@@ -41,10 +41,16 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user }) {
       return user.email?.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase();
     },
-    async jwt({ token }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.email = user.email;
+      }
       return token;
     },
     async session({ session, token }) {
+      if (token) {
+        session.user.email = token.email;
+      }
       return session;
     },
   },
