@@ -36,20 +36,14 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/admin/login',
   },
-  session: { strategy: 'jwt' },
+  session: { strategy: 'database' },
   callbacks: {
     async signIn({ user }) {
       return user.email?.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase();
     },
-    async jwt({ token, user }) {
+    async session({ session, user }) {
       if (user) {
-        token.email = user.email;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.email = token.email;
+        session.user.email = user.email;
       }
       return session;
     },
