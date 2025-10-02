@@ -1,14 +1,103 @@
-import type { Adapter } from 'next-auth/adapters';
+import type { Adapter, AdapterUser } from 'next-auth/adapters';
 
-// Extend global type for verification tokens
+// Extend global type for verification tokens and users
 declare global {
   var verificationTokens: Map<string, any> | undefined;
+  var users: Map<string, AdapterUser> | undefined;
 }
 
-// Simple in-memory adapter for verification tokens only
+// Simple in-memory adapter for verification tokens and basic user management
 // This is needed because Email provider requires an adapter
 export const memoryAdapter: Adapter = {
-  async createVerificationToken(verificationToken) {
+  async createUser(user: Omit<AdapterUser, 'id'>) {
+    if (!global.users) {
+      global.users = new Map();
+    }
+    const adapterUser: AdapterUser = {
+      id: user.email || `user_${Date.now()}`,
+      email: user.email!,
+      name: user.name,
+      image: user.image,
+      emailVerified: user.emailVerified || null,
+    };
+    global.users.set(adapterUser.id, adapterUser);
+    return adapterUser;
+  },
+
+  async getUser(id: string) {
+    if (!global.users) {
+      return null;
+    }
+    return global.users.get(id) || null;
+  },
+
+  async getUserByEmail(email: string) {
+    if (!global.users) {
+      return null;
+    }
+    const users = Array.from(global.users.values());
+    for (const user of users) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return null;
+  },
+
+  async getUserByAccount({ providerAccountId, provider }: { providerAccountId: string; provider: string }) {
+    // For email provider, we don't need this
+    return null;
+  },
+
+  async updateUser(user: Partial<AdapterUser> & Pick<AdapterUser, 'id'>) {
+    if (!global.users) {
+      return user as AdapterUser;
+    }
+    const existingUser = global.users.get(user.id);
+    if (existingUser) {
+      const updatedUser = { ...existingUser, ...user };
+      global.users.set(user.id, updatedUser);
+      return updatedUser;
+    }
+    return user as AdapterUser;
+  },
+
+  async deleteUser(userId: string) {
+    if (!global.users) {
+      return;
+    }
+    global.users.delete(userId);
+  },
+
+  async linkAccount(account: any) {
+    // For email provider, we don't need this
+    return account;
+  },
+
+  async unlinkAccount({ providerAccountId, provider }: { providerAccountId: string; provider: string }) {
+    // For email provider, we don't need this
+  },
+
+  async createSession({ sessionToken, userId, expires }: { sessionToken: string; userId: string; expires: Date }) {
+    // For JWT sessions, we don't need this
+    return { sessionToken, userId, expires };
+  },
+
+  async getSessionAndUser(sessionToken: string) {
+    // For JWT sessions, we don't need this
+    return null;
+  },
+
+  async updateSession(session: any) {
+    // For JWT sessions, we don't need this
+    return session;
+  },
+
+  async deleteSession(sessionToken: string) {
+    // For JWT sessions, we don't need this
+  },
+
+  async createVerificationToken(verificationToken: any) {
     // Store in memory (will be lost on server restart, but that's fine for magic links)
     if (!global.verificationTokens) {
       global.verificationTokens = new Map();
@@ -20,7 +109,7 @@ export const memoryAdapter: Adapter = {
     return verificationToken;
   },
   
-  async useVerificationToken({ identifier, token }) {
+  async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
     if (!global.verificationTokens) {
       return null;
     }
@@ -40,18 +129,4 @@ export const memoryAdapter: Adapter = {
     global.verificationTokens.delete(identifier);
     return stored;
   },
-  
-  // All other methods are not needed for JWT sessions
-  async createUser() { throw new Error('Not implemented'); },
-  async getUser() { throw new Error('Not implemented'); },
-  async getUserByEmail() { throw new Error('Not implemented'); },
-  async getUserByAccount() { throw new Error('Not implemented'); },
-  async updateUser() { throw new Error('Not implemented'); },
-  async deleteUser() { throw new Error('Not implemented'); },
-  async linkAccount() { throw new Error('Not implemented'); },
-  async unlinkAccount() { throw new Error('Not implemented'); },
-  async createSession() { throw new Error('Not implemented'); },
-  async getSessionAndUser() { throw new Error('Not implemented'); },
-  async updateSession() { throw new Error('Not implemented'); },
-  async deleteSession() { throw new Error('Not implemented'); },
 };
