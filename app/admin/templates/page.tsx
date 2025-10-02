@@ -231,15 +231,15 @@ export default function TemplatesPage() {
                 required
                 placeholder="e.g., Wedding Photography Agreement"
                 title="A descriptive name for your template"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  backgroundColor: inputBg,
-                  color: textColor
-                }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    backgroundColor: inputBg,
+                    color: textColor
+                  }}
               />
             </div>
 
@@ -254,17 +254,17 @@ export default function TemplatesPage() {
                 rows={10}
                 placeholder="Enter your HTML template content here. Use {{fieldName}} for dynamic fields."
                 title="HTML content with smart fields like {{client.firstName}}"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  fontFamily: 'monospace',
-                  resize: 'vertical',
-                  backgroundColor: inputBg,
-                  color: textColor
-                }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    resize: 'vertical',
+                    backgroundColor: inputBg,
+                    color: textColor
+                  }}
               />
               <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
                 Use smart fields like {`{{client.firstName}}`}, {`{{client.lastName}}`}, {`{{eventDate}}`} etc.
@@ -287,17 +287,17 @@ export default function TemplatesPage() {
                 rows={6}
                 placeholder='{"client.firstName": {"type": "text", "required": true, "editableByClient": false}}'
                 title="Define field types, requirements, and permissions (optional)"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  fontFamily: 'monospace',
-                  resize: 'vertical',
-                  backgroundColor: inputBg,
-                  color: textColor
-                }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    resize: 'vertical',
+                    backgroundColor: inputBg,
+                    color: textColor
+                  }}
               />
               <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
                 Define field types, requirements, and permissions. Leave empty for now.

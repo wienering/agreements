@@ -279,7 +279,7 @@ export default function AgreementsPage() {
                   title="Choose which client this agreement is for"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -306,7 +306,7 @@ export default function AgreementsPage() {
                   title="Choose which template to use for this agreement"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -441,6 +441,10 @@ export default function AgreementsPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
+                      onClick={() => {
+                        // TODO: Implement view details functionality
+                        alert(`Agreement Details:\n\nClient: ${agreement.client.firstName} ${agreement.client.lastName}\nTemplate: ${agreement.template.title}\nStatus: ${agreement.status}\nToken: ${agreement.uniqueToken}\nCreated: ${new Date(agreement.createdAt).toLocaleString()}`);
+                      }}
                       style={{
                         backgroundColor: '#3b82f6',
                         color: 'white',
@@ -449,13 +453,35 @@ export default function AgreementsPage() {
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '14px',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#2563eb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#3b82f6';
                       }}
                       title="View agreement details"
                     >
                       View Details
                     </button>
                     <button
+                      onClick={() => {
+                        const clientLink = `${window.location.origin}/agreement/${agreement.uniqueToken}`;
+                        navigator.clipboard.writeText(clientLink).then(() => {
+                          alert('Client link copied to clipboard!');
+                        }).catch(() => {
+                          // Fallback for older browsers
+                          const textArea = document.createElement('textarea');
+                          textArea.value = clientLink;
+                          document.body.appendChild(textArea);
+                          textArea.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(textArea);
+                          alert('Client link copied to clipboard!');
+                        });
+                      }}
                       style={{
                         backgroundColor: '#059669',
                         color: 'white',
@@ -464,9 +490,16 @@ export default function AgreementsPage() {
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '14px',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
                       }}
-                      title="Copy client link"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#047857';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#059669';
+                      }}
+                      title="Copy client link to clipboard"
                     >
                       Copy Link
                     </button>

@@ -137,7 +137,7 @@ export default function ClientsPage() {
                   title="Client's first name"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -158,7 +158,7 @@ export default function ClientsPage() {
                   title="Client's last name"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -182,7 +182,7 @@ export default function ClientsPage() {
                   title="Client's email address for communication"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -202,7 +202,7 @@ export default function ClientsPage() {
                   title="Client's phone number"
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -213,47 +213,53 @@ export default function ClientsPage() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                Event Date
-              </label>
-              <input
-                type="date"
-                value={newClient.eventDate}
-                onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
-                title="Date of the client's event"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  backgroundColor: inputBg,
-                  color: textColor
-                }}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
+                  Event Date
+                </label>
+                <input
+                  type="date"
+                  value={newClient.eventDate}
+                  onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
+                  title="Date of the client's event"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    backgroundColor: inputBg,
+                    color: textColor,
+                    colorScheme: isDark ? 'dark' : 'light'
+                  }}
+                />
+              </div>
+              <div>
+                {/* Empty div for spacing */}
+              </div>
             </div>
 
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 Notes
               </label>
-              <textarea
-                value={newClient.notes}
-                onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
-                rows={3}
-                title="Additional notes about the client"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  resize: 'vertical',
-                  backgroundColor: inputBg,
-                  color: textColor
-                }}
-              />
+                <textarea
+                  value={newClient.notes}
+                  onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
+                  rows={3}
+                  title="Additional notes about the client"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    resize: 'vertical',
+                    backgroundColor: inputBg,
+                    color: textColor
+                  }}
+                />
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>

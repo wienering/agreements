@@ -123,68 +123,71 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* Dark Mode Toggle */}
-        <div style={{ padding: '0 24px', marginBottom: '16px' }}>
-          <button
-            onClick={toggleDarkMode}
-            style={{
-              width: '100%',
-              padding: '12px 24px',
-              backgroundColor: '#374151',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'background-color 0.2s',
-            }}
-            title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#4b5563';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#374151';
-            }}
-          >
-            <span>{isDark ? '☀️' : '🌙'}</span>
-            {isDark ? 'Light Mode' : 'Dark Mode'}
-          </button>
-        </div>
+        {/* Bottom Actions */}
+        <div style={{ padding: '0 24px', marginTop: 'auto' }}>
+          {/* Dark Mode Toggle */}
+          <div style={{ marginBottom: '12px' }}>
+            <button
+              onClick={toggleDarkMode}
+              style={{
+                width: '100%',
+                padding: '10px 20px',
+                backgroundColor: '#374151',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'background-color 0.2s',
+              }}
+              title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#4b5563';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151';
+              }}
+            >
+              <span>{isDark ? '☀️' : '🌙'}</span>
+              {isDark ? 'Light Mode' : 'Dark Mode'}
+            </button>
+          </div>
 
-        {/* Logout Button */}
-        <div style={{ padding: '0 24px', marginBottom: '24px' }}>
-          <button
-            onClick={() => signOut({ callbackUrl: '/admin/login' })}
-            style={{
-              width: '100%',
-              padding: '12px 24px',
-              backgroundColor: '#dc2626',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'background-color 0.2s',
-            }}
-            title="Sign out of admin dashboard"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#b91c1c';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc2626';
-            }}
-          >
-            <span>🚪</span>
-            Logout
-          </button>
+          {/* Logout Button */}
+          <div>
+            <button
+              onClick={() => signOut({ callbackUrl: '/admin/login' })}
+              style={{
+                width: '100%',
+                padding: '10px 20px',
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'background-color 0.2s',
+              }}
+              title="Sign out of admin dashboard"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#b91c1c';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#dc2626';
+              }}
+            >
+              <span>🚪</span>
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
