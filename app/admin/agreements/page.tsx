@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
+import { useToast } from '../../components/Toast';
 
 interface Agreement {
   id: string;
@@ -40,6 +41,7 @@ export default function AgreementsPage() {
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
+  const { showToast, ToastContainer } = useToast();
 
   // Check if device is mobile
   useEffect(() => {
@@ -113,20 +115,20 @@ export default function AgreementsPage() {
         setAgreements([createdAgreement, ...agreements]);
         setShowCreateForm(false);
         setNewAgreement({ clientId: '', templateId: '', expiresAt: '' });
-        alert('Agreement created successfully!');
+        showToast('Agreement created successfully!');
       } else {
         try {
           const error = await response.json();
           const errorMessage = error.error || error.message || 'Unknown error occurred';
-          alert(`Error: ${errorMessage}`);
+          showToast(`Error: ${errorMessage}`, 'error');
         } catch (parseError) {
           console.error('Failed to parse error response:', parseError);
-          alert(`Error: Failed to create agreement (${response.status})`);
+          showToast(`Error: Failed to create agreement (${response.status})`, 'error');
         }
       }
     } catch (error) {
       console.error('Error creating agreement:', error);
-      alert('Failed to create agreement');
+      showToast('Failed to create agreement', 'error');
     } finally {
       setLoading(false);
     }
@@ -159,20 +161,20 @@ export default function AgreementsPage() {
           a.id === selectedAgreement.id ? updatedAgreement : a
         ));
         setSelectedAgreement(updatedAgreement);
-        alert('Agreement saved successfully!');
+        showToast('Agreement saved successfully!');
       } else {
         try {
           const error = await response.json();
           const errorMessage = error.error || error.message || 'Unknown error occurred';
-          alert(`Error: ${errorMessage}`);
+          showToast(`Error: ${errorMessage}`, 'error');
         } catch (parseError) {
           console.error('Failed to parse error response:', parseError);
-          alert(`Error: Failed to save agreement (${response.status})`);
+          showToast(`Error: Failed to save agreement (${response.status})`, 'error');
         }
       }
     } catch (error) {
       console.error('Error saving agreement:', error);
-      alert('Failed to save agreement');
+      showToast('Failed to save agreement', 'error');
     } finally {
       setSaving(false);
     }
@@ -180,7 +182,7 @@ export default function AgreementsPage() {
 
   const handleSendToClient = async (agreement: Agreement) => {
     // Send functionality temporarily disabled
-    alert('Send functionality is not yet implemented. Please use the "Copy Link" button to share the agreement with the client.');
+    showToast('Send functionality is not yet implemented. Please use the "Copy Link" button to share the agreement with the client.', 'info');
   };
 
   const handleDeleteAgreement = async (agreementId: string) => {
@@ -200,16 +202,27 @@ export default function AgreementsPage() {
 
       if (response.ok) {
         setAgreements(agreements.filter(a => a.id !== agreementId));
-        alert('Agreement deleted successfully!');
+        showToast('Agreement deleted successfully!');
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to delete agreement'}`);
+        showToast(`Error: ${error.error || 'Failed to delete agreement'}`, 'error');
       }
     } catch (error) {
       console.error('Error deleting agreement:', error);
-      alert('Failed to delete agreement');
+      showToast('Failed to delete agreement', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopyLink = async (uniqueToken: string) => {
+    try {
+      const clientLink = `${window.location.origin}/agreement/${uniqueToken}`;
+      await navigator.clipboard.writeText(clientLink);
+      showToast('Copied!');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      showToast('Failed to copy link', 'error');
     }
   };
 
@@ -225,6 +238,7 @@ export default function AgreementsPage() {
       backgroundColor: mainBg,
       padding: isMobile ? '16px' : '24px'
     }}>
+      <ToastContainer />
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ 
@@ -510,11 +524,7 @@ export default function AgreementsPage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => {
-                      const clientLink = `${window.location.origin}/agreement/${agreement.uniqueToken}`;
-                      navigator.clipboard.writeText(clientLink);
-                      alert('Client link copied to clipboard!');
-                    }}
+                    onClick={() => handleCopyLink(agreement.uniqueToken)}
                     style={{
                       backgroundColor: '#3b82f6',
                       color: 'white',

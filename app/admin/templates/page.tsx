@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
+import { useToast } from '../../components/Toast';
 
 interface Template {
   id: string;
@@ -27,6 +28,7 @@ export default function TemplatesPage() {
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
+  const { showToast, ToastContainer } = useToast();
 
   // Check if device is mobile
   useEffect(() => {
@@ -74,27 +76,17 @@ export default function TemplatesPage() {
         setTemplates([createdTemplate, ...templates]);
         setShowAddForm(false);
         setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
-        alert('Template created successfully!');
+        showToast('Template created successfully!');
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        showToast(`Error: ${error.error}`, 'error');
       }
     } catch (error) {
       console.error('Error creating template:', error);
-      alert('Failed to create template');
+      showToast('Failed to create template', 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEditTemplate = (template: Template) => {
-    setEditingTemplate(template);
-    setNewTemplate({
-      title: template.title,
-      htmlContent: template.htmlContent,
-      fieldsSchema: template.fieldsSchema || {}
-    });
-    setShowAddForm(true);
   };
 
   const handleUpdateTemplate = async (e: React.FormEvent) => {
@@ -117,15 +109,15 @@ export default function TemplatesPage() {
         setShowAddForm(false);
         setEditingTemplate(null);
         setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
-        alert('Template updated successfully!');
+        showToast('Template updated successfully!');
       } else {
         const error = await response.json();
         console.error('Template update error:', error);
-        alert(`Error: ${error.error || 'Unknown error occurred'}`);
+        showToast(`Error: ${error.error || 'Unknown error occurred'}`, 'error');
       }
     } catch (error) {
       console.error('Error updating template:', error);
-      alert('Failed to update template');
+      showToast('Failed to update template', 'error');
     } finally {
       setLoading(false);
     }
@@ -154,14 +146,14 @@ export default function TemplatesPage() {
 
       if (response.ok) {
         setTemplates(templates.filter(t => t.id !== templateId));
-        alert('Template deleted successfully!');
+        showToast('Template deleted successfully!');
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to delete template'}`);
+        showToast(`Error: ${error.error || 'Failed to delete template'}`, 'error');
       }
     } catch (error) {
       console.error('Error deleting template:', error);
-      alert('Failed to delete template');
+      showToast('Failed to delete template', 'error');
     } finally {
       setLoading(false);
     }
@@ -171,427 +163,403 @@ export default function TemplatesPage() {
     router.push(`/admin/agreements?templateId=${templateId}`);
   };
 
+  const handleEditTemplate = (template: Template) => {
+    setEditingTemplate(template);
+    setNewTemplate({
+      title: template.title,
+      htmlContent: template.htmlContent,
+      fieldsSchema: template.fieldsSchema
+    });
+    setShowAddForm(true);
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const textColor = isDark ? '#f8fafc' : '#0f172a';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const textColor = isDark ? '#f1f5f9' : '#1e293b';
   const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const inputBg = isDark ? '#0f172a' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
 
   return (
     <div style={{ 
-      padding: isMobile ? '16px' : '24px', 
-      backgroundColor: mainBg, 
       minHeight: '100vh', 
-      color: textColor 
+      backgroundColor: mainBg,
+      padding: isMobile ? '16px' : '24px'
     }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: isMobile ? 'flex-start' : 'center', 
-        marginBottom: '24px',
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? '16px' : '0'
-      }}>
-        <div>
-          <h1 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: isMobile ? '24px' : '32px', 
-            color: textColor, 
-            fontWeight: 'bold' 
-          }}>
-            {isMobile ? 'Templates' : 'Photobooth Guys - Templates'}
-          </h1>
-          <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
-            Create and manage agreement templates
-          </p>
-        </div>
+      <ToastContainer />
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header */}
         <div style={{ 
           display: 'flex', 
-          gap: '12px',
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '24px',
           flexDirection: isMobile ? 'column' : 'row',
-          width: isMobile ? '100%' : 'auto'
+          gap: isMobile ? '16px' : '0'
         }}>
-          <button
-            onClick={() => setShowSmartFields(!showSmartFields)}
-            style={{
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              padding: isMobile ? '12px 16px' : '12px 24px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: isMobile ? '14px' : '16px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: 'center'
-            }}
-            title="View all available smart fields for templates"
-          >
-            <span>🔧</span>
-            {showSmartFields ? 'Hide' : 'Show'} Smart Fields
-          </button>
-          <button 
-            onClick={() => setShowAddForm(true)}
-            style={{
-              backgroundColor: '#059669',
-              color: 'white',
-              border: 'none',
-              padding: isMobile ? '12px 16px' : '12px 24px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: isMobile ? '14px' : '16px',
-              fontWeight: '500',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: 'center'
-            }}
-            title="Create a new agreement template"
-          >
-            + Add Template
-          </button>
-        </div>
-      </div>
-
-      {/* Smart Fields Panel */}
-      {showSmartFields && (
-        <div style={{
-          backgroundColor: cardBg,
-          padding: '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: `1px solid ${borderColor}`,
-          marginBottom: '24px'
-        }}>
-          <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>Available Smart Fields</h2>
-          <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
-            Use these fields in your templates to automatically populate client and event information.
-          </p>
+          <div>
+            <h1 style={{ 
+              margin: '0 0 8px 0', 
+              fontSize: isMobile ? '24px' : '32px', 
+              fontWeight: '700', 
+              color: textColor 
+            }}>
+              Templates
+            </h1>
+            <p style={{ 
+              margin: '0', 
+              color: mutedText, 
+              fontSize: '16px' 
+            }}>
+              Manage agreement templates
+            </p>
+          </div>
           <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '12px' 
+            display: 'flex', 
+            gap: '12px',
+            flexDirection: isMobile ? 'column' : 'row',
+            width: isMobile ? '100%' : 'auto'
           }}>
-            {[
-              { field: '{{client.firstName}}', description: 'Client first name', example: 'John' },
-              { field: '{{client.lastName}}', description: 'Client last name', example: 'Smith' },
-              { field: '{{client.email}}', description: 'Client email address', example: 'john@example.com' },
-              { field: '{{client.phone}}', description: 'Client phone number', example: '(555) 123-4567' },
-              { field: '{{client.eventDate}}', description: 'Event date', example: '2024-06-15' },
-              { field: '{{event.type}}', description: 'Type of event', example: 'Wedding Photography' },
-              { field: '{{event.location}}', description: 'Event location', example: 'Grand Ballroom' },
-              { field: '{{event.startTime}}', description: 'Event start time', example: '2:00 PM' },
-              { field: '{{event.duration}}', description: 'Event duration', example: '8 hours' },
-              { field: '{{event.package}}', description: 'Package selected', example: 'Premium Package' },
-              { field: '{{pricing.basePrice}}', description: 'Base package price', example: '$2,500' },
-              { field: '{{pricing.additionalHours}}', description: 'Additional hours rate', example: '$300/hour' },
-              { field: '{{pricing.total}}', description: 'Total price', example: '$2,500' },
-            ].map((field, index) => (
-              <div key={index} style={{
-                padding: '12px',
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+            <button
+              onClick={() => setShowSmartFields(!showSmartFields)}
+              style={{
+                backgroundColor: showSmartFields ? '#059669' : '#6b7280',
+                color: 'white',
+                border: 'none',
+                padding: isMobile ? '12px 20px' : '10px 20px',
                 borderRadius: '6px',
-                border: `1px solid ${borderColor}`
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <code style={{
-                    backgroundColor: '#1e293b',
-                    color: '#f8fafc',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontFamily: 'monospace'
-                  }}>
-                    {field.field}
-                  </code>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(field.field)}
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      color: mutedText
-                    }}
-                    title="Copy to clipboard"
-                  >
-                    📋
-                  </button>
-                </div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: mutedText }}>{field.description}</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '500' }}>
-                  Example: {field.example}
-                </p>
-              </div>
-            ))}
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                width: isMobile ? '100%' : 'auto'
+              }}
+              title="Show available smart fields"
+            >
+              {showSmartFields ? 'Hide Smart Fields' : 'Show Smart Fields'}
+            </button>
+            <button
+              onClick={() => setShowAddForm(true)}
+              style={{
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                padding: isMobile ? '12px 20px' : '10px 20px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                width: isMobile ? '100%' : 'auto'
+              }}
+              title="Create a new template"
+            >
+              + New Template
+            </button>
           </div>
         </div>
-      )}
 
-      {showAddForm && (
-        <div style={{
-          backgroundColor: cardBg,
-          padding: isMobile ? '16px' : '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: `1px solid ${borderColor}`,
-          marginBottom: '24px'
-        }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
-            {editingTemplate ? 'Edit Template' : 'Add New Template'}
-          </h2>
-          <form onSubmit={editingTemplate ? handleUpdateTemplate : handleAddTemplate}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                Template Title *
-              </label>
-              <input
-                type="text"
-                value={newTemplate.title}
-                onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
-                required
-                placeholder="e.g., Wedding Photography Agreement"
-                title="A descriptive name for your template"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                HTML Content *
-              </label>
-              <textarea
-                value={newTemplate.htmlContent}
-                onChange={(e) => setNewTemplate({ ...newTemplate, htmlContent: e.target.value })}
-                required
-                rows={10}
-                placeholder="Enter your HTML template content here. Use {{fieldName}} for dynamic fields."
-                title="HTML content with smart fields like {{client.firstName}}"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    fontFamily: 'monospace',
-                    resize: 'vertical',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-              />
-              <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
-                Use smart fields like {`{{client.firstName}}`}, {`{{client.lastName}}`}, {`{{eventDate}}`} etc.
-              </p>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                Fields Schema (JSON)
-              </label>
-              <textarea
-                value={JSON.stringify(newTemplate.fieldsSchema, null, 2)}
-                onChange={(e) => {
-                  try {
-                    setNewTemplate({ ...newTemplate, fieldsSchema: JSON.parse(e.target.value) });
-                  } catch (err) {
-                    // Invalid JSON, keep the text but don't update the object
-                  }
-                }}
-                rows={6}
-                placeholder='{"client.firstName": {"type": "text", "required": true, "editableByClient": false}}'
-                title="Define field types, requirements, and permissions (optional)"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    fontFamily: 'monospace',
-                    resize: 'vertical',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-              />
-              <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
-                Define field types, requirements, and permissions. Leave empty for now.
-              </p>
-            </div>
-
+        {/* Smart Fields Help */}
+        {showSmartFields && (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: textColor }}>
+              Available Smart Fields
+            </h3>
             <div style={{ 
-              display: 'flex', 
-              gap: '12px',
-              flexDirection: isMobile ? 'column' : 'row'
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '12px' 
             }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  backgroundColor: loading ? '#9ca3af' : '#059669',
-                  color: 'white',
-                  border: 'none',
-                  padding: isMobile ? '12px 16px' : '12px 24px',
-                  borderRadius: '6px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: isMobile ? '14px' : '16px',
-                  fontWeight: '500',
-                  width: isMobile ? '100%' : 'auto'
-                }}
-                title="Save the new template"
-              >
-                {loading ? (editingTemplate ? 'Updating...' : 'Creating...') : (editingTemplate ? 'Update Template' : 'Add Template')}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                style={{
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: isMobile ? '12px 16px' : '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: isMobile ? '14px' : '16px',
-                  fontWeight: '500',
-                  width: isMobile ? '100%' : 'auto'
-                }}
-                title={editingTemplate ? "Cancel editing template" : "Cancel creating template"}
-              >
-                Cancel
-              </button>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{client.firstName}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{client.lastName}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{client.email}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{client.phone}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{client.eventDate}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{client.notes}}`}
+              </div>
             </div>
-          </form>
-        </div>
-      )}
+            <p style={{ 
+              margin: '12px 0 0 0', 
+              fontSize: '14px', 
+              color: mutedText 
+            }}>
+              Use these smart fields in your template content. They will be automatically replaced with actual client data when creating agreements.
+            </p>
+          </div>
+        )}
 
-      {/* Templates List */}
-      <div style={{ 
-        backgroundColor: cardBg, 
-        borderRadius: '8px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: `1px solid ${borderColor}`,
-        padding: isMobile ? '16px' : '24px'
-      }}>
-        {templates.length === 0 ? (
-          <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No templates yet. Create your first template to get started.</p>
-        ) : (
-          <div>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
-              Templates ({templates.length})
+        {/* Add/Edit Form */}
+        {showAddForm && (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+              {editingTemplate ? 'Edit Template' : 'Create New Template'}
             </h2>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              {templates.map((template) => (
-                <div key={template.id} style={{
-                  padding: '16px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc'
+            <form onSubmit={editingTemplate ? handleUpdateTemplate : handleAddTemplate}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor 
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'start', 
-                    marginBottom: '12px',
-                    flexDirection: isMobile ? 'column' : 'row',
-                    gap: isMobile ? '8px' : '0'
-                  }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
-                        {template.title}
-                      </h3>
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                        Version {template.version}
-                      </p>
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                        {template.htmlContent.length} characters
-                      </p>
-                    </div>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: mutedText,
-                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      alignSelf: isMobile ? 'flex-start' : 'auto'
-                    }}>
-                      Created {new Date(template.createdAt).toLocaleDateString()}
-                    </span>
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={newTemplate.title}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '4px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '14px'
+                  }}
+                  placeholder="Enter template title"
+                />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor 
+                }}>
+                  Content
+                </label>
+                <textarea
+                  value={newTemplate.htmlContent}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, htmlContent: e.target.value })}
+                  required
+                  rows={10}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '4px',
+                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    color: textColor,
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Enter template content with smart fields..."
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {loading ? (editingTemplate ? 'Updating...' : 'Creating...') : (editingTemplate ? 'Update Template' : 'Create Template')}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Templates List */}
+        {templates.length === 0 ? (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '48px 24px',
+            textAlign: 'center'
+          }}>
+            <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
+              No templates found. Create your first template to get started.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {templates.map(template => (
+              <div key={template.id} style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '20px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'start', 
+                  marginBottom: '12px',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: isMobile ? '8px' : '0'
+                }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
+                      {template.title}
+                    </h3>
+                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                      Version {template.version}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                      {template.htmlContent.length} characters
+                    </p>
                   </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '8px',
-                    flexDirection: isMobile ? 'column' : 'row'
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: mutedText,
+                    backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    alignSelf: isMobile ? 'flex-start' : 'auto'
                   }}>
-                    <button
-                      onClick={() => handleUseTemplate(template.id)}
-                      style={{
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        padding: isMobile ? '10px 16px' : '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        width: isMobile ? '100%' : 'auto'
-                      }}
-                      title="Use this template to create an agreement"
-                    >
-                      Use This Template
-                    </button>
-                    <button
-                      onClick={() => handleEditTemplate(template)}
-                      style={{
-                        backgroundColor: '#059669',
-                        color: 'white',
-                        border: 'none',
-                        padding: isMobile ? '10px 16px' : '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        width: isMobile ? '100%' : 'auto'
-                      }}
-                      title="Edit template details"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTemplate(template.id)}
-                      disabled={loading}
-                      style={{
-                        backgroundColor: loading ? '#9ca3af' : '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: isMobile ? '10px 16px' : '8px 16px',
-                        borderRadius: '4px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        width: isMobile ? '100%' : 'auto'
-                      }}
-                      title="Delete this template permanently"
-                    >
-                      {loading ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
+                    Created {new Date(template.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '8px',
+                  flexDirection: isMobile ? 'column' : 'row'
+                }}>
+                  <button
+                    onClick={() => handleUseTemplate(template.id)}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: isMobile ? '10px 16px' : '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      width: isMobile ? '100%' : 'auto'
+                    }}
+                    title="Use this template to create an agreement"
+                  >
+                    Use This Template
+                  </button>
+                  <button
+                    onClick={() => handleEditTemplate(template)}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: 'white',
+                      border: 'none',
+                      padding: isMobile ? '10px 16px' : '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      width: isMobile ? '100%' : 'auto'
+                    }}
+                    title="Edit template details"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    disabled={loading}
+                    style={{
+                      backgroundColor: loading ? '#9ca3af' : '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      padding: isMobile ? '10px 16px' : '8px 16px',
+                      borderRadius: '4px',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      width: isMobile ? '100%' : 'auto'
+                    }}
+                    title="Delete this template permanently"
+                  >
+                    {loading ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

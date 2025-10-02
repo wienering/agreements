@@ -1,24 +1,27 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
+import { useRouter } from 'next/navigation';
+import { useToast } from '../../components/Toast';
 
 interface Client {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string | null;
-  eventDate: string | null;
-  notes: string | null;
+  phone?: string;
+  eventDate?: string;
+  notes?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [newClient, setNewClient] = useState({
     firstName: '',
@@ -29,6 +32,8 @@ export default function ClientsPage() {
     notes: ''
   });
   const { isDark } = useDarkMode();
+  const router = useRouter();
+  const { showToast, ToastContainer } = useToast();
 
   // Check if device is mobile
   useEffect(() => {
@@ -76,36 +81,23 @@ export default function ClientsPage() {
         setClients([createdClient, ...clients]);
         setShowAddForm(false);
         setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
-        alert('Client added successfully!');
-          } else {
-            try {
-              const error = await response.json();
-              const errorMessage = error.error || error.message || 'Unknown error occurred';
-              alert(`Error: ${errorMessage}`);
-            } catch (parseError) {
-              console.error('Failed to parse error response:', parseError);
-              alert(`Error: Failed to create client (${response.status})`);
-            }
-          }
+        showToast('Client added successfully!');
+      } else {
+        try {
+          const error = await response.json();
+          const errorMessage = error.error || error.message || 'Unknown error occurred';
+          showToast(`Error: ${errorMessage}`, 'error');
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          showToast(`Error: Failed to create client (${response.status})`, 'error');
+        }
+      }
     } catch (error) {
       console.error('Error creating client:', error);
-      alert('Failed to create client');
+      showToast('Failed to create client', 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEditClient = (client: Client) => {
-    setEditingClient(client);
-    setNewClient({
-      firstName: client.firstName,
-      lastName: client.lastName,
-      email: client.email,
-      phone: client.phone || '',
-      eventDate: client.eventDate ? new Date(client.eventDate).toISOString().split('T')[0] : '',
-      notes: client.notes || ''
-    });
-    setShowAddForm(true);
   };
 
   const handleUpdateClient = async (e: React.FormEvent) => {
@@ -129,23 +121,36 @@ export default function ClientsPage() {
         setShowAddForm(false);
         setEditingClient(null);
         setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
-        alert('Client updated successfully!');
+        showToast('Client updated successfully!');
       } else {
         try {
           const error = await response.json();
           const errorMessage = error.error || error.message || 'Unknown error occurred';
-          alert(`Error: ${errorMessage}`);
+          showToast(`Error: ${errorMessage}`, 'error');
         } catch (parseError) {
           console.error('Failed to parse error response:', parseError);
-          alert(`Error: Failed to update client (${response.status})`);
+          showToast(`Error: Failed to update client (${response.status})`, 'error');
         }
       }
     } catch (error) {
       console.error('Error updating client:', error);
-      alert('Failed to update client');
+      showToast('Failed to update client', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setNewClient({
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phone: client.phone || '',
+      eventDate: client.eventDate ? new Date(client.eventDate).toISOString().slice(0, 16) : '',
+      notes: client.notes || ''
+    });
+    setShowAddForm(true);
   };
 
   const handleCancelEdit = () => {
@@ -155,312 +160,331 @@ export default function ClientsPage() {
   };
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const textColor = isDark ? '#f8fafc' : '#0f172a';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const textColor = isDark ? '#f1f5f9' : '#1e293b';
   const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const inputBg = isDark ? '#0f172a' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
 
   return (
     <div style={{ 
-      padding: isMobile ? '16px' : '24px', 
-      backgroundColor: mainBg, 
       minHeight: '100vh', 
-      color: textColor 
+      backgroundColor: mainBg,
+      padding: isMobile ? '16px' : '24px'
     }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: isMobile ? 'flex-start' : 'center', 
-        marginBottom: '24px',
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? '16px' : '0'
-      }}>
-        <div>
-          <h1 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: isMobile ? '24px' : '32px', 
-            color: textColor, 
-            fontWeight: 'bold' 
-          }}>
-            {isMobile ? 'Clients' : 'Photobooth Guys - Clients'}
-          </h1>
-          <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
-            Manage your client information
-          </p>
-        </div>
-        <button 
-          onClick={() => setShowAddForm(true)}
-          style={{
-            backgroundColor: '#059669',
-            color: 'white',
-            border: 'none',
-            padding: isMobile ? '12px 16px' : '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: isMobile ? '14px' : '16px',
-            fontWeight: '500',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            width: isMobile ? '100%' : 'auto'
-          }}
-          title="Add a new client to the system"
-        >
-          + Add Client
-        </button>
-      </div>
-
-      {showAddForm && (
-        <div style={{
-          backgroundColor: cardBg,
-          padding: isMobile ? '16px' : '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: `1px solid ${borderColor}`,
-          marginBottom: '24px'
+      <ToastContainer />
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '24px',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '16px' : '0'
         }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
-            {editingClient ? 'Edit Client' : 'Add New Client'}
-          </h2>
-          <form onSubmit={editingClient ? handleUpdateClient : handleAddClient}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
-              gap: '20px', 
-              marginBottom: '20px' 
-            }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  value={newClient.firstName}
-                  onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
-                  required
-                  title="Client's first name"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  value={newClient.lastName}
-                  onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
-                  required
-                  title="Client's last name"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={newClient.email}
-                  onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                  required
-                  title="Client's email address for communication"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={newClient.phone}
-                  onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-                  title="Client's phone number"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  Event Date
-                </label>
-                <input
-                  type="date"
-                  value={newClient.eventDate}
-                  onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
-                  title="Date of the client's event"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    colorScheme: isDark ? 'dark' : 'light'
-                  }}
-                />
-              </div>
-              <div>
-                {/* Empty div for spacing */}
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                Notes
-              </label>
-                <textarea
-                  value={newClient.notes}
-                  onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
-                  rows={3}
-                  title="Additional notes about the client"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    resize: 'vertical',
-                    backgroundColor: inputBg,
-                    color: textColor,
-                    boxSizing: 'border-box'
-                  }}
-                />
-            </div>
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '12px',
-              flexDirection: isMobile ? 'column' : 'row'
-            }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  backgroundColor: loading ? '#9ca3af' : '#059669',
-                  color: 'white',
-                  border: 'none',
-                  padding: isMobile ? '12px 16px' : '12px 24px',
-                  borderRadius: '6px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: isMobile ? '14px' : '16px',
-                  fontWeight: '500',
-                  width: isMobile ? '100%' : 'auto'
-                }}
-                title={editingClient ? 'Save client changes' : 'Save the new client'}
-              >
-                {loading ? (editingClient ? 'Updating...' : 'Adding...') : (editingClient ? 'Update Client' : 'Add Client')}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                style={{
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: isMobile ? '12px 16px' : '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: isMobile ? '14px' : '16px',
-                  fontWeight: '500',
-                  width: isMobile ? '100%' : 'auto'
-                }}
-                title="Cancel"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Clients List */}
-      <div style={{ 
-        backgroundColor: cardBg, 
-        borderRadius: '8px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: `1px solid ${borderColor}`,
-        padding: isMobile ? '16px' : '24px'
-      }}>
-        {clients.length === 0 ? (
-          <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No clients yet. Add your first client to get started.</p>
-        ) : (
           <div>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
-              Clients ({clients.length})
+            <h1 style={{ 
+              margin: '0 0 8px 0', 
+              fontSize: isMobile ? '24px' : '32px', 
+              fontWeight: '700', 
+              color: textColor 
+            }}>
+              Clients
+            </h1>
+            <p style={{ 
+              margin: '0', 
+              color: mutedText, 
+              fontSize: '16px' 
+            }}>
+              Manage your client database
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddForm(true)}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              padding: isMobile ? '12px 20px' : '10px 20px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              width: isMobile ? '100%' : 'auto'
+            }}
+            title="Add a new client"
+          >
+            + New Client
+          </button>
+        </div>
+
+        {/* Add/Edit Form */}
+        {showAddForm && (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+              {editingClient ? 'Edit Client' : 'Add New Client'}
             </h2>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              {clients.map((client) => (
-                <div key={client.id} style={{
-                  padding: '16px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc'
+            <form onSubmit={editingClient ? handleUpdateClient : handleAddClient}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+                gap: '16px',
+                marginBottom: '16px'
+              }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.firstName}
+                    onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.lastName}
+                    onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="Enter last name"
+                  />
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="Enter email address"
+                  />
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Event Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newClient.eventDate}
+                    onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Notes
+                  </label>
+                  <textarea
+                    value={newClient.notes}
+                    onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px',
+                      resize: 'vertical'
+                    }}
+                    placeholder="Enter any additional notes"
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {loading ? (editingClient ? 'Updating...' : 'Adding...') : (editingClient ? 'Update Client' : 'Add Client')}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Clients List */}
+        {clients.length === 0 ? (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '48px 24px',
+            textAlign: 'center'
+          }}>
+            <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
+              No clients found. Add your first client to get started.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {clients.map(client => (
+              <div key={client.id} style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '20px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'start',
+                  marginBottom: '12px',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: isMobile ? '12px' : '0'
                 }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
+                      {client.firstName} {client.lastName}
+                    </h3>
+                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                      {client.email}
+                    </p>
+                    {client.phone && (
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                        {client.phone}
+                      </p>
+                    )}
+                    {client.eventDate && (
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                        Event: {new Date(client.eventDate).toLocaleDateString()}
+                      </p>
+                    )}
+                    {client.notes && (
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                        {client.notes}
+                      </p>
+                    )}
+                  </div>
                   <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'start', 
-                    marginBottom: '12px',
-                    flexDirection: isMobile ? 'column' : 'row',
-                    gap: isMobile ? '8px' : '0'
+                    gap: '8px',
+                    flexDirection: isMobile ? 'column' : 'row'
                   }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
-                        {client.firstName} {client.lastName}
-                      </h3>
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>{client.email}</p>
-                      {client.phone && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>{client.phone}</p>
-                      )}
-                      {client.eventDate && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Event: {new Date(client.eventDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
@@ -472,32 +496,38 @@ export default function ClientsPage() {
                       Added {new Date(client.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '8px',
-                    flexDirection: isMobile ? 'column' : 'row'
-                  }}>
-                    <button
-                      onClick={() => handleEditClient(client)}
-                      style={{
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        padding: isMobile ? '10px 16px' : '6px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: isMobile ? '14px' : '12px',
-                        fontWeight: '500',
-                        width: isMobile ? '100%' : 'auto'
-                      }}
-                      title="Edit client details"
-                    >
-                      Edit
-                    </button>
-                  </div>
                 </div>
-              ))}
-            </div>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '8px',
+                  flexWrap: 'wrap'
+                }}>
+                  <button
+                    onClick={() => handleEditClient(client)}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#047857';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#059669';
+                    }}
+                    title="Edit client details"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
