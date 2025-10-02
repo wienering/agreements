@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'First name, last name, and email are required' }, { status: 400 });
     }
 
-    // Create client with all available fields
     const client = await prisma.client.create({
       data: {
         firstName,
@@ -43,33 +42,17 @@ export async function POST(request: NextRequest) {
         email,
         phone: phone || null,
         eventDate: eventDate ? new Date(eventDate) : null,
+        // TODO: Uncomment after running database migration
+        // eventType: eventType || null,
+        // eventLocation: eventLocation || null,
+        // eventStartTime: eventStartTime || null,
+        // eventDuration: eventDuration || null,
+        // eventPackage: eventPackage || null,
         notes: notes || null,
       },
     });
 
-    // Try to update with event fields if they exist in database
-    try {
-      await prisma.$executeRaw`
-        UPDATE "Client" 
-        SET "eventType" = ${eventType || null},
-            "eventLocation" = ${eventLocation || null},
-            "eventStartTime" = ${eventStartTime || null},
-            "eventDuration" = ${eventDuration || null},
-            "eventPackage" = ${eventPackage || null}
-        WHERE "id" = ${client.id}
-      `;
-      
-      // Fetch updated client with event fields
-      const updatedClient = await prisma.client.findUnique({
-        where: { id: client.id }
-      });
-      
-      return NextResponse.json(updatedClient, { status: 201 });
-    } catch (error: any) {
-      // If event fields don't exist, just return the basic client
-      console.log('Event fields not available in database, returning basic client');
-      return NextResponse.json(client, { status: 201 });
-    }
+    return NextResponse.json(client, { status: 201 });
   } catch (error) {
     console.error('Error creating client:', error);
     return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
