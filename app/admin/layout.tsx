@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import Image from 'next/image';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 export default function AdminLayout({
   children,
@@ -12,6 +12,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const { isDark, toggleDarkMode } = useDarkMode();
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊', href: '/admin', tooltip: 'Dashboard overview and statistics' },
@@ -28,11 +29,12 @@ export default function AdminLayout({
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: '#f8fafc'
+        backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+        color: isDark ? '#f8fafc' : '#0f172a'
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
-          <p style={{ color: '#64748b', fontSize: '16px' }}>Loading...</p>
+          <p style={{ fontSize: '16px' }}>Loading...</p>
         </div>
       </div>
     );
@@ -43,12 +45,18 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
+  const sidebarBg = isDark ? '#1e293b' : '#1e293b';
+  const mainBg = isDark ? '#0f172a' : '#f8fafc';
+  const textColor = isDark ? '#f8fafc' : '#0f172a';
+  const cardBg = isDark ? '#1e293b' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: mainBg }}>
       {/* Sidebar */}
       <div style={{ 
         width: '250px', 
-        backgroundColor: '#1e293b', 
+        backgroundColor: sidebarBg, 
         color: 'white', 
         padding: '24px 0',
         boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
@@ -115,8 +123,40 @@ export default function AdminLayout({
           })}
         </nav>
 
+        {/* Dark Mode Toggle */}
+        <div style={{ padding: '0 24px', marginBottom: '16px' }}>
+          <button
+            onClick={toggleDarkMode}
+            style={{
+              width: '100%',
+              padding: '12px 24px',
+              backgroundColor: '#374151',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'background-color 0.2s',
+            }}
+            title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#4b5563';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#374151';
+            }}
+          >
+            <span>{isDark ? '☀️' : '🌙'}</span>
+            {isDark ? 'Light Mode' : 'Dark Mode'}
+          </button>
+        </div>
+
         {/* Logout Button */}
-        <div style={{ padding: '0 24px', marginTop: 'auto', marginBottom: '24px' }}>
+        <div style={{ padding: '0 24px', marginBottom: '24px' }}>
           <button
             onClick={() => signOut({ callbackUrl: '/admin/login' })}
             style={{
@@ -149,7 +189,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <div style={{ flex: 1, backgroundColor: mainBg }}>
         {children}
       </div>
     </div>

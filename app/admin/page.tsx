@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 export default function AdminHome() {
   const [showSmartFields, setShowSmartFields] = useState(false);
+  const { isDark } = useDarkMode();
 
   // Sample agreement data
   const sampleAgreement = {
@@ -44,14 +46,20 @@ export default function AdminHome() {
     { field: '{{pricing.total}}', description: 'Total price', example: sampleAgreement.pricing.total },
   ];
 
+  const mainBg = isDark ? '#0f172a' : '#f8fafc';
+  const textColor = isDark ? '#f8fafc' : '#0f172a';
+  const cardBg = isDark ? '#1e293b' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mutedText = isDark ? '#94a3b8' : '#64748b';
+
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{ padding: '24px', backgroundColor: mainBg, minHeight: '100vh', color: textColor }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: '#0f172a', fontWeight: 'bold' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: textColor, fontWeight: 'bold' }}>
             Photobooth Guys - Admin Dashboard
           </h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '16px' }}>
+          <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
             Manage your client agreements and templates
           </p>
         </div>
@@ -81,43 +89,43 @@ export default function AdminHome() {
       {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px' }}>
         <div style={{ 
-          backgroundColor: 'white', 
+          backgroundColor: cardBg, 
           padding: '24px', 
           borderRadius: '8px', 
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
+          border: `1px solid ${borderColor}`
         }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '16px', fontWeight: '600' }}>Total Clients</h3>
+          <h3 style={{ margin: '0 0 8px 0', color: textColor, fontSize: '16px', fontWeight: '600' }}>Total Clients</h3>
           <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#059669' }}>0</p>
         </div>
         <div style={{ 
-          backgroundColor: 'white', 
+          backgroundColor: cardBg, 
           padding: '24px', 
           borderRadius: '8px', 
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
+          border: `1px solid ${borderColor}`
         }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '16px', fontWeight: '600' }}>Templates</h3>
+          <h3 style={{ margin: '0 0 8px 0', color: textColor, fontSize: '16px', fontWeight: '600' }}>Templates</h3>
           <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#059669' }}>0</p>
         </div>
         <div style={{ 
-          backgroundColor: 'white', 
+          backgroundColor: cardBg, 
           padding: '24px', 
           borderRadius: '8px', 
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
+          border: `1px solid ${borderColor}`
         }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '16px', fontWeight: '600' }}>Active Agreements</h3>
+          <h3 style={{ margin: '0 0 8px 0', color: textColor, fontSize: '16px', fontWeight: '600' }}>Active Agreements</h3>
           <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#059669' }}>0</p>
         </div>
         <div style={{ 
-          backgroundColor: 'white', 
+          backgroundColor: cardBg, 
           padding: '24px', 
           borderRadius: '8px', 
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
+          border: `1px solid ${borderColor}`
         }}>
-          <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '16px', fontWeight: '600' }}>Signed This Week</h3>
+          <h3 style={{ margin: '0 0 8px 0', color: textColor, fontSize: '16px', fontWeight: '600' }}>Signed This Week</h3>
           <p style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#059669' }}>0</p>
         </div>
       </div>
@@ -125,24 +133,24 @@ export default function AdminHome() {
       {/* Smart Fields Panel */}
       {showSmartFields && (
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: cardBg,
           padding: '24px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${borderColor}`,
           marginBottom: '32px'
         }}>
-          <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: '#0f172a', fontWeight: 'bold' }}>Available Smart Fields</h2>
-          <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '16px' }}>
+          <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>Available Smart Fields</h2>
+          <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
             Use these fields in your templates to automatically populate client and event information.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
             {smartFields.map((field, index) => (
               <div key={index} style={{
                 padding: '12px',
-                backgroundColor: '#f8fafc',
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                 borderRadius: '6px',
-                border: '1px solid #e2e8f0'
+                border: `1px solid ${borderColor}`
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                   <code style={{
@@ -162,14 +170,14 @@ export default function AdminHome() {
                       border: 'none',
                       cursor: 'pointer',
                       fontSize: '12px',
-                      color: '#64748b'
+                      color: mutedText
                     }}
                     title="Copy to clipboard"
                   >
                     📋
                   </button>
                 </div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748b' }}>{field.description}</p>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: mutedText }}>{field.description}</p>
                 <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '500' }}>
                   Example: {field.example}
                 </p>
@@ -181,26 +189,27 @@ export default function AdminHome() {
 
       {/* Sample Agreement */}
       <div style={{
-        backgroundColor: 'white',
+        backgroundColor: cardBg,
         padding: '24px',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: '1px solid #e2e8f0'
+        border: `1px solid ${borderColor}`
       }}>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: '#0f172a', fontWeight: 'bold' }}>Sample Agreement Preview</h2>
-        <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '16px' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>Sample Agreement Preview</h2>
+        <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
           This shows how smart fields work in a real agreement template.
         </p>
         
         <div style={{
-          border: '1px solid #d1d5db',
+          border: `1px solid ${borderColor}`,
           borderRadius: '6px',
           padding: '24px',
-          backgroundColor: '#fafafa',
+          backgroundColor: isDark ? '#0f172a' : '#fafafa',
           fontFamily: 'Georgia, serif',
-          lineHeight: '1.6'
+          lineHeight: '1.6',
+          color: textColor
         }}>
-          <h1 style={{ textAlign: 'center', margin: '0 0 24px 0', color: '#0f172a' }}>
+          <h1 style={{ textAlign: 'center', margin: '0 0 24px 0', color: textColor }}>
             Photobooth Guys - Photography Services Agreement
           </h1>
           
@@ -209,19 +218,19 @@ export default function AdminHome() {
           <p><strong>Phone:</strong> {sampleAgreement.client.phone}</p>
           <p><strong>Event Date:</strong> {sampleAgreement.client.eventDate}</p>
           
-          <h2 style={{ margin: '24px 0 12px 0', color: '#0f172a' }}>Event Details</h2>
+          <h2 style={{ margin: '24px 0 12px 0', color: textColor }}>Event Details</h2>
           <p><strong>Event Type:</strong> {sampleAgreement.event.type}</p>
           <p><strong>Location:</strong> {sampleAgreement.event.location}</p>
           <p><strong>Start Time:</strong> {sampleAgreement.event.startTime}</p>
           <p><strong>Duration:</strong> {sampleAgreement.event.duration}</p>
           <p><strong>Package:</strong> {sampleAgreement.event.package}</p>
           
-          <h2 style={{ margin: '24px 0 12px 0', color: '#0f172a' }}>Pricing</h2>
+          <h2 style={{ margin: '24px 0 12px 0', color: textColor }}>Pricing</h2>
           <p><strong>Base Price:</strong> {sampleAgreement.pricing.basePrice}</p>
           <p><strong>Additional Hours:</strong> {sampleAgreement.pricing.additionalHours}</p>
           <p><strong>Total Amount:</strong> {sampleAgreement.pricing.total}</p>
           
-          <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #d1d5db' }}>
+          <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: `1px solid ${borderColor}` }}>
             <p><strong>Client Signature:</strong> _________________________</p>
             <p><strong>Date:</strong> _________________________</p>
           </div>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useDarkMode } from '../../contexts/DarkModeContext';
+import { useRouter } from 'next/navigation';
 
 interface Template {
   id: string;
@@ -14,12 +16,15 @@ interface Template {
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showSmartFields, setShowSmartFields] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     htmlContent: '',
     fieldsSchema: {}
   });
+  const { isDark } = useDarkMode();
+  const router = useRouter();
 
   // Fetch templates on component mount
   useEffect(() => {
@@ -69,49 +74,154 @@ export default function TemplatesPage() {
     }
   };
 
+  const handleUseTemplate = (templateId: string) => {
+    router.push(`/admin/agreements?templateId=${templateId}`);
+  };
+
+  const mainBg = isDark ? '#0f172a' : '#f8fafc';
+  const textColor = isDark ? '#f8fafc' : '#0f172a';
+  const cardBg = isDark ? '#1e293b' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mutedText = isDark ? '#94a3b8' : '#64748b';
+  const inputBg = isDark ? '#0f172a' : '#ffffff';
+
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{ padding: '24px', backgroundColor: mainBg, minHeight: '100vh', color: textColor }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: '#0f172a', fontWeight: 'bold' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: textColor, fontWeight: 'bold' }}>
             Photobooth Guys - Templates
           </h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '16px' }}>
+          <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
             Create and manage agreement templates
           </p>
         </div>
-        <button 
-          onClick={() => setShowAddForm(true)}
-          style={{
-            backgroundColor: '#059669',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: '500',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}
-          title="Create a new agreement template"
-        >
-          + Add Template
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => setShowSmartFields(!showSmartFields)}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+            title="View all available smart fields for templates"
+          >
+            <span>🔧</span>
+            {showSmartFields ? 'Hide' : 'Show'} Smart Fields
+          </button>
+          <button 
+            onClick={() => setShowAddForm(true)}
+            style={{
+              backgroundColor: '#059669',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+            title="Create a new agreement template"
+          >
+            + Add Template
+          </button>
+        </div>
       </div>
 
-      {showAddForm && (
+      {/* Smart Fields Panel */}
+      {showSmartFields && (
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: cardBg,
           padding: '24px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${borderColor}`,
           marginBottom: '24px'
         }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: '#0f172a', fontWeight: 'bold' }}>Add New Template</h2>
+          <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>Available Smart Fields</h2>
+          <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
+            Use these fields in your templates to automatically populate client and event information.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
+            {[
+              { field: '{{client.firstName}}', description: 'Client first name', example: 'John' },
+              { field: '{{client.lastName}}', description: 'Client last name', example: 'Smith' },
+              { field: '{{client.email}}', description: 'Client email address', example: 'john@example.com' },
+              { field: '{{client.phone}}', description: 'Client phone number', example: '(555) 123-4567' },
+              { field: '{{client.eventDate}}', description: 'Event date', example: '2024-06-15' },
+              { field: '{{event.type}}', description: 'Type of event', example: 'Wedding Photography' },
+              { field: '{{event.location}}', description: 'Event location', example: 'Grand Ballroom' },
+              { field: '{{event.startTime}}', description: 'Event start time', example: '2:00 PM' },
+              { field: '{{event.duration}}', description: 'Event duration', example: '8 hours' },
+              { field: '{{event.package}}', description: 'Package selected', example: 'Premium Package' },
+              { field: '{{pricing.basePrice}}', description: 'Base package price', example: '$2,500' },
+              { field: '{{pricing.additionalHours}}', description: 'Additional hours rate', example: '$300/hour' },
+              { field: '{{pricing.total}}', description: 'Total price', example: '$2,500' },
+            ].map((field, index) => (
+              <div key={index} style={{
+                padding: '12px',
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                borderRadius: '6px',
+                border: `1px solid ${borderColor}`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <code style={{
+                    backgroundColor: '#1e293b',
+                    color: '#f8fafc',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontFamily: 'monospace'
+                  }}>
+                    {field.field}
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(field.field)}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      color: mutedText
+                    }}
+                    title="Copy to clipboard"
+                  >
+                    📋
+                  </button>
+                </div>
+                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: mutedText }}>{field.description}</p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '500' }}>
+                  Example: {field.example}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showAddForm && (
+        <div style={{
+          backgroundColor: cardBg,
+          padding: '24px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: `1px solid ${borderColor}`,
+          marginBottom: '24px'
+        }}>
+          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>Add New Template</h2>
           <form onSubmit={handleAddTemplate}>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 Template Title *
               </label>
               <input
@@ -124,16 +234,17 @@ export default function TemplatesPage() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   fontSize: '16px',
-                  backgroundColor: 'white'
+                  backgroundColor: inputBg,
+                  color: textColor
                 }}
               />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 HTML Content *
               </label>
               <textarea
@@ -146,21 +257,22 @@ export default function TemplatesPage() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   fontSize: '16px',
                   fontFamily: 'monospace',
                   resize: 'vertical',
-                  backgroundColor: 'white'
+                  backgroundColor: inputBg,
+                  color: textColor
                 }}
               />
-              <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '14px' }}>
+              <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
                 Use smart fields like {`{{client.firstName}}`}, {`{{client.lastName}}`}, {`{{eventDate}}`} etc.
               </p>
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 Fields Schema (JSON)
               </label>
               <textarea
@@ -178,15 +290,16 @@ export default function TemplatesPage() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   fontSize: '16px',
                   fontFamily: 'monospace',
                   resize: 'vertical',
-                  backgroundColor: 'white'
+                  backgroundColor: inputBg,
+                  color: textColor
                 }}
               />
-              <p style={{ margin: '8px 0 0 0', color: '#64748b', fontSize: '14px' }}>
+              <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
                 Define field types, requirements, and permissions. Leave empty for now.
               </p>
             </div>
@@ -233,48 +346,81 @@ export default function TemplatesPage() {
 
       {/* Templates List */}
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: cardBg, 
         borderRadius: '8px', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: '1px solid #e2e8f0',
+        border: `1px solid ${borderColor}`,
         padding: '24px'
       }}>
         {templates.length === 0 ? (
-          <p style={{ color: '#64748b', fontSize: '16px', textAlign: 'center' }}>No templates yet. Create your first template to get started.</p>
+          <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No templates yet. Create your first template to get started.</p>
         ) : (
           <div>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: '#0f172a', fontWeight: 'bold' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
               Templates ({templates.length})
             </h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               {templates.map((template) => (
                 <div key={template.id} style={{
                   padding: '16px',
-                  border: '1px solid #e2e8f0',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
-                  backgroundColor: '#f8fafc'
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                     <div>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#0f172a', fontWeight: '600' }}>
+                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
                         {template.title}
                       </h3>
-                      <p style={{ margin: '0 0 4px 0', color: '#64748b', fontSize: '14px' }}>
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                         Version {template.version}
                       </p>
-                      <p style={{ margin: '0 0 4px 0', color: '#64748b', fontSize: '14px' }}>
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                         {template.htmlContent.length} characters
                       </p>
                     </div>
                     <span style={{ 
                       fontSize: '12px', 
-                      color: '#9ca3af',
-                      backgroundColor: '#f1f5f9',
+                      color: mutedText,
+                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px'
                     }}>
                       Created {new Date(template.createdAt).toLocaleDateString()}
                     </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => handleUseTemplate(template.id)}
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                      title="Use this template to create an agreement"
+                    >
+                      Use This Template
+                    </button>
+                    <button
+                      style={{
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                      title="View template details"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               ))}

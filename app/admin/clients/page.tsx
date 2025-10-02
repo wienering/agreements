@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useDarkMode } from '../../contexts/DarkModeContext';
 
 interface Client {
   id: string;
@@ -25,6 +26,7 @@ export default function ClientsPage() {
     eventDate: '',
     notes: ''
   });
+  const { isDark } = useDarkMode();
 
   // Fetch clients on component mount
   useEffect(() => {
@@ -74,14 +76,21 @@ export default function ClientsPage() {
     }
   };
 
+  const mainBg = isDark ? '#0f172a' : '#f8fafc';
+  const textColor = isDark ? '#f8fafc' : '#0f172a';
+  const cardBg = isDark ? '#1e293b' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mutedText = isDark ? '#94a3b8' : '#64748b';
+  const inputBg = isDark ? '#0f172a' : '#ffffff';
+
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{ padding: '24px', backgroundColor: mainBg, minHeight: '100vh', color: textColor }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: '#0f172a', fontWeight: 'bold' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: textColor, fontWeight: 'bold' }}>
             Photobooth Guys - Clients
           </h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '16px' }}>
+          <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
             Manage your client information
           </p>
         </div>
@@ -106,18 +115,18 @@ export default function ClientsPage() {
 
       {showAddForm && (
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: cardBg,
           padding: '24px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${borderColor}`,
           marginBottom: '24px'
         }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: '#0f172a', fontWeight: 'bold' }}>Add New Client</h2>
+          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>Add New Client</h2>
           <form onSubmit={handleAddClient}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                   First Name *
                 </label>
                 <input
@@ -129,15 +138,16 @@ export default function ClientsPage() {
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
-                    backgroundColor: 'white'
+                    backgroundColor: inputBg,
+                    color: textColor
                   }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                   Last Name *
                 </label>
                 <input
@@ -149,10 +159,11 @@ export default function ClientsPage() {
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
-                    backgroundColor: 'white'
+                    backgroundColor: inputBg,
+                    color: textColor
                   }}
                 />
               </div>
@@ -160,7 +171,7 @@ export default function ClientsPage() {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                   Email *
                 </label>
                 <input
@@ -172,15 +183,16 @@ export default function ClientsPage() {
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
-                    backgroundColor: 'white'
+                    backgroundColor: inputBg,
+                    color: textColor
                   }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                   Phone
                 </label>
                 <input
@@ -191,17 +203,18 @@ export default function ClientsPage() {
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: '1px solid #d1d5db',
+                    border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
-                    backgroundColor: 'white'
+                    backgroundColor: inputBg,
+                    color: textColor
                   }}
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 Event Date
               </label>
               <input
@@ -212,16 +225,17 @@ export default function ClientsPage() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   fontSize: '16px',
-                  backgroundColor: 'white'
+                  backgroundColor: inputBg,
+                  color: textColor
                 }}
               />
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#374151' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 Notes
               </label>
               <textarea
@@ -232,11 +246,12 @@ export default function ClientsPage() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   fontSize: '16px',
                   resize: 'vertical',
-                  backgroundColor: 'white'
+                  backgroundColor: inputBg,
+                  color: textColor
                 }}
               />
             </div>
@@ -283,46 +298,46 @@ export default function ClientsPage() {
 
       {/* Clients List */}
       <div style={{ 
-        backgroundColor: 'white', 
+        backgroundColor: cardBg, 
         borderRadius: '8px', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: '1px solid #e2e8f0',
+        border: `1px solid ${borderColor}`,
         padding: '24px'
       }}>
         {clients.length === 0 ? (
-          <p style={{ color: '#64748b', fontSize: '16px', textAlign: 'center' }}>No clients yet. Add your first client to get started.</p>
+          <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No clients yet. Add your first client to get started.</p>
         ) : (
           <div>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: '#0f172a', fontWeight: 'bold' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
               Clients ({clients.length})
             </h2>
             <div style={{ display: 'grid', gap: '12px' }}>
               {clients.map((client) => (
                 <div key={client.id} style={{
                   padding: '16px',
-                  border: '1px solid #e2e8f0',
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
-                  backgroundColor: '#f8fafc'
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                     <div>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#0f172a', fontWeight: '600' }}>
+                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
                         {client.firstName} {client.lastName}
                       </h3>
-                      <p style={{ margin: '0 0 4px 0', color: '#64748b', fontSize: '14px' }}>{client.email}</p>
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>{client.email}</p>
                       {client.phone && (
-                        <p style={{ margin: '0 0 4px 0', color: '#64748b', fontSize: '14px' }}>{client.phone}</p>
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>{client.phone}</p>
                       )}
                       {client.eventDate && (
-                        <p style={{ margin: '0 0 4px 0', color: '#64748b', fontSize: '14px' }}>
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                           Event: {new Date(client.eventDate).toLocaleDateString()}
                         </p>
                       )}
                     </div>
                     <span style={{ 
                       fontSize: '12px', 
-                      color: '#9ca3af',
-                      backgroundColor: '#f1f5f9',
+                      color: mutedText,
+                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px'
                     }}>
