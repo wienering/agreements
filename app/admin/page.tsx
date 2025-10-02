@@ -7,43 +7,20 @@ export default function AdminHome() {
   const [showSmartFields, setShowSmartFields] = useState(false);
   const { isDark } = useDarkMode();
 
-  // Sample agreement data
-  const sampleAgreement = {
-    client: {
-      firstName: 'John',
-      lastName: 'Smith',
-      email: 'john.smith@example.com',
-      phone: '(555) 123-4567',
-      eventDate: '2024-06-15'
-    },
-    event: {
-      type: 'Wedding Photography',
-      location: 'Grand Ballroom, Downtown Hotel',
-      startTime: '2:00 PM',
-      duration: '8 hours',
-      package: 'Premium Package'
-    },
-    pricing: {
-      basePrice: '$2,500',
-      additionalHours: '$300/hour',
-      total: '$2,500'
-    }
-  };
-
   const smartFields = [
-    { field: '{{client.firstName}}', description: 'Client first name', example: sampleAgreement.client.firstName },
-    { field: '{{client.lastName}}', description: 'Client last name', example: sampleAgreement.client.lastName },
-    { field: '{{client.email}}', description: 'Client email address', example: sampleAgreement.client.email },
-    { field: '{{client.phone}}', description: 'Client phone number', example: sampleAgreement.client.phone },
-    { field: '{{client.eventDate}}', description: 'Event date', example: sampleAgreement.client.eventDate },
-    { field: '{{event.type}}', description: 'Type of event', example: sampleAgreement.event.type },
-    { field: '{{event.location}}', description: 'Event location', example: sampleAgreement.event.location },
-    { field: '{{event.startTime}}', description: 'Event start time', example: sampleAgreement.event.startTime },
-    { field: '{{event.duration}}', description: 'Event duration', example: sampleAgreement.event.duration },
-    { field: '{{event.package}}', description: 'Package selected', example: sampleAgreement.event.package },
-    { field: '{{pricing.basePrice}}', description: 'Base package price', example: sampleAgreement.pricing.basePrice },
-    { field: '{{pricing.additionalHours}}', description: 'Additional hours rate', example: sampleAgreement.pricing.additionalHours },
-    { field: '{{pricing.total}}', description: 'Total price', example: sampleAgreement.pricing.total },
+    { field: '{{client.firstName}}', description: 'Client first name', example: 'John' },
+    { field: '{{client.lastName}}', description: 'Client last name', example: 'Smith' },
+    { field: '{{client.email}}', description: 'Client email address', example: 'john.smith@example.com' },
+    { field: '{{client.phone}}', description: 'Client phone number', example: '(555) 123-4567' },
+    { field: '{{client.eventDate}}', description: 'Event date', example: '2024-06-15' },
+    { field: '{{event.type}}', description: 'Type of event', example: 'Wedding Photography' },
+    { field: '{{event.location}}', description: 'Event location', example: 'Grand Ballroom, Downtown Hotel' },
+    { field: '{{event.startTime}}', description: 'Event start time', example: '2:00 PM' },
+    { field: '{{event.duration}}', description: 'Event duration', example: '8 hours' },
+    { field: '{{event.package}}', description: 'Package selected', example: 'Premium Package' },
+    { field: '{{pricing.basePrice}}', description: 'Base package price', example: '$2,500' },
+    { field: '{{pricing.additionalHours}}', description: 'Additional hours rate', example: '$300/hour' },
+    { field: '{{pricing.total}}', description: 'Total price', example: '$2,500' },
   ];
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
@@ -187,62 +164,6 @@ export default function AdminHome() {
         </div>
       )}
 
-      {/* Sample Agreement */}
-      <div style={{
-        backgroundColor: cardBg,
-        padding: '24px',
-        borderRadius: '8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: `1px solid ${borderColor}`
-      }}>
-        <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>Sample Agreement Preview</h2>
-        <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
-          This shows how smart fields work in a real agreement template.
-        </p>
-        
-        <div style={{
-          border: `1px solid ${borderColor}`,
-          borderRadius: '6px',
-          padding: '24px',
-          backgroundColor: isDark ? '#0f172a' : '#fafafa',
-          fontFamily: 'Georgia, serif',
-          lineHeight: '1.6',
-          color: textColor
-        }}>
-          <h1 style={{ textAlign: 'center', margin: '0 0 24px 0', color: textColor }}>
-            Photobooth Guys - Photography Services Agreement
-          </h1>
-          
-          <p><strong>Client:</strong> {sampleAgreement.client.firstName} {sampleAgreement.client.lastName}</p>
-          <p><strong>Email:</strong> {sampleAgreement.client.email}</p>
-          <p><strong>Phone:</strong> {sampleAgreement.client.phone}</p>
-          <p><strong>Event Date:</strong> {sampleAgreement.client.eventDate}</p>
-          
-          <h2 style={{ margin: '24px 0 12px 0', color: textColor }}>Event Details</h2>
-          <p><strong>Event Type:</strong> {sampleAgreement.event.type}</p>
-          <p><strong>Location:</strong> {sampleAgreement.event.location}</p>
-          <p><strong>Start Time:</strong> {sampleAgreement.event.startTime}</p>
-          <p><strong>Duration:</strong> {sampleAgreement.event.duration}</p>
-          <p><strong>Package:</strong> {sampleAgreement.event.package}</p>
-          
-          <h2 style={{ margin: '24px 0 12px 0', color: textColor }}>Pricing</h2>
-          <p><strong>Base Price:</strong> {sampleAgreement.pricing.basePrice}</p>
-          <p><strong>Additional Hours:</strong> {sampleAgreement.pricing.additionalHours}</p>
-          <p><strong>Total Amount:</strong> {sampleAgreement.pricing.total}</p>
-          
-          <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: `1px solid ${borderColor}` }}>
-            <p><strong>Client Signature:</strong> _________________________</p>
-            <p><strong>Date:</strong> _________________________</p>
-          </div>
-        </div>
-        
-        <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f0f9ff', borderRadius: '6px', border: '1px solid #bae6fd' }}>
-          <p style={{ margin: 0, fontSize: '14px', color: '#0369a1' }}>
-            💡 <strong>Tip:</strong> This agreement uses smart fields like {`{{client.firstName}}`}, {`{{event.type}}`}, and {`{{pricing.total}}`} 
-            that automatically populate with real client data when you create an agreement.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ interface Client {
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(false);
   const [newClient, setNewClient] = useState({
     firstName: '',
@@ -76,6 +77,59 @@ export default function ClientsPage() {
     }
   };
 
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setNewClient({
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phone: client.phone || '',
+      eventDate: client.eventDate ? new Date(client.eventDate).toISOString().split('T')[0] : '',
+      notes: client.notes || ''
+    });
+    setShowAddForm(true);
+  };
+
+  const handleUpdateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClient) return;
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`/api/clients/${editingClient.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newClient),
+      });
+
+      if (response.ok) {
+        const updatedClient = await response.json();
+        setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
+        setShowAddForm(false);
+        setEditingClient(null);
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
+        alert('Client updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating client:', error);
+      alert('Failed to update client');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowAddForm(false);
+    setEditingClient(null);
+    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const textColor = isDark ? '#f8fafc' : '#0f172a';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
@@ -122,8 +176,10 @@ export default function ClientsPage() {
           border: `1px solid ${borderColor}`,
           marginBottom: '24px'
         }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>Add New Client</h2>
-          <form onSubmit={handleAddClient}>
+          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
+            {editingClient ? 'Edit Client' : 'Add New Client'}
+          </h2>
+          <form onSubmit={editingClient ? handleUpdateClient : handleAddClient}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
@@ -276,13 +332,13 @@ export default function ClientsPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
-                title="Save the new client"
+                title={editingClient ? 'Save client changes' : 'Save the new client'}
               >
-                {loading ? 'Adding...' : 'Add Client'}
+                {loading ? (editingClient ? 'Updating...' : 'Adding...') : (editingClient ? 'Update Client' : 'Add Client')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={handleCancelEdit}
                 style={{
                   backgroundColor: '#6b7280',
                   color: 'white',
@@ -293,7 +349,7 @@ export default function ClientsPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
-                title="Cancel adding client"
+                title="Cancel"
               >
                 Cancel
               </button>
@@ -325,7 +381,7 @@ export default function ClientsPage() {
                   borderRadius: '6px',
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                     <div>
                       <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
                         {client.firstName} {client.lastName}
@@ -349,6 +405,24 @@ export default function ClientsPage() {
                     }}>
                       Added {new Date(client.createdAt).toLocaleDateString()}
                     </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => handleEditClient(client)}
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                      title="Edit client details"
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
               ))}
