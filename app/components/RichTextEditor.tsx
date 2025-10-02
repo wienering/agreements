@@ -14,75 +14,66 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Convert HTML to plain text for editing
-  const htmlToPlainText = (html: string) => {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    return temp.textContent || temp.innerText || '';
+  const htmlToPlainText = (html: string): string => {
+    if (!html) return '';
+    // Convert <br> tags to newlines
+    return html.replace(/<br\s*\/?>/gi, '\n');
   };
 
   // Convert plain text to HTML for storage
-  const plainTextToHtml = (text: string) => {
-    return text
-      .split('\n')
-      .map(line => line.trim() === '' ? '<br>' : line)
-      .join('\n')
-      .replace(/\n/g, '<br>');
+  const plainTextToHtml = (text: string): string => {
+    if (!text) return '';
+    // Convert newlines to <br> tags
+    return text.replace(/\n/g, '<br>');
   };
 
+  // Get the current plain text value
+  const getPlainTextValue = (): string => {
+    return htmlToPlainText(value);
+  };
+
+  // Handle text changes
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const plainText = e.target.value;
     const html = plainTextToHtml(plainText);
     onChange(html);
   };
 
+  // Handle key down events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle Enter key for line breaks
+    // Allow Enter key to create new lines
     if (e.key === 'Enter') {
-      e.preventDefault();
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const text = textarea.value;
-      
-      // Insert line break at cursor position
-      const newText = text.substring(0, start) + '\n' + text.substring(end);
-      const html = plainTextToHtml(newText);
-      onChange(html);
-      
-      // Update textarea value and cursor position
-      textarea.value = newText;
-      const newCursorPos = start + 1;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      // Let the default behavior happen (creates newline)
+      return;
     }
   };
 
+  // Handle paste events
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
-    const pastedText = e.clipboardData.getData('text/plain');
-    const textarea = e.currentTarget;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
+    const text = e.clipboardData.getData('text/plain');
+    const selectionStart = textareaRef.current?.selectionStart || 0;
+    const selectionEnd = textareaRef.current?.selectionEnd || 0;
+    const currentValue = getPlainTextValue();
     
-    // Insert pasted text at cursor position
-    const newText = text.substring(0, start) + pastedText + text.substring(end);
-    const html = plainTextToHtml(newText);
+    const newValue = currentValue.substring(0, selectionStart) + text + currentValue.substring(selectionEnd);
+    const html = plainTextToHtml(newValue);
     onChange(html);
     
-    // Update textarea value and cursor position
-    textarea.value = newText;
-    const newCursorPos = start + pastedText.length;
-    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    // Set cursor position after pasted text
+    setTimeout(() => {
+      if (textareaRef.current) {
+        const newCursorPos = selectionStart + text.length;
+        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
   };
-
-  // Convert HTML to plain text for display
-  const displayValue = htmlToPlainText(value);
 
   return (
     <div style={{ position: 'relative' }}>
       <textarea
         ref={textareaRef}
-        value={displayValue}
+        value={getPlainTextValue()}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
@@ -103,6 +94,7 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           resize: 'vertical',
           outline: 'none',
           transition: 'border-color 0.2s',
+          whiteSpace: 'pre-wrap',
           ...style
         }}
       />
