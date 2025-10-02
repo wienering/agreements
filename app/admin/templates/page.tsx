@@ -91,12 +91,12 @@ export default function TemplatesPage() {
     setLoading(true);
     
     try {
-      const response = await fetch(`/api/templates/${editingTemplate.id}`, {
+      const response = await fetch(`/api/templates/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newTemplate),
+        body: JSON.stringify({ ...newTemplate, id: editingTemplate.id }),
       });
 
       if (response.ok) {
