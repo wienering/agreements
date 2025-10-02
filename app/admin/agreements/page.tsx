@@ -1,51 +1,56 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
-import { useSearchParams } from 'next/navigation';
-
-interface Client {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
-interface Template {
-  id: string;
-  title: string;
-  htmlContent: string;
-  version: number;
-}
+import { useRouter } from 'next/navigation';
 
 interface Agreement {
   id: string;
-  client: Client;
-  template: Template;
-  status: string;
   uniqueToken: string;
-  expiresAt: string | null;
+  status: 'DRAFT' | 'SENT' | 'SIGNED' | 'EXPIRED';
+  expiresAt: string;
   createdAt: string;
+  client: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  template: {
+    id: string;
+    title: string;
+    htmlContent: string;
+  };
 }
 
 export default function AgreementsPage() {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showSmartFields, setShowSmartFields] = useState(false);
-  const [showAgreementEditor, setShowAgreementEditor] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [editingContent, setEditingContent] = useState('');
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [newAgreement, setNewAgreement] = useState({
     clientId: '',
     templateId: '',
     expiresAt: ''
   });
   const { isDark } = useDarkMode();
-  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -53,15 +58,6 @@ export default function AgreementsPage() {
     fetchClients();
     fetchTemplates();
   }, []);
-
-  // Handle template pre-selection from URL
-  useEffect(() => {
-    const templateId = searchParams.get('templateId');
-    if (templateId) {
-      setNewAgreement(prev => ({ ...prev, templateId }));
-      setShowCreateForm(true);
-    }
-  }, [searchParams]);
 
   const fetchAgreements = async () => {
     try {
@@ -118,16 +114,16 @@ export default function AgreementsPage() {
         setShowCreateForm(false);
         setNewAgreement({ clientId: '', templateId: '', expiresAt: '' });
         alert('Agreement created successfully!');
-          } else {
-            try {
-              const error = await response.json();
-              const errorMessage = error.error || error.message || 'Unknown error occurred';
-              alert(`Error: ${errorMessage}`);
-            } catch (parseError) {
-              console.error('Failed to parse error response:', parseError);
-              alert(`Error: Failed to create agreement (${response.status})`);
-            }
-          }
+      } else {
+        try {
+          const error = await response.json();
+          const errorMessage = error.error || error.message || 'Unknown error occurred';
+          alert(`Error: ${errorMessage}`);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          alert(`Error: Failed to create agreement (${response.status})`);
+        }
+      }
     } catch (error) {
       console.error('Error creating agreement:', error);
       alert('Failed to create agreement');
@@ -136,10 +132,9 @@ export default function AgreementsPage() {
     }
   };
 
-  const handleViewAgreement = async (agreement: Agreement) => {
+  const handleEditAgreement = (agreement: Agreement) => {
     setSelectedAgreement(agreement);
     setEditingContent(agreement.template.htmlContent);
-    setShowAgreementEditor(true);
   };
 
   const handleSaveAgreement = async () => {
@@ -160,7 +155,6 @@ export default function AgreementsPage() {
 
       if (response.ok) {
         const updatedAgreement = await response.json();
-        // Use the actual response data instead of manual state updates
         setAgreements(agreements.map(a => 
           a.id === selectedAgreement.id ? updatedAgreement : a
         ));
@@ -185,24 +179,8 @@ export default function AgreementsPage() {
   };
 
   const handleSendToClient = async (agreement: Agreement) => {
-    try {
-      const response = await fetch(`/api/agreements/${agreement.id}/send`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        // Update the agreement status
-        setAgreements(agreements.map(a => 
-          a.id === agreement.id ? { ...a, status: 'SENT' } : a
-        ));
-        alert('Agreement sent to client successfully!');
-      } else {
-        alert('Failed to send agreement to client');
-      }
-    } catch (error) {
-      console.error('Error sending agreement:', error);
-      alert('Failed to send agreement to client');
-    }
+    // Send functionality temporarily disabled
+    alert('Send functionality is not yet implemented. Please use the "Copy Link" button to share the agreement with the client.');
   };
 
   const handleDeleteAgreement = async (agreementId: string) => {
@@ -236,507 +214,435 @@ export default function AgreementsPage() {
   };
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const textColor = isDark ? '#f8fafc' : '#0f172a';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const textColor = isDark ? '#f1f5f9' : '#1e293b';
   const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const inputBg = isDark ? '#0f172a' : '#ffffff';
+  const borderColor = isDark ? '#334155' : '#e2e8f0';
 
   return (
-    <div style={{ padding: '24px', backgroundColor: mainBg, minHeight: '100vh', color: textColor }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: textColor, fontWeight: 'bold' }}>
-            Photobooth Guys - Agreements
-          </h1>
-          <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
-            Create and manage client agreements
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: mainBg,
+      padding: isMobile ? '16px' : '24px'
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '24px',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '16px' : '0'
+        }}>
+          <div>
+            <h1 style={{ 
+              margin: '0 0 8px 0', 
+              fontSize: isMobile ? '24px' : '32px', 
+              fontWeight: '700', 
+              color: textColor 
+            }}>
+              Agreements
+            </h1>
+            <p style={{ 
+              margin: '0', 
+              color: mutedText, 
+              fontSize: '16px' 
+            }}>
+              Manage client agreements and contracts
+            </p>
+          </div>
           <button
-            onClick={() => setShowSmartFields(!showSmartFields)}
+            onClick={() => setShowCreateForm(true)}
             style={{
               backgroundColor: '#3b82f6',
               color: 'white',
               border: 'none',
-              padding: '12px 24px',
+              padding: isMobile ? '12px 20px' : '10px 20px',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '16px',
+              fontSize: '14px',
               fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              width: isMobile ? '100%' : 'auto'
             }}
-            title="View all available smart fields for templates"
+            title="Create a new agreement"
           >
-            <span>🔧</span>
-            {showSmartFields ? 'Hide' : 'Show'} Smart Fields
-          </button>
-          <button 
-            onClick={() => setShowCreateForm(true)}
-            style={{
-              backgroundColor: '#059669',
-              color: 'white',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '500',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-            }}
-            title="Create a new agreement for a client"
-          >
-            + Create Agreement
+            + New Agreement
           </button>
         </div>
-      </div>
 
-      {/* Smart Fields Panel */}
-      {showSmartFields && (
-        <div style={{
-          backgroundColor: cardBg,
-          padding: '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: `1px solid ${borderColor}`,
-          marginBottom: '24px'
-        }}>
-          <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>Available Smart Fields</h2>
-          <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
-            Use these fields in your templates to automatically populate client and event information.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
-            {[
-              { field: '{{client.firstName}}', description: 'Client first name', example: 'John' },
-              { field: '{{client.lastName}}', description: 'Client last name', example: 'Smith' },
-              { field: '{{client.email}}', description: 'Client email address', example: 'john@example.com' },
-              { field: '{{client.phone}}', description: 'Client phone number', example: '(555) 123-4567' },
-              { field: '{{client.eventDate}}', description: 'Event date', example: '2024-06-15' },
-              { field: '{{event.type}}', description: 'Type of event', example: 'Wedding Photography' },
-              { field: '{{event.location}}', description: 'Event location', example: 'Grand Ballroom' },
-              { field: '{{event.startTime}}', description: 'Event start time', example: '2:00 PM' },
-              { field: '{{event.duration}}', description: 'Event duration', example: '8 hours' },
-              { field: '{{event.package}}', description: 'Package selected', example: 'Premium Package' },
-              { field: '{{pricing.basePrice}}', description: 'Base package price', example: '$2,500' },
-              { field: '{{pricing.additionalHours}}', description: 'Additional hours rate', example: '$300/hour' },
-              { field: '{{pricing.total}}', description: 'Total price', example: '$2,500' },
-            ].map((field, index) => (
-              <div key={index} style={{
-                padding: '12px',
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                borderRadius: '6px',
-                border: `1px solid ${borderColor}`
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <code style={{
-                    backgroundColor: '#1e293b',
-                    color: '#f8fafc',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontFamily: 'monospace'
-                  }}>
-                    {field.field}
-                  </code>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(field.field)}
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      color: mutedText
-                    }}
-                    title="Copy to clipboard"
-                  >
-                    📋
-                  </button>
-                </div>
-                <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: mutedText }}>{field.description}</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#059669', fontWeight: '500' }}>
-                  Example: {field.example}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {showCreateForm && (
-        <div style={{
-          backgroundColor: cardBg,
-          padding: '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: `1px solid ${borderColor}`,
-          marginBottom: '24px'
-        }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>Create New Agreement</h2>
-          <form onSubmit={handleCreateAgreement}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  Select Client *
-                </label>
-                <select
-                  value={newAgreement.clientId}
-                  onChange={(e) => setNewAgreement({ ...newAgreement, clientId: e.target.value })}
-                  required
-                  title="Choose which client this agreement is for"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor
-                  }}
-                >
-                  <option value="">Choose a client...</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.firstName} {client.lastName} ({client.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                  Select Template *
-                </label>
-                <select
-                  value={newAgreement.templateId}
-                  onChange={(e) => setNewAgreement({ ...newAgreement, templateId: e.target.value })}
-                  required
-                  title="Choose which template to use for this agreement"
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '16px',
-                    backgroundColor: inputBg,
-                    color: textColor
-                  }}
-                >
-                  <option value="">Choose a template...</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.title} (v{template.version})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
-                Expiration Date (Optional)
-              </label>
-              <input
-                type="datetime-local"
-                value={newAgreement.expiresAt}
-                onChange={(e) => setNewAgreement({ ...newAgreement, expiresAt: e.target.value })}
-                title="Set when this agreement expires (optional)"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  backgroundColor: inputBg,
-                  color: textColor
-                }}
-              />
-              <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
-                Leave empty for no expiration
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  backgroundColor: loading ? '#9ca3af' : '#059669',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
-                }}
-                title="Create the agreement and generate client link"
-              >
-                {loading ? 'Creating...' : 'Create Agreement'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                style={{
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
-                }}
-                title="Cancel creating agreement"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Agreements List */}
-      <div style={{ 
-        backgroundColor: cardBg, 
-        borderRadius: '8px', 
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: `1px solid ${borderColor}`,
-        padding: '24px'
-      }}>
-        {agreements.length === 0 ? (
-          <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No agreements yet. Create your first agreement to get started.</p>
-        ) : (
-          <div>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
-              Agreements ({agreements.length})
+        {/* Create Form */}
+        {showCreateForm && (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+              Create New Agreement
             </h2>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              {agreements.map((agreement) => (
-                <div key={agreement.id} style={{
-                  padding: '16px',
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc'
+            <form onSubmit={handleCreateAgreement}>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+                gap: '16px',
+                marginBottom: '16px'
+              }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Client
+                  </label>
+                  <select
+                    value={newAgreement.clientId}
+                    onChange={(e) => setNewAgreement({ ...newAgreement, clientId: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">Select a client</option>
+                    {clients.map(client => (
+                      <option key={client.id} value={client.id}>
+                        {client.firstName} {client.lastName} ({client.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Template
+                  </label>
+                  <select
+                    value={newAgreement.templateId}
+                    onChange={(e) => setNewAgreement({ ...newAgreement, templateId: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">Select a template</option>
+                    {templates.map(template => (
+                      <option key={template.id} value={template.id}>
+                        {template.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Expires At
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newAgreement.expiresAt}
+                    onChange={(e) => setNewAgreement({ ...newAgreement, expiresAt: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {loading ? 'Creating...' : 'Create Agreement'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Agreements List */}
+        {agreements.length === 0 ? (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '48px 24px',
+            textAlign: 'center'
+          }}>
+            <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
+              No agreements found. Create your first agreement to get started.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {agreements.map(agreement => (
+              <div key={agreement.id} style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '20px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'start',
+                  marginBottom: '12px',
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: isMobile ? '12px' : '0'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
-                      <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
-                        {agreement.client.firstName} {agreement.client.lastName}
-                      </h3>
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                        Template: {agreement.template.title} (v{agreement.template.version})
-                      </p>
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                        Status: <span style={{ 
-                          color: agreement.status === 'SIGNED' ? '#059669' : 
-                                agreement.status === 'SENT' ? '#3b82f6' : '#6b7280',
-                          fontWeight: '500'
-                        }}>
-                          {agreement.status}
-                        </span>
-                      </p>
-                    </div>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor }}>
+                      {agreement.client.firstName} {agreement.client.lastName}
+                    </h3>
+                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                      {agreement.template.title}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                      {agreement.client.email}
+                    </p>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px',
+                    flexDirection: isMobile ? 'column' : 'row'
+                  }}>
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
                       backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
+                      alignSelf: isMobile ? 'flex-start' : 'auto'
+                    }}>
+                      {agreement.status}
+                    </span>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: mutedText,
+                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
                       Created {new Date(agreement.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                      onClick={() => handleViewAgreement(agreement)}
-                      style={{
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#2563eb';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#3b82f6';
-                      }}
-                      title="View and edit agreement before sending"
-                    >
-                      View/Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        const clientLink = `${window.location.origin}/agreement/${agreement.uniqueToken}`;
-                        navigator.clipboard.writeText(clientLink).then(() => {
-                          alert('Client link copied to clipboard!');
-                        }).catch(() => {
-                          // Fallback for older browsers
-                          const textArea = document.createElement('textarea');
-                          textArea.value = clientLink;
-                          document.body.appendChild(textArea);
-                          textArea.select();
-                          document.execCommand('copy');
-                          document.body.removeChild(textArea);
-                          alert('Client link copied to clipboard!');
-                        });
-                      }}
-                      style={{
-                        backgroundColor: '#059669',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#047857';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#059669';
-                      }}
-                      title="Copy client link to clipboard"
-                    >
-                      Copy Link
-                    </button>
-                    {agreement.status === 'DRAFT' && (
-                      <button
-                        onClick={() => handleSendToClient(agreement)}
-                        style={{
-                          backgroundColor: '#dc2626',
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 16px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          transition: 'background-color 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#b91c1c';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#dc2626';
-                        }}
-                        title="Send agreement to client"
-                      >
-                        Send to Client
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteAgreement(agreement.id)}
-                      disabled={loading}
-                      style={{
-                        backgroundColor: loading ? '#9ca3af' : '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!loading) {
-                          e.currentTarget.style.backgroundColor = '#4b5563';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!loading) {
-                          e.currentTarget.style.backgroundColor = '#6b7280';
-                        }
-                      }}
-                      title="Delete this agreement permanently"
-                    >
-                      {loading ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
                 </div>
-              ))}
-            </div>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '8px',
+                  flexWrap: 'wrap'
+                }}>
+                  <button
+                    onClick={() => handleEditAgreement(agreement)}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#047857';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#059669';
+                    }}
+                    title="Edit agreement content"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      const clientLink = `${window.location.origin}/agreement/${agreement.uniqueToken}`;
+                      navigator.clipboard.writeText(clientLink);
+                      alert('Client link copied to clipboard!');
+                    }}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }}
+                    title="Copy client link to clipboard"
+                  >
+                    Copy Link
+                  </button>
+                  {agreement.status === 'DRAFT' && (
+                    <button
+                      onClick={() => handleSendToClient(agreement)}
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#b91c1c';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#dc2626';
+                      }}
+                      title="Send agreement to client"
+                    >
+                      Send to Client
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteAgreement(agreement.id)}
+                    disabled={loading}
+                    style={{
+                      backgroundColor: loading ? '#9ca3af' : '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#4b5563';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#6b7280';
+                      }
+                    }}
+                    title="Delete this agreement permanently"
+                  >
+                    {loading ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-      </div>
 
-      {/* Agreement Editor Modal */}
-      {showAgreementEditor && selectedAgreement && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
+        {/* Edit Modal */}
+        {selectedAgreement && (
           <div style={{
-            backgroundColor: cardBg,
-            borderRadius: '8px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-            maxWidth: '90vw',
-            maxHeight: '90vh',
-            width: '1000px',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
             display: 'flex',
-            flexDirection: 'column'
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
           }}>
-            {/* Header */}
             <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
               padding: '24px',
-              borderBottom: `1px solid ${borderColor}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
+              width: '100%',
+              maxWidth: '800px',
+              maxHeight: '90vh',
+              overflow: 'auto'
             }}>
-              <div>
-                <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>
-                  Agreement Editor
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '20px'
+              }}>
+                <h2 style={{ margin: '0', fontSize: '20px', color: textColor }}>
+                  Edit Agreement
                 </h2>
-                <p style={{ margin: 0, color: '#94a3b8', fontSize: '16px' }}>
-                  {selectedAgreement.client.firstName} {selectedAgreement.client.lastName} - {selectedAgreement.template.title}
-                </p>
+                <button
+                  onClick={() => setSelectedAgreement(null)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: mutedText
+                  }}
+                >
+                  Ã—
+                </button>
               </div>
-              <button
-                onClick={() => setShowAgreementEditor(false)}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: textColor,
-                  padding: '8px'
-                }}
-                title="Close editor"
-              >
-                ✕
-              </button>
-            </div>
 
-            {/* Content */}
-            <div style={{
-              flex: 1,
-              padding: '24px',
-              overflow: 'auto',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              {/* Editor */}
+              {/* Content Editor */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ 
                   display: 'block', 
@@ -745,25 +651,25 @@ export default function AgreementsPage() {
                   color: textColor,
                   fontSize: '14px'
                 }}>
-                  Agreement Content (HTML)
+                  Agreement Content
                 </label>
                 <textarea
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
                   style={{
                     width: '100%',
-                    height: '400px',
-                    padding: '16px',
+                    height: '300px',
+                    padding: '12px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
-                    fontSize: '14px',
-                    fontFamily: 'monospace',
-                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                     color: textColor,
-                    resize: 'vertical',
-                    boxSizing: 'border-box'
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    resize: 'vertical'
                   }}
-                  placeholder="Enter HTML content for the agreement..."
+                  placeholder="Enter agreement content here..."
                 />
               </div>
 
@@ -860,8 +766,8 @@ export default function AgreementsPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
