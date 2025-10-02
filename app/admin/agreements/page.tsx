@@ -118,10 +118,16 @@ export default function AgreementsPage() {
         setShowCreateForm(false);
         setNewAgreement({ clientId: '', templateId: '', expiresAt: '' });
         alert('Agreement created successfully!');
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
-      }
+          } else {
+            try {
+              const error = await response.json();
+              const errorMessage = error.error || error.message || 'Unknown error occurred';
+              alert(`Error: ${errorMessage}`);
+            } catch (parseError) {
+              console.error('Failed to parse error response:', parseError);
+              alert(`Error: Failed to create agreement (${response.status})`);
+            }
+          }
     } catch (error) {
       console.error('Error creating agreement:', error);
       alert('Failed to create agreement');
@@ -154,13 +160,21 @@ export default function AgreementsPage() {
 
       if (response.ok) {
         const updatedAgreement = await response.json();
+        // Use the actual response data instead of manual state updates
         setAgreements(agreements.map(a => 
-          a.id === selectedAgreement.id ? { ...a, template: { ...a.template, htmlContent: editingContent } } : a
+          a.id === selectedAgreement.id ? updatedAgreement : a
         ));
-        setSelectedAgreement({ ...selectedAgreement, template: { ...selectedAgreement.template, htmlContent: editingContent } });
+        setSelectedAgreement(updatedAgreement);
         alert('Agreement saved successfully!');
       } else {
-        alert('Failed to save agreement');
+        try {
+          const error = await response.json();
+          const errorMessage = error.error || error.message || 'Unknown error occurred';
+          alert(`Error: ${errorMessage}`);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          alert(`Error: Failed to save agreement (${response.status})`);
+        }
       }
     } catch (error) {
       console.error('Error saving agreement:', error);

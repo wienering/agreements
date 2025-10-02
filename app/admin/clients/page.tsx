@@ -77,10 +77,16 @@ export default function ClientsPage() {
         setShowAddForm(false);
         setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
         alert('Client added successfully!');
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
-      }
+          } else {
+            try {
+              const error = await response.json();
+              const errorMessage = error.error || error.message || 'Unknown error occurred';
+              alert(`Error: ${errorMessage}`);
+            } catch (parseError) {
+              console.error('Failed to parse error response:', parseError);
+              alert(`Error: Failed to create client (${response.status})`);
+            }
+          }
     } catch (error) {
       console.error('Error creating client:', error);
       alert('Failed to create client');
@@ -125,8 +131,14 @@ export default function ClientsPage() {
         setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
         alert('Client updated successfully!');
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
+        try {
+          const error = await response.json();
+          const errorMessage = error.error || error.message || 'Unknown error occurred';
+          alert(`Error: ${errorMessage}`);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          alert(`Error: Failed to update client (${response.status})`);
+        }
       }
     } catch (error) {
       console.error('Error updating client:', error);
