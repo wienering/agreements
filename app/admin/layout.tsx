@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 export default function AdminLayout({
   children,
@@ -10,6 +11,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊', href: '/admin', tooltip: 'Dashboard overview and statistics' },
@@ -18,12 +20,35 @@ export default function AdminLayout({
     { id: 'agreements', label: 'Agreements', icon: '📝', href: '/admin/agreements', tooltip: 'Manage client agreements' },
   ];
 
+  // Show loading state
+  if (status === 'loading') {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        backgroundColor: '#f8fafc'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
+          <p style={{ color: '#64748b', fontSize: '16px' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show login page without sidebar
+  if (status === 'unauthenticated') {
+    return <>{children}</>;
+  }
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       {/* Sidebar */}
       <div style={{ 
         width: '250px', 
-        backgroundColor: '#1f2937', 
+        backgroundColor: '#1e293b', 
         color: 'white', 
         padding: '24px 0',
         boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
@@ -31,8 +56,26 @@ export default function AdminLayout({
         flexDirection: 'column'
       }}>
         <div style={{ padding: '0 24px', marginBottom: '32px' }}>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Agreements</h1>
-          <p style={{ margin: '8px 0 0 0', color: '#9ca3af', fontSize: '14px' }}>Admin Dashboard</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              backgroundColor: '#fbbf24', 
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: '#1e293b'
+            }}>
+              PG
+            </div>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Photobooth Guys</h1>
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: '12px' }}>Agreements Admin</p>
+            </div>
+          </div>
         </div>
         
         <nav style={{ flex: 1 }}>
@@ -46,7 +89,7 @@ export default function AdminLayout({
                 style={{
                   display: 'flex',
                   padding: '12px 24px',
-                  backgroundColor: isActive ? '#374151' : 'transparent',
+                  backgroundColor: isActive ? '#334155' : 'transparent',
                   color: 'white',
                   textDecoration: 'none',
                   alignItems: 'center',
@@ -56,7 +99,7 @@ export default function AdminLayout({
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.backgroundColor = '#374151';
+                    e.currentTarget.style.backgroundColor = '#334155';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -106,7 +149,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, backgroundColor: '#f8fafc' }}>
         {children}
       </div>
     </div>
