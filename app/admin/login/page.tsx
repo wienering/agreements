@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 import { signIn, useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
