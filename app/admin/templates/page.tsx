@@ -18,6 +18,7 @@ export default function TemplatesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSmartFields, setShowSmartFields] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     htmlContent: '',
@@ -72,6 +73,55 @@ export default function TemplatesPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditTemplate = (template: Template) => {
+    setEditingTemplate(template);
+    setNewTemplate({
+      title: template.title,
+      htmlContent: template.htmlContent,
+      fieldsSchema: template.fieldsSchema || {}
+    });
+    setShowAddForm(true);
+  };
+
+  const handleUpdateTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTemplate) return;
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`/api/templates/${editingTemplate.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTemplate),
+      });
+
+      if (response.ok) {
+        const updatedTemplate = await response.json();
+        setTemplates(templates.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
+        setShowAddForm(false);
+        setEditingTemplate(null);
+        setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
+        alert('Template updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating template:', error);
+      alert('Failed to update template');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowAddForm(false);
+    setEditingTemplate(null);
+    setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
   };
 
   const handleUseTemplate = (templateId: string) => {
@@ -218,8 +268,10 @@ export default function TemplatesPage() {
           border: `1px solid ${borderColor}`,
           marginBottom: '24px'
         }}>
-          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>Add New Template</h2>
-          <form onSubmit={handleAddTemplate}>
+          <h2 style={{ margin: '0 0 24px 0', fontSize: '20px', color: textColor, fontWeight: 'bold' }}>
+            {editingTemplate ? 'Edit Template' : 'Add New Template'}
+          </h2>
+          <form onSubmit={editingTemplate ? handleUpdateTemplate : handleAddTemplate}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                 Template Title *
@@ -320,11 +372,11 @@ export default function TemplatesPage() {
                 }}
                 title="Save the new template"
               >
-                {loading ? 'Creating...' : 'Add Template'}
+                {loading ? (editingTemplate ? 'Updating...' : 'Creating...') : (editingTemplate ? 'Update Template' : 'Add Template')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={handleCancelEdit}
                 style={{
                   backgroundColor: '#6b7280',
                   color: 'white',
@@ -335,7 +387,7 @@ export default function TemplatesPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
-                title="Cancel creating template"
+                title={editingTemplate ? "Cancel editing template" : "Cancel creating template"}
               >
                 Cancel
               </button>
@@ -407,8 +459,9 @@ export default function TemplatesPage() {
                       Use This Template
                     </button>
                     <button
+                      onClick={() => handleEditTemplate(template)}
                       style={{
-                        backgroundColor: '#6b7280',
+                        backgroundColor: '#3b82f6',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
@@ -417,9 +470,9 @@ export default function TemplatesPage() {
                         fontSize: '14px',
                         fontWeight: '500'
                       }}
-                      title="View template details"
+                      title="Edit template details"
                     >
-                      View Details
+                      Edit
                     </button>
                   </div>
                 </div>
