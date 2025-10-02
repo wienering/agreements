@@ -102,6 +102,7 @@ export default function AdminLayout({
         zIndex: 999,
         transform: isMobile ? (isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
         transition: 'transform 0.3s ease-in-out',
+        overflow: 'hidden'
       }}>
         <div style={{ padding: '0 24px', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
@@ -126,7 +127,7 @@ export default function AdminLayout({
           </div>
         </div>
         
-        <nav style={{ flex: 1 }}>
+        <nav style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -169,7 +170,12 @@ export default function AdminLayout({
         </nav>
 
         {/* Bottom Actions */}
-        <div style={{ padding: '0 24px', marginTop: 'auto' }}>
+        <div style={{ 
+          padding: '16px 24px', 
+          marginTop: 'auto',
+          flexShrink: 0,
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
           {/* Dark Mode Toggle */}
           <div style={{ marginBottom: '12px' }}>
             <button
