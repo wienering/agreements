@@ -3,7 +3,6 @@ import EmailProvider from 'next-auth/providers/email';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import nodemailer from 'nodemailer';
 import { prisma } from './prisma';
-import { fallbackAdapter } from './fallback-adapter';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -15,17 +14,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Try to use Prisma adapter, fallback to in-memory if it fails
-let adapter;
-try {
-  adapter = PrismaAdapter(prisma);
-} catch (error) {
-  console.error('Prisma adapter failed, using fallback:', error);
-  adapter = fallbackAdapter;
-}
-
 export const authOptions: NextAuthOptions = {
-  adapter,
+  adapter: PrismaAdapter(prisma),
   debug: process.env.NODE_ENV === 'development',
   providers: [
     EmailProvider({
