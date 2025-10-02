@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
+import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 
 interface Agreement {
   id: string;
@@ -663,23 +664,15 @@ export default function AgreementsPage() {
                 }}>
                   Agreement Content
                 </label>
-                <textarea
+                <RichTextEditor
                   value={editingContent}
-                  onChange={(e) => setEditingContent(e.target.value)}
+                  onChange={setEditingContent}
+                  placeholder="Enter agreement content here..."
                   style={{
-                    width: '100%',
-                    height: '300px',
-                    padding: '12px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
                     backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                     color: textColor,
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    resize: 'vertical'
+                    borderColor: borderColor
                   }}
-                  placeholder="Enter agreement content here..."
                 />
               </div>
 
@@ -694,23 +687,13 @@ export default function AgreementsPage() {
                 }}>
                   Preview
                 </label>
-                <div style={{
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '6px',
-                  padding: '24px',
-                  backgroundColor: isDark ? '#0f172a' : '#fafafa',
-                  fontFamily: 'Georgia, serif',
-                  lineHeight: '1.6',
-                  fontSize: '16px',
-                  color: textColor,
-                  minHeight: '200px',
-                  maxHeight: '300px',
-                  overflow: 'auto'
-                }}>
-                  <div dangerouslySetInnerHTML={{ 
-                    __html: editingContent || '<p>Enter content above to see preview...</p>'
-                  }} />
-                </div>
+                <RichTextPreview 
+                  html={editingContent || '<p>Enter content above to see preview...</p>'}
+                  style={{
+                    backgroundColor: isDark ? '#0f172a' : '#fafafa',
+                    borderColor: borderColor
+                  }}
+                />
               </div>
               
               {/* Actions */}

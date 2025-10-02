@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
+import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 
 interface Template {
   id: string;
@@ -392,26 +393,37 @@ export default function TemplatesPage() {
                 }}>
                   Content
                 </label>
-                <textarea
+                <RichTextEditor
                   value={newTemplate.htmlContent}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, htmlContent: e.target.value })}
-                  required
-                  rows={10}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '4px',
-                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                    color: textColor,
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    resize: 'vertical'
-                  }}
+                  onChange={(value) => setNewTemplate({ ...newTemplate, htmlContent: value })}
                   placeholder="Enter template content with smart fields..."
+                  style={{
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    borderColor: borderColor
+                  }}
                 />
               </div>
+              
+              {/* Preview */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor 
+                }}>
+                  Preview
+                </label>
+                <RichTextPreview 
+                  html={newTemplate.htmlContent || '<p>Enter content above to see preview...</p>'}
+                  style={{
+                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    borderColor: borderColor
+                  }}
+                />
+              </div>
+              
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
@@ -500,6 +512,35 @@ export default function TemplatesPage() {
                     Created {new Date(template.createdAt).toLocaleDateString()}
                   </span>
                 </div>
+                
+                {/* Template Preview */}
+                <div style={{ 
+                  marginBottom: '12px',
+                  padding: '12px',
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  borderRadius: '6px',
+                  border: `1px solid ${borderColor}`
+                }}>
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: mutedText, 
+                    marginBottom: '8px',
+                    fontWeight: '500'
+                  }}>
+                    Preview:
+                  </div>
+                  <RichTextPreview 
+                    html={template.htmlContent}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      padding: '0',
+                      minHeight: '60px',
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+                
                 <div style={{ 
                   display: 'flex', 
                   gap: '8px',
