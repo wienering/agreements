@@ -417,6 +417,7 @@ export default function TemplatesPage() {
                 </label>
                 <RichTextPreview 
                   html={newTemplate.htmlContent || '<p>Enter content above to see preview...</p>'}
+                  isDark={isDark}
                   style={{
                     backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                     borderColor: borderColor
@@ -531,6 +532,7 @@ export default function TemplatesPage() {
                   </div>
                   <RichTextPreview 
                     html={template.htmlContent}
+                    isDark={isDark}
                     style={{
                       backgroundColor: 'transparent',
                       border: 'none',
