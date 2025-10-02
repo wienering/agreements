@@ -141,12 +141,13 @@ export default function AgreementsPage() {
     
     setSaving(true);
     try {
-      const response = await fetch(`/api/agreements/${selectedAgreement.id}`, {
+      const response = await fetch(`/api/agreements/update-agreement`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          id: selectedAgreement.id,
           htmlContent: editingContent
         }),
       });
