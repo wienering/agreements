@@ -137,6 +137,36 @@ export default function TemplatesPage() {
     setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
   };
 
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/templates/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: templateId }),
+      });
+
+      if (response.ok) {
+        setTemplates(templates.filter(t => t.id !== templateId));
+        alert('Template deleted successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to delete template'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      alert('Failed to delete template');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUseTemplate = (templateId: string) => {
     router.push(`/admin/agreements?templateId=${templateId}`);
   };
@@ -539,6 +569,24 @@ export default function TemplatesPage() {
                       title="Edit template details"
                     >
                       Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTemplate(template.id)}
+                      disabled={loading}
+                      style={{
+                        backgroundColor: loading ? '#9ca3af' : '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: isMobile ? '10px 16px' : '8px 16px',
+                        borderRadius: '4px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        width: isMobile ? '100%' : 'auto'
+                      }}
+                      title="Delete this template permanently"
+                    >
+                      {loading ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 </div>
