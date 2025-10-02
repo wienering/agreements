@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -278,7 +278,7 @@ export default function AdminHome() {
                 justifyContent: 'center',
                 marginRight: '12px'
               }}>
-                <span style={{ color: 'white', fontSize: '20px' }}>ðŸ“Š</span>
+                
               </div>
               <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Analytics Dashboard</h3>
             </div>
@@ -321,7 +321,7 @@ export default function AdminHome() {
                 justifyContent: 'center',
                 marginRight: '12px'
               }}>
-                <span style={{ color: 'white', fontSize: '20px' }}>ðŸ‘¥</span>
+                
               </div>
               <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Manage Clients</h3>
             </div>
@@ -364,7 +364,7 @@ export default function AdminHome() {
                 justifyContent: 'center',
                 marginRight: '12px'
               }}>
-                <span style={{ color: 'white', fontSize: '20px' }}>ðŸ“„</span>
+                
               </div>
               <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Templates</h3>
             </div>
@@ -407,7 +407,7 @@ export default function AdminHome() {
                 justifyContent: 'center',
                 marginRight: '12px'
               }}>
-                <span style={{ color: 'white', fontSize: '20px' }}>ðŸ“‹</span>
+                
               </div>
               <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Agreements</h3>
             </div>
@@ -495,3 +495,4 @@ export default function AdminHome() {
     </div>
   );
 }
+
