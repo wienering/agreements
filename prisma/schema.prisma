@@ -22,15 +22,20 @@ model User {
 }
 
 model Client {
-  id        String   @id @default(cuid())
-  firstName String
-  lastName  String
-  email     String
-  phone     String?
-  eventDate DateTime?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  eventDate     DateTime?
+  eventType     String?
+  eventLocation String?
+  eventStartTime String?
+  eventDuration String?
+  eventPackage  String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   agreements Agreement[]
 }

@@ -42,12 +42,11 @@ export async function POST(request: NextRequest) {
         email,
         phone: phone || null,
         eventDate: eventDate ? new Date(eventDate) : null,
-        // TODO: Uncomment after running database migration
-        // eventType: eventType || null,
-        // eventLocation: eventLocation || null,
-        // eventStartTime: eventStartTime || null,
-        // eventDuration: eventDuration || null,
-        // eventPackage: eventPackage || null,
+        eventType: eventType || null,
+        eventLocation: eventLocation || null,
+        eventStartTime: eventStartTime || null,
+        eventDuration: eventDuration || null,
+        eventPackage: eventPackage || null,
         notes: notes || null,
       },
     });

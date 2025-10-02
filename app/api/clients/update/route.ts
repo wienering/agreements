@@ -33,12 +33,11 @@ export async function PUT(request: NextRequest) {
         email: validatedData.email,
         phone: validatedData.phone,
         eventDate: validatedData.eventDate ? new Date(validatedData.eventDate) : null,
-        // TODO: Uncomment after running database migration
-        // eventType: validatedData.eventType,
-        // eventLocation: validatedData.eventLocation,
-        // eventStartTime: validatedData.eventStartTime,
-        // eventDuration: validatedData.eventDuration,
-        // eventPackage: validatedData.eventPackage,
+        eventType: validatedData.eventType,
+        eventLocation: validatedData.eventLocation,
+        eventStartTime: validatedData.eventStartTime,
+        eventDuration: validatedData.eventDuration,
+        eventPackage: validatedData.eventPackage,
         notes: validatedData.notes,
       },
     });
