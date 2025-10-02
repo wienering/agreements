@@ -228,7 +228,7 @@ export default function ClientsPage() {
                   title="Client's first name"
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
+                    padding: '12px 20px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -249,7 +249,7 @@ export default function ClientsPage() {
                   title="Client's last name"
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
+                    padding: '12px 20px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -273,7 +273,7 @@ export default function ClientsPage() {
                   title="Client's email address for communication"
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
+                    padding: '12px 20px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -293,7 +293,7 @@ export default function ClientsPage() {
                   title="Client's phone number"
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
+                    padding: '12px 20px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
@@ -342,7 +342,7 @@ export default function ClientsPage() {
                   title="Additional notes about the client"
                   style={{
                     width: '100%',
-                    padding: '12px 16px',
+                    padding: '12px 20px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
