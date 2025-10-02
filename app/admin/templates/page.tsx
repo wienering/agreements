@@ -35,6 +35,7 @@ export default function TemplatesPage() {
             fontSize: '16px',
             fontWeight: '500'
           }}
+          title="Create a new agreement template"
         >
           + Add Template
         </button>
@@ -61,6 +62,7 @@ export default function TemplatesPage() {
                 onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
                 required
                 placeholder="e.g., Wedding Photography Agreement"
+                title="A descriptive name for your template"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -81,6 +83,7 @@ export default function TemplatesPage() {
                 required
                 rows={10}
                 placeholder="Enter your HTML template content here. Use {{fieldName}} for dynamic fields."
+                title="HTML content with smart fields like {{client.firstName}}"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -111,6 +114,7 @@ export default function TemplatesPage() {
                 }}
                 rows={6}
                 placeholder='{"client.firstName": {"type": "text", "required": true, "editableByClient": false}}'
+                title="Define field types, requirements, and permissions (optional)"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -139,6 +143,7 @@ export default function TemplatesPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
+                title="Save the new template"
               >
                 Add Template
               </button>
@@ -155,6 +160,7 @@ export default function TemplatesPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
+                title="Cancel creating template"
               >
                 Cancel
               </button>

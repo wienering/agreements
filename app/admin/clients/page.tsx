@@ -38,6 +38,7 @@ export default function ClientsPage() {
             fontSize: '16px',
             fontWeight: '500'
           }}
+          title="Add a new client to the system"
         >
           + Add Client
         </button>
@@ -64,6 +65,7 @@ export default function ClientsPage() {
                   value={newClient.firstName}
                   onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
                   required
+                  title="Client's first name"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -82,6 +84,7 @@ export default function ClientsPage() {
                   value={newClient.lastName}
                   onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
                   required
+                  title="Client's last name"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -103,6 +106,7 @@ export default function ClientsPage() {
                   value={newClient.email}
                   onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
                   required
+                  title="Client's email address for communication"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -120,6 +124,7 @@ export default function ClientsPage() {
                   type="tel"
                   value={newClient.phone}
                   onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                  title="Client's phone number"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -139,6 +144,7 @@ export default function ClientsPage() {
                 type="date"
                 value={newClient.eventDate}
                 onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
+                title="Date of the client's event"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -157,6 +163,7 @@ export default function ClientsPage() {
                 value={newClient.notes}
                 onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
                 rows={3}
+                title="Additional notes about the client"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -181,6 +188,7 @@ export default function ClientsPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
+                title="Save the new client"
               >
                 Add Client
               </button>
@@ -197,6 +205,7 @@ export default function ClientsPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
+                title="Cancel adding client"
               >
                 Cancel
               </button>

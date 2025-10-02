@@ -35,6 +35,7 @@ export default function AgreementsPage() {
             fontSize: '16px',
             fontWeight: '500'
           }}
+          title="Create a new agreement for a client"
         >
           + Create Agreement
         </button>
@@ -60,6 +61,7 @@ export default function AgreementsPage() {
                   value={newAgreement.clientId}
                   onChange={(e) => setNewAgreement({ ...newAgreement, clientId: e.target.value })}
                   required
+                  title="Choose which client this agreement is for"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -80,6 +82,7 @@ export default function AgreementsPage() {
                   value={newAgreement.templateId}
                   onChange={(e) => setNewAgreement({ ...newAgreement, templateId: e.target.value })}
                   required
+                  title="Choose which template to use for this agreement"
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -102,6 +105,7 @@ export default function AgreementsPage() {
                 type="datetime-local"
                 value={newAgreement.expiresAt}
                 onChange={(e) => setNewAgreement({ ...newAgreement, expiresAt: e.target.value })}
+                title="Set when this agreement expires (optional)"
                 style={{
                   width: '100%',
                   padding: '12px',
@@ -128,6 +132,7 @@ export default function AgreementsPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
+                title="Create the agreement and generate client link"
               >
                 Create Agreement
               </button>
@@ -144,6 +149,7 @@ export default function AgreementsPage() {
                   fontSize: '16px',
                   fontWeight: '500'
                 }}
+                title="Cancel creating agreement"
               >
                 Cancel
               </button>
