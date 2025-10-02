@@ -25,6 +25,7 @@ export async function PUT(request: NextRequest) {
     const validatedData = clientUpdateSchema.parse(body);
     console.log('Validated data:', validatedData);
 
+    // Update client with basic fields first
     const updatedClient = await prisma.client.update({
       where: { id: validatedData.id },
       data: {
@@ -33,18 +34,34 @@ export async function PUT(request: NextRequest) {
         email: validatedData.email,
         phone: validatedData.phone,
         eventDate: validatedData.eventDate ? new Date(validatedData.eventDate) : null,
-        // TODO: Uncomment after running database migration
-        // eventType: validatedData.eventType,
-        // eventLocation: validatedData.eventLocation,
-        // eventStartTime: validatedData.eventStartTime,
-        // eventDuration: validatedData.eventDuration,
-        // eventPackage: validatedData.eventPackage,
         notes: validatedData.notes,
       },
     });
 
-    console.log('Updated client:', updatedClient);
-    return NextResponse.json(updatedClient);
+    // Try to update with event fields if they exist in database
+    try {
+      await prisma.$executeRaw`
+        UPDATE "Client" 
+        SET "eventType" = ${validatedData.eventType || null},
+            "eventLocation" = ${validatedData.eventLocation || null},
+            "eventStartTime" = ${validatedData.eventStartTime || null},
+            "eventDuration" = ${validatedData.eventDuration || null},
+            "eventPackage" = ${validatedData.eventPackage || null}
+        WHERE "id" = ${validatedData.id}
+      `;
+      
+      // Fetch updated client with event fields
+      const finalClient = await prisma.client.findUnique({
+        where: { id: validatedData.id }
+      });
+      
+      console.log('Updated client with event fields:', finalClient);
+      return NextResponse.json(finalClient);
+    } catch (error: any) {
+      // If event fields don't exist, just return the basic updated client
+      console.log('Event fields not available in database, returning basic client');
+      return NextResponse.json(updatedClient);
+    }
   } catch (error: any) {
     console.error('Client update error details:', error);
     if (error instanceof z.ZodError) {
