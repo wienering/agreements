@@ -109,12 +109,12 @@ export default function ClientsPage() {
     setLoading(true);
     
     try {
-      const response = await fetch(`/api/clients/${editingClient.id}`, {
+      const response = await fetch(`/api/clients/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newClient),
+        body: JSON.stringify({ ...newClient, id: editingClient.id }),
       });
 
       if (response.ok) {
