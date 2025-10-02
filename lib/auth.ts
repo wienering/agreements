@@ -1,8 +1,6 @@
 import type { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import nodemailer from 'nodemailer';
-import { prisma } from './prisma';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -15,8 +13,6 @@ const transporter = nodemailer.createTransport({
 });
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  debug: process.env.NODE_ENV === 'development',
   providers: [
     EmailProvider({
       from: process.env.SMTP_FROM,
@@ -37,7 +33,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/admin/login',
   },
-  session: { strategy: 'database' },
+  session: { strategy: 'jwt' },
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log('SignIn callback:', { user, account, profile });
@@ -45,16 +41,19 @@ export const authOptions: NextAuthOptions = {
       console.log('Is admin:', isAdmin);
       return isAdmin;
     },
-    async session({ session, user }) {
-      console.log('Session callback:', { session, user });
-      if (user && session.user) {
-        session.user.email = user.email;
+    async jwt({ token, user }) {
+      if (user) {
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      console.log('Session callback:', { session, token });
+      if (token && session.user) {
+        session.user.email = token.email;
       }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-
-
-
