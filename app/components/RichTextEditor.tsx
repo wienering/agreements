@@ -122,9 +122,37 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
 
 // Preview component to show how the HTML will render
 export function RichTextPreview({ html, style }: { html: string; style?: React.CSSProperties }) {
+  // Replace smart fields with sample data for better readability
+  const processPreviewHtml = (html: string) => {
+    if (!html) return '';
+    
+    let processedHtml = html;
+    
+    // Replace client fields with sample data
+    processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, '<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[John]</span>');
+    processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, '<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[Smith]</span>');
+    processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, '<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[john@example.com]</span>');
+    processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, '<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[(555) 123-4567]</span>');
+    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, '<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[12/25/2024]</span>');
+    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, '<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[Special requests]</span>');
+    
+    // Replace event fields with sample data
+    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, '<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[Wedding]</span>');
+    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, '<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[Grand Ballroom]</span>');
+    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, '<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[2:00 PM]</span>');
+    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, '<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[4 hours]</span>');
+    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, '<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[Premium Package]</span>');
+    
+    // Replace agreement fields with sample data
+    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, '<span style="background-color: #f3e8ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[12/01/2024]</span>');
+    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, '<span style="background-color: #f3e8ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[AG-12345]</span>');
+    
+    return processedHtml;
+  };
+
   return (
     <div
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: processPreviewHtml(html) }}
       style={{
         padding: '12px',
         border: '1px solid #d1d5db',
