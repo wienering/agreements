@@ -1,0 +1,1 @@
+export default function DashboardPage() { return ( <div> <h1>Dashboard</h1> <p>Analytics dashboard coming soon...</p> </div> ); }
