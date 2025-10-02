@@ -34,7 +34,7 @@ export default function ClientAgreementPage() {
 
   const fetchAgreement = useCallback(async () => {
     try {
-      const response = await fetch(`/api/agreements/${token}`);
+      const response = await fetch(`/api/agreements/client?token=${token}`);
       if (response.ok) {
         const data = await response.json();
         setAgreement(data);
