@@ -327,12 +327,13 @@ export default function TemplatesPage() {
                 title="A descriptive name for your template"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
               />
             </div>
@@ -350,14 +351,15 @@ export default function TemplatesPage() {
                 title="HTML content with smart fields like {{client.firstName}}"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     fontFamily: 'monospace',
                     resize: 'vertical',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
               />
               <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
@@ -383,14 +385,15 @@ export default function TemplatesPage() {
                 title="Define field types, requirements, and permissions (optional)"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     fontFamily: 'monospace',
                     resize: 'vertical',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
               />
               <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>

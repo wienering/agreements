@@ -213,8 +213,8 @@ export default function ClientsPage() {
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
-              gap: '16px', 
-              marginBottom: '16px' 
+              gap: '20px', 
+              marginBottom: '20px' 
             }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
@@ -228,12 +228,13 @@ export default function ClientsPage() {
                   title="Client's first name"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -249,12 +250,13 @@ export default function ClientsPage() {
                   title="Client's last name"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -273,12 +275,13 @@ export default function ClientsPage() {
                   title="Client's email address for communication"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -293,12 +296,13 @@ export default function ClientsPage() {
                   title="Client's phone number"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -342,13 +346,14 @@ export default function ClientsPage() {
                   title="Additional notes about the client"
                   style={{
                     width: '100%',
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     fontSize: '16px',
                     resize: 'vertical',
                     backgroundColor: inputBg,
-                    color: textColor
+                    color: textColor,
+                    boxSizing: 'border-box'
                   }}
                 />
             </div>
