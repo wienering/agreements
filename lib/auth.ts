@@ -1,6 +1,7 @@
 import type { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
 import nodemailer from 'nodemailer';
+import { memoryAdapter } from './memory-adapter';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -13,6 +14,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export const authOptions: NextAuthOptions = {
+  adapter: memoryAdapter,
   providers: [
     EmailProvider({
       from: process.env.SMTP_FROM,
