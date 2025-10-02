@@ -120,7 +120,8 @@ export default function TemplatesPage() {
         alert('Template updated successfully!');
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        console.error('Template update error:', error);
+        alert(`Error: ${error.error || 'Unknown error occurred'}`);
       }
     } catch (error) {
       console.error('Error updating template:', error);

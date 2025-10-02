@@ -12,7 +12,10 @@ const templateUpdateSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('Template update request body:', body);
+    
     const validatedData = templateUpdateSchema.parse(body);
+    console.log('Validated data:', validatedData);
 
     const updatedTemplate = await prisma.template.update({
       where: { id: validatedData.id },
@@ -24,9 +27,12 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    console.log('Updated template:', updatedTemplate);
     return NextResponse.json(updatedTemplate);
   } catch (error: any) {
+    console.error('Template update error details:', error);
     if (error instanceof z.ZodError) {
+      console.error('Zod validation errors:', error.errors);
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
     console.error('Error updating template:', error);
