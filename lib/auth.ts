@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
       return user.email?.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase();
     },
     async session({ session, user }) {
-      if (user) {
+      if (user && session.user) {
         session.user.email = user.email;
       }
       return session;
