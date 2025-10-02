@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
@@ -13,6 +13,11 @@ interface Client {
   phone?: string;
   eventDate?: string;
   notes?: string;
+  eventType?: string;
+  eventLocation?: string;
+  eventStartTime?: string;
+  eventDuration?: string;
+  eventPackage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +34,11 @@ export default function ClientsPage() {
     email: '',
     phone: '',
     eventDate: '',
+    eventType: '',
+    eventLocation: '',
+    eventStartTime: '',
+    eventDuration: '',
+    eventPackage: '',
     notes: ''
   });
   const { isDark } = useDarkMode();
@@ -80,7 +90,7 @@ export default function ClientsPage() {
         const createdClient = await response.json();
         setClients([createdClient, ...clients]);
         setShowAddForm(false);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
         showToast('Client added successfully!');
       } else {
         try {
@@ -120,7 +130,7 @@ export default function ClientsPage() {
         setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
         setShowAddForm(false);
         setEditingClient(null);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
         showToast('Client updated successfully!');
       } else {
         try {
@@ -148,6 +158,11 @@ export default function ClientsPage() {
       email: client.email,
       phone: client.phone || '',
       eventDate: client.eventDate ? new Date(client.eventDate).toISOString().slice(0, 16) : '',
+      eventType: client.eventType || '',
+      eventLocation: client.eventLocation || '',
+      eventStartTime: client.eventStartTime || '',
+      eventDuration: client.eventDuration || '',
+      eventPackage: client.eventPackage || '',
       notes: client.notes || ''
     });
     setShowAddForm(true);
@@ -156,7 +171,7 @@ export default function ClientsPage() {
   const handleCancelEdit = () => {
     setShowAddForm(false);
     setEditingClient(null);
-    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', notes: '' });
+    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
   };
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
@@ -364,6 +379,142 @@ export default function ClientsPage() {
                     }}
                   />
                 </div>
+
+                {/* Event Type */}
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Event Type
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.eventType}
+                    onChange={(e) => setNewClient({ ...newClient, eventType: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="e.g., Wedding, Corporate Event"
+                  />
+                </div>
+
+                {/* Event Location */}
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Event Location
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.eventLocation}
+                    onChange={(e) => setNewClient({ ...newClient, eventLocation: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="e.g., Grand Ballroom, Downtown Hotel"
+                  />
+                </div>
+
+                {/* Event Start Time */}
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Event Start Time
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.eventStartTime}
+                    onChange={(e) => setNewClient({ ...newClient, eventStartTime: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="e.g., 2:00 PM, 14:00"
+                  />
+                </div>
+
+                {/* Event Duration */}
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Event Duration
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.eventDuration}
+                    onChange={(e) => setNewClient({ ...newClient, eventDuration: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="e.g., 4 hours, 8 hours"
+                  />
+                </div>
+
+                {/* Event Package */}
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Package
+                  </label>
+                  <input
+                    type="text"
+                    value={newClient.eventPackage}
+                    onChange={(e) => setNewClient({ ...newClient, eventPackage: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="e.g., Premium Package, Basic Package"
+                  />
+                </div>
+
                 <div>
                   <label style={{ 
                     display: 'block', 
@@ -469,12 +620,37 @@ export default function ClientsPage() {
                         {client.phone}
                       </p>
                     )}
-                    {client.eventDate && (
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                        Event: {new Date(client.eventDate).toLocaleDateString()}
-                      </p>
-                    )}
-                    {client.notes && (
+                      {client.eventDate && (
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                          Event: {new Date(client.eventDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {client.eventType && (
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                          Type: {client.eventType}
+                        </p>
+                      )}
+                      {client.eventLocation && (
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                          Location: {client.eventLocation}
+                        </p>
+                      )}
+                      {client.eventStartTime && (
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                          Time: {client.eventStartTime}
+                        </p>
+                      )}
+                      {client.eventDuration && (
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                          Duration: {client.eventDuration}
+                        </p>
+                      )}
+                      {client.eventPackage && (
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                          Package: {client.eventPackage}
+                        </p>
+                      )}
+                      {client.notes && (
                       <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                         {client.notes}
                       </p>
