@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         email,
         phone: phone || null,
         eventDate: eventDate ? new Date(eventDate) : null,
-        // TODO: Uncomment after database migration
+        // TODO: Uncomment after running database migration
         // eventType: eventType || null,
         // eventLocation: eventLocation || null,
         // eventStartTime: eventStartTime || null,
