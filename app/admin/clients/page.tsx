@@ -19,6 +19,7 @@ export default function ClientsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [newClient, setNewClient] = useState({
     firstName: '',
     lastName: '',
@@ -28,6 +29,17 @@ export default function ClientsPage() {
     notes: ''
   });
   const { isDark } = useDarkMode();
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch clients on component mount
   useEffect(() => {
@@ -138,11 +150,28 @@ export default function ClientsPage() {
   const inputBg = isDark ? '#0f172a' : '#ffffff';
 
   return (
-    <div style={{ padding: '24px', backgroundColor: mainBg, minHeight: '100vh', color: textColor }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div style={{ 
+      padding: isMobile ? '16px' : '24px', 
+      backgroundColor: mainBg, 
+      minHeight: '100vh', 
+      color: textColor 
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        marginBottom: '24px',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '16px' : '0'
+      }}>
         <div>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: textColor, fontWeight: 'bold' }}>
-            Photobooth Guys - Clients
+          <h1 style={{ 
+            margin: '0 0 8px 0', 
+            fontSize: isMobile ? '24px' : '32px', 
+            color: textColor, 
+            fontWeight: 'bold' 
+          }}>
+            {isMobile ? 'Clients' : 'Photobooth Guys - Clients'}
           </h1>
           <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
             Manage your client information
@@ -154,12 +183,13 @@ export default function ClientsPage() {
             backgroundColor: '#059669',
             color: 'white',
             border: 'none',
-            padding: '12px 24px',
+            padding: isMobile ? '12px 16px' : '12px 24px',
             borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '16px',
+            fontSize: isMobile ? '14px' : '16px',
             fontWeight: '500',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            width: isMobile ? '100%' : 'auto'
           }}
           title="Add a new client to the system"
         >
@@ -170,7 +200,7 @@ export default function ClientsPage() {
       {showAddForm && (
         <div style={{
           backgroundColor: cardBg,
-          padding: '24px',
+          padding: isMobile ? '16px' : '24px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           border: `1px solid ${borderColor}`,
@@ -180,7 +210,12 @@ export default function ClientsPage() {
             {editingClient ? 'Edit Client' : 'Add New Client'}
           </h2>
           <form onSubmit={editingClient ? handleUpdateClient : handleAddClient}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+              gap: '16px', 
+              marginBottom: '16px' 
+            }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: textColor }}>
                   First Name *
@@ -318,7 +353,11 @@ export default function ClientsPage() {
                 />
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
               <button
                 type="submit"
                 disabled={loading}
@@ -326,11 +365,12 @@ export default function ClientsPage() {
                   backgroundColor: loading ? '#9ca3af' : '#059669',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
+                  padding: isMobile ? '12px 16px' : '12px 24px',
                   borderRadius: '6px',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  width: isMobile ? '100%' : 'auto'
                 }}
                 title={editingClient ? 'Save client changes' : 'Save the new client'}
               >
@@ -343,11 +383,12 @@ export default function ClientsPage() {
                   backgroundColor: '#6b7280',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
+                  padding: isMobile ? '12px 16px' : '12px 24px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  width: isMobile ? '100%' : 'auto'
                 }}
                 title="Cancel"
               >
@@ -364,7 +405,7 @@ export default function ClientsPage() {
         borderRadius: '8px', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: `1px solid ${borderColor}`,
-        padding: '24px'
+        padding: isMobile ? '16px' : '24px'
       }}>
         {clients.length === 0 ? (
           <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No clients yet. Add your first client to get started.</p>
@@ -381,7 +422,14 @@ export default function ClientsPage() {
                   borderRadius: '6px',
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'start', 
+                    marginBottom: '12px',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? '8px' : '0'
+                  }}>
                     <div>
                       <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
                         {client.firstName} {client.lastName}
@@ -401,23 +449,29 @@ export default function ClientsPage() {
                       color: mutedText,
                       backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
+                      alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
                       Added {new Date(client.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px',
+                    flexDirection: isMobile ? 'column' : 'row'
+                  }}>
                     <button
                       onClick={() => handleEditClient(client)}
                       style={{
                         backgroundColor: '#3b82f6',
                         color: 'white',
                         border: 'none',
-                        padding: '6px 12px',
+                        padding: isMobile ? '10px 16px' : '6px 12px',
                         borderRadius: '4px',
                         cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '500'
+                        fontSize: isMobile ? '14px' : '12px',
+                        fontWeight: '500',
+                        width: isMobile ? '100%' : 'auto'
                       }}
                       title="Edit client details"
                     >

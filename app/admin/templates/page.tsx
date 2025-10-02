@@ -19,6 +19,7 @@ export default function TemplatesPage() {
   const [showSmartFields, setShowSmartFields] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     htmlContent: '',
@@ -26,6 +27,17 @@ export default function TemplatesPage() {
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch templates on component mount
   useEffect(() => {
@@ -136,32 +148,56 @@ export default function TemplatesPage() {
   const inputBg = isDark ? '#0f172a' : '#ffffff';
 
   return (
-    <div style={{ padding: '24px', backgroundColor: mainBg, minHeight: '100vh', color: textColor }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div style={{ 
+      padding: isMobile ? '16px' : '24px', 
+      backgroundColor: mainBg, 
+      minHeight: '100vh', 
+      color: textColor 
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        marginBottom: '24px',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '16px' : '0'
+      }}>
         <div>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', color: textColor, fontWeight: 'bold' }}>
-            Photobooth Guys - Templates
+          <h1 style={{ 
+            margin: '0 0 8px 0', 
+            fontSize: isMobile ? '24px' : '32px', 
+            color: textColor, 
+            fontWeight: 'bold' 
+          }}>
+            {isMobile ? 'Templates' : 'Photobooth Guys - Templates'}
           </h1>
           <p style={{ margin: 0, color: mutedText, fontSize: '16px' }}>
             Create and manage agreement templates
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '12px',
+          flexDirection: isMobile ? 'column' : 'row',
+          width: isMobile ? '100%' : 'auto'
+        }}>
           <button
             onClick={() => setShowSmartFields(!showSmartFields)}
             style={{
               backgroundColor: '#3b82f6',
               color: 'white',
               border: 'none',
-              padding: '12px 24px',
+              padding: isMobile ? '12px 16px' : '12px 24px',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '16px',
+              fontSize: isMobile ? '14px' : '16px',
               fontWeight: '500',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              width: isMobile ? '100%' : 'auto',
+              justifyContent: 'center'
             }}
             title="View all available smart fields for templates"
           >
@@ -174,12 +210,14 @@ export default function TemplatesPage() {
               backgroundColor: '#059669',
               color: 'white',
               border: 'none',
-              padding: '12px 24px',
+              padding: isMobile ? '12px 16px' : '12px 24px',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '16px',
+              fontSize: isMobile ? '14px' : '16px',
               fontWeight: '500',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              width: isMobile ? '100%' : 'auto',
+              justifyContent: 'center'
             }}
             title="Create a new agreement template"
           >
@@ -202,7 +240,11 @@ export default function TemplatesPage() {
           <p style={{ margin: '0 0 20px 0', color: mutedText, fontSize: '16px' }}>
             Use these fields in your templates to automatically populate client and event information.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', 
+            gap: '12px' 
+          }}>
             {[
               { field: '{{client.firstName}}', description: 'Client first name', example: 'John' },
               { field: '{{client.lastName}}', description: 'Client last name', example: 'Smith' },
@@ -262,7 +304,7 @@ export default function TemplatesPage() {
       {showAddForm && (
         <div style={{
           backgroundColor: cardBg,
-          padding: '24px',
+          padding: isMobile ? '16px' : '24px',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           border: `1px solid ${borderColor}`,
@@ -356,7 +398,11 @@ export default function TemplatesPage() {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
               <button
                 type="submit"
                 disabled={loading}
@@ -364,11 +410,12 @@ export default function TemplatesPage() {
                   backgroundColor: loading ? '#9ca3af' : '#059669',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
+                  padding: isMobile ? '12px 16px' : '12px 24px',
                   borderRadius: '6px',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  width: isMobile ? '100%' : 'auto'
                 }}
                 title="Save the new template"
               >
@@ -381,11 +428,12 @@ export default function TemplatesPage() {
                   backgroundColor: '#6b7280',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
+                  padding: isMobile ? '12px 16px' : '12px 24px',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '500'
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  width: isMobile ? '100%' : 'auto'
                 }}
                 title={editingTemplate ? "Cancel editing template" : "Cancel creating template"}
               >
@@ -402,7 +450,7 @@ export default function TemplatesPage() {
         borderRadius: '8px', 
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         border: `1px solid ${borderColor}`,
-        padding: '24px'
+        padding: isMobile ? '16px' : '24px'
       }}>
         {templates.length === 0 ? (
           <p style={{ color: mutedText, fontSize: '16px', textAlign: 'center' }}>No templates yet. Create your first template to get started.</p>
@@ -419,7 +467,14 @@ export default function TemplatesPage() {
                   borderRadius: '6px',
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'start', 
+                    marginBottom: '12px',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? '8px' : '0'
+                  }}>
                     <div>
                       <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
                         {template.title}
@@ -436,23 +491,29 @@ export default function TemplatesPage() {
                       color: mutedText,
                       backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
+                      alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
                       Created {new Date(template.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px',
+                    flexDirection: isMobile ? 'column' : 'row'
+                  }}>
                     <button
                       onClick={() => handleUseTemplate(template.id)}
                       style={{
                         backgroundColor: '#3b82f6',
                         color: 'white',
                         border: 'none',
-                        padding: '8px 16px',
+                        padding: isMobile ? '10px 16px' : '8px 16px',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '14px',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        width: isMobile ? '100%' : 'auto'
                       }}
                       title="Use this template to create an agreement"
                     >
@@ -461,14 +522,15 @@ export default function TemplatesPage() {
                     <button
                       onClick={() => handleEditTemplate(template)}
                       style={{
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#059669',
                         color: 'white',
                         border: 'none',
-                        padding: '8px 16px',
+                        padding: isMobile ? '10px 16px' : '8px 16px',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '14px',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        width: isMobile ? '100%' : 'auto'
                       }}
                       title="Edit template details"
                     >

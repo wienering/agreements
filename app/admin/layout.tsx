@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useState, useEffect } from 'react';
 
 export default function AdminLayout({
   children,
@@ -13,6 +14,22 @@ export default function AdminLayout({
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const { isDark, toggleDarkMode } = useDarkMode();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊', href: '/admin', tooltip: 'Dashboard overview and statistics' },
@@ -53,15 +70,38 @@ export default function AdminLayout({
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: mainBg }}>
+      {/* Mobile Menu Overlay */}
+      {isMobile && isMobileMenuOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 998,
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div style={{ 
-        width: '250px', 
+        width: isMobile ? '280px' : '250px', 
         backgroundColor: sidebarBg, 
         color: 'white', 
         padding: '24px 0',
         boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: isMobile ? 'fixed' : 'relative',
+        top: 0,
+        left: 0,
+        height: '100vh',
+        zIndex: 999,
+        transform: isMobile ? (isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+        transition: 'transform 0.3s ease-in-out',
       }}>
         <div style={{ padding: '0 24px', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
@@ -94,6 +134,11 @@ export default function AdminLayout({
                 key={item.id}
                 href={item.href}
                 title={item.tooltip}
+                onClick={() => {
+                  if (isMobile) {
+                    setIsMobileMenuOpen(false);
+                  }
+                }}
                 style={{
                   display: 'flex',
                   padding: '12px 24px',
@@ -192,7 +237,65 @@ export default function AdminLayout({
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, backgroundColor: mainBg }}>
+      <div style={{ 
+        flex: 1, 
+        backgroundColor: mainBg,
+        marginLeft: isMobile ? '0' : '0',
+        width: isMobile ? '100%' : 'auto'
+      }}>
+        {/* Mobile Header */}
+        {isMobile && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            backgroundColor: cardBg,
+            borderBottom: `1px solid ${borderColor}`,
+            position: 'sticky',
+            top: 0,
+            zIndex: 997,
+          }}>
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              style={{
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: textColor,
+                fontSize: '24px',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Open menu"
+            >
+              ☰
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                backgroundColor: '#fbbf24', 
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: '#1e293b'
+              }}>
+                PG
+              </div>
+              <span style={{ fontSize: '16px', fontWeight: '600', color: textColor }}>
+                Photobooth Guys
+              </span>
+            </div>
+            <div style={{ width: '40px' }} /> {/* Spacer for centering */}
+          </div>
+        )}
         {children}
       </div>
     </div>
