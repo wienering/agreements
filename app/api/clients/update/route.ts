@@ -9,6 +9,11 @@ const clientUpdateSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().optional().nullable(),
   eventDate: z.string().optional().nullable(),
+  eventType: z.string().optional().nullable(),
+  eventLocation: z.string().optional().nullable(),
+  eventStartTime: z.string().optional().nullable(),
+  eventDuration: z.string().optional().nullable(),
+  eventPackage: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -28,6 +33,12 @@ export async function PUT(request: NextRequest) {
         email: validatedData.email,
         phone: validatedData.phone,
         eventDate: validatedData.eventDate ? new Date(validatedData.eventDate) : null,
+        // TODO: Uncomment after database migration
+        // eventType: validatedData.eventType,
+        // eventLocation: validatedData.eventLocation,
+        // eventStartTime: validatedData.eventStartTime,
+        // eventDuration: validatedData.eventDuration,
+        // eventPackage: validatedData.eventPackage,
         notes: validatedData.notes,
       },
     });

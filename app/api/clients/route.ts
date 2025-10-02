@@ -16,7 +16,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, eventDate, notes } = body;
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      phone, 
+      eventDate, 
+      eventType,
+      eventLocation,
+      eventStartTime,
+      eventDuration,
+      eventPackage,
+      notes 
+    } = body;
 
     // Validate required fields
     if (!firstName || !lastName || !email) {
@@ -30,6 +42,12 @@ export async function POST(request: NextRequest) {
         email,
         phone: phone || null,
         eventDate: eventDate ? new Date(eventDate) : null,
+        // TODO: Uncomment after database migration
+        // eventType: eventType || null,
+        // eventLocation: eventLocation || null,
+        // eventStartTime: eventStartTime || null,
+        // eventDuration: eventDuration || null,
+        // eventPackage: eventPackage || null,
         notes: notes || null,
       },
     });
