@@ -14,6 +14,7 @@ interface Client {
 interface Template {
   id: string;
   title: string;
+  htmlContent: string;
   version: number;
 }
 
@@ -33,6 +34,8 @@ export default function AgreementsPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showSmartFields, setShowSmartFields] = useState(false);
+  const [showAgreementEditor, setShowAgreementEditor] = useState(false);
+  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [loading, setLoading] = useState(false);
   const [newAgreement, setNewAgreement] = useState({
     clientId: '',
@@ -122,6 +125,32 @@ export default function AgreementsPage() {
       alert('Failed to create agreement');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewAgreement = async (agreement: Agreement) => {
+    setSelectedAgreement(agreement);
+    setShowAgreementEditor(true);
+  };
+
+  const handleSendToClient = async (agreement: Agreement) => {
+    try {
+      const response = await fetch(`/api/agreements/${agreement.id}/send`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        // Update the agreement status
+        setAgreements(agreements.map(a => 
+          a.id === agreement.id ? { ...a, status: 'SENT' } : a
+        ));
+        alert('Agreement sent to client successfully!');
+      } else {
+        alert('Failed to send agreement to client');
+      }
+    } catch (error) {
+      console.error('Error sending agreement:', error);
+      alert('Failed to send agreement to client');
     }
   };
 
@@ -439,12 +468,9 @@ export default function AgreementsPage() {
                       Created {new Date(agreement.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
-                      onClick={() => {
-                        // TODO: Implement view details functionality
-                        alert(`Agreement Details:\n\nClient: ${agreement.client.firstName} ${agreement.client.lastName}\nTemplate: ${agreement.template.title}\nStatus: ${agreement.status}\nToken: ${agreement.uniqueToken}\nCreated: ${new Date(agreement.createdAt).toLocaleString()}`);
-                      }}
+                      onClick={() => handleViewAgreement(agreement)}
                       style={{
                         backgroundColor: '#3b82f6',
                         color: 'white',
@@ -462,9 +488,9 @@ export default function AgreementsPage() {
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = '#3b82f6';
                       }}
-                      title="View agreement details"
+                      title="View and edit agreement before sending"
                     >
-                      View Details
+                      View/Edit
                     </button>
                     <button
                       onClick={() => {
@@ -503,6 +529,31 @@ export default function AgreementsPage() {
                     >
                       Copy Link
                     </button>
+                    {agreement.status === 'DRAFT' && (
+                      <button
+                        onClick={() => handleSendToClient(agreement)}
+                        style={{
+                          backgroundColor: '#dc2626',
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#b91c1c';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#dc2626';
+                        }}
+                        title="Send agreement to client"
+                      >
+                        Send to Client
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -510,6 +561,133 @@ export default function AgreementsPage() {
           </div>
         )}
       </div>
+
+      {/* Agreement Editor Modal */}
+      {showAgreementEditor && selectedAgreement && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: cardBg,
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            width: '1000px',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: `1px solid ${borderColor}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', color: textColor, fontWeight: 'bold' }}>
+                  Agreement Editor
+                </h2>
+                <p style={{ margin: 0, color: '#94a3b8', fontSize: '16px' }}>
+                  {selectedAgreement.client.firstName} {selectedAgreement.client.lastName} - {selectedAgreement.template.title}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAgreementEditor(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: textColor,
+                  padding: '8px'
+                }}
+                title="Close editor"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{
+              flex: 1,
+              padding: '24px',
+              overflow: 'auto'
+            }}>
+              <div style={{
+                border: `1px solid ${borderColor}`,
+                borderRadius: '6px',
+                padding: '24px',
+                backgroundColor: isDark ? '#0f172a' : '#fafafa',
+                fontFamily: 'Georgia, serif',
+                lineHeight: '1.6',
+                fontSize: '16px',
+                color: textColor,
+                minHeight: '400px'
+              }}>
+                <div dangerouslySetInnerHTML={{ 
+                  __html: selectedAgreement.template.htmlContent 
+                }} />
+              </div>
+              
+              <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                <p style={{ margin: '0 0 16px 0', color: '#94a3b8', fontSize: '14px' }}>
+                  This is a preview of how the agreement will look to the client. 
+                  Smart fields will be automatically replaced with client data.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => {
+                      const clientLink = `${window.location.origin}/agreement/${selectedAgreement.uniqueToken}`;
+                      window.open(clientLink, '_blank');
+                    }}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '500'
+                    }}
+                    title="Open client view in new tab"
+                  >
+                    Preview Client View
+                  </button>
+                  <button
+                    onClick={() => handleSendToClient(selectedAgreement)}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '500'
+                    }}
+                    title="Send this agreement to the client"
+                  >
+                    Send to Client
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
