@@ -36,7 +36,9 @@ export default function AgreementsPage() {
   const [showSmartFields, setShowSmartFields] = useState(false);
   const [showAgreementEditor, setShowAgreementEditor] = useState(false);
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
+  const [editingContent, setEditingContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newAgreement, setNewAgreement] = useState({
     clientId: '',
     templateId: '',
@@ -130,7 +132,41 @@ export default function AgreementsPage() {
 
   const handleViewAgreement = async (agreement: Agreement) => {
     setSelectedAgreement(agreement);
+    setEditingContent(agreement.template.htmlContent);
     setShowAgreementEditor(true);
+  };
+
+  const handleSaveAgreement = async () => {
+    if (!selectedAgreement) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/agreements/${selectedAgreement.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          htmlContent: editingContent
+        }),
+      });
+
+      if (response.ok) {
+        const updatedAgreement = await response.json();
+        setAgreements(agreements.map(a => 
+          a.id === selectedAgreement.id ? { ...a, template: { ...a.template, htmlContent: editingContent } } : a
+        ));
+        setSelectedAgreement({ ...selectedAgreement, template: { ...selectedAgreement.template, htmlContent: editingContent } });
+        alert('Agreement saved successfully!');
+      } else {
+        alert('Failed to save agreement');
+      }
+    } catch (error) {
+      console.error('Error saving agreement:', error);
+      alert('Failed to save agreement');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSendToClient = async (agreement: Agreement) => {
@@ -623,66 +659,131 @@ export default function AgreementsPage() {
             <div style={{
               flex: 1,
               padding: '24px',
-              overflow: 'auto'
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column'
             }}>
-              <div style={{
-                border: `1px solid ${borderColor}`,
-                borderRadius: '6px',
-                padding: '24px',
-                backgroundColor: isDark ? '#0f172a' : '#fafafa',
-                fontFamily: 'Georgia, serif',
-                lineHeight: '1.6',
-                fontSize: '16px',
-                color: textColor,
-                minHeight: '400px'
-              }}>
-                <div dangerouslySetInnerHTML={{ 
-                  __html: selectedAgreement.template.htmlContent 
-                }} />
+              {/* Editor */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor,
+                  fontSize: '14px'
+                }}>
+                  Agreement Content (HTML)
+                </label>
+                <textarea
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  style={{
+                    width: '100%',
+                    height: '400px',
+                    padding: '16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontFamily: 'monospace',
+                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    color: textColor,
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter HTML content for the agreement..."
+                />
+              </div>
+
+              {/* Preview */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor,
+                  fontSize: '14px'
+                }}>
+                  Preview
+                </label>
+                <div style={{
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '6px',
+                  padding: '24px',
+                  backgroundColor: isDark ? '#0f172a' : '#fafafa',
+                  fontFamily: 'Georgia, serif',
+                  lineHeight: '1.6',
+                  fontSize: '16px',
+                  color: textColor,
+                  minHeight: '200px',
+                  maxHeight: '300px',
+                  overflow: 'auto'
+                }}>
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: editingContent || '<p>Enter content above to see preview...</p>'
+                  }} />
+                </div>
               </div>
               
-              <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 16px 0', color: '#94a3b8', fontSize: '14px' }}>
-                  This is a preview of how the agreement will look to the client. 
-                  Smart fields will be automatically replaced with client data.
-                </p>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => {
-                      const clientLink = `${window.location.origin}/agreement/${selectedAgreement.uniqueToken}`;
-                      window.open(clientLink, '_blank');
-                    }}
-                    style={{
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '16px',
-                      fontWeight: '500'
-                    }}
-                    title="Open client view in new tab"
-                  >
-                    Preview Client View
-                  </button>
-                  <button
-                    onClick={() => handleSendToClient(selectedAgreement)}
-                    style={{
-                      backgroundColor: '#059669',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '16px',
-                      fontWeight: '500'
-                    }}
-                    title="Send this agreement to the client"
-                  >
-                    Send to Client
-                  </button>
-                </div>
+              {/* Actions */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px', 
+                justifyContent: 'center',
+                paddingTop: '16px',
+                borderTop: `1px solid ${borderColor}`
+              }}>
+                <button
+                  onClick={handleSaveAgreement}
+                  disabled={saving}
+                  style={{
+                    backgroundColor: saving ? '#9ca3af' : '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                  title="Save changes to this agreement"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => {
+                    const clientLink = `${window.location.origin}/agreement/${selectedAgreement.uniqueToken}`;
+                    window.open(clientLink, '_blank');
+                  }}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                  title="Open client view in new tab"
+                >
+                  Preview Client View
+                </button>
+                <button
+                  onClick={() => handleSendToClient(selectedAgreement)}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                  title="Send this agreement to the client"
+                >
+                  Send to Client
+                </button>
               </div>
             </div>
           </div>

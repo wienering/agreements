@@ -171,7 +171,7 @@ export default function AdminLayout({
 
         {/* Bottom Actions */}
         <div style={{ 
-          padding: '16px 24px', 
+          padding: '16px 24px 24px 24px', 
           marginTop: 'auto',
           flexShrink: 0,
           borderTop: '1px solid rgba(255, 255, 255, 0.1)'
