@@ -85,55 +85,85 @@ export async function POST(request: NextRequest) {
           <title>Agreement - ${agreement.client.firstName} ${agreement.client.lastName}</title>
           <style>
             body {
-              font-family: 'Times New Roman', serif;
-              line-height: 1.6;
+              font-family: Arial, sans-serif;
+              line-height: 1.4;
               margin: 0;
-              padding: 40px;
+              padding: 0.5in;
               color: #333;
               background: white;
+              font-size: 12px;
+              max-width: 7.5in;
+              margin: 0 auto;
             }
             .header {
               text-align: center;
-              margin-bottom: 40px;
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
+              margin-bottom: 20px;
+              border-bottom: 1px solid #333;
+              padding-bottom: 15px;
+              page-break-inside: avoid;
             }
             .header h1 {
               margin: 0;
-              font-size: 28px;
+              font-size: 18px;
               color: #333;
             }
             .header p {
-              margin: 10px 0 0 0;
-              font-size: 16px;
+              margin: 5px 0 0 0;
+              font-size: 14px;
               color: #666;
             }
-            .agreement-content {
+            .client-info, .event-info {
+              margin-bottom: 15px;
+              page-break-inside: avoid;
+            }
+            .client-info h3, .event-info h3 {
               font-size: 14px;
-              line-height: 1.8;
+              margin: 0 0 8px 0;
+              color: #3b82f6;
+            }
+            .info-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+              font-size: 11px;
+            }
+            .info-item {
+              margin-bottom: 3px;
+            }
+            .info-label {
+              font-weight: bold;
+              display: inline-block;
+              width: 80px;
+            }
+            .agreement-content {
+              font-size: 12px;
+              line-height: 1.4;
+              margin-bottom: 20px;
             }
             .signature-section {
-              margin-top: 60px;
+              margin-top: 30px;
               border-top: 1px solid #ccc;
-              padding-top: 30px;
+              padding-top: 15px;
+              page-break-inside: avoid;
             }
             .signature-line {
               border-bottom: 1px solid #333;
-              width: 300px;
-              margin: 20px 0 5px 0;
+              width: 250px;
+              margin: 15px 0 5px 0;
             }
             .signature-label {
-              font-size: 12px;
+              font-size: 10px;
               color: #666;
             }
             .footer {
-              margin-top: 40px;
-              font-size: 12px;
+              margin-top: 20px;
+              font-size: 10px;
               color: #666;
               text-align: center;
+              page-break-inside: avoid;
             }
             @media print {
-              body { margin: 0; padding: 20px; }
+              body { margin: 0; padding: 0.5in; }
             }
           </style>
         </head>
@@ -141,6 +171,45 @@ export async function POST(request: NextRequest) {
           <div class="header">
             <h1>Photobooth Guys</h1>
             <p>Service Agreement</p>
+          </div>
+          
+          <div class="client-info">
+            <h3>Client Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Name:</span> ${agreement.client.firstName} ${agreement.client.lastName}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Email:</span> ${agreement.client.email}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Phone:</span> ${agreement.client.phone || 'Not provided'}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Event Date:</span> ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString() : 'Not specified'}
+              </div>
+            </div>
+          </div>
+          
+          <div class="event-info">
+            <h3>Event Details</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Type:</span> ${agreement.client.eventType || 'Not specified'}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Location:</span> ${agreement.client.eventLocation || 'Not specified'}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Start Time:</span> ${agreement.client.eventStartTime || 'Not specified'}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Duration:</span> ${agreement.client.eventDuration || 'Not specified'}
+              </div>
+              <div class="info-item">
+                <span class="info-label">Package:</span> ${agreement.client.eventPackage || 'Not specified'}
+              </div>
+            </div>
           </div>
           
           <div class="agreement-content">
@@ -154,7 +223,8 @@ export async function POST(request: NextRequest) {
             <p style="margin-top: 20px;">
               <strong>Name:</strong> ${agreement.client.firstName} ${agreement.client.lastName}<br>
               <strong>Email:</strong> ${agreement.client.email}<br>
-              <strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}
+              <strong>Date & Time Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString() : 'N/A'}<br>
+              <strong>Agreement ID:</strong> ${agreement.id}
             </p>
           </div>
           
@@ -188,16 +258,18 @@ export async function POST(request: NextRequest) {
       const page = await browser.newPage();
       await page.setContent(htmlDocument, { waitUntil: 'networkidle0' });
       
-      const pdfData = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm'
-        },
-        printBackground: true
-      });
+             const pdfData = await page.pdf({
+               format: 'Letter', // 8.5x11 inches
+               margin: {
+                 top: '0.5in',
+                 right: '0.5in',
+                 bottom: '0.5in',
+                 left: '0.5in'
+               },
+               printBackground: true,
+               preferCSSPageSize: false,
+               displayHeaderFooter: false
+             });
       pdfBuffer = Buffer.from(pdfData);
       
       await browser.close();

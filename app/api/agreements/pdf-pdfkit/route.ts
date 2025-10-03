@@ -66,12 +66,12 @@ export async function POST(request: NextRequest) {
 
     // Create PDF using PDFKit
     const doc = new PDFDocument({
-      size: 'A4',
+      size: 'LETTER', // 8.5x11 inches
       margins: {
-        top: 50,
-        bottom: 50,
-        left: 50,
-        right: 50
+        top: 36, // 0.5 inch
+        bottom: 36, // 0.5 inch
+        left: 36, // 0.5 inch
+        right: 36 // 0.5 inch
       }
     });
 
@@ -87,51 +87,51 @@ export async function POST(request: NextRequest) {
     });
 
     // Add content to PDF
-    doc.fontSize(20).text('AGREEMENT DOCUMENT', { align: 'center' });
+    doc.fontSize(18).text('AGREEMENT DOCUMENT', { align: 'center' });
     doc.moveDown();
     
-    doc.fontSize(16).text('Photobooth Guys - Service Agreement', { align: 'center' });
-    doc.moveDown(2);
+    doc.fontSize(14).text('Photobooth Guys - Service Agreement', { align: 'center' });
+    doc.moveDown(1.5);
 
     // Client Information
-    doc.fontSize(14).text('CLIENT INFORMATION:', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12).text(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
+    doc.fontSize(12).text('CLIENT INFORMATION:', { underline: true });
+    doc.moveDown(0.3);
+    doc.fontSize(10).text(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
     doc.text(`Email: ${agreement.client.email}`);
     doc.text(`Phone: ${agreement.client.phone || 'Not provided'}`);
     doc.text(`Event Date: ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString() : 'Not specified'}`);
-    doc.moveDown();
+    doc.moveDown(0.5);
 
     // Event Details
-    doc.fontSize(14).text('EVENT DETAILS:', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12).text(`Event Type: ${agreement.client.eventType || 'Not specified'}`);
+    doc.fontSize(12).text('EVENT DETAILS:', { underline: true });
+    doc.moveDown(0.3);
+    doc.fontSize(10).text(`Event Type: ${agreement.client.eventType || 'Not specified'}`);
     doc.text(`Location: ${agreement.client.eventLocation || 'Not specified'}`);
     doc.text(`Start Time: ${agreement.client.eventStartTime || 'Not specified'}`);
     doc.text(`Duration: ${agreement.client.eventDuration || 'Not specified'}`);
     doc.text(`Package: ${agreement.client.eventPackage || 'Not specified'}`);
-    doc.moveDown();
+    doc.moveDown(0.5);
 
     // Agreement Content
-    doc.fontSize(14).text('AGREEMENT CONTENT:', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(11).text(plainText, { align: 'justify' });
-    doc.moveDown(2);
+    doc.fontSize(12).text('AGREEMENT CONTENT:', { underline: true });
+    doc.moveDown(0.3);
+    doc.fontSize(9).text(plainText, { align: 'justify' });
+    doc.moveDown(1);
 
     // Digital Signature
-    doc.fontSize(14).text('DIGITAL SIGNATURE:', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12).text('This agreement has been digitally signed by:');
-    doc.moveDown(0.5);
+    doc.fontSize(12).text('DIGITAL SIGNATURE:', { underline: true });
+    doc.moveDown(0.3);
+    doc.fontSize(10).text('This agreement has been digitally signed by:');
+    doc.moveDown(0.3);
     doc.text(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
     doc.text(`Email: ${agreement.client.email}`);
-    doc.text(`Date Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}`);
+    doc.text(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString() : 'N/A'}`);
     doc.text(`Agreement ID: ${agreement.id}`);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`);
-    doc.moveDown();
+    doc.text(`Generated: ${new Date().toLocaleString()}`);
+    doc.moveDown(0.5);
 
-    doc.fontSize(10).text('This document is legally binding and represents the complete agreement between the parties.', { align: 'center' });
-    doc.moveDown();
+    doc.fontSize(8).text('This document is legally binding and represents the complete agreement between the parties.', { align: 'center' });
+    doc.moveDown(0.3);
     doc.text('Photobooth Guys', { align: 'center' });
     doc.text('Contact: info@photoboothguys.ca', { align: 'center' });
 
