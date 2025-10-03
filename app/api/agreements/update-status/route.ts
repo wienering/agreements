@@ -30,9 +30,25 @@ export async function PUT(request: NextRequest) {
     console.error('Status update error details:', error);
     if (error instanceof z.ZodError) {
       console.error('Zod validation errors:', error.errors);
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Validation failed', 
+        details: error.errors 
+      }, { status: 400 });
     }
+    
+    // Check if it's a database constraint error
+    if (error.code === 'P2002' || error.message?.includes('constraint')) {
+      console.error('Database constraint error:', error);
+      return NextResponse.json({ 
+        error: 'Database constraint error - status may not be valid', 
+        details: error.message 
+      }, { status: 400 });
+    }
+    
     console.error('Error updating agreement status:', error);
-    return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to update status', 
+      details: error.message 
+    }, { status: 500 });
   }
 }
