@@ -204,6 +204,18 @@ export default function ClientsPage() {
     }
   };
 
+  const handleCreateAgreement = (client: Client) => {
+    // Navigate to agreements page with client pre-selected
+    // We'll use URL parameters to pass the client data
+    const clientData = encodeURIComponent(JSON.stringify({
+      id: client.id,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email
+    }));
+    router.push(`/admin/agreements?create=true&client=${clientData}`);
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
   const textColor = isDark ? '#f1f5f9' : '#1e293b';
@@ -730,6 +742,29 @@ export default function ClientsPage() {
                     title="Edit client details"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => handleCreateAgreement(client)}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }}
+                    title="Create new agreement for this client"
+                  >
+                    Create Agreement
                   </button>
                   <button
                     onClick={() => handleDeleteClient(client.id)}

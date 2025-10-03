@@ -90,6 +90,30 @@ export default function AgreementsPage() {
     fetchTemplates();
   }, []);
 
+  // Handle URL parameters for pre-selecting client
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const createParam = urlParams.get('create');
+    const clientParam = urlParams.get('client');
+    
+    if (createParam === 'true' && clientParam) {
+      try {
+        const clientData = JSON.parse(decodeURIComponent(clientParam));
+        // Set the client ID in the new agreement form
+        setNewAgreement(prev => ({
+          ...prev,
+          clientId: clientData.id
+        }));
+        // Show the create form
+        setShowCreateForm(true);
+        // Clean up URL parameters
+        window.history.replaceState({}, '', '/admin/agreements');
+      } catch (error) {
+        console.error('Error parsing client data from URL:', error);
+      }
+    }
+  }, []);
+
   const fetchAgreements = async () => {
     try {
       const response = await fetch('/api/agreements');
