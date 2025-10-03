@@ -59,7 +59,7 @@
             }
             .button {
               display: inline-block;
-              background: #1e40af;
+              background: #2563eb;
               color: white;
               padding: 18px 36px;
               text-decoration: none;
@@ -110,7 +110,7 @@
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${m}/agreement/${a.token}" class="button">View Online</a>
-                <a href="${m}/api/agreements/pdf" class="button">Download PDF</a>
+                <a href="${m}/agreement/${a.token}#download" class="button">Download PDF</a>
               </div>
             </div>
             
