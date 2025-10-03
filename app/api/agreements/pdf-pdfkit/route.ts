@@ -95,7 +95,9 @@ export async function POST(request: NextRequest) {
         .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
         .replace(/\n\s*\n\s*\n/g, '\n\n') // Replace multiple newlines with double
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
-        .replace(/[ \t]+/g, ' '); // Replace multiple spaces with single space
+        .replace(/[ \t]+/g, ' ') // Replace multiple spaces with single space
+        .replace(/\n /g, '\n') // Remove spaces after newlines
+        .replace(/ \n/g, '\n'); // Remove spaces before newlines
       
       return text;
     };
@@ -153,7 +155,20 @@ export async function POST(request: NextRequest) {
     // Agreement Content
     doc.fontSize(12).text('AGREEMENT CONTENT:', { underline: true });
     doc.moveDown(0.3);
-    doc.fontSize(10).text(formattedText, { align: 'justify' });
+    doc.fontSize(10);
+    
+    // Split text into lines and add each line separately to ensure proper line breaks
+    const lines = formattedText.split('\n');
+    lines.forEach((line, index) => {
+      if (line.trim()) {
+        doc.text(line.trim(), { align: 'justify' });
+        if (index < lines.length - 1) {
+          doc.moveDown(0.2);
+        }
+      } else {
+        doc.moveDown(0.3); // Extra space for empty lines
+      }
+    });
     doc.moveDown(1);
 
     // Digital Signature

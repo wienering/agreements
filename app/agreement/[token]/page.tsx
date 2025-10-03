@@ -296,7 +296,7 @@ export default function ClientAgreementPage() {
         },
         body: JSON.stringify({
           token,
-          email: emailAddress.trim(),
+          recipientEmail: emailAddress.trim(),
         }),
       });
 

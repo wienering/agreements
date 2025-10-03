@@ -89,12 +89,12 @@
           <div class="email-container">
             <div class="header">
               <h1>Photobooth Guys</h1>
-              <p>Signed Service Agreement</p>
+              <p>Your Signed Service Agreement</p>
             </div>
             
             <div class="content">
               <h2>Hello ${i.client.firstName},</h2>
-              <p>Thank you for signing your service agreement! Please find a copy of your signed agreement below.</p>
+              <p>Please find a copy of your previously signed service agreement below. This agreement is already legally binding and does not require any further action from you.</p>
               
               <div class="signature-info">
                 <h3>Agreement Details</h3>
@@ -102,6 +102,7 @@
                 <p><strong>Email:</strong> ${i.client.email}</p>
                 <p><strong>Date Signed:</strong> ${i.signedAt?new Date(i.signedAt).toLocaleDateString():"N/A"}</p>
                 <p><strong>Agreement ID:</strong> ${i.id}</p>
+                <p><strong>Status:</strong> <span style="color: #10b981; font-weight: bold;">✓ Already Signed</span></p>
               </div>
               
               <div class="agreement-content">
@@ -122,4 +123,4 @@
           </div>
         </body>
       </html>
-    `,f={from:process.env.SMTP_FROM||process.env.SMTP_USER,to:a.recipientEmail,subject:`Signed Agreement - ${i.client.firstName} ${i.client.lastName}`,html:h};try{await x.verify();let e=await Promise.race([x.sendMail(f),new Promise((e,t)=>setTimeout(()=>t(Error("Email send timeout")),15e3))]);return console.log("Email sent successfully:",e),o.NextResponse.json({message:"Agreement sent successfully",recipientEmail:a.recipientEmail})}catch(e){if(console.error("Email sending failed:",e),e.message&&e.message.includes("timeout"))return o.NextResponse.json({error:"Email service is currently unavailable. Please try again later or contact support."},{status:503});if(e.message&&e.message.includes("authentication"))return o.NextResponse.json({error:"Email authentication failed. Please contact support to fix email configuration."},{status:503});return o.NextResponse.json({error:"Failed to send email. Please try again later or contact support."},{status:500})}}catch(e){if(console.error("Error sending email:",e),e instanceof u.G)return o.NextResponse.json({error:"Validation failed",details:e.errors},{status:400});return o.NextResponse.json({error:"Failed to send email"},{status:500})}}let m=new n.AppRouteRouteModule({definition:{kind:a.RouteKind.APP_ROUTE,page:"/api/agreements/email/route",pathname:"/api/agreements/email",filename:"route",bundlePath:"app/api/agreements/email/route"},resolvedPagePath:"C:\\Users\\denni\\agreements\\app\\api\\agreements\\email\\route.ts",nextConfigOutput:"",userland:s}),{workAsyncStorage:x,workUnitAsyncStorage:h,serverHooks:f}=m;function v(){return(0,i.patchFetch)({workAsyncStorage:x,workUnitAsyncStorage:h})}},96487:()=>{},78335:()=>{},71618:(e,t,r)=>{"use strict";r.d(t,{z:()=>n});let s=require("@prisma/client"),n=global.prisma||new s.PrismaClient({log:["error","warn"]})}};var t=require("../../../../webpack-runtime.js");t.C(e);var r=e=>t(t.s=e),s=t.X(0,[638,452,727,721],()=>r(88681));module.exports=s})();
+    `,f={from:process.env.SMTP_FROM||process.env.SMTP_USER,to:a.recipientEmail,subject:`Copy of Your Signed Agreement - ${i.client.firstName} ${i.client.lastName}`,html:h};try{await x.verify();let e=await Promise.race([x.sendMail(f),new Promise((e,t)=>setTimeout(()=>t(Error("Email send timeout")),15e3))]);return console.log("Email sent successfully:",e),o.NextResponse.json({message:"Agreement sent successfully",recipientEmail:a.recipientEmail})}catch(e){if(console.error("Email sending failed:",e),e.message&&e.message.includes("timeout"))return o.NextResponse.json({error:"Email service is currently unavailable. Please try again later or contact support."},{status:503});if(e.message&&e.message.includes("authentication"))return o.NextResponse.json({error:"Email authentication failed. Please contact support to fix email configuration."},{status:503});return o.NextResponse.json({error:"Failed to send email. Please try again later or contact support."},{status:500})}}catch(e){if(console.error("Error sending email:",e),e instanceof u.G)return o.NextResponse.json({error:"Validation failed",details:e.errors},{status:400});return o.NextResponse.json({error:"Failed to send email"},{status:500})}}let m=new n.AppRouteRouteModule({definition:{kind:a.RouteKind.APP_ROUTE,page:"/api/agreements/email/route",pathname:"/api/agreements/email",filename:"route",bundlePath:"app/api/agreements/email/route"},resolvedPagePath:"C:\\Users\\denni\\agreements\\app\\api\\agreements\\email\\route.ts",nextConfigOutput:"",userland:s}),{workAsyncStorage:x,workUnitAsyncStorage:h,serverHooks:f}=m;function v(){return(0,i.patchFetch)({workAsyncStorage:x,workUnitAsyncStorage:h})}},96487:()=>{},78335:()=>{},71618:(e,t,r)=>{"use strict";r.d(t,{z:()=>n});let s=require("@prisma/client"),n=global.prisma||new s.PrismaClient({log:["error","warn"]})}};var t=require("../../../../webpack-runtime.js");t.C(e);var r=e=>t(t.s=e),s=t.X(0,[638,452,727,721],()=>r(88681));module.exports=s})();

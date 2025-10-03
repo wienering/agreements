@@ -171,7 +171,6 @@ export function RichTextPreview({
 
   return (
     <div
-      dangerouslySetInnerHTML={{ __html: processPreviewHtml(html) }}
       style={{
         padding: '12px',
         border: '1px solid #d1d5db',
@@ -181,9 +180,18 @@ export function RichTextPreview({
         lineHeight: '1.6',
         fontSize: '16px',
         color: isDark ? '#f1f5f9' : '#1f2937',
-        minHeight: '100px',
+        height: '200px', // Fixed height like the text input
+        overflowY: 'auto', // Make it scrollable
+        whiteSpace: 'pre-wrap', // Preserve line breaks
         ...style
       }}
-    />
+    >
+      <div
+        dangerouslySetInnerHTML={{ __html: processPreviewHtml(html) }}
+        style={{
+          minHeight: '100%'
+        }}
+      />
+    </div>
   );
 }

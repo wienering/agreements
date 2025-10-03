@@ -177,12 +177,12 @@ export async function POST(request: NextRequest) {
           <div class="email-container">
             <div class="header">
               <h1>Photobooth Guys</h1>
-              <p>Signed Service Agreement</p>
+              <p>Your Signed Service Agreement</p>
             </div>
             
             <div class="content">
               <h2>Hello ${agreement.client.firstName},</h2>
-              <p>Thank you for signing your service agreement! Please find a copy of your signed agreement below.</p>
+              <p>Please find a copy of your previously signed service agreement below. This agreement is already legally binding and does not require any further action from you.</p>
               
               <div class="signature-info">
                 <h3>Agreement Details</h3>
@@ -190,6 +190,7 @@ export async function POST(request: NextRequest) {
                 <p><strong>Email:</strong> ${agreement.client.email}</p>
                 <p><strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Agreement ID:</strong> ${agreement.id}</p>
+                <p><strong>Status:</strong> <span style="color: #10b981; font-weight: bold;">✓ Already Signed</span></p>
               </div>
               
               <div class="agreement-content">
@@ -216,7 +217,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: validatedData.recipientEmail,
-      subject: `Signed Agreement - ${agreement.client.firstName} ${agreement.client.lastName}`,
+      subject: `Copy of Your Signed Agreement - ${agreement.client.firstName} ${agreement.client.lastName}`,
       html: emailHtml,
     };
 
