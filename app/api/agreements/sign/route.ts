@@ -186,24 +186,28 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
         }
         .button { 
           display: inline-block; 
-          background-color: #1d4ed8; 
+          background-color: #1e40af; 
           color: white; 
-          padding: 16px 32px; 
+          padding: 18px 36px; 
           text-decoration: none; 
-          border-radius: 8px; 
+          border-radius: 6px; 
           margin: 10px 5px;
-          font-weight: 600;
-          font-size: 16px;
+          font-weight: 700;
+          font-size: 18px;
+          font-family: Arial, sans-serif;
           text-align: center;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          border: 2px solid #1d4ed8;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          border: none;
           transition: all 0.2s ease;
-          min-width: 200px;
+          min-width: 220px;
+          text-shadow: none;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          letter-spacing: 0.5px;
         }
         .button:hover { 
-          background-color: #1e40af; 
-          border-color: #1e40af;
-          box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+          background-color: #1d4ed8; 
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
           transform: translateY(-1px);
         }
         .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
