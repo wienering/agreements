@@ -7,12 +7,12 @@ Generated: ${new Date().toLocaleDateString()}
 ${e.replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim()}
 
 This is a text version of the agreement. For a properly formatted PDF, please contact support.
-  `;return Buffer.from(a,"utf-8")},g=o.Ik({token:o.Yj().min(1,"Token is required")});async function d(e){try{var t,i,n;let o;let l=await e.json(),p=g.parse(l),d=await r.z.agreement.findFirst({where:{uniqueToken:p.token,status:"SIGNED"},include:{client:!0,template:!0}});if(!d)return a.NextResponse.json({error:"Signed agreement not found or has expired"},{status:404});let m=(t=d.template.htmlContent,i=d.client,n=d.id,t.replace(/\{\{client\.firstName\}\}/g,i.firstName||"").replace(/\{\{client\.lastName\}\}/g,i.lastName||"").replace(/\{\{client\.email\}\}/g,i.email||"").replace(/\{\{client\.phone\}\}/g,i.phone||"").replace(/\{\{client\.eventDate\}\}/g,i.eventDate?new Date(i.eventDate).toLocaleDateString():"").replace(/\{\{client\.notes\}\}/g,i.notes||"").replace(/\{\{event\.type\}\}/g,i.eventType||"").replace(/\{\{event\.location\}\}/g,i.eventLocation||"").replace(/\{\{event\.startTime\}\}/g,i.eventStartTime||"").replace(/\{\{event\.duration\}\}/g,i.eventDuration||"").replace(/\{\{event\.package\}\}/g,i.eventPackage||"").replace(/\{\{agreement\.date\}\}/g,new Date().toLocaleDateString()).replace(/\{\{agreement\.id\}\}/g,n||"")),f=`
+  `;return Buffer.from(a,"utf-8")},g=o.Ik({token:o.Yj().min(1,"Token is required")});async function d(e){try{let o,l;let p=await e.json(),d=g.parse(p),m=await r.z.agreement.findFirst({where:{uniqueToken:d.token,status:"SIGNED"},include:{client:!0,template:!0}});if(!m)return a.NextResponse.json({error:"Signed agreement not found or has expired"},{status:404});if("SIGNED"===m.status&&m.mergedHtml)o=m.mergedHtml;else{var t,i,n;t=m.template.htmlContent,i=m.client,n=m.id,o=t.replace(/\{\{client\.firstName\}\}/g,i.firstName||"").replace(/\{\{client\.lastName\}\}/g,i.lastName||"").replace(/\{\{client\.email\}\}/g,i.email||"").replace(/\{\{client\.phone\}\}/g,i.phone||"").replace(/\{\{client\.eventDate\}\}/g,i.eventDate?new Date(i.eventDate).toLocaleDateString():"").replace(/\{\{client\.notes\}\}/g,i.notes||"").replace(/\{\{event\.type\}\}/g,i.eventType||"").replace(/\{\{event\.location\}\}/g,i.eventLocation||"").replace(/\{\{event\.startTime\}\}/g,i.eventStartTime||"").replace(/\{\{event\.duration\}\}/g,i.eventDuration||"").replace(/\{\{event\.package\}\}/g,i.eventPackage||"").replace(/\{\{agreement\.date\}\}/g,new Date().toLocaleDateString()).replace(/\{\{agreement\.id\}\}/g,n||"")}let f=`
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Agreement - ${d.client.firstName} ${d.client.lastName}</title>
+          <title>Agreement - ${m.client.firstName} ${m.client.lastName}</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -107,16 +107,16 @@ This is a text version of the agreement. For a properly formatted PDF, please co
             <h3>Client Information</h3>
             <div class="info-grid">
               <div class="info-item">
-                <span class="info-label">Name:</span> ${d.client.firstName} ${d.client.lastName}
+                <span class="info-label">Name:</span> ${m.client.firstName} ${m.client.lastName}
               </div>
               <div class="info-item">
-                <span class="info-label">Email:</span> ${d.client.email}
+                <span class="info-label">Email:</span> ${m.client.email}
               </div>
               <div class="info-item">
-                <span class="info-label">Phone:</span> ${d.client.phone||"Not provided"}
+                <span class="info-label">Phone:</span> ${m.client.phone||"Not provided"}
               </div>
               <div class="info-item">
-                <span class="info-label">Event Date:</span> ${d.client.eventDate?new Date(d.client.eventDate).toLocaleDateString():"Not specified"}
+                <span class="info-label">Event Date:</span> ${m.client.eventDate?new Date(m.client.eventDate).toLocaleDateString():"Not specified"}
               </div>
             </div>
           </div>
@@ -125,25 +125,25 @@ This is a text version of the agreement. For a properly formatted PDF, please co
             <h3>Event Details</h3>
             <div class="info-grid">
               <div class="info-item">
-                <span class="info-label">Type:</span> ${d.client.eventType||"Not specified"}
+                <span class="info-label">Type:</span> ${m.client.eventType||"Not specified"}
               </div>
               <div class="info-item">
-                <span class="info-label">Location:</span> ${d.client.eventLocation||"Not specified"}
+                <span class="info-label">Location:</span> ${m.client.eventLocation||"Not specified"}
               </div>
               <div class="info-item">
-                <span class="info-label">Start Time:</span> ${d.client.eventStartTime||"Not specified"}
+                <span class="info-label">Start Time:</span> ${m.client.eventStartTime||"Not specified"}
               </div>
               <div class="info-item">
-                <span class="info-label">Duration:</span> ${d.client.eventDuration||"Not specified"}
+                <span class="info-label">Duration:</span> ${m.client.eventDuration||"Not specified"}
               </div>
               <div class="info-item">
-                <span class="info-label">Package:</span> ${d.client.eventPackage||"Not specified"}
+                <span class="info-label">Package:</span> ${m.client.eventPackage||"Not specified"}
               </div>
             </div>
           </div>
           
           <div class="agreement-content">
-            ${m}
+            ${o}
           </div>
           
           <div class="signature-section">
@@ -151,18 +151,18 @@ This is a text version of the agreement. For a properly formatted PDF, please co
             <div class="signature-line"></div>
             <div class="signature-label">Client Signature</div>
             <p style="margin-top: 20px;">
-              <strong>Name:</strong> ${d.client.firstName} ${d.client.lastName}<br>
-              <strong>Email:</strong> ${d.client.email}<br>
-              <strong>Date & Time Signed:</strong> ${d.signedAt?new Date(d.signedAt).toLocaleString("en-CA",{timeZone:"America/Toronto"}):"N/A"}<br>
-              <strong>IP Address:</strong> ${d.signedFromIP||"N/A"}<br>
-              <strong>Agreement ID:</strong> ${d.id}
+              <strong>Name:</strong> ${m.client.firstName} ${m.client.lastName}<br>
+              <strong>Email:</strong> ${m.client.email}<br>
+              <strong>Date & Time Signed:</strong> ${m.signedAt?new Date(m.signedAt).toLocaleString("en-CA",{timeZone:"America/Toronto"}):"N/A"}<br>
+              <strong>IP Address:</strong> ${m.signedFromIP||"N/A"}<br>
+              <strong>Agreement ID:</strong> ${m.id}
             </p>
           </div>
           
           <div class="footer">
             <p>This document was digitally signed and is legally binding.</p>
-            <p>Agreement ID: ${d.id} | Generated: ${new Date().toLocaleDateString()}</p>
+            <p>Agreement ID: ${m.id} | Generated: ${new Date().toLocaleDateString()}</p>
           </div>
         </body>
       </html>
-    `;try{let e=await s.default.launch({headless:!0,args:["--no-sandbox","--disable-setuid-sandbox","--disable-dev-shm-usage","--disable-accelerated-2d-canvas","--no-first-run","--no-zygote","--single-process","--disable-gpu"],executablePath:process.env.PUPPETEER_EXECUTABLE_PATH||void 0}),t=await e.newPage();await t.setContent(f,{waitUntil:"networkidle0"});let i=await t.pdf({format:"Letter",margin:{top:"0.5in",right:"0.5in",bottom:"0.5in",left:"0.5in"},printBackground:!0,preferCSSPageSize:!1,displayHeaderFooter:!1});o=Buffer.from(i),await e.close()}catch(e){console.warn("Puppeteer failed, using fallback PDF generation:",e),o=await c(m,`${d.client.firstName} ${d.client.lastName}`,d.client.email,d.id)}return new a.NextResponse(o,{status:200,headers:{"Content-Type":"application/pdf","Content-Disposition":`attachment; filename="agreement-${d.client.firstName}-${d.client.lastName}-${d.id}.pdf"`,"Content-Length":o.length.toString()}})}catch(e){if(console.error("Error generating PDF:",e),e instanceof l.G)return a.NextResponse.json({error:"Validation failed",details:e.errors},{status:400});return a.NextResponse.json({error:"Failed to generate PDF"},{status:500})}}n()}catch(e){n(e)}})},71618:(e,t,i)=>{"use strict";i.d(t,{z:()=>a});let n=require("@prisma/client"),a=global.prisma||new n.PrismaClient({log:["error","warn"]})}};var t=require("../../../../webpack-runtime.js");t.C(e);var i=e=>t(t.s=e),n=t.X(0,[638,452,727],()=>i(92870));module.exports=n})();
+    `;try{let e=await s.default.launch({headless:!0,args:["--no-sandbox","--disable-setuid-sandbox","--disable-dev-shm-usage","--disable-accelerated-2d-canvas","--no-first-run","--no-zygote","--single-process","--disable-gpu"],executablePath:process.env.PUPPETEER_EXECUTABLE_PATH||void 0}),t=await e.newPage();await t.setContent(f,{waitUntil:"networkidle0"});let i=await t.pdf({format:"Letter",margin:{top:"0.5in",right:"0.5in",bottom:"0.5in",left:"0.5in"},printBackground:!0,preferCSSPageSize:!1,displayHeaderFooter:!1});l=Buffer.from(i),await e.close()}catch(e){console.warn("Puppeteer failed, using fallback PDF generation:",e),l=await c(o,`${m.client.firstName} ${m.client.lastName}`,m.client.email,m.id)}return new a.NextResponse(l,{status:200,headers:{"Content-Type":"application/pdf","Content-Disposition":`attachment; filename="agreement-${m.client.firstName}-${m.client.lastName}-${m.id}.pdf"`,"Content-Length":l.length.toString()}})}catch(e){if(console.error("Error generating PDF:",e),e instanceof l.G)return a.NextResponse.json({error:"Validation failed",details:e.errors},{status:400});return a.NextResponse.json({error:"Failed to generate PDF"},{status:500})}}n()}catch(e){n(e)}})},71618:(e,t,i)=>{"use strict";i.d(t,{z:()=>a});let n=require("@prisma/client"),a=global.prisma||new n.PrismaClient({log:["error","warn"]})}};var t=require("../../../../webpack-runtime.js");t.C(e);var i=e=>t(t.s=e),n=t.X(0,[638,452,727],()=>i(92870));module.exports=n})();

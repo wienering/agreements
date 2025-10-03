@@ -53,8 +53,16 @@ export async function GET(request: NextRequest) {
       return processedHtml;
     };
 
-    // Process the HTML content with smart fields
-    const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    // For signed agreements, use the saved snapshot to prevent changes
+    // For unsigned agreements, process the template in real-time
+    let processedHtml;
+    if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+      // Use the saved snapshot for signed agreements
+      processedHtml = agreement.mergedHtml;
+    } else {
+      // Process the template in real-time for unsigned agreements
+      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    }
 
     // Return the agreement with processed HTML
     return NextResponse.json({

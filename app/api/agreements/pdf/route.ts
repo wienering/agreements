@@ -74,7 +74,16 @@ export async function POST(request: NextRequest) {
       return processedHtml;
     };
 
-    const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    // For signed agreements, use the saved snapshot to prevent changes
+    // For unsigned agreements, process the template in real-time
+    let processedHtml;
+    if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+      // Use the saved snapshot for signed agreements
+      processedHtml = agreement.mergedHtml;
+    } else {
+      // Process the template in real-time for unsigned agreements
+      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    }
 
     // Create a complete HTML document for PDF generation
     const htmlDocument = `

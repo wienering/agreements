@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
         }
       },
       include: {
-        client: true
+        client: true,
+        template: true
       }
     });
 
@@ -67,13 +68,43 @@ export async function POST(request: NextRequest) {
 
     const clientIP = getClientIP(request);
 
-    // Update agreement status to SIGNED
+    // Process and save the HTML content as a snapshot
+    const processHtmlContent = (html: string, client: any, agreementId: string) => {
+      let processedHtml = html;
+      
+      // Replace client fields
+      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
+      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
+      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
+      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '');
+      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
+      
+      // Replace event fields
+      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
+      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
+      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
+      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
+      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+      
+      // Replace agreement fields
+      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
+      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
+      
+      return processedHtml;
+    };
+
+    // Create a snapshot of the agreement content at the time of signing
+    const signedHtmlContent = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+
+    // Update agreement status to SIGNED and save the snapshot
     const updatedAgreement = await prisma.agreement.update({
       where: { id: agreement.id },
       data: {
         status: 'SIGNED',
         signedAt: new Date(),
-        signedFromIP: clientIP
+        signedFromIP: clientIP,
+        mergedHtml: signedHtmlContent // Save the processed HTML as a snapshot
       },
       include: {
         client: true,
