@@ -5,6 +5,7 @@ import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
+import SearchableSelect from '../../components/SearchableSelect';
 
 interface Agreement {
   id: string;
@@ -314,27 +315,23 @@ export default function AgreementsPage() {
                   }}>
                     Client
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={clients.map(client => ({
+                      id: client.id,
+                      label: `${client.firstName} ${client.lastName} (${client.email})`,
+                      value: client.id
+                    }))}
                     value={newAgreement.clientId}
-                    onChange={(e) => setNewAgreement({ ...newAgreement, clientId: e.target.value })}
+                    onChange={(value) => setNewAgreement({ ...newAgreement, clientId: value })}
+                    placeholder="Search and select a client..."
                     required
                     style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
+                      borderColor: borderColor,
                       backgroundColor: cardBg,
                       color: textColor,
                       fontSize: '14px'
                     }}
-                  >
-                    <option value="">Select a client</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.firstName} {client.lastName} ({client.email})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div>
                   <label style={{ 
