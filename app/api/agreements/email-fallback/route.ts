@@ -59,7 +59,10 @@ export async function POST(request: NextRequest) {
     const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
 
     // Create a shareable link instead of sending email
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // Get the base URL from the request headers or environment
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
     const agreementUrl = `${baseUrl}/agreement/${validatedData.token}`;
     
     // Create a simple text version for sharing
