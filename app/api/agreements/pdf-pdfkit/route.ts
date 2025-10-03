@@ -67,11 +67,40 @@ export async function POST(request: NextRequest) {
       processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
     }
 
-    // Convert HTML to plain text for PDF
-    const plainText = processedHtml
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .trim();
+    // Create a better HTML to text converter that preserves formatting
+    const convertHtmlToText = (html: string) => {
+      // Replace common HTML elements with proper formatting
+      let text = html
+        .replace(/<br\s*\/?>/gi, '\n') // Convert <br> to newlines
+        .replace(/<\/p>/gi, '\n\n') // Convert </p> to double newlines
+        .replace(/<p[^>]*>/gi, '') // Remove opening <p> tags
+        .replace(/<h[1-6][^>]*>/gi, '\n\n') // Convert headers to double newlines
+        .replace(/<\/h[1-6]>/gi, '\n\n')
+        .replace(/<strong[^>]*>/gi, '') // Remove <strong> tags
+        .replace(/<\/strong>/gi, '')
+        .replace(/<b[^>]*>/gi, '') // Remove <b> tags
+        .replace(/<\/b>/gi, '')
+        .replace(/<em[^>]*>/gi, '') // Remove <em> tags
+        .replace(/<\/em>/gi, '')
+        .replace(/<i[^>]*>/gi, '') // Remove <i> tags
+        .replace(/<\/i>/gi, '')
+        .replace(/<ul[^>]*>/gi, '\n') // Convert lists
+        .replace(/<\/ul>/gi, '\n')
+        .replace(/<ol[^>]*>/gi, '\n')
+        .replace(/<\/ol>/gi, '\n')
+        .replace(/<li[^>]*>/gi, '• ') // Convert list items
+        .replace(/<\/li>/gi, '\n')
+        .replace(/<div[^>]*>/gi, '\n') // Convert divs to newlines
+        .replace(/<\/div>/gi, '')
+        .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
+        .replace(/\n\s*\n\s*\n/g, '\n\n') // Replace multiple newlines with double
+        .replace(/^\s+|\s+$/g, '') // Trim whitespace
+        .replace(/[ \t]+/g, ' '); // Replace multiple spaces with single space
+      
+      return text;
+    };
+
+    const formattedText = convertHtmlToText(processedHtml);
 
     // Create PDF using PDFKit
     const doc = new PDFDocument({
@@ -95,9 +124,9 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    // Add content to PDF
-    doc.fontSize(18).text('AGREEMENT DOCUMENT', { align: 'center' });
-    doc.moveDown();
+    // Add header
+    doc.fontSize(20).font('Helvetica-Bold').text('AGREEMENT DOCUMENT', { align: 'center' });
+    doc.moveDown(0.5);
     
     doc.fontSize(14).text('Photobooth Guys - Service Agreement', { align: 'center' });
     doc.moveDown(1.5);
@@ -124,7 +153,7 @@ export async function POST(request: NextRequest) {
     // Agreement Content
     doc.fontSize(12).text('AGREEMENT CONTENT:', { underline: true });
     doc.moveDown(0.3);
-    doc.fontSize(9).text(plainText, { align: 'justify' });
+    doc.fontSize(10).text(formattedText, { align: 'justify' });
     doc.moveDown(1);
 
     // Digital Signature

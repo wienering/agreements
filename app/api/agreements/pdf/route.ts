@@ -145,24 +145,53 @@ export async function POST(request: NextRequest) {
               width: 80px;
             }
             .agreement-content {
-              font-size: 12px;
-              line-height: 1.4;
+              font-size: 11px;
+              line-height: 1.6;
               margin-bottom: 20px;
+              text-align: justify;
+            }
+            .agreement-content p {
+              margin: 8px 0;
+            }
+            .agreement-content h1, .agreement-content h2, .agreement-content h3 {
+              margin: 15px 0 8px 0;
+              font-weight: bold;
+            }
+            .agreement-content ul, .agreement-content ol {
+              margin: 8px 0;
+              padding-left: 20px;
+            }
+            .agreement-content li {
+              margin: 4px 0;
             }
             .signature-section {
               margin-top: 30px;
-              border-top: 1px solid #ccc;
-              padding-top: 15px;
+              border-top: 2px solid #333;
+              padding: 20px;
               page-break-inside: avoid;
+              background-color: #f9f9f9;
+              border-radius: 5px;
+            }
+            .signature-section h3 {
+              margin: 0 0 15px 0;
+              font-size: 14px;
+              color: #333;
+              text-decoration: underline;
             }
             .signature-line {
               border-bottom: 1px solid #333;
-              width: 250px;
+              width: 300px;
               margin: 15px 0 5px 0;
             }
             .signature-label {
-              font-size: 10px;
-              color: #666;
+              font-size: 11px;
+              color: #555;
+              font-weight: bold;
+            }
+            .signature-details {
+              margin-top: 15px;
+              font-size: 11px;
+              line-height: 1.4;
             }
             .footer {
               margin-top: 20px;
@@ -226,16 +255,17 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div class="signature-section">
-            <p><strong>Digital Signature:</strong></p>
+            <h3>Digital Signature Details</h3>
             <div class="signature-line"></div>
             <div class="signature-label">Client Signature</div>
-            <p style="margin-top: 20px;">
-              <strong>Name:</strong> ${agreement.client.firstName} ${agreement.client.lastName}<br>
-              <strong>Email:</strong> ${agreement.client.email}<br>
-              <strong>Date & Time Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
-              <strong>IP Address:</strong> ${agreement.signedFromIP || 'N/A'}<br>
-              <strong>Agreement ID:</strong> ${agreement.id}
-            </p>
+            <div class="signature-details">
+              <p><strong>Name:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
+              <p><strong>Email:</strong> ${agreement.client.email}</p>
+              <p><strong>Date & Time Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
+              <p><strong>IP Address:</strong> ${agreement.signedFromIP || 'N/A'}</p>
+              <p><strong>Agreement ID:</strong> ${agreement.id}</p>
+              <p><strong>Generated:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
+            </div>
           </div>
           
           <div class="footer">

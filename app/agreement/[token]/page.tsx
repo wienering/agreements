@@ -115,6 +115,27 @@ export default function ClientAgreementPage() {
     }
   }, [token, fetchAgreement]);
 
+  // Handle anchor links for PDF download
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#download' && agreement) {
+        handleDownloadPDF();
+      }
+    };
+
+    // Check on mount
+    if (window.location.hash === '#download' && agreement) {
+      handleDownloadPDF();
+    }
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [agreement, handleDownloadPDF]);
+
   const handleSignAgreement = async () => {
     if (!agreement) return;
     
