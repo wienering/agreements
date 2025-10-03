@@ -145,26 +145,26 @@ export function RichTextPreview({
     const eventDuration = clientData?.eventDuration || '4 hours';
     const eventPackage = clientData?.eventPackage || 'Premium Package';
     
-    // Replace client fields with actual or sample data
-    processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, `<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${firstName}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, `<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${lastName}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, `<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${email}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, `<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${phone}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, `<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${eventDate}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, `<span style="background-color: #fef3c7; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${notes}]</span>`);
+    // Replace client fields with clean, readable styling
+    processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${firstName}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${lastName}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${email}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${phone}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${eventDate}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${notes}</strong>`);
     
-    // Replace event fields with actual or sample data
-    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, `<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${eventType}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, `<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${eventLocation}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, `<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${eventStartTime}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, `<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${eventDuration}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, `<span style="background-color: #dbeafe; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${eventPackage}]</span>`);
+    // Replace event fields with clean, readable styling
+    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventType}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventLocation}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventStartTime}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventDuration}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventPackage}</strong>`);
     
-    // Replace agreement fields with actual or sample data
+    // Replace agreement fields with clean, readable styling
     const agreementDate = new Date().toLocaleDateString();
     const agreementIdValue = agreementId || 'AG-12345';
-    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, `<span style="background-color: #f3e8ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${agreementDate}]</span>`);
-    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, `<span style="background-color: #f3e8ff; padding: 2px 4px; border-radius: 3px; font-weight: 500;">[${agreementIdValue}]</span>`);
+    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${agreementDate}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${agreementIdValue}</strong>`);
     
     return processedHtml;
   };
