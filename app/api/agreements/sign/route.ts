@@ -51,12 +51,28 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get client IP address
+    const getClientIP = (request: NextRequest): string => {
+      const forwarded = request.headers.get('x-forwarded-for');
+      const realIP = request.headers.get('x-real-ip');
+      const cfConnectingIP = request.headers.get('cf-connecting-ip');
+      
+      if (cfConnectingIP) return cfConnectingIP;
+      if (realIP) return realIP;
+      if (forwarded) return forwarded.split(',')[0].trim();
+      
+      return 'Unknown';
+    };
+
+    const clientIP = getClientIP(request);
+
     // Update agreement status to SIGNED
     const updatedAgreement = await prisma.agreement.update({
       where: { id: agreement.id },
       data: {
         status: 'SIGNED',
-        signedAt: new Date()
+        signedAt: new Date(),
+        signedFromIP: clientIP
       },
       include: {
         client: true,

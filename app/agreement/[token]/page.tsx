@@ -24,6 +24,7 @@ interface AgreementData {
   };
   status: string;
   signedAt: string | null;
+  signedFromIP: string | null;
   mergedHtml: string | null;
   fields: Array<{
     key: string;
@@ -685,6 +686,26 @@ export default function ClientAgreementPage() {
                    fontFamily: 'monospace'
                  }}>
                    {agreement.id}
+                 </div>
+               </div>
+               <div>
+                 <div style={{ 
+                   fontSize: '12px', 
+                   color: '#94a3b8', 
+                   marginBottom: '4px',
+                   fontWeight: '500',
+                   textTransform: 'uppercase',
+                   letterSpacing: '0.5px'
+                 }}>
+                   IP Address
+                 </div>
+                 <div style={{ 
+                   fontSize: '14px', 
+                   color: textColor,
+                   fontWeight: '600',
+                   fontFamily: 'monospace'
+                 }}>
+                   {agreement.signedFromIP || 'N/A'}
                  </div>
                </div>
              </div>

@@ -151,12 +151,14 @@ export default function SearchableSelect({
                   }}
                   onMouseEnter={(e) => {
                     if (value !== option.value) {
-                      e.currentTarget.style.backgroundColor = '#f9fafb';
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.color = '#ffffff';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (value !== option.value) {
                       e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = style?.color || '#1f2937';
                     }
                   }}
                 >
