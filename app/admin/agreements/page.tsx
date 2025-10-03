@@ -565,14 +565,22 @@ export default function AgreementsPage() {
                   }}>
                     <span style={{ 
                       fontSize: '12px', 
-                      color: mutedText,
-                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                      color: agreement.status === 'DRAFT' ? '#dc2626' : 
+                             agreement.status === 'LIVE' ? '#059669' :
+                             agreement.status === 'SIGNED' ? '#2563eb' :
+                             agreement.status === 'COMPLETED' ? '#7c3aed' : mutedText,
+                      backgroundColor: agreement.status === 'DRAFT' ? '#fef2f2' :
+                                      agreement.status === 'LIVE' ? '#f0fdf4' :
+                                      agreement.status === 'SIGNED' ? '#eff6ff' :
+                                      agreement.status === 'COMPLETED' ? '#faf5ff' :
+                                      isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto',
                       cursor: 'pointer',
                       border: '1px solid transparent',
-                      transition: 'border-color 0.2s'
+                      transition: 'border-color 0.2s',
+                      fontWeight: '500'
                     }}
                     onClick={() => {
                       setEditingStatus(true);
