@@ -445,7 +445,16 @@ export default function TemplatesPage() {
                     padding: '8px 16px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    transition: 'background-color 0.2s, color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                    e.currentTarget.style.color = textColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = mutedText;
                   }}
                 >
                   Cancel
@@ -460,7 +469,18 @@ export default function TemplatesPage() {
                     padding: '8px 16px',
                     borderRadius: '4px',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }
                   }}
                 >
                   {loading ? (editingTemplate ? 'Updating...' : 'Creating...') : (editingTemplate ? 'Update Template' : 'Create Template')}
@@ -581,7 +601,14 @@ export default function TemplatesPage() {
                       cursor: 'pointer',
                       fontSize: '14px',
                       fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto'
+                      width: isMobile ? '100%' : 'auto',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#6d28d9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#7c3aed';
                     }}
                     title="View full template content"
                   >
@@ -598,7 +625,14 @@ export default function TemplatesPage() {
                       cursor: 'pointer',
                       fontSize: '14px',
                       fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto'
+                      width: isMobile ? '100%' : 'auto',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
                     }}
                     title="Use this template to create an agreement"
                   >
@@ -616,7 +650,18 @@ export default function TemplatesPage() {
                       cursor: loading ? 'not-allowed' : 'pointer',
                       fontSize: '14px',
                       fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto'
+                      width: isMobile ? '100%' : 'auto',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#b91c1c';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#dc2626';
+                      }
                     }}
                     title="Delete this template permanently"
                   >
@@ -743,7 +788,16 @@ export default function TemplatesPage() {
                     padding: '8px 16px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    transition: 'background-color 0.2s, color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                    e.currentTarget.style.color = textColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = mutedText;
                   }}
                 >
                   Close
@@ -761,7 +815,14 @@ export default function TemplatesPage() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#047857';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#059669';
                   }}
                 >
                   Edit Template
@@ -779,7 +840,14 @@ export default function TemplatesPage() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3b82f6';
                   }}
                 >
                   Use Template
