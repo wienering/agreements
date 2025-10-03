@@ -59,8 +59,8 @@
             }
             .button {
               display: inline-block;
-              background: #2563eb;
-              color: white;
+              background: #2563eb !important;
+              color: white !important;
               padding: 18px 36px;
               text-decoration: none;
               border-radius: 6px;
@@ -109,8 +109,8 @@
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${m}/agreement/${a.token}" class="button">View Online</a>
-                <a href="${m}/agreement/${a.token}#download" class="button">Download PDF</a>
+                <a href="${m}/agreement/${a.token}" class="button" style="color: white !important; background-color: #2563eb !important;">View Online</a>
+                <a href="${m}/agreement/${a.token}#download" class="button" style="color: white !important; background-color: #2563eb !important;">Download PDF</a>
               </div>
             </div>
             

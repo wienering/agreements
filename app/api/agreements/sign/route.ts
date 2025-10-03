@@ -186,8 +186,8 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
         }
         .button { 
           display: inline-block; 
-          background-color: #2563eb; 
-          color: white; 
+          background-color: #2563eb !important; 
+          color: white !important; 
           padding: 18px 36px; 
           text-decoration: none; 
           border-radius: 6px; 

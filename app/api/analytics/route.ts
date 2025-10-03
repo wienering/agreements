@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const days = searchParams.get('days');
+    
     // Get basic counts
     const [
       totalAgreements,
@@ -21,6 +24,9 @@ export async function GET(request: NextRequest) {
       prisma.agreement.count({ where: { status: 'SIGNED' } }),
       prisma.agreement.count({ where: { status: 'COMPLETED' } })
     ]);
+
+    // Calculate conversion rate
+    const conversionRate = totalAgreements > 0 ? Math.round((signedAgreements / totalAgreements) * 100) : 0;
 
     // Get recent agreements (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -116,6 +122,21 @@ export async function GET(request: NextRequest) {
         }
       }
     });
+
+    // If days parameter is provided, return simplified overview for admin page
+    if (days) {
+      return NextResponse.json({
+        overview: {
+          totalAgreements,
+          totalClients,
+          totalTemplates,
+          signedAgreements,
+          draftAgreements,
+          sentAgreements: liveAgreements, // Live agreements are "sent"
+          conversionRate
+        }
+      });
+    }
 
     const analytics = {
       overview: {
