@@ -777,10 +777,25 @@ export default function AgreementsPage() {
                     border: 'none',
                     fontSize: '24px',
                     cursor: 'pointer',
-                    color: mutedText
+                    color: mutedText,
+                    padding: '4px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s, color 0.2s'
                   }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                    e.currentTarget.style.color = textColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = mutedText;
+                  }}
+                  title="Close modal"
                 >
-                  Ãƒâ€”
+                  ×
                 </button>
               </div>
 
