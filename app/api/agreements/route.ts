@@ -5,6 +5,9 @@ import { randomBytes } from 'crypto';
 export async function GET() {
   try {
     const agreements = await prisma.agreement.findMany({
+      where: {
+        archived: false, // Only show non-archived agreements
+      },
       include: {
         client: true,
         template: true,

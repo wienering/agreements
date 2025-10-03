@@ -493,6 +493,36 @@ export default function AgreementsPage() {
     setCancellationConfirm('');
   };
 
+  const handleArchiveAgreement = async (agreementId: string) => {
+    if (!confirm('Are you sure you want to archive this agreement? It will be moved to the archived section.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/agreements/archive', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agreementId }),
+      });
+
+      if (response.ok) {
+        showToast('Agreement archived successfully', 'success');
+        fetchAgreements(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to archive agreement', 'error');
+      }
+    } catch (error) {
+      console.error('Error archiving agreement:', error);
+      showToast('Error archiving agreement', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
   const textColor = isDark ? '#f1f5f9' : '#1e293b';
@@ -526,12 +556,64 @@ export default function AgreementsPage() {
               Agreements
             </h1>
             <p style={{ 
-              margin: '0', 
+              margin: '0 0 12px 0', 
               color: mutedText, 
               fontSize: '16px' 
             }}>
               Manage client agreements and contracts
             </p>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => router.push('/admin/agreements/completed')}
+                style={{
+                  backgroundColor: '#7c3aed',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6d28d9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#7c3aed';
+                }}
+                title="View completed agreements"
+              >
+                Completed
+              </button>
+              <button
+                onClick={() => router.push('/admin/agreements/archived')}
+                style={{
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#4b5563';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6b7280';
+                }}
+                title="View archived agreements"
+              >
+                Archived
+              </button>
+            </div>
           </div>
           <button
             onClick={() => setShowCreateForm(true)}
@@ -936,6 +1018,36 @@ export default function AgreementsPage() {
                       title="Cancel this signed agreement (Admin only - requires confirmation)"
                     >
                       Cancel Agreement
+                    </button>
+                  )}
+                  {(agreement.status === 'SIGNED' || agreement.status === 'COMPLETED') && (
+                    <button
+                      onClick={() => handleArchiveAgreement(agreement.id)}
+                      disabled={loading}
+                      style={{
+                        backgroundColor: loading ? '#9ca3af' : '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.backgroundColor = '#4b5563';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.backgroundColor = '#6b7280';
+                        }
+                      }}
+                      title="Archive this agreement"
+                    >
+                      {loading ? 'Archiving...' : 'Archive'}
                     </button>
                   )}
                 </div>
