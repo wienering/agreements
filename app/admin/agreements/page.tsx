@@ -196,8 +196,47 @@ export default function AgreementsPage() {
   };
 
   const handleSendToClient = async (agreement: Agreement) => {
-    // Send functionality temporarily disabled
-    showToast('Send functionality is not yet implemented. Please use the "Copy Link" button to share the agreement with the client.', 'info');
+    try {
+      setLoading(true);
+      const response = await fetch('/api/agreements/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agreementId: agreement.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the agreement status if it was changed to LIVE
+        if (data.status) {
+          setAgreements(agreements.map(a => 
+            a.id === agreement.id ? { ...a, status: data.status } : a
+          ));
+        }
+        showToast(`Agreement sent successfully to ${agreement.client.email}!`);
+      } else {
+        // If email failed but we have a fallback link, show both error and fallback
+        if (data.fallback) {
+          showToast(`Email failed: ${data.error}. ${data.fallback.message}`, 'error');
+          // Also copy the link to clipboard
+          try {
+            await navigator.clipboard.writeText(data.fallback.clientLink);
+            showToast('Fallback link copied to clipboard!', 'info');
+          } catch (clipboardError) {
+            console.log('Could not copy to clipboard:', clipboardError);
+          }
+        } else {
+          showToast(`Error: ${data.error || 'Failed to send agreement'}`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error sending agreement:', error);
+      showToast('Failed to send agreement. Please try again later.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteAgreement = async (agreementId: string) => {
@@ -998,19 +1037,20 @@ export default function AgreementsPage() {
                 </button>
                 <button
                   onClick={() => handleSendToClient(selectedAgreement)}
+                  disabled={loading}
                   style={{
-                    backgroundColor: '#dc2626',
+                    backgroundColor: loading ? '#9ca3af' : '#dc2626',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '6px',
-                    cursor: 'pointer',
+                    cursor: loading ? 'not-allowed' : 'pointer',
                     fontSize: '16px',
                     fontWeight: '500'
                   }}
                   title="Send this agreement to the client"
                 >
-                  Send to Client
+                  {loading ? 'Sending...' : 'Send to Client'}
                 </button>
               </div>
             </div>
