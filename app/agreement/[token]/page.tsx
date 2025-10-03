@@ -43,12 +43,52 @@ export default function ClientAgreementPage() {
   const [clientEmail, setClientEmail] = useState('');
   const [signError, setSignError] = useState<string | null>(null);
 
+  // Function to process smart fields in HTML content
+  const processSmartFields = (html: string, client: any, agreementId: string) => {
+    if (!html || !client) return html;
+    
+    let processedHtml = html;
+    
+    // Replace client fields
+    processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
+    processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
+    processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
+    processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
+    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
+    
+    // Replace event fields
+    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
+    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
+    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
+    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
+    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+    
+    // Replace agreement fields
+    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
+    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
+    
+    return processedHtml;
+  };
+
   const fetchAgreement = useCallback(async () => {
     try {
       const response = await fetch(`/api/agreements/client?token=${token}`);
       if (response.ok) {
         const data = await response.json();
-        setAgreement(data);
+        // Process smart fields for the fetched agreement
+        const processedAgreement = {
+          ...data,
+          template: {
+            ...data.template,
+            htmlContent: processSmartFields(
+              data.template.htmlContent, 
+              data.client, 
+              data.id
+            )
+          }
+        };
+        setAgreement(processedAgreement);
       } else if (response.status === 404) {
         setError('Agreement not found or has expired.');
       } else {
@@ -100,7 +140,19 @@ export default function ClientAgreementPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setAgreement(data.agreement);
+        // Process smart fields for the updated agreement
+        const processedAgreement = {
+          ...data.agreement,
+          template: {
+            ...data.agreement.template,
+            htmlContent: processSmartFields(
+              data.agreement.template.htmlContent, 
+              data.agreement.client, 
+              data.agreement.id
+            )
+          }
+        };
+        setAgreement(processedAgreement);
         setShowSignModal(false);
         // Show success message
         alert('Agreement signed successfully!');
