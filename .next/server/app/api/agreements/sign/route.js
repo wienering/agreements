@@ -1,1 +1,89 @@
-(()=>{var e={};e.id=159,e.ids=[159],e.modules={10846:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},44870:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},3295:e=>{"use strict";e.exports=require("next/dist/server/app-render/after-task-async-storage.external.js")},29294:e=>{"use strict";e.exports=require("next/dist/server/app-render/work-async-storage.external.js")},63033:e=>{"use strict";e.exports=require("next/dist/server/app-render/work-unit-async-storage.external.js")},53730:(e,r,t)=>{"use strict";t.r(r),t.d(r,{patchFetch:()=>w,routeModule:()=>c,serverHooks:()=>f,workAsyncStorage:()=>g,workUnitAsyncStorage:()=>x});var s={};t.r(s),t.d(s,{POST:()=>m});var n=t(42706),a=t(28203),i=t(45994),o=t(39187),u=t(71618),l=t(27727),d=t(65665);let p=l.Ik({token:l.Yj().min(1,"Token is required"),clientName:l.Yj().min(1,"Client name is required"),clientEmail:l.Yj().email("Valid email is required")});async function m(e){try{let r=await e.json(),t=p.parse(r),s=await u.z.agreement.findFirst({where:{uniqueToken:t.token,expiresAt:{gte:new Date}},include:{client:!0}});if(!s)return o.NextResponse.json({error:"Agreement not found or has expired"},{status:404});let n=`${s.client.firstName} ${s.client.lastName}`.toLowerCase(),a=t.clientName.toLowerCase(),i=s.client.email.toLowerCase(),l=t.clientEmail.toLowerCase();if(n!==a||i!==l)return o.NextResponse.json({error:"Client information does not match. Please verify your name and email."},{status:400});if("SIGNED"===s.status)return o.NextResponse.json({error:"This agreement has already been signed"},{status:400});let d=(e=>{let r=e.headers.get("x-forwarded-for"),t=e.headers.get("x-real-ip");return e.headers.get("cf-connecting-ip")||t||(r?r.split(",")[0].trim():"Unknown")})(e),m=await u.z.agreement.update({where:{id:s.id},data:{status:"SIGNED",signedAt:new Date,signedFromIP:d},include:{client:!0,template:!0}});return o.NextResponse.json({message:"Agreement signed successfully",agreement:m})}catch(e){if(e instanceof d.G)return o.NextResponse.json({error:"Validation failed",details:e.errors},{status:400});return console.error("Error signing agreement:",e),o.NextResponse.json({error:"Failed to sign agreement"},{status:500})}}let c=new n.AppRouteRouteModule({definition:{kind:a.RouteKind.APP_ROUTE,page:"/api/agreements/sign/route",pathname:"/api/agreements/sign",filename:"route",bundlePath:"app/api/agreements/sign/route"},resolvedPagePath:"C:\\Users\\denni\\agreements\\app\\api\\agreements\\sign\\route.ts",nextConfigOutput:"",userland:s}),{workAsyncStorage:g,workUnitAsyncStorage:x,serverHooks:f}=c;function w(){return(0,i.patchFetch)({workAsyncStorage:g,workUnitAsyncStorage:x})}},96487:()=>{},78335:()=>{},71618:(e,r,t)=>{"use strict";t.d(r,{z:()=>n});let s=require("@prisma/client"),n=global.prisma||new s.PrismaClient({log:["error","warn"]})}};var r=require("../../../../webpack-runtime.js");r.C(e);var t=e=>r(r.s=e),s=r.X(0,[638,452,727],()=>t(53730));module.exports=s})();
+(()=>{var e={};e.id=159,e.ids=[159],e.modules={10846:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},44870:e=>{"use strict";e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},3295:e=>{"use strict";e.exports=require("next/dist/server/app-render/after-task-async-storage.external.js")},29294:e=>{"use strict";e.exports=require("next/dist/server/app-render/work-async-storage.external.js")},63033:e=>{"use strict";e.exports=require("next/dist/server/app-render/work-unit-async-storage.external.js")},79646:e=>{"use strict";e.exports=require("child_process")},55511:e=>{"use strict";e.exports=require("crypto")},14985:e=>{"use strict";e.exports=require("dns")},94735:e=>{"use strict";e.exports=require("events")},29021:e=>{"use strict";e.exports=require("fs")},81630:e=>{"use strict";e.exports=require("http")},55591:e=>{"use strict";e.exports=require("https")},91645:e=>{"use strict";e.exports=require("net")},21820:e=>{"use strict";e.exports=require("os")},33873:e=>{"use strict";e.exports=require("path")},27910:e=>{"use strict";e.exports=require("stream")},34631:e=>{"use strict";e.exports=require("tls")},79551:e=>{"use strict";e.exports=require("url")},28354:e=>{"use strict";e.exports=require("util")},74075:e=>{"use strict";e.exports=require("zlib")},53730:(e,t,r)=>{"use strict";r.r(t),r.d(t,{patchFetch:()=>y,routeModule:()=>x,serverHooks:()=>v,workAsyncStorage:()=>h,workUnitAsyncStorage:()=>f});var i={};r.r(i),r.d(i,{POST:()=>g});var n=r(42706),s=r(28203),o=r(45994),a=r(39187),l=r(71618),p=r(27727),c=r(65665),d=r(98721);let u=p.Ik({token:p.Yj().min(1,"Token is required"),clientName:p.Yj().min(1,"Client name is required"),clientEmail:p.Yj().email("Valid email is required")});async function g(e){try{let t=await e.json(),r=u.parse(t),i=await l.z.agreement.findFirst({where:{uniqueToken:r.token,expiresAt:{gte:new Date}},include:{client:!0}});if(!i)return a.NextResponse.json({error:"Agreement not found or has expired"},{status:404});let n=`${i.client.firstName} ${i.client.lastName}`.toLowerCase(),s=r.clientName.toLowerCase(),o=i.client.email.toLowerCase(),p=r.clientEmail.toLowerCase();if(n!==s||o!==p)return a.NextResponse.json({error:"Client information does not match. Please verify your name and email."},{status:400});if("SIGNED"===i.status)return a.NextResponse.json({error:"This agreement has already been signed"},{status:400});let c=(e=>{let t=e.headers.get("x-forwarded-for"),r=e.headers.get("x-real-ip");return e.headers.get("cf-connecting-ip")||r||(t?t.split(",")[0].trim():"Unknown")})(e),d=await l.z.agreement.update({where:{id:i.id},data:{status:"SIGNED",signedAt:new Date,signedFromIP:c},include:{client:!0,template:!0}});try{await m(d,c)}catch(e){console.error("Failed to send notification email:",e)}return a.NextResponse.json({message:"Agreement signed successfully",agreement:d})}catch(e){if(e instanceof c.G)return a.NextResponse.json({error:"Validation failed",details:e.errors},{status:400});return console.error("Error signing agreement:",e),a.NextResponse.json({error:"Failed to sign agreement"},{status:500})}}async function m(e,t){if(!process.env.SMTP_HOST||!process.env.SMTP_USER||!process.env.SMTP_PASS){console.log("SMTP not configured, skipping notification email");return}let r=process.env.NEXT_PUBLIC_BASE_URL||"http://localhost:3000",i=`${r}/agreement/${e.uniqueToken}`,n=d.createTransport({host:process.env.SMTP_HOST,port:parseInt(process.env.SMTP_PORT||"587"),secure:"465"===process.env.SMTP_PORT,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS},connectionTimeout:1e4,greetingTimeout:1e4,socketTimeout:1e4}),s=`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #3b82f6; margin: 0; }
+        .content { margin-bottom: 30px; }
+        .agreement-details { 
+          border: 1px solid #eee; 
+          padding: 20px; 
+          border-radius: 8px; 
+          margin: 20px 0; 
+          background-color: #f9f9f9;
+        }
+        .button { 
+          display: inline-block; 
+          background-color: #059669; 
+          color: white; 
+          padding: 12px 24px; 
+          text-decoration: none; 
+          border-radius: 6px; 
+          margin: 10px 5px;
+          font-weight: 500;
+        }
+        .button:hover { background-color: #047857; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
+        .urgent { background-color: #dbeafe; border: 1px solid #93c5fd; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .signature-info { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 6px; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Photobooth Guys</h1>
+          <p>Agreement Signed Notification</p>
+        </div>
+        
+        <div class="content">
+          <p><strong>An agreement has been digitally signed!</strong></p>
+          
+          <div class="agreement-details">
+            <h3>Agreement Details:</h3>
+            <p><strong>Client:</strong> ${e.client.firstName} ${e.client.lastName}</p>
+            <p><strong>Email:</strong> ${e.client.email}</p>
+            <p><strong>Template:</strong> ${e.template.title}</p>
+            <p><strong>Agreement ID:</strong> ${e.id}</p>
+            <p><strong>Signed At:</strong> ${e.signedAt?new Date(e.signedAt).toLocaleString("en-CA",{timeZone:"America/Toronto"}):"N/A"}</p>
+            <p><strong>IP Address:</strong> ${t}</p>
+          </div>
+          
+          <div class="signature-info">
+            <h3>Digital Signature Information:</h3>
+            <p>This agreement has been legally signed by the client using their email verification. The signature includes:</p>
+            <ul>
+              <li>Client identity verification</li>
+              <li>Timestamp of signing (Toronto timezone)</li>
+              <li>IP address of signing location</li>
+              <li>Unique agreement identifier</li>
+            </ul>
+          </div>
+          
+          <div class="urgent">
+            <strong>📋 Next Steps:</strong>
+            <ul>
+              <li>Review the signed agreement details above</li>
+              <li>Download a PDF copy for your records</li>
+              <li>Update your internal systems with the signed status</li>
+              <li>Contact the client if needed: ${e.client.email}</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${i}" class="button">View Signed Agreement</a>
+          </div>
+          
+          <p>This notification was automatically sent when the client completed the digital signing process.</p>
+        </div>
+        
+        <div class="footer">
+          <p>Photobooth Guys Agreement Management System</p>
+          <p>Generated: ${new Date().toLocaleString("en-CA",{timeZone:"America/Toronto"})}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `,o={from:process.env.SMTP_FROM||process.env.SMTP_USER,to:"info@photoboothguys.ca",subject:`Agreement Signed - ${e.client.firstName} ${e.client.lastName} - ${e.template.title}`,html:s};try{await n.verify(),await n.sendMail(o),console.log("Signed agreement notification sent successfully")}catch(e){throw console.error("Failed to send notification email:",e),e}}let x=new n.AppRouteRouteModule({definition:{kind:s.RouteKind.APP_ROUTE,page:"/api/agreements/sign/route",pathname:"/api/agreements/sign",filename:"route",bundlePath:"app/api/agreements/sign/route"},resolvedPagePath:"C:\\Users\\denni\\agreements\\app\\api\\agreements\\sign\\route.ts",nextConfigOutput:"",userland:i}),{workAsyncStorage:h,workUnitAsyncStorage:f,serverHooks:v}=x;function y(){return(0,o.patchFetch)({workAsyncStorage:h,workUnitAsyncStorage:f})}},96487:()=>{},78335:()=>{},71618:(e,t,r)=>{"use strict";r.d(t,{z:()=>n});let i=require("@prisma/client"),n=global.prisma||new i.PrismaClient({log:["error","warn"]})}};var t=require("../../../../webpack-runtime.js");t.C(e);var r=e=>t(t.s=e),i=t.X(0,[638,452,727,721],()=>r(53730));module.exports=i})();

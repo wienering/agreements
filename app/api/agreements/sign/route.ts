@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import nodemailer from 'nodemailer';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -80,6 +81,14 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Send automatic notification email to info@photoboothguys.ca
+    try {
+      await sendSignedAgreementNotification(updatedAgreement, clientIP);
+    } catch (emailError) {
+      console.error('Failed to send notification email:', emailError);
+      // Don't fail the signing process if email fails
+    }
+
     return NextResponse.json({
       message: 'Agreement signed successfully',
       agreement: updatedAgreement
@@ -95,5 +104,140 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       error: 'Failed to sign agreement' 
     }, { status: 500 });
+  }
+}
+
+// Function to send signed agreement notification email
+async function sendSignedAgreementNotification(agreement: any, clientIP: string) {
+  // Check if SMTP is configured
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('SMTP not configured, skipping notification email');
+    return;
+  }
+
+  // Get the base URL from environment or construct it
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
+
+  // Create email transporter
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_PORT === '465',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+  });
+
+  // Create email content
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #3b82f6; margin: 0; }
+        .content { margin-bottom: 30px; }
+        .agreement-details { 
+          border: 1px solid #eee; 
+          padding: 20px; 
+          border-radius: 8px; 
+          margin: 20px 0; 
+          background-color: #f9f9f9;
+        }
+        .button { 
+          display: inline-block; 
+          background-color: #059669; 
+          color: white; 
+          padding: 12px 24px; 
+          text-decoration: none; 
+          border-radius: 6px; 
+          margin: 10px 5px;
+          font-weight: 500;
+        }
+        .button:hover { background-color: #047857; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
+        .urgent { background-color: #dbeafe; border: 1px solid #93c5fd; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .signature-info { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 6px; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Photobooth Guys</h1>
+          <p>Agreement Signed Notification</p>
+        </div>
+        
+        <div class="content">
+          <p><strong>An agreement has been digitally signed!</strong></p>
+          
+          <div class="agreement-details">
+            <h3>Agreement Details:</h3>
+            <p><strong>Client:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
+            <p><strong>Email:</strong> ${agreement.client.email}</p>
+            <p><strong>Template:</strong> ${agreement.template.title}</p>
+            <p><strong>Agreement ID:</strong> ${agreement.id}</p>
+            <p><strong>Signed At:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
+            <p><strong>IP Address:</strong> ${clientIP}</p>
+          </div>
+          
+          <div class="signature-info">
+            <h3>Digital Signature Information:</h3>
+            <p>This agreement has been legally signed by the client using their email verification. The signature includes:</p>
+            <ul>
+              <li>Client identity verification</li>
+              <li>Timestamp of signing (Toronto timezone)</li>
+              <li>IP address of signing location</li>
+              <li>Unique agreement identifier</li>
+            </ul>
+          </div>
+          
+          <div class="urgent">
+            <strong>📋 Next Steps:</strong>
+            <ul>
+              <li>Review the signed agreement details above</li>
+              <li>Download a PDF copy for your records</li>
+              <li>Update your internal systems with the signed status</li>
+              <li>Contact the client if needed: ${agreement.client.email}</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${agreementUrl}" class="button">View Signed Agreement</a>
+          </div>
+          
+          <p>This notification was automatically sent when the client completed the digital signing process.</p>
+        </div>
+        
+        <div class="footer">
+          <p>Photobooth Guys Agreement Management System</p>
+          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Send email
+  const mailOptions = {
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: 'info@photoboothguys.ca',
+    subject: `Agreement Signed - ${agreement.client.firstName} ${agreement.client.lastName} - ${agreement.template.title}`,
+    html: emailHtml,
+  };
+
+  try {
+    await transporter.verify();
+    await transporter.sendMail(mailOptions);
+    console.log('Signed agreement notification sent successfully');
+  } catch (error) {
+    console.error('Failed to send notification email:', error);
+    throw error;
   }
 }
