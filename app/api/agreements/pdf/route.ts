@@ -3,6 +3,24 @@ import { prisma } from '@/lib/prisma';
 import puppeteer from 'puppeteer';
 import { z } from 'zod';
 
+// Fallback PDF generation using HTML to PDF conversion
+const generateFallbackPDF = async (htmlContent: string, clientName: string, clientEmail: string, agreementId: string) => {
+  // For now, return a simple text-based response
+  // In production, you might want to use a service like PDFShift, HTML/CSS to PDF API, or similar
+  const textContent = `
+AGREEMENT - ${clientName}
+Email: ${clientEmail}
+Agreement ID: ${agreementId}
+Generated: ${new Date().toLocaleDateString()}
+
+${htmlContent.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
+
+This is a text version of the agreement. For a properly formatted PDF, please contact support.
+  `;
+  
+  return Buffer.from(textContent, 'utf-8');
+};
+
 const pdfRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
 });
@@ -148,27 +166,51 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    // Try to generate PDF using Puppeteer, fallback to text if it fails
+    let pdfBuffer: Buffer;
     
-    const page = await browser.newPage();
-    await page.setContent(htmlDocument, { waitUntil: 'networkidle0' });
-    
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
-      },
-      printBackground: true
-    });
-    
-    await browser.close();
+    try {
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+      });
+      
+      const page = await browser.newPage();
+      await page.setContent(htmlDocument, { waitUntil: 'networkidle0' });
+      
+      const pdfData = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm'
+        },
+        printBackground: true
+      });
+      pdfBuffer = Buffer.from(pdfData);
+      
+      await browser.close();
+    } catch (puppeteerError) {
+      console.warn('Puppeteer failed, using fallback PDF generation:', puppeteerError);
+      // Use fallback PDF generation
+      pdfBuffer = await generateFallbackPDF(
+        processedHtml, 
+        `${agreement.client.firstName} ${agreement.client.lastName}`, 
+        agreement.client.email, 
+        agreement.id
+      );
+    }
 
     // Return PDF as response
     return new NextResponse(pdfBuffer as any, {

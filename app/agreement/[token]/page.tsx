@@ -177,7 +177,8 @@ export default function ClientAgreementPage() {
     
     setIsDownloading(true);
     try {
-      const response = await fetch('/api/agreements/pdf', {
+      // Try the main PDF endpoint first
+      let response = await fetch('/api/agreements/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,21 +188,42 @@ export default function ClientAgreementPage() {
         }),
       });
 
+      // If the main PDF endpoint fails, try the serverless fallback
+      if (!response.ok) {
+        console.log('Main PDF endpoint failed, trying serverless fallback...');
+        response = await fetch('/api/agreements/pdf-serverless', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+          }),
+        });
+      }
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `agreement-${agreement.client.firstName}-${agreement.client.lastName}-${agreement.id}.pdf`;
+        const isTextFile = response.headers.get('content-type')?.includes('text/plain');
+        const extension = isTextFile ? 'txt' : 'pdf';
+        a.download = `agreement-${agreement.client.firstName}-${agreement.client.lastName}-${agreement.id}.${extension}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        if (isTextFile) {
+          alert('PDF generation is temporarily unavailable. A text version has been downloaded instead.');
+        }
       } else {
-        alert('Failed to download PDF');
+        alert('Failed to download agreement. Please try again later.');
       }
     } catch (err) {
-      alert('Error downloading PDF');
+      console.error('Download error:', err);
+      alert('Error downloading agreement. Please try again later.');
     } finally {
       setIsDownloading(false);
     }
