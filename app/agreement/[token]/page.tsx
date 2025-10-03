@@ -247,7 +247,8 @@ export default function ClientAgreementPage() {
     setEmailError(null);
 
     try {
-      const response = await fetch('/api/agreements/email', {
+      // Try the main email endpoint first
+      let response = await fetch('/api/agreements/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -258,15 +259,47 @@ export default function ClientAgreementPage() {
         }),
       });
 
+      // If the main email endpoint fails, try the fallback
+      if (!response.ok) {
+        console.log('Main email endpoint failed, trying fallback...');
+        response = await fetch('/api/agreements/email-fallback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+            recipientEmail: emailAddress.trim(),
+          }),
+        });
+      }
+
       if (response.ok) {
+        const data = await response.json();
         setShowEmailModal(false);
-        alert('Agreement sent successfully!');
+        
+        if (data.shareableLink) {
+          // Show the shareable link
+          const shareText = `Your agreement is ready!\n\nShareable Link: ${data.shareableLink}\n\nYou can copy this link and share it with others to access your signed agreement.`;
+          alert(shareText);
+          
+          // Copy link to clipboard
+          try {
+            await navigator.clipboard.writeText(data.shareableLink);
+            alert('Shareable link copied to clipboard!');
+          } catch (clipboardErr) {
+            console.log('Could not copy to clipboard:', clipboardErr);
+          }
+        } else {
+          alert('Agreement sent successfully!');
+        }
       } else {
         const errorData = await response.json();
         setEmailError(errorData.error || 'Failed to send email');
       }
     } catch (err) {
-      setEmailError('Error sending email');
+      console.error('Email error:', err);
+      setEmailError('Error sending email. Please try again later.');
     } finally {
       setIsEmailing(false);
     }

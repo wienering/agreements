@@ -59,15 +59,25 @@ export async function POST(request: NextRequest) {
 
     const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
 
+    // Check if SMTP is configured
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return NextResponse.json({ 
+        error: 'Email service is not configured. Please contact support to set up email functionality.' 
+      }, { status: 503 });
+    }
+
     // Create email transporter (using environment variables for SMTP)
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false, // true for 465, false for other ports
+      secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000, // 10 seconds
+      socketTimeout: 10000, // 10 seconds
     });
 
     // Create email content
@@ -184,7 +194,7 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
-    // Send email
+    // Send email with timeout and error handling
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: validatedData.recipientEmail,
@@ -192,12 +202,42 @@ export async function POST(request: NextRequest) {
       html: emailHtml,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      // Verify connection first
+      await transporter.verify();
+      
+      // Send email with timeout
+      const info = await Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email send timeout')), 15000)
+        )
+      ]);
 
-    return NextResponse.json({
-      message: 'Agreement sent successfully',
-      recipientEmail: validatedData.recipientEmail
-    });
+      console.log('Email sent successfully:', info);
+
+      return NextResponse.json({
+        message: 'Agreement sent successfully',
+        recipientEmail: validatedData.recipientEmail
+      });
+    } catch (emailError: any) {
+      console.error('Email sending failed:', emailError);
+      
+      // Return a more helpful error message
+      if (emailError.message && emailError.message.includes('timeout')) {
+        return NextResponse.json({ 
+          error: 'Email service is currently unavailable. Please try again later or contact support.' 
+        }, { status: 503 });
+      } else if (emailError.message && emailError.message.includes('authentication')) {
+        return NextResponse.json({ 
+          error: 'Email authentication failed. Please contact support to fix email configuration.' 
+        }, { status: 503 });
+      } else {
+        return NextResponse.json({ 
+          error: 'Failed to send email. Please try again later or contact support.' 
+        }, { status: 500 });
+      }
+    }
 
   } catch (error: any) {
     console.error('Error sending email:', error);
