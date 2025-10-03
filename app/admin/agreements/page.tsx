@@ -644,7 +644,7 @@ export default function AgreementsPage() {
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
-                      Created {new Date(agreement.createdAt).toLocaleDateString()}
+                      Created {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </span>
                     <span style={{ 
                       fontSize: '12px', 
@@ -662,7 +662,7 @@ export default function AgreementsPage() {
                     }}
                     title="Click to edit expiration date"
                     >
-                      Expires {new Date(agreement.expiresAt).toLocaleDateString()}
+                      Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </span>
                   </div>
                 </div>

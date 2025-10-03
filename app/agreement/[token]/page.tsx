@@ -664,7 +664,7 @@ export default function ClientAgreementPage() {
                    color: textColor,
                    fontWeight: '600'
                  }}>
-                   {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString() : 'N/A'}
+                   {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
                  </div>
                </div>
                <div>

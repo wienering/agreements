@@ -153,7 +153,7 @@ This is a text version of the agreement. For a properly formatted PDF, please co
             <p style="margin-top: 20px;">
               <strong>Name:</strong> ${d.client.firstName} ${d.client.lastName}<br>
               <strong>Email:</strong> ${d.client.email}<br>
-              <strong>Date & Time Signed:</strong> ${d.signedAt?new Date(d.signedAt).toLocaleString():"N/A"}<br>
+              <strong>Date & Time Signed:</strong> ${d.signedAt?new Date(d.signedAt).toLocaleString("en-CA",{timeZone:"America/Toronto"}):"N/A"}<br>
               <strong>Agreement ID:</strong> ${d.id}
             </p>
           </div>

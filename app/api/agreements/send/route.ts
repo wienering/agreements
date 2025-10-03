@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
             </div>
             
             <div class="urgent">
-              <strong>⏰ Important:</strong> This agreement expires on ${agreement.expiresAt ? new Date(agreement.expiresAt).toLocaleDateString() : 'the specified date'}. Please review and sign before the expiration date.
+              <strong>⏰ Important:</strong> This agreement expires on ${agreement.expiresAt ? new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'the specified date'}. Please review and sign before the expiration date.
             </div>
             
             <h3>Agreement Preview:</h3>
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
           
           <div class="footer">
             <p>This email was sent by Photobooth Guys Agreement Management System</p>
-            <p>Agreement ID: ${agreement.id} | Generated: ${new Date().toLocaleString()}</p>
+            <p>Agreement ID: ${agreement.id} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
           </div>
         </div>
       </body>

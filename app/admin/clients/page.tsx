@@ -699,7 +699,7 @@ export default function ClientsPage() {
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
-                      Added {new Date(client.createdAt).toLocaleDateString()}
+                      Added {new Date(client.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </span>
                   </div>
                 </div>

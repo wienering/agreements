@@ -125,9 +125,9 @@ export async function POST(request: NextRequest) {
     doc.moveDown(0.3);
     doc.text(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
     doc.text(`Email: ${agreement.client.email}`);
-    doc.text(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString() : 'N/A'}`);
+    doc.text(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`);
     doc.text(`Agreement ID: ${agreement.id}`);
-    doc.text(`Generated: ${new Date().toLocaleString()}`);
+    doc.text(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
     doc.moveDown(0.5);
 
     doc.fontSize(8).text('This document is legally binding and represents the complete agreement between the parties.', { align: 'center' });

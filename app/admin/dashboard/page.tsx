@@ -282,7 +282,7 @@ export default function DashboardPage() {
                       {agreement.template.title}
                     </div>
                     <div style={{ color: mutedText, fontSize: '11px' }}>
-                      {new Date(agreement.createdAt).toLocaleDateString()}
+                      {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </div>
                   </div>
                   <div style={{

@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
             <p style="margin-top: 20px;">
               <strong>Name:</strong> ${agreement.client.firstName} ${agreement.client.lastName}<br>
               <strong>Email:</strong> ${agreement.client.email}<br>
-              <strong>Date & Time Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString() : 'N/A'}<br>
+              <strong>Date & Time Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
               <strong>Agreement ID:</strong> ${agreement.id}
             </p>
           </div>

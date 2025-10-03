@@ -539,7 +539,7 @@ export default function TemplatesPage() {
                     borderRadius: '4px',
                     alignSelf: isMobile ? 'flex-start' : 'auto'
                   }}>
-                    Created {new Date(template.createdAt).toLocaleDateString()}
+                    Created {new Date(template.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                   </span>
                 </div>
                 
