@@ -35,11 +35,21 @@ export default function AgreementsPage() {
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editingExpiration, setEditingExpiration] = useState(false);
+  const [newExpirationDate, setNewExpirationDate] = useState('');
+  const [editingAgreementId, setEditingAgreementId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  // Calculate 2 weeks from today for default expiration
+  const getDefaultExpirationDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 14); // Add 2 weeks
+    return date.toISOString().slice(0, 16); // Format for datetime-local input
+  };
+
   const [newAgreement, setNewAgreement] = useState({
     clientId: '',
     templateId: '',
-    expiresAt: ''
+    expiresAt: getDefaultExpirationDate()
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
@@ -225,6 +235,45 @@ export default function AgreementsPage() {
     } catch (error) {
       console.error('Failed to copy link:', error);
       showToast('Failed to copy link', 'error');
+    }
+  };
+
+  const handleUpdateExpiration = async (agreementId: string) => {
+    if (!newExpirationDate) {
+      showToast('Please select a new expiration date', 'error');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await fetch('/api/agreements/update-expiration', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          id: agreementId, 
+          expiresAt: newExpirationDate 
+        }),
+      });
+
+      if (response.ok) {
+        const updatedAgreement = await response.json();
+        setAgreements(agreements.map(a => 
+          a.id === agreementId ? { ...a, expiresAt: updatedAgreement.expiresAt } : a
+        ));
+        setEditingExpiration(false);
+        setNewExpirationDate('');
+        showToast('Expiration date updated successfully!');
+      } else {
+        const error = await response.json();
+        showToast(`Error: ${error.error || 'Failed to update expiration date'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error updating expiration date:', error);
+      showToast('Failed to update expiration date', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -490,6 +539,24 @@ export default function AgreementsPage() {
                       alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
                       Created {new Date(agreement.createdAt).toLocaleDateString()}
+                    </span>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: mutedText,
+                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      alignSelf: isMobile ? 'flex-start' : 'auto',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      setEditingExpiration(true);
+                      setEditingAgreementId(agreement.id);
+                      setNewExpirationDate(new Date(agreement.expiresAt).toISOString().slice(0, 16));
+                    }}
+                    title="Click to edit expiration date"
+                    >
+                      Expires {new Date(agreement.expiresAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -862,6 +929,100 @@ export default function AgreementsPage() {
                   title="Send this agreement to the client"
                 >
                   Send to Client
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Expiration Date Edit Modal */}
+        {editingExpiration && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px'
+            }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+                Edit Expiration Date
+              </h3>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor 
+                }}>
+                  New Expiration Date
+                </label>
+                <input
+                  type="datetime-local"
+                  value={newExpirationDate}
+                  onChange={(e) => setNewExpirationDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '4px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  onClick={() => {
+                    setEditingExpiration(false);
+                    setEditingAgreementId(null);
+                    setNewExpirationDate('');
+                  }}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleUpdateExpiration(editingAgreementId || '')}
+                  disabled={saving}
+                  style={{
+                    backgroundColor: saving ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  {saving ? 'Updating...' : 'Update'}
                 </button>
               </div>
             </div>
