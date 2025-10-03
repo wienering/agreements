@@ -174,6 +174,36 @@ export default function ClientsPage() {
     setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
   };
 
+  const handleDeleteClient = async (clientId: string) => {
+    if (!confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/clients/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: clientId }),
+      });
+
+      if (response.ok) {
+        showToast('Client deleted successfully', 'success');
+        fetchClients(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to delete client', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      showToast('Error deleting client', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
   const textColor = isDark ? '#f1f5f9' : '#1e293b';
@@ -700,6 +730,34 @@ export default function ClientsPage() {
                     title="Edit client details"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClient(client.id)}
+                    disabled={loading}
+                    style={{
+                      backgroundColor: loading ? '#9ca3af' : '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#b91c1c';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#dc2626';
+                      }
+                    }}
+                    title="Delete client permanently"
+                  >
+                    {loading ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>
