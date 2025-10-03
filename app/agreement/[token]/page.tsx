@@ -11,6 +11,12 @@ interface AgreementData {
     email: string;
     phone: string | null;
     eventDate: string | null;
+    eventType: string | null;
+    eventLocation: string | null;
+    eventStartTime: string | null;
+    eventDuration: string | null;
+    eventPackage: string | null;
+    notes: string | null;
   };
   template: {
     title: string;
