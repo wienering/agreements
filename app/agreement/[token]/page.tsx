@@ -23,6 +23,7 @@ interface AgreementData {
     htmlContent: string;
   };
   status: string;
+  signedAt: string | null;
   mergedHtml: string | null;
   fields: Array<{
     key: string;
@@ -509,83 +510,204 @@ export default function ClientAgreementPage() {
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           textAlign: 'center'
         }}>
-          {agreement.status === 'SIGNED' ? (
-            <>
-              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>Agreement Signed!</h3>
-              <p style={{ margin: '0 0 24px 0', color: '#94a3b8', fontSize: '16px' }}>
-                Your agreement has been digitally signed. You can download a PDF copy or email it to yourself.
-              </p>
-              <div style={{ 
-                display: 'flex', 
-                gap: '12px', 
-                justifyContent: 'center',
-                flexWrap: 'wrap'
-              }}>
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={isDownloading}
-                  style={{
-                    backgroundColor: isDownloading ? '#9ca3af' : '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: isDownloading ? 'not-allowed' : 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isDownloading) {
-                      e.currentTarget.style.backgroundColor = '#b91c1c';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isDownloading) {
-                      e.currentTarget.style.backgroundColor = '#dc2626';
-                    }
-                  }}
-                  title="Download PDF copy of the agreement"
-                >
-                  {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
-                </button>
-                <button
-                  onClick={handleEmailAgreement}
-                  disabled={isEmailing}
-                  style={{
-                    backgroundColor: isEmailing ? '#9ca3af' : '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: isEmailing ? 'not-allowed' : 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isEmailing) {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isEmailing) {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
-                    }
-                  }}
-                  title="Email a copy of the agreement"
-                >
-                  {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
-                </button>
-              </div>
-            </>
-          ) : (
+       {agreement.status === 'SIGNED' ? (
+         <>
+           <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>Agreement Signed!</h3>
+           <p style={{ margin: '0 0 24px 0', color: '#94a3b8', fontSize: '16px' }}>
+             Your agreement has been digitally signed. You can download a PDF copy or email it to yourself.
+           </p>
+           <div style={{ 
+             display: 'flex', 
+             gap: '12px', 
+             justifyContent: 'center',
+             flexWrap: 'wrap',
+             marginBottom: '24px'
+           }}>
+             <button
+               onClick={handleDownloadPDF}
+               disabled={isDownloading}
+               style={{
+                 backgroundColor: isDownloading ? '#9ca3af' : '#dc2626',
+                 color: 'white',
+                 border: 'none',
+                 padding: '12px 24px',
+                 borderRadius: '6px',
+                 cursor: isDownloading ? 'not-allowed' : 'pointer',
+                 fontSize: '16px',
+                 fontWeight: '500',
+                 transition: 'background-color 0.2s',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '8px'
+               }}
+               onMouseEnter={(e) => {
+                 if (!isDownloading) {
+                   e.currentTarget.style.backgroundColor = '#b91c1c';
+                 }
+               }}
+               onMouseLeave={(e) => {
+                 if (!isDownloading) {
+                   e.currentTarget.style.backgroundColor = '#dc2626';
+                 }
+               }}
+               title="Download PDF copy of the agreement"
+             >
+               {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
+             </button>
+             <button
+               onClick={handleEmailAgreement}
+               disabled={isEmailing}
+               style={{
+                 backgroundColor: isEmailing ? '#9ca3af' : '#3b82f6',
+                 color: 'white',
+                 border: 'none',
+                 padding: '12px 24px',
+                 borderRadius: '6px',
+                 cursor: isEmailing ? 'not-allowed' : 'pointer',
+                 fontSize: '16px',
+                 fontWeight: '500',
+                 transition: 'background-color 0.2s',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '8px'
+               }}
+               onMouseEnter={(e) => {
+                 if (!isEmailing) {
+                   e.currentTarget.style.backgroundColor = '#2563eb';
+                 }
+               }}
+               onMouseLeave={(e) => {
+                 if (!isEmailing) {
+                   e.currentTarget.style.backgroundColor = '#3b82f6';
+                 }
+               }}
+               title="Email a copy of the agreement"
+             >
+               {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
+             </button>
+           </div>
+           
+           {/* Signing Details */}
+           <div style={{
+             backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+             border: `1px solid ${borderColor}`,
+             borderRadius: '8px',
+             padding: '20px',
+             marginTop: '20px'
+           }}>
+             <h4 style={{ 
+               margin: '0 0 16px 0', 
+               fontSize: '16px', 
+               color: textColor,
+               fontWeight: '600',
+               textAlign: 'center'
+             }}>
+               ✍️ Digital Signature Details
+             </h4>
+             <div style={{
+               display: 'grid',
+               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+               gap: '16px',
+               textAlign: 'center'
+             }}>
+               <div>
+                 <div style={{ 
+                   fontSize: '12px', 
+                   color: '#94a3b8', 
+                   marginBottom: '4px',
+                   fontWeight: '500',
+                   textTransform: 'uppercase',
+                   letterSpacing: '0.5px'
+                 }}>
+                   Signed By
+                 </div>
+                 <div style={{ 
+                   fontSize: '14px', 
+                   color: textColor,
+                   fontWeight: '600'
+                 }}>
+                   {agreement.client.firstName} {agreement.client.lastName}
+                 </div>
+               </div>
+               <div>
+                 <div style={{ 
+                   fontSize: '12px', 
+                   color: '#94a3b8', 
+                   marginBottom: '4px',
+                   fontWeight: '500',
+                   textTransform: 'uppercase',
+                   letterSpacing: '0.5px'
+                 }}>
+                   Email Address
+                 </div>
+                 <div style={{ 
+                   fontSize: '14px', 
+                   color: textColor,
+                   fontWeight: '600'
+                 }}>
+                   {agreement.client.email}
+                 </div>
+               </div>
+               <div>
+                 <div style={{ 
+                   fontSize: '12px', 
+                   color: '#94a3b8', 
+                   marginBottom: '4px',
+                   fontWeight: '500',
+                   textTransform: 'uppercase',
+                   letterSpacing: '0.5px'
+                 }}>
+                   Date & Time
+                 </div>
+                 <div style={{ 
+                   fontSize: '14px', 
+                   color: textColor,
+                   fontWeight: '600'
+                 }}>
+                   {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString() : 'N/A'}
+                 </div>
+               </div>
+               <div>
+                 <div style={{ 
+                   fontSize: '12px', 
+                   color: '#94a3b8', 
+                   marginBottom: '4px',
+                   fontWeight: '500',
+                   textTransform: 'uppercase',
+                   letterSpacing: '0.5px'
+                 }}>
+                   Agreement ID
+                 </div>
+                 <div style={{ 
+                   fontSize: '14px', 
+                   color: textColor,
+                   fontWeight: '600',
+                   fontFamily: 'monospace'
+                 }}>
+                   {agreement.id}
+                 </div>
+               </div>
+             </div>
+             <div style={{
+               marginTop: '16px',
+               padding: '12px',
+               backgroundColor: isDark ? '#0f172a' : '#f1f5f9',
+               borderRadius: '6px',
+               border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+             }}>
+               <div style={{
+                 fontSize: '12px',
+                 color: '#94a3b8',
+                 textAlign: 'center',
+                 lineHeight: '1.4'
+               }}>
+                 This document has been digitally signed and is legally binding. 
+                 The signature includes verification of identity through email confirmation.
+               </div>
+             </div>
+           </div>
+         </>
+       ) : (
             <>
               <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>Ready to Sign?</h3>
               <p style={{ margin: '0 0 24px 0', color: '#94a3b8', fontSize: '16px' }}>
