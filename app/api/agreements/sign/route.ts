@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     // Send automatic notification email to info@photoboothguys.ca
     try {
-      await sendSignedAgreementNotification(updatedAgreement, clientIP);
+      await sendSignedAgreementNotification(updatedAgreement, clientIP, request);
     } catch (emailError) {
       console.error('Failed to send notification email:', emailError);
       // Don't fail the signing process if email fails
@@ -139,15 +139,17 @@ export async function POST(request: NextRequest) {
 }
 
 // Function to send signed agreement notification email
-async function sendSignedAgreementNotification(agreement: any, clientIP: string) {
+async function sendSignedAgreementNotification(agreement: any, clientIP: string, request: NextRequest) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.log('SMTP not configured, skipping notification email');
     return;
   }
 
-  // Get the base URL from environment or construct it
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  // Get the base URL from request headers or environment
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const host = request.headers.get('host') || 'localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
   // Create email transporter

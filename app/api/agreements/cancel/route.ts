@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Send cancellation email to client
     try {
-      await sendCancellationEmail(updatedAgreement, validatedData.cancellationReason, validatedData.adminName);
+      await sendCancellationEmail(updatedAgreement, validatedData.cancellationReason, validatedData.adminName, request);
     } catch (emailError) {
       console.error('Failed to send cancellation email:', emailError);
       // Don't fail the cancellation process if email fails
@@ -78,15 +78,17 @@ export async function POST(request: NextRequest) {
 }
 
 // Function to send cancellation email to client
-async function sendCancellationEmail(agreement: any, reason: string, adminName: string) {
+async function sendCancellationEmail(agreement: any, reason: string, adminName: string, request: NextRequest) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.log('SMTP not configured, skipping cancellation email');
     return;
   }
 
-  // Get the base URL from environment or construct it
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  // Get the base URL from request headers or environment
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const host = request.headers.get('host') || 'localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
   // Create email transporter

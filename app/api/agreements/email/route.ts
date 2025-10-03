@@ -59,6 +59,11 @@ export async function POST(request: NextRequest) {
 
     const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
 
+    // Get the base URL from request headers or environment
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+
     // Check if SMTP is configured
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
       return NextResponse.json({ 
@@ -179,8 +184,8 @@ export async function POST(request: NextRequest) {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/agreement/${validatedData.token}" class="button">View Online</a>
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/agreements/pdf" class="button">Download PDF</a>
+                <a href="${baseUrl}/agreement/${validatedData.token}" class="button">View Online</a>
+                <a href="${baseUrl}/api/agreements/pdf" class="button">Download PDF</a>
               </div>
             </div>
             
