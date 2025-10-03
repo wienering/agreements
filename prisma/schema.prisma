@@ -63,6 +63,9 @@ model Agreement {
   signedAt     DateTime?
   signedFromIP String?
   mergedHtml   String?
+  cancelledAt  DateTime?
+  cancelledBy  String?
+  cancellationReason String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -78,6 +81,7 @@ enum AgreementStatus {
   LIVE
   SIGNED
   COMPLETED
+  CANCELLED
 }
 
 model AgreementField {

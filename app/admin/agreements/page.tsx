@@ -10,9 +10,13 @@ import SearchableSelect from '../../components/SearchableSelect';
 interface Agreement {
   id: string;
   uniqueToken: string;
-  status: 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED';
+  status: 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
   expiresAt: string;
   createdAt: string;
+  signedAt?: string;
+  cancelledAt?: string;
+  cancelledBy?: string;
+  cancellationReason?: string;
   client: {
     id: string;
     firstName: string;
@@ -42,6 +46,15 @@ export default function AgreementsPage() {
   const [newStatus, setNewStatus] = useState('');
   const [editingStatusAgreementId, setEditingStatusAgreementId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Cancellation state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellingAgreement, setCancellingAgreement] = useState<Agreement | null>(null);
+  const [cancellationStep, setCancellationStep] = useState(1);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [cancellationConfirm, setCancellationConfirm] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
     const date = new Date();
@@ -359,6 +372,102 @@ export default function AgreementsPage() {
     }
   };
 
+  // Cancellation functions
+  const handleCancelAgreement = (agreement: Agreement) => {
+    if (agreement.status !== 'SIGNED') {
+      showToast('Only signed agreements can be cancelled', 'error');
+      return;
+    }
+    setCancellingAgreement(agreement);
+    setShowCancelModal(true);
+    setCancellationStep(1);
+    setCancellationReason('');
+    setAdminName('');
+    setCancellationConfirm('');
+  };
+
+  const handleCancelStep1 = () => {
+    if (!cancellationReason.trim()) {
+      showToast('Please provide a reason for cancellation', 'error');
+      return;
+    }
+    setCancellationStep(2);
+  };
+
+  const handleCancelStep2 = () => {
+    if (!adminName.trim()) {
+      showToast('Please enter your name', 'error');
+      return;
+    }
+    setCancellationStep(3);
+  };
+
+  const handleCancelStep3 = () => {
+    if (cancellationConfirm !== 'CANCEL AGREEMENT') {
+      showToast('Please type "CANCEL AGREEMENT" exactly as shown', 'error');
+      return;
+    }
+    setCancellationStep(4);
+  };
+
+  const handleConfirmCancellation = async () => {
+    if (!cancellingAgreement) return;
+
+    try {
+      setCancelling(true);
+      const response = await fetch('/api/agreements/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agreementId: cancellingAgreement.id,
+          cancellationReason: cancellationReason,
+          adminName: adminName
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the agreement in the list
+        setAgreements(agreements.map(a => 
+          a.id === cancellingAgreement.id ? { 
+            ...a, 
+            status: 'CANCELLED',
+            cancelledAt: data.agreement.cancelledAt,
+            cancelledBy: data.agreement.cancelledBy,
+            cancellationReason: data.agreement.cancellationReason
+          } : a
+        ));
+        
+        showToast('Agreement cancelled successfully! Client has been notified via email.', 'success');
+        setShowCancelModal(false);
+        setCancellingAgreement(null);
+        setCancellationStep(1);
+        setCancellationReason('');
+        setAdminName('');
+        setCancellationConfirm('');
+      } else {
+        showToast(`Error: ${data.error || 'Failed to cancel agreement'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error cancelling agreement:', error);
+      showToast('Failed to cancel agreement', 'error');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setCancellingAgreement(null);
+    setCancellationStep(1);
+    setCancellationReason('');
+    setAdminName('');
+    setCancellationConfirm('');
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
   const textColor = isDark ? '#f1f5f9' : '#1e293b';
@@ -607,11 +716,13 @@ export default function AgreementsPage() {
                       color: agreement.status === 'DRAFT' ? '#dc2626' : 
                              agreement.status === 'LIVE' ? '#059669' :
                              agreement.status === 'SIGNED' ? '#2563eb' :
-                             agreement.status === 'COMPLETED' ? '#7c3aed' : mutedText,
+                             agreement.status === 'COMPLETED' ? '#7c3aed' :
+                             agreement.status === 'CANCELLED' ? '#dc2626' : mutedText,
                       backgroundColor: agreement.status === 'DRAFT' ? '#fef2f2' :
                                       agreement.status === 'LIVE' ? '#f0fdf4' :
                                       agreement.status === 'SIGNED' ? '#eff6ff' :
                                       agreement.status === 'COMPLETED' ? '#faf5ff' :
+                                      agreement.status === 'CANCELLED' ? '#fef2f2' :
                                       isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
@@ -770,6 +881,31 @@ export default function AgreementsPage() {
                       title="Delete this agreement permanently (only DRAFT agreements can be deleted)"
                     >
                       {loading ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
+                  {agreement.status === 'SIGNED' && (
+                    <button
+                      onClick={() => handleCancelAgreement(agreement)}
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#b91c1c';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#dc2626';
+                      }}
+                      title="Cancel this signed agreement (Admin only - requires confirmation)"
+                    >
+                      Cancel Agreement
                     </button>
                   )}
                 </div>
@@ -1110,6 +1246,7 @@ export default function AgreementsPage() {
                   <option value="LIVE">Live - Use after the agreement has been sent</option>
                   <option value="SIGNED">Signed - Use after the agreement has been signed</option>
                   <option value="COMPLETED">Completed - Use once the event is over</option>
+                  <option value="CANCELLED">Cancelled - Agreement has been cancelled (Admin only)</option>
                 </select>
               </div>
               <div style={{ 
@@ -1247,6 +1384,358 @@ export default function AgreementsPage() {
                   {saving ? 'Updating...' : 'Update'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cancellation Modal */}
+        {showCancelModal && cancellingAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <h3 style={{ 
+                margin: '0 0 16px 0', 
+                fontSize: '18px', 
+                color: textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ color: '#dc2626' }}>⚠️</span>
+                Cancel Agreement - Step {cancellationStep} of 4
+              </h3>
+
+              {/* Step 1: Reason */}
+              {cancellationStep === 1 && (
+                <div>
+                  <p style={{ margin: '0 0 16px 0', color: textColor }}>
+                    <strong>Client:</strong> {cancellingAgreement.client.firstName} {cancellingAgreement.client.lastName}<br/>
+                    <strong>Template:</strong> {cancellingAgreement.template.title}<br/>
+                    <strong>Signed:</strong> {cancellingAgreement.signedAt ? new Date(cancellingAgreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                  </p>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '8px', 
+                      fontWeight: '500', 
+                      color: textColor 
+                    }}>
+                      Reason for Cancellation *
+                    </label>
+                    <textarea
+                      value={cancellationReason}
+                      onChange={(e) => setCancellationReason(e.target.value)}
+                      placeholder="Please provide a detailed reason for cancelling this agreement..."
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '4px',
+                        backgroundColor: cardBg,
+                        color: textColor,
+                        fontSize: '14px',
+                        minHeight: '100px',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    justifyContent: 'flex-end' 
+                  }}>
+                    <button
+                      onClick={closeCancelModal}
+                      style={{
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCancelStep1}
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Admin Name */}
+              {cancellationStep === 2 && (
+                <div>
+                  <p style={{ margin: '0 0 16px 0', color: textColor }}>
+                    <strong>Reason:</strong> {cancellationReason}
+                  </p>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '8px', 
+                      fontWeight: '500', 
+                      color: textColor 
+                    }}>
+                      Your Name (Admin) *
+                    </label>
+                    <input
+                      type="text"
+                      value={adminName}
+                      onChange={(e) => setAdminName(e.target.value)}
+                      placeholder="Enter your full name"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '4px',
+                        backgroundColor: cardBg,
+                        color: textColor,
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    justifyContent: 'flex-end' 
+                  }}>
+                    <button
+                      onClick={() => setCancellationStep(1)}
+                      style={{
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleCancelStep2}
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Confirmation */}
+              {cancellationStep === 3 && (
+                <div>
+                  <div style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '6px',
+                    padding: '16px',
+                    marginBottom: '16px'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626' }}>⚠️ Final Confirmation Required</h4>
+                    <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
+                      This action will permanently cancel the agreement and notify the client via email. 
+                      This cannot be undone.
+                    </p>
+                  </div>
+                  <p style={{ margin: '0 0 16px 0', color: textColor }}>
+                    <strong>Client:</strong> {cancellingAgreement.client.firstName} {cancellingAgreement.client.lastName}<br/>
+                    <strong>Template:</strong> {cancellingAgreement.template.title}<br/>
+                    <strong>Reason:</strong> {cancellationReason}<br/>
+                    <strong>Cancelled by:</strong> {adminName}
+                  </p>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '8px', 
+                      fontWeight: '500', 
+                      color: textColor 
+                    }}>
+                      Type &quot;CANCEL AGREEMENT&quot; to confirm *
+                    </label>
+                    <input
+                      type="text"
+                      value={cancellationConfirm}
+                      onChange={(e) => setCancellationConfirm(e.target.value)}
+                      placeholder="CANCEL AGREEMENT"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '4px',
+                        backgroundColor: cardBg,
+                        color: textColor,
+                        fontSize: '14px',
+                        fontFamily: 'monospace'
+                      }}
+                    />
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    justifyContent: 'flex-end' 
+                  }}>
+                    <button
+                      onClick={() => setCancellationStep(2)}
+                      style={{
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleCancelStep3}
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Final Confirmation */}
+              {cancellationStep === 4 && (
+                <div>
+                  <div style={{
+                    backgroundColor: '#fef2f2',
+                    border: '2px solid #dc2626',
+                    borderRadius: '6px',
+                    padding: '20px',
+                    marginBottom: '16px',
+                    textAlign: 'center'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px' }}>⚠️ FINAL WARNING</h4>
+                    <p style={{ margin: '0', color: '#991b1b', fontSize: '16px', fontWeight: '500' }}>
+                      You are about to permanently cancel this signed agreement.
+                    </p>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#f9f9f9',
+                    border: '1px solid #e5e5e5',
+                    borderRadius: '6px',
+                    padding: '16px',
+                    marginBottom: '16px'
+                  }}>
+                    <h5 style={{ margin: '0 0 8px 0', color: textColor }}>Agreement Details:</h5>
+                    <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                      <strong>Client:</strong> {cancellingAgreement.client.firstName} {cancellingAgreement.client.lastName}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                      <strong>Email:</strong> {cancellingAgreement.client.email}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                      <strong>Template:</strong> {cancellingAgreement.template.title}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                      <strong>Signed:</strong> {cancellingAgreement.signedAt ? new Date(cancellingAgreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                      <strong>Reason:</strong> {cancellationReason}
+                    </p>
+                    <p style={{ margin: '0', color: textColor, fontSize: '14px' }}>
+                      <strong>Cancelled by:</strong> {adminName}
+                    </p>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    justifyContent: 'flex-end' 
+                  }}>
+                    <button
+                      onClick={() => setCancellationStep(3)}
+                      style={{
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleConfirmCancellation}
+                      disabled={cancelling}
+                      style={{
+                        backgroundColor: cancelling ? '#9ca3af' : '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: cancelling ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {cancelling ? 'Cancelling...' : 'CANCEL AGREEMENT'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
