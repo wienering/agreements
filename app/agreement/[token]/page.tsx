@@ -42,6 +42,11 @@ export default function ClientAgreementPage() {
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [signError, setSignError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isEmailing, setIsEmailing] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Function to process smart fields in HTML content
   const processSmartFields = (html: string, client: any, agreementId: string) => {
@@ -164,6 +169,84 @@ export default function ClientAgreementPage() {
       setSignError('Error signing agreement');
     } finally {
       setIsSigning(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!agreement) return;
+    
+    setIsDownloading(true);
+    try {
+      const response = await fetch('/api/agreements/pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+        }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `agreement-${agreement.client.firstName}-${agreement.client.lastName}-${agreement.id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Failed to download PDF');
+      }
+    } catch (err) {
+      alert('Error downloading PDF');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleEmailAgreement = () => {
+    if (!agreement) return;
+    
+    setEmailAddress(agreement.client.email);
+    setShowEmailModal(true);
+    setEmailError(null);
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailAddress.trim()) {
+      setEmailError('Please enter an email address');
+      return;
+    }
+
+    setIsEmailing(true);
+    setEmailError(null);
+
+    try {
+      const response = await fetch('/api/agreements/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          recipientEmail: emailAddress.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setShowEmailModal(false);
+        alert('Agreement sent successfully!');
+      } else {
+        const errorData = await response.json();
+        setEmailError(errorData.error || 'Failed to send email');
+      }
+    } catch (err) {
+      setEmailError('Error sending email');
+    } finally {
+      setIsEmailing(false);
     }
   };
 
@@ -341,41 +424,119 @@ export default function ClientAgreementPage() {
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           textAlign: 'center'
         }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>Ready to Sign?</h3>
-          <p style={{ margin: '0 0 24px 0', color: '#94a3b8', fontSize: '16px' }}>
-            Review the agreement above and click the button below to digitally sign.
-          </p>
-          <button
-            onClick={handleSignAgreement}
-            disabled={agreement.status === 'SIGNED' || isSigning}
-            style={{
-              backgroundColor: agreement.status === 'SIGNED' ? '#6b7280' : 
-                             isSigning ? '#9ca3af' : '#059669',
-              color: 'white',
-              border: 'none',
-              padding: '16px 32px',
-              borderRadius: '8px',
-              cursor: agreement.status === 'SIGNED' || isSigning ? 'not-allowed' : 'pointer',
-              fontSize: '18px',
-              fontWeight: '600',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              if (agreement.status !== 'SIGNED' && !isSigning) {
-                e.currentTarget.style.backgroundColor = '#047857';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (agreement.status !== 'SIGNED' && !isSigning) {
-                e.currentTarget.style.backgroundColor = '#059669';
-              }
-            }}
-            title={agreement.status === 'SIGNED' ? 'Agreement already signed' : 'Sign this agreement digitally'}
-          >
-            {agreement.status === 'SIGNED' ? '✅ Signed' : 
-             isSigning ? 'Signing...' : '✍️ Sign Agreement'}
-          </button>
+          {agreement.status === 'SIGNED' ? (
+            <>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>Agreement Signed!</h3>
+              <p style={{ margin: '0 0 24px 0', color: '#94a3b8', fontSize: '16px' }}>
+                Your agreement has been digitally signed. You can download a PDF copy or email it to yourself.
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px', 
+                justifyContent: 'center',
+                flexWrap: 'wrap'
+              }}>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  style={{
+                    backgroundColor: isDownloading ? '#9ca3af' : '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: isDownloading ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isDownloading) {
+                      e.currentTarget.style.backgroundColor = '#b91c1c';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isDownloading) {
+                      e.currentTarget.style.backgroundColor = '#dc2626';
+                    }
+                  }}
+                  title="Download PDF copy of the agreement"
+                >
+                  {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
+                </button>
+                <button
+                  onClick={handleEmailAgreement}
+                  disabled={isEmailing}
+                  style={{
+                    backgroundColor: isEmailing ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: isEmailing ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isEmailing) {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isEmailing) {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }
+                  }}
+                  title="Email a copy of the agreement"
+                >
+                  {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>Ready to Sign?</h3>
+              <p style={{ margin: '0 0 24px 0', color: '#94a3b8', fontSize: '16px' }}>
+                Review the agreement above and click the button below to digitally sign.
+              </p>
+              <button
+                onClick={handleSignAgreement}
+                disabled={isSigning}
+                style={{
+                  backgroundColor: isSigning ? '#9ca3af' : '#059669',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px 32px',
+                  borderRadius: '8px',
+                  cursor: isSigning ? 'not-allowed' : 'pointer',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSigning) {
+                    e.currentTarget.style.backgroundColor = '#047857';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSigning) {
+                    e.currentTarget.style.backgroundColor = '#059669';
+                  }
+                }}
+                title="Sign this agreement digitally"
+              >
+                {isSigning ? 'Signing...' : '✍️ Sign Agreement'}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Signing Modal */}
@@ -553,6 +714,158 @@ export default function ClientAgreementPage() {
                   }}
                 >
                   {isSigning ? 'Signing...' : 'Sign Agreement'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email Modal */}
+        {showEmailModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '32px',
+              width: '100%',
+              maxWidth: '500px',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            }}>
+              <h2 style={{ 
+                margin: '0 0 20px 0', 
+                fontSize: '24px', 
+                color: textColor, 
+                textAlign: 'center',
+                fontWeight: '600'
+              }}>
+                Email Agreement Copy
+              </h2>
+              
+              <p style={{ 
+                margin: '0 0 24px 0', 
+                color: '#94a3b8', 
+                fontSize: '16px',
+                textAlign: 'center',
+                lineHeight: '1.5'
+              }}>
+                Enter the email address where you&apos;d like to receive a copy of your signed agreement.
+              </p>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor,
+                  fontSize: '14px'
+                }}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '16px',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              {emailError && (
+                <div style={{
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#dc2626',
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  marginBottom: '20px',
+                  fontSize: '14px'
+                }}>
+                  {emailError}
+                </div>
+              )}
+
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px',
+                justifyContent: 'center'
+              }}>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  disabled={isEmailing}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: isEmailing ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s, color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isEmailing) {
+                      e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                      e.currentTarget.style.color = textColor;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isEmailing) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = mutedText;
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendEmail}
+                  disabled={isEmailing || !emailAddress.trim()}
+                  style={{
+                    backgroundColor: isEmailing || !emailAddress.trim() ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: isEmailing || !emailAddress.trim() ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isEmailing && emailAddress.trim()) {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isEmailing && emailAddress.trim()) {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }
+                  }}
+                >
+                  {isEmailing ? 'Sending...' : 'Send Email'}
                 </button>
               </div>
             </div>
