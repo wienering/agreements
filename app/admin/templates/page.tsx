@@ -21,6 +21,7 @@ export default function TemplatesPage() {
   const [showSmartFields, setShowSmartFields] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [viewingTemplate, setViewingTemplate] = useState<Template | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
@@ -172,6 +173,14 @@ export default function TemplatesPage() {
       fieldsSchema: template.fieldsSchema
     });
     setShowAddForm(true);
+  };
+
+  const handleViewTemplate = (template: Template) => {
+    setViewingTemplate(template);
+  };
+
+  const handleCloseViewModal = () => {
+    setViewingTemplate(null);
   };
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
@@ -514,13 +523,16 @@ export default function TemplatesPage() {
                   </span>
                 </div>
                 
-                {/* Template Preview */}
+                {/* Template Preview - Small */}
                 <div style={{ 
                   marginBottom: '12px',
                   padding: '12px',
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                   borderRadius: '6px',
-                  border: `1px solid ${borderColor}`
+                  border: `1px solid ${borderColor}`,
+                  maxHeight: '120px',
+                  overflow: 'hidden',
+                  position: 'relative'
                 }}>
                   <div style={{ 
                     fontSize: '12px', 
@@ -537,10 +549,20 @@ export default function TemplatesPage() {
                       backgroundColor: 'transparent',
                       border: 'none',
                       padding: '0',
-                      minHeight: '60px',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      lineHeight: '1.4'
                     }}
                   />
+                  {/* Fade overlay at bottom */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '30px',
+                    background: `linear-gradient(transparent, ${isDark ? '#0f172a' : '#f8fafc'})`,
+                    pointerEvents: 'none'
+                  }}></div>
                 </div>
                 
                 <div style={{ 
@@ -548,6 +570,23 @@ export default function TemplatesPage() {
                   gap: '8px',
                   flexDirection: isMobile ? 'column' : 'row'
                 }}>
+                  <button
+                    onClick={() => handleViewTemplate(template)}
+                    style={{
+                      backgroundColor: '#7c3aed',
+                      color: 'white',
+                      border: 'none',
+                      padding: isMobile ? '10px 16px' : '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      width: isMobile ? '100%' : 'auto'
+                    }}
+                    title="View full template content"
+                  >
+                    View/Edit
+                  </button>
                   <button
                     onClick={() => handleUseTemplate(template.id)}
                     style={{
@@ -563,24 +602,7 @@ export default function TemplatesPage() {
                     }}
                     title="Use this template to create an agreement"
                   >
-                    Use This Template
-                  </button>
-                  <button
-                    onClick={() => handleEditTemplate(template)}
-                    style={{
-                      backgroundColor: '#059669',
-                      color: 'white',
-                      border: 'none',
-                      padding: isMobile ? '10px 16px' : '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto'
-                    }}
-                    title="Edit template details"
-                  >
-                    Edit
+                    Use Template
                   </button>
                   <button
                     onClick={() => handleDeleteTemplate(template.id)}
@@ -603,6 +625,167 @@ export default function TemplatesPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* View/Edit Template Modal */}
+        {viewingTemplate && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              border: `1px solid ${borderColor}`,
+              width: '100%',
+              maxWidth: '900px',
+              maxHeight: '90vh',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              {/* Modal Header */}
+              <div style={{
+                padding: '20px',
+                borderBottom: `1px solid ${borderColor}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <h2 style={{ 
+                    margin: '0 0 4px 0', 
+                    fontSize: '20px', 
+                    color: textColor, 
+                    fontWeight: '600' 
+                  }}>
+                    {viewingTemplate.title}
+                  </h2>
+                  <p style={{ 
+                    margin: '0', 
+                    color: mutedText, 
+                    fontSize: '14px' 
+                  }}>
+                    Version {viewingTemplate.version} • {viewingTemplate.htmlContent.length} characters
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseViewModal}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: mutedText,
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  title="Close modal"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div style={{
+                padding: '20px',
+                overflow: 'auto',
+                flex: 1
+              }}>
+                <div style={{
+                  padding: '16px',
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  borderRadius: '6px',
+                  border: `1px solid ${borderColor}`,
+                  minHeight: '400px'
+                }}>
+                  <RichTextPreview 
+                    html={viewingTemplate.htmlContent}
+                    isDark={isDark}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      padding: '0',
+                      fontSize: '16px',
+                      lineHeight: '1.6'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{
+                padding: '20px',
+                borderTop: `1px solid ${borderColor}`,
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  onClick={handleCloseViewModal}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    handleEditTemplate(viewingTemplate);
+                    handleCloseViewModal();
+                  }}
+                  style={{
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Edit Template
+                </button>
+                <button
+                  onClick={() => {
+                    handleUseTemplate(viewingTemplate.id);
+                    handleCloseViewModal();
+                  }}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Use Template
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
