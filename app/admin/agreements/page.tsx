@@ -1701,8 +1701,8 @@ export default function AgreementsPage() {
                     </p>
                   </div>
                   <div style={{
-                    backgroundColor: '#f9f9f9',
-                    border: '1px solid #e5e5e5',
+                    backgroundColor: cardBg,
+                    border: `1px solid ${borderColor}`,
                     borderRadius: '6px',
                     padding: '16px',
                     marginBottom: '16px'
