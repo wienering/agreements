@@ -115,6 +115,15 @@ export default function ClientAgreementPage() {
     }
   }, [token, fetchAgreement]);
 
+  // Update document title when agreement is loaded
+  useEffect(() => {
+    if (agreement) {
+      document.title = `Agreement - ${agreement.client.firstName} ${agreement.client.lastName}`;
+    } else {
+      document.title = 'Agreement - Loading...';
+    }
+  }, [agreement]);
+
   const handleDownloadPDF = useCallback(async () => {
     if (!agreement) return;
     
