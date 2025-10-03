@@ -177,8 +177,8 @@ export default function ClientAgreementPage() {
     
     setIsDownloading(true);
     try {
-      // Try the main PDF endpoint first
-      let response = await fetch('/api/agreements/pdf', {
+      // Try PDFKit endpoint first (most reliable)
+      let response = await fetch('/api/agreements/pdf-pdfkit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,9 +188,37 @@ export default function ClientAgreementPage() {
         }),
       });
 
-      // If the main PDF endpoint fails, try the serverless fallback
+      // If PDFKit fails, try the manual PDF endpoint
       if (!response.ok) {
-        console.log('Main PDF endpoint failed, trying serverless fallback...');
+        console.log('PDFKit endpoint failed, trying manual PDF...');
+        response = await fetch('/api/agreements/pdf-js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+          }),
+        });
+      }
+
+      // If manual PDF fails, try the original Puppeteer endpoint
+      if (!response.ok) {
+        console.log('Manual PDF endpoint failed, trying Puppeteer...');
+        response = await fetch('/api/agreements/pdf', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token,
+          }),
+        });
+      }
+
+      // If Puppeteer fails, try the serverless fallback
+      if (!response.ok) {
+        console.log('Puppeteer endpoint failed, trying serverless fallback...');
         response = await fetch('/api/agreements/pdf-serverless', {
           method: 'POST',
           headers: {
@@ -217,6 +245,8 @@ export default function ClientAgreementPage() {
         
         if (isTextFile) {
           alert('PDF generation is temporarily unavailable. A text version has been downloaded instead.');
+        } else {
+          alert('PDF downloaded successfully!');
         }
       } else {
         alert('Failed to download agreement. Please try again later.');
