@@ -106,15 +106,26 @@ export async function POST(request: NextRequest) {
           }
           .button { 
             display: inline-block; 
-            background-color: #3b82f6; 
+            background-color: #1d4ed8; 
             color: white; 
-            padding: 12px 24px; 
+            padding: 16px 32px; 
             text-decoration: none; 
-            border-radius: 6px; 
-            margin: 10px 5px;
-            font-weight: 500;
+            border-radius: 8px; 
+            margin: 20px 5px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #1d4ed8;
+            transition: all 0.2s ease;
+            min-width: 200px;
           }
-          .button:hover { background-color: #2563eb; }
+          .button:hover { 
+            background-color: #1e40af; 
+            border-color: #1e40af;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+          }
           .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
           .urgent { background-color: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
         </style>
@@ -131,8 +142,9 @@ export async function POST(request: NextRequest) {
             
             <p>Your service agreement is ready for review and digital signature. Please click the button below to access your agreement.</p>
             
-            <div style="text-align: center; margin: 30px 0;">
+            <div style="text-align: center; margin: 40px 0; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
               <a href="${clientLink}" class="button">Review & Sign Agreement</a>
+              <p style="margin-top: 15px; font-size: 14px; color: #64748b;">Click the button above to access your agreement</p>
             </div>
             
             <div class="urgent">

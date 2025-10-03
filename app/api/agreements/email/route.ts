@@ -147,16 +147,25 @@ export async function POST(request: NextRequest) {
             }
             .button {
               display: inline-block;
-              background: #10b981;
+              background: #1d4ed8;
               color: white;
-              padding: 12px 24px;
+              padding: 16px 32px;
               text-decoration: none;
-              border-radius: 6px;
+              border-radius: 8px;
               margin: 10px 5px;
-              font-weight: 500;
+              font-weight: 600;
+              font-size: 16px;
+              text-align: center;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              border: 2px solid #1d4ed8;
+              transition: all 0.2s ease;
+              min-width: 200px;
             }
             .button:hover {
-              background: #059669;
+              background: #1e40af;
+              border-color: #1e40af;
+              box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+              transform: translateY(-1px);
             }
           </style>
         </head>
