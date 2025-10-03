@@ -240,7 +240,7 @@ export default function AgreementsPage() {
   };
 
   const handleDeleteAgreement = async (agreementId: string) => {
-    if (!confirm('Are you sure you want to delete this agreement? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete this DRAFT agreement? This action cannot be undone and will permanently remove the agreement.')) {
       return;
     }
 
@@ -742,34 +742,36 @@ export default function AgreementsPage() {
                       Send to Client
                     </button>
                   )}
-                  <button
-                    onClick={() => handleDeleteAgreement(agreement.id)}
-                    disabled={loading}
-                    style={{
-                      backgroundColor: loading ? '#9ca3af' : '#6b7280',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#4b5563';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#6b7280';
-                      }
-                    }}
-                    title="Delete this agreement permanently"
-                  >
-                    {loading ? 'Deleting...' : 'Delete'}
-                  </button>
+                  {agreement.status === 'DRAFT' && (
+                    <button
+                      onClick={() => handleDeleteAgreement(agreement.id)}
+                      disabled={loading}
+                      style={{
+                        backgroundColor: loading ? '#9ca3af' : '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.backgroundColor = '#4b5563';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.backgroundColor = '#6b7280';
+                        }
+                      }}
+                      title="Delete this agreement permanently (only DRAFT agreements can be deleted)"
+                    >
+                      {loading ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
