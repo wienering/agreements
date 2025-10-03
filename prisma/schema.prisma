@@ -73,9 +73,9 @@ model Agreement {
 
 enum AgreementStatus {
   DRAFT
-  SENT
+  LIVE
   SIGNED
-  VOID
+  COMPLETED
 }
 
 model AgreementField {

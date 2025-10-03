@@ -10,7 +10,7 @@ import SearchableSelect from '../../components/SearchableSelect';
 interface Agreement {
   id: string;
   uniqueToken: string;
-  status: 'DRAFT' | 'SENT' | 'SIGNED' | 'EXPIRED';
+  status: 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED';
   expiresAt: string;
   createdAt: string;
   client: {
@@ -38,6 +38,9 @@ export default function AgreementsPage() {
   const [editingExpiration, setEditingExpiration] = useState(false);
   const [newExpirationDate, setNewExpirationDate] = useState('');
   const [editingAgreementId, setEditingAgreementId] = useState<string | null>(null);
+  const [editingStatus, setEditingStatus] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+  const [editingStatusAgreementId, setEditingStatusAgreementId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
@@ -272,6 +275,46 @@ export default function AgreementsPage() {
     } catch (error) {
       console.error('Error updating expiration date:', error);
       showToast('Failed to update expiration date', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateStatus = async (agreementId: string) => {
+    if (!newStatus) {
+      showToast('Please select a new status', 'error');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await fetch('/api/agreements/update-status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          id: agreementId, 
+          status: newStatus 
+        }),
+      });
+
+      if (response.ok) {
+        const updatedAgreement = await response.json();
+        setAgreements(agreements.map(a => 
+          a.id === agreementId ? { ...a, status: updatedAgreement.status } : a
+        ));
+        setEditingStatus(false);
+        setNewStatus('');
+        setEditingStatusAgreementId(null);
+        showToast('Status updated successfully!');
+      } else {
+        const error = await response.json();
+        showToast(`Error: ${error.error || 'Failed to update status'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showToast('Failed to update status', 'error');
     } finally {
       setSaving(false);
     }
@@ -526,8 +569,24 @@ export default function AgreementsPage() {
                       backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
-                      alignSelf: isMobile ? 'flex-start' : 'auto'
-                    }}>
+                      alignSelf: isMobile ? 'flex-start' : 'auto',
+                      cursor: 'pointer',
+                      border: '1px solid transparent',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onClick={() => {
+                      setEditingStatus(true);
+                      setEditingStatusAgreementId(agreement.id);
+                      setNewStatus(agreement.status);
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#3b82f6';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'transparent';
+                    }}
+                    title="Click to edit status"
+                    >
                       {agreement.status}
                     </span>
                     <span style={{ 
@@ -929,6 +988,104 @@ export default function AgreementsPage() {
                   title="Send this agreement to the client"
                 >
                   Send to Client
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Status Edit Modal */}
+        {editingStatus && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px'
+            }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+                Edit Agreement Status
+              </h3>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor 
+                }}>
+                  New Status
+                </label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '4px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="DRAFT">Draft - Use while creating the agreement</option>
+                  <option value="LIVE">Live - Use after the agreement has been sent</option>
+                  <option value="SIGNED">Signed - Use after the agreement has been signed</option>
+                  <option value="COMPLETED">Completed - Use once the event is over</option>
+                </select>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  onClick={() => {
+                    setEditingStatus(false);
+                    setEditingStatusAgreementId(null);
+                    setNewStatus('');
+                  }}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleUpdateStatus(editingStatusAgreementId || '')}
+                  disabled={saving}
+                  style={{
+                    backgroundColor: saving ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  {saving ? 'Updating...' : 'Update'}
                 </button>
               </div>
             </div>
