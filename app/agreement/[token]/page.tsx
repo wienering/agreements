@@ -49,6 +49,7 @@ export default function ClientAgreementPage() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [showEmailSentToast, setShowEmailSentToast] = useState(false);
 
   // Function to process smart fields in HTML content
   const processSmartFields = (html: string, client: any, agreementId: string) => {
@@ -311,19 +312,19 @@ export default function ClientAgreementPage() {
         setShowEmailModal(false);
         
         if (data.shareableLink) {
-          // Show the shareable link
-          const shareText = `Your agreement is ready!\n\nShareable Link: ${data.shareableLink}\n\nYou can copy this link and share it with others to access your signed agreement.`;
-          alert(shareText);
-          
           // Copy link to clipboard
           try {
             await navigator.clipboard.writeText(data.shareableLink);
-            alert('Shareable link copied to clipboard!');
+            setShowEmailSentToast(true);
+            setTimeout(() => setShowEmailSentToast(false), 3000);
           } catch (clipboardErr) {
             console.log('Could not copy to clipboard:', clipboardErr);
+            setShowEmailSentToast(true);
+            setTimeout(() => setShowEmailSentToast(false), 3000);
           }
         } else {
-          alert('Agreement sent successfully!');
+          setShowEmailSentToast(true);
+          setTimeout(() => setShowEmailSentToast(false), 3000);
         }
       } else {
         const errorData = await response.json();
@@ -398,12 +399,21 @@ export default function ClientAgreementPage() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: mainBg, 
-      color: textColor,
-      padding: '24px'
-    }}>
+    <>
+      <style jsx>{`
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+      `}</style>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: mainBg, 
+        color: textColor,
+        padding: '24px'
+      }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ 
@@ -522,7 +532,8 @@ export default function ClientAgreementPage() {
              gap: '12px', 
              justifyContent: 'center',
              flexWrap: 'wrap',
-             marginBottom: '24px'
+             marginBottom: '24px',
+             alignItems: 'center'
            }}>
              <button
                onClick={handleDownloadPDF}
@@ -555,37 +566,59 @@ export default function ClientAgreementPage() {
              >
                {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
              </button>
-             <button
-               onClick={handleEmailAgreement}
-               disabled={isEmailing}
-               style={{
-                 backgroundColor: isEmailing ? '#9ca3af' : '#3b82f6',
-                 color: 'white',
-                 border: 'none',
-                 padding: '12px 24px',
-                 borderRadius: '6px',
-                 cursor: isEmailing ? 'not-allowed' : 'pointer',
-                 fontSize: '16px',
-                 fontWeight: '500',
-                 transition: 'background-color 0.2s',
-                 display: 'flex',
-                 alignItems: 'center',
-                 gap: '8px'
-               }}
-               onMouseEnter={(e) => {
-                 if (!isEmailing) {
-                   e.currentTarget.style.backgroundColor = '#2563eb';
-                 }
-               }}
-               onMouseLeave={(e) => {
-                 if (!isEmailing) {
-                   e.currentTarget.style.backgroundColor = '#3b82f6';
-                 }
-               }}
-               title="Email a copy of the agreement"
-             >
-               {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
-             </button>
+             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+               <button
+                 onClick={handleEmailAgreement}
+                 disabled={isEmailing}
+                 style={{
+                   backgroundColor: isEmailing ? '#9ca3af' : '#3b82f6',
+                   color: 'white',
+                   border: 'none',
+                   padding: '12px 24px',
+                   borderRadius: '6px',
+                   cursor: isEmailing ? 'not-allowed' : 'pointer',
+                   fontSize: '16px',
+                   fontWeight: '500',
+                   transition: 'background-color 0.2s',
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '8px'
+                 }}
+                 onMouseEnter={(e) => {
+                   if (!isEmailing) {
+                     e.currentTarget.style.backgroundColor = '#2563eb';
+                   }
+                 }}
+                 onMouseLeave={(e) => {
+                   if (!isEmailing) {
+                     e.currentTarget.style.backgroundColor = '#3b82f6';
+                   }
+                 }}
+                 title="Email a copy of the agreement"
+               >
+                 {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
+               </button>
+               {showEmailSentToast && (
+                 <div style={{
+                   position: 'absolute',
+                   top: '-40px',
+                   left: '50%',
+                   transform: 'translateX(-50%)',
+                   backgroundColor: '#059669',
+                   color: 'white',
+                   padding: '8px 16px',
+                   borderRadius: '20px',
+                   fontSize: '14px',
+                   fontWeight: '500',
+                   whiteSpace: 'nowrap',
+                   zIndex: 1000,
+                   boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                   animation: 'fadeInOut 3s ease-in-out'
+                 }}>
+                   ✅ Sent!
+                 </div>
+               )}
+             </div>
            </div>
            
            {/* Signing Details */}
@@ -1101,5 +1134,6 @@ export default function ClientAgreementPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -36,6 +36,7 @@ export default function AgreementsPage() {
   const [templates, setTemplates] = useState<any[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sendingToClient, setSendingToClient] = useState(false);
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [saving, setSaving] = useState(false);
@@ -210,7 +211,7 @@ export default function AgreementsPage() {
 
   const handleSendToClient = async (agreement: Agreement) => {
     try {
-      setLoading(true);
+      setSendingToClient(true);
       const response = await fetch('/api/agreements/send', {
         method: 'POST',
         headers: {
@@ -248,7 +249,7 @@ export default function AgreementsPage() {
       console.error('Error sending agreement:', error);
       showToast('Failed to send agreement. Please try again later.', 'error');
     } finally {
-      setLoading(false);
+      setSendingToClient(false);
     }
   };
 
@@ -831,26 +832,31 @@ export default function AgreementsPage() {
                   {agreement.status === 'DRAFT' && (
                     <button
                       onClick={() => handleSendToClient(agreement)}
+                      disabled={sendingToClient}
                       style={{
-                        backgroundColor: '#dc2626',
+                        backgroundColor: sendingToClient ? '#9ca3af' : '#dc2626',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: sendingToClient ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         fontWeight: '500',
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#b91c1c';
+                        if (!sendingToClient) {
+                          e.currentTarget.style.backgroundColor = '#b91c1c';
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#dc2626';
+                        if (!sendingToClient) {
+                          e.currentTarget.style.backgroundColor = '#dc2626';
+                        }
                       }}
                       title="Send agreement to client"
                     >
-                      Send to Client
+                      {sendingToClient ? 'Sending...' : 'Send to Client'}
                     </button>
                   )}
                   {agreement.status === 'DRAFT' && (
