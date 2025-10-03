@@ -60,6 +60,7 @@ model Agreement {
   status       AgreementStatus @default(DRAFT)
   uniqueToken  String   @unique
   expiresAt    DateTime?
+  signedAt     DateTime?
   mergedHtml   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

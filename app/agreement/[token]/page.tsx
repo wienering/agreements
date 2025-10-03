@@ -37,6 +37,11 @@ export default function ClientAgreementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(true);
+  const [isSigning, setIsSigning] = useState(false);
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [signError, setSignError] = useState<string | null>(null);
 
   const fetchAgreement = useCallback(async () => {
     try {
@@ -62,10 +67,59 @@ export default function ClientAgreementPage() {
     }
   }, [token, fetchAgreement]);
 
+  const handleSignAgreement = async () => {
+    if (!agreement) return;
+    
+    setClientName(`${agreement.client.firstName} ${agreement.client.lastName}`);
+    setClientEmail(agreement.client.email);
+    setShowSignModal(true);
+    setSignError(null);
+  };
+
+  const handleConfirmSign = async () => {
+    if (!clientName.trim() || !clientEmail.trim()) {
+      setSignError('Please fill in all fields');
+      return;
+    }
+
+    setIsSigning(true);
+    setSignError(null);
+
+    try {
+      const response = await fetch('/api/agreements/sign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          clientName: clientName.trim(),
+          clientEmail: clientEmail.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAgreement(data.agreement);
+        setShowSignModal(false);
+        // Show success message
+        alert('Agreement signed successfully!');
+      } else {
+        const errorData = await response.json();
+        setSignError(errorData.error || 'Failed to sign agreement');
+      }
+    } catch (err) {
+      setSignError('Error signing agreement');
+    } finally {
+      setIsSigning(false);
+    }
+  };
+
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const textColor = isDark ? '#f8fafc' : '#0f172a';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
   const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mutedText = isDark ? '#94a3b8' : '#64748b';
 
   if (loading) {
     return (
@@ -240,29 +294,218 @@ export default function ClientAgreementPage() {
             Review the agreement above and click the button below to digitally sign.
           </p>
           <button
+            onClick={handleSignAgreement}
+            disabled={agreement.status === 'SIGNED' || isSigning}
             style={{
-              backgroundColor: '#059669',
+              backgroundColor: agreement.status === 'SIGNED' ? '#6b7280' : 
+                             isSigning ? '#9ca3af' : '#059669',
               color: 'white',
               border: 'none',
               padding: '16px 32px',
               borderRadius: '8px',
-              cursor: 'pointer',
+              cursor: agreement.status === 'SIGNED' || isSigning ? 'not-allowed' : 'pointer',
               fontSize: '18px',
               fontWeight: '600',
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#047857';
+              if (agreement.status !== 'SIGNED' && !isSigning) {
+                e.currentTarget.style.backgroundColor = '#047857';
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#059669';
+              if (agreement.status !== 'SIGNED' && !isSigning) {
+                e.currentTarget.style.backgroundColor = '#059669';
+              }
             }}
-            title="Sign this agreement digitally"
+            title={agreement.status === 'SIGNED' ? 'Agreement already signed' : 'Sign this agreement digitally'}
           >
-            ✍️ Sign Agreement
+            {agreement.status === 'SIGNED' ? '✅ Signed' : 
+             isSigning ? 'Signing...' : '✍️ Sign Agreement'}
           </button>
         </div>
+
+        {/* Signing Modal */}
+        {showSignModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '32px',
+              width: '100%',
+              maxWidth: '500px',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            }}>
+              <h2 style={{ 
+                margin: '0 0 20px 0', 
+                fontSize: '24px', 
+                color: textColor, 
+                textAlign: 'center',
+                fontWeight: '600'
+              }}>
+                Digital Signature
+              </h2>
+              
+              <p style={{ 
+                margin: '0 0 24px 0', 
+                color: '#94a3b8', 
+                fontSize: '16px',
+                textAlign: 'center',
+                lineHeight: '1.5'
+              }}>
+                Please confirm your information to digitally sign this agreement. 
+                By signing, you agree to the terms and conditions outlined above.
+              </p>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor,
+                  fontSize: '14px'
+                }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '16px',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor,
+                  fontSize: '14px'
+                }}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '16px',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter your email address"
+                />
+              </div>
+
+              {signError && (
+                <div style={{
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#dc2626',
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  marginBottom: '20px',
+                  fontSize: '14px'
+                }}>
+                  {signError}
+                </div>
+              )}
+
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px',
+                justifyContent: 'center'
+              }}>
+                <button
+                  onClick={() => setShowSignModal(false)}
+                  disabled={isSigning}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: isSigning ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s, color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSigning) {
+                      e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                      e.currentTarget.style.color = textColor;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSigning) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = mutedText;
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmSign}
+                  disabled={isSigning || !clientName.trim() || !clientEmail.trim()}
+                  style={{
+                    backgroundColor: isSigning || !clientName.trim() || !clientEmail.trim() ? '#9ca3af' : '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: isSigning || !clientName.trim() || !clientEmail.trim() ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSigning && clientName.trim() && clientEmail.trim()) {
+                      e.currentTarget.style.backgroundColor = '#047857';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSigning && clientName.trim() && clientEmail.trim()) {
+                      e.currentTarget.style.backgroundColor = '#059669';
+                    }
+                  }}
+                >
+                  {isSigning ? 'Signing...' : 'Sign Agreement'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
