@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
         status: 'CANCELLED',
         cancelledAt: new Date(),
         cancelledBy: validatedData.adminName,
-        cancellationReason: validatedData.cancellationReason
+        cancellationReason: validatedData.cancellationReason,
+        archived: true,
+        archivedAt: new Date()
       },
       include: {
         client: true,
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Agreement cancelled successfully',
+      message: 'Agreement cancelled and archived successfully',
       agreement: updatedAgreement
     });
   } catch (error: any) {

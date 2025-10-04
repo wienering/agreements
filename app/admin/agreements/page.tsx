@@ -455,18 +455,10 @@ export default function AgreementsPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Update the agreement in the list
-        setAgreements(agreements.map(a => 
-          a.id === cancellingAgreement.id ? { 
-            ...a, 
-            status: 'CANCELLED',
-            cancelledAt: data.agreement.cancelledAt,
-            cancelledBy: data.agreement.cancelledBy,
-            cancellationReason: data.agreement.cancellationReason
-          } : a
-        ));
+        // Remove the agreement from the list since it's now archived
+        setAgreements(agreements.filter(a => a.id !== cancellingAgreement.id));
         
-        showToast('Agreement cancelled successfully! Client has been notified via email.', 'success');
+        showToast('Agreement cancelled and archived successfully! Client has been notified via email.', 'success');
         setShowCancelModal(false);
         setCancellingAgreement(null);
         setCancellationStep(1);
@@ -1721,7 +1713,7 @@ export default function AgreementsPage() {
                   }}>
                     <h4 style={{ margin: '0 0 8px 0', color: '#dc2626' }}>⚠️ Final Confirmation Required</h4>
                     <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
-                      This action will permanently cancel the agreement and notify the client via email. 
+                      This action will permanently cancel the agreement, move it to the archived section, and notify the client via email. 
                       This cannot be undone.
                     </p>
                   </div>
@@ -1809,7 +1801,7 @@ export default function AgreementsPage() {
                   }}>
                     <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px' }}>⚠️ FINAL WARNING</h4>
                     <p style={{ margin: '0', color: '#991b1b', fontSize: '16px', fontWeight: '500' }}>
-                      You are about to permanently cancel this signed agreement.
+                      You are about to permanently cancel this signed agreement. It will be moved to the archived section.
                     </p>
                   </div>
                   <div style={{
