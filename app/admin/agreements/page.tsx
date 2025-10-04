@@ -17,6 +17,8 @@ interface Agreement {
   cancelledAt?: string;
   cancelledBy?: string;
   cancellationReason?: string;
+  lastEmailedAt?: string;
+  emailSendCount: number;
   client: {
     id: string;
     firstName: string;
@@ -272,6 +274,52 @@ export default function AgreementsPage() {
     } catch (error) {
       console.error('Error sending agreement:', error);
       showToast('Failed to send agreement. Please try again later.', 'error');
+    } finally {
+      setSendingToClient(false);
+    }
+  };
+
+  const handleResendEmail = async (agreement: Agreement) => {
+    try {
+      setSendingToClient(true);
+      const response = await fetch('/api/agreements/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agreementId: agreement.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the agreement with new email tracking data
+        setAgreements(agreements.map(a => 
+          a.id === agreement.id ? { 
+            ...a, 
+            lastEmailedAt: new Date().toISOString(),
+            emailSendCount: (a.emailSendCount || 0) + 1
+          } : a
+        ));
+        showToast(`Agreement resent successfully to ${agreement.client.email}! (Send #${(agreement.emailSendCount || 0) + 1})`);
+      } else {
+        // If email failed but we have a fallback link, show both error and fallback
+        if (data.fallback) {
+          showToast(`Email failed: ${data.error}. ${data.fallback.message}`, 'error');
+          // Also copy the link to clipboard
+          try {
+            await navigator.clipboard.writeText(data.fallback.clientLink);
+            showToast('Fallback link copied to clipboard!', 'info');
+          } catch (clipboardError) {
+            console.log('Could not copy to clipboard:', clipboardError);
+          }
+        } else {
+          showToast(`Error: ${data.error || 'Failed to resend agreement'}`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error resending agreement:', error);
+      showToast('Failed to resend agreement. Please try again later.', 'error');
     } finally {
       setSendingToClient(false);
     }
@@ -841,6 +889,21 @@ export default function AgreementsPage() {
                     }}>
                       Created {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </span>
+                    {agreement.lastEmailedAt && (
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: '#059669',
+                        backgroundColor: '#f0fdf4',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        alignSelf: isMobile ? 'flex-start' : 'auto',
+                        border: '1px solid #bbf7d0'
+                      }}
+                      title={`Email sent ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''}`}
+                      >
+                        Emailed {new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                      </span>
+                    )}
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
@@ -912,6 +975,36 @@ export default function AgreementsPage() {
                   >
                     Copy Link
                   </button>
+                  {(agreement.status === 'LIVE' || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
+                    <button
+                      onClick={() => handleResendEmail(agreement)}
+                      disabled={sendingToClient}
+                      style={{
+                        backgroundColor: sendingToClient ? '#9ca3af' : '#f59e0b',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: sendingToClient ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!sendingToClient) {
+                          e.currentTarget.style.backgroundColor = '#d97706';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!sendingToClient) {
+                          e.currentTarget.style.backgroundColor = '#f59e0b';
+                        }
+                      }}
+                      title={`Resend email to client (Previously sent ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''})`}
+                    >
+                      {sendingToClient ? 'Sending...' : 'Resend Email'}
+                    </button>
+                  )}
                   {agreement.status === 'DRAFT' && (
                     <button
                       onClick={() => handleSendToClient(agreement)}

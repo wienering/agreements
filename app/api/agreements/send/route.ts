@@ -86,6 +86,30 @@ export async function POST(request: NextRequest) {
       socketTimeout: 10000,
     });
 
+    // Get current send count for different messaging
+    const currentSendCount = agreement.emailSendCount || 0;
+    const newSendCount = currentSendCount + 1;
+    
+    // Different messaging based on send count
+    let emailSubject, emailTitle, emailMessage, emailUrgency;
+    
+    if (newSendCount === 1) {
+      emailSubject = `Service Agreement Ready - ${agreement.client.firstName}`;
+      emailTitle = "Service Agreement Ready for Review";
+      emailMessage = "Your service agreement is ready for review and digital signature. Please click the button below to access your agreement.";
+      emailUrgency = "This agreement expires on the specified date. Please review and sign before the expiration date.";
+    } else if (newSendCount === 2) {
+      emailSubject = `Reminder: Service Agreement Pending - ${agreement.client.firstName}`;
+      emailTitle = "Reminder: Your Service Agreement is Waiting";
+      emailMessage = "This is a friendly reminder that your service agreement is still waiting for your review and signature. We want to make sure everything is ready for your event.";
+      emailUrgency = "Please review and sign your agreement to secure your booking.";
+    } else {
+      emailSubject = `Final Notice: Service Agreement - ${agreement.client.firstName}`;
+      emailTitle = "Final Notice: Service Agreement Signature Required";
+      emailMessage = "This is our final notice regarding your service agreement. We need your signature to proceed with your booking and ensure everything is ready for your event.";
+      emailUrgency = "Please sign your agreement immediately to avoid any delays in your service.";
+    }
+
     // Create email content
     const emailHtml = `
       <!DOCTYPE html>
@@ -132,27 +156,31 @@ export async function POST(request: NextRequest) {
           }
           .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
           .urgent { background-color: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
+          .reminder { background-color: #fef3cd; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; color: #92400e; }
+          .final-notice { background-color: #fef2f2; border: 2px solid #fca5a5; padding: 15px; border-radius: 6px; margin: 20px 0; color: #dc2626; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
             <h1>Photobooth Guys</h1>
-            <p>Service Agreement Ready for Review</p>
+            <p>${emailTitle}</p>
           </div>
           
           <div class="content">
             <p>Dear ${agreement.client.firstName} ${agreement.client.lastName},</p>
             
-            <p>Your service agreement is ready for review and digital signature. Please click the button below to access your agreement.</p>
+            <p>${emailMessage}</p>
             
             <div style="text-align: center; margin: 40px 0; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
               <a href="${clientLink}" class="button">Review & Sign Agreement</a>
               <p style="margin-top: 15px; font-size: 14px; color: #64748b;">Click the button above to access your agreement</p>
             </div>
             
-            <div class="urgent">
-              <strong>⏰ Important:</strong> This agreement expires on ${agreement.expiresAt ? new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'the specified date'}. Please review and sign before the expiration date.
+            <div class="${newSendCount === 1 ? 'urgent' : newSendCount === 2 ? 'reminder' : 'final-notice'}">
+              <strong>${newSendCount === 1 ? '⏰ Important:' : newSendCount === 2 ? '📧 Reminder:' : '🚨 Final Notice:'}</strong> 
+              ${emailUrgency}
+              ${newSendCount > 1 ? `<br><br><strong>Previous emails sent:</strong> ${currentSendCount}` : ''}
             </div>
             
             <h3>Agreement Preview:</h3>
@@ -186,7 +214,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: agreement.client.email,
-      subject: `Service Agreement Ready for Review - ${agreement.template.title}`,
+      subject: emailSubject,
       html: emailHtml,
     };
 
@@ -204,13 +232,15 @@ export async function POST(request: NextRequest) {
 
       console.log('Agreement email sent successfully:', info);
 
-      // Update agreement status to LIVE if it was DRAFT
-      if (agreement.status === 'DRAFT') {
-        await prisma.agreement.update({
-          where: { id: agreement.id },
-          data: { status: 'LIVE' }
-        });
-      }
+      // Update agreement status to LIVE if it was DRAFT and track email send
+      await prisma.agreement.update({
+        where: { id: agreement.id },
+        data: { 
+          status: agreement.status === 'DRAFT' ? 'LIVE' : agreement.status,
+          lastEmailedAt: new Date(),
+          emailSendCount: { increment: 1 }
+        }
+      });
 
       return NextResponse.json({
         message: 'Agreement sent successfully',
