@@ -172,7 +172,7 @@ export default function ArchivedAgreementsPage() {
               color: mutedText, 
               fontSize: '16px' 
             }}>
-              View and manage archived agreements
+              View completed and cancelled agreements
             </p>
           </div>
           <button

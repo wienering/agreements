@@ -568,29 +568,6 @@ export default function AgreementsPage() {
               flexWrap: 'wrap'
             }}>
               <button
-                onClick={() => router.push('/admin/agreements/completed')}
-                style={{
-                  backgroundColor: '#7c3aed',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#6d28d9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#7c3aed';
-                }}
-                title="View completed agreements"
-              >
-                Completed
-              </button>
-              <button
                 onClick={() => router.push('/admin/agreements/archived')}
                 style={{
                   backgroundColor: '#6b7280',
@@ -609,7 +586,7 @@ export default function AgreementsPage() {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '#6b7280';
                 }}
-                title="View archived agreements"
+                title="View archived agreements (includes completed and cancelled)"
               >
                 Archived
               </button>
