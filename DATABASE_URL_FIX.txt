@@ -1,0 +1,19 @@
+# Fix for Database Connection Pool Timeout
+# Copy this line to your .env file, replacing your current DATABASE_URL
+
+# If your current DATABASE_URL is:
+# DATABASE_URL="postgresql://user:password@host/database"
+
+# Change it to:
+# DATABASE_URL="postgresql://user:password@host/database?sslmode=require&pgbouncer=true&connection_limit=10&pool_timeout=60&connect_timeout=30"
+
+# Connection Pool Parameters Explained:
+# - sslmode=require: Requires SSL connection
+# - pgbouncer=true: Enables connection pooling
+# - connection_limit=10: Maximum 10 connections in pool
+# - pool_timeout=60: Wait up to 60 seconds for a connection
+# - connect_timeout=30: Wait up to 30 seconds to establish connection
+
+# After updating your .env file:
+# 1. Restart your development server: npm run dev
+# 2. Try updating the template again
