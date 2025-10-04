@@ -378,13 +378,21 @@ export default function AgreementsPage() {
 
       if (response.ok) {
         const updatedAgreement = await response.json();
-        setAgreements(agreements.map(a => 
-          a.id === agreementId ? { ...a, status: updatedAgreement.status } : a
-        ));
+        
+        // If status is COMPLETED, remove from list since it's now archived
+        if (newStatus === 'COMPLETED') {
+          setAgreements(agreements.filter(a => a.id !== agreementId));
+          showToast('Agreement marked as completed and moved to archived section!');
+        } else {
+          setAgreements(agreements.map(a => 
+            a.id === agreementId ? { ...a, status: updatedAgreement.status } : a
+          ));
+          showToast('Status updated successfully!');
+        }
+        
         setEditingStatus(false);
         setNewStatus('');
         setEditingStatusAgreementId(null);
-        showToast('Status updated successfully!');
       } else {
         const error = await response.json();
         showToast(`Error: ${error.error || 'Failed to update status'}`, 'error');

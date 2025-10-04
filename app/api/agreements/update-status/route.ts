@@ -21,6 +21,11 @@ export async function PUT(request: NextRequest) {
       where: { id: validatedData.id },
       data: {
         status: validatedData.status,
+        // Auto-archive when status is set to COMPLETED
+        ...(validatedData.status === 'COMPLETED' && {
+          archived: true,
+          archivedAt: new Date()
+        })
       },
     });
 
