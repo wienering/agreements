@@ -1026,6 +1026,28 @@ export default function ClientAgreementPage() {
         </div>
       )}
 
+      {/* SIMPLE TEST MODAL */}
+      {showEmailVerification && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'red',
+          zIndex: 999999
+        }}>
+          <div style={{
+            backgroundColor: 'yellow',
+            padding: '50px',
+            fontSize: '30px',
+            textAlign: 'center'
+          }}>
+            TEST MODAL - IF YOU SEE THIS, MODAL WORKS!
+          </div>
+        </div>
+      )}
+
       {/* Email Verification Modal */}
       {showEmailVerification && (
         <div style={{
