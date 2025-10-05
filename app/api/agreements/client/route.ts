@@ -6,7 +6,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
 
+    console.log('🔍 API: Looking for agreement with token:', token);
+
     if (!token) {
+      console.log('❌ API: No token provided');
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
@@ -24,7 +27,10 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    console.log('📊 API: Agreement found:', !!agreement);
+
     if (!agreement) {
+      console.log('❌ API: Agreement not found or expired');
       return NextResponse.json({ error: 'Agreement not found or expired' }, { status: 404 });
     }
 
