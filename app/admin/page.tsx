@@ -14,15 +14,44 @@ interface DashboardStats {
   conversionRate: number;
 }
 
+interface Warning {
+  id: string;
+  status: string;
+  lastEmailedAt: string | null;
+  expiresAt: string | null;
+  daysSinceSent: number | null;
+  hoursUntilExpiry: number | null;
+  warningType: 'expiration' | 'critical' | 'warning';
+  client: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  template: {
+    title: string;
+  };
+}
+
+interface WarningsData {
+  warnings: Warning[];
+  summary: {
+    totalWarnings: number;
+    yellowWarnings: number;
+    redWarnings: number;
+    expirationWarnings: number;
+  };
+}
+
 export default function AdminHome() {
-  const [showSmartFields, setShowSmartFields] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [warnings, setWarnings] = useState<WarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useDarkMode();
   const router = useRouter();
 
   useEffect(() => {
     fetchStats();
+    fetchWarnings();
   }, []);
 
   const fetchStats = async () => {
@@ -39,34 +68,18 @@ export default function AdminHome() {
     }
   };
 
-  const smartFields = [
-    { field: '{{client.firstName}}', description: 'Client first name', example: 'John' },
-    { field: '{{client.lastName}}', description: 'Client last name', example: 'Smith' },
-    { field: '{{client.email}}', description: 'Client email address', example: 'john.smith@example.com' },
-    { field: '{{client.phone}}', description: 'Client phone number', example: '(555) 123-4567' },
-    { field: '{{client.eventDate}}', description: 'Event date', example: '2024-06-15' },
-    { field: '{{event.type}}', description: 'Type of event', example: 'Wedding Photography' },
-    { field: '{{event.location}}', description: 'Event location', example: 'Grand Ballroom, Downtown Hotel' },
-    { field: '{{event.startTime}}', description: 'Event start time', example: '2:00 PM' },
-    { field: '{{event.duration}}', description: 'Event duration', example: '8 hours' },
-    { field: '{{event.package}}', description: 'Package selected', example: 'Premium Package' },
-    { field: '{{event.guests}}', description: 'Expected number of guests', example: '150' },
-    { field: '{{event.specialRequests}}', description: 'Special requests or notes', example: 'Candids during ceremony' },
-    { field: '{{pricing.basePrice}}', description: 'Base package price', example: '$2,500' },
-    { field: '{{pricing.addOns}}', description: 'Additional services cost', example: '$500' },
-    { field: '{{pricing.total}}', description: 'Total price', example: '$3,000' },
-    { field: '{{pricing.deposit}}', description: 'Required deposit', example: '$1,500' },
-    { field: '{{pricing.balance}}', description: 'Remaining balance', example: '$1,500' },
-    { field: '{{pricing.paymentSchedule}}', description: 'Payment schedule', example: '50% deposit, 50% on delivery' },
-    { field: '{{company.name}}', description: 'Your company name', example: 'Photobooth Guys' },
-    { field: '{{company.phone}}', description: 'Your company phone', example: '(555) 987-6543' },
-    { field: '{{company.email}}', description: 'Your company email', example: 'info@photoboothguys.ca' },
-    { field: '{{company.address}}', description: 'Your company address', example: '123 Main St, City, State 12345' },
-    { field: '{{company.website}}', description: 'Your website URL', example: 'www.photoboothguys.ca' },
-    { field: '{{agreement.date}}', description: 'Agreement creation date', example: '2024-01-15' },
-    { field: '{{agreement.expires}}', description: 'Agreement expiration date', example: '2024-02-15' },
-    { field: '{{agreement.id}}', description: 'Unique agreement ID', example: 'AGR-2024-001' }
-  ];
+  const fetchWarnings = async () => {
+    try {
+      const response = await fetch('/api/analytics/warnings');
+      if (response.ok) {
+        const data = await response.json();
+        setWarnings(data);
+      }
+    } catch (error) {
+      console.error('Error fetching warnings:', error);
+    }
+  };
+
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
@@ -99,6 +112,158 @@ export default function AdminHome() {
             Manage your client agreements and contracts efficiently
           </p>
         </div>
+
+        {/* Warnings Section */}
+        {warnings && warnings.summary.totalWarnings > 0 && (
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '24px',
+            marginBottom: '32px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '20px'
+            }}>
+              <div style={{
+                fontSize: '24px'
+              }}>
+                {warnings.summary.expirationWarnings > 0 ? '🚨' : 
+                 warnings.summary.redWarnings > 0 ? '⚠️' : '⚠️'}
+              </div>
+              <h2 style={{
+                margin: '0',
+                fontSize: '20px',
+                color: textColor,
+                fontWeight: '700'
+              }}>
+                {warnings.summary.expirationWarnings > 0 ? 'Critical Alerts' : 
+                 warnings.summary.redWarnings > 0 ? 'Urgent Attention Required' : 'Attention Required'}
+              </h2>
+              <div style={{
+                padding: '4px 12px',
+                backgroundColor: warnings.summary.expirationWarnings > 0 ? '#dc2626' : 
+                              warnings.summary.redWarnings > 0 ? '#dc2626' : '#f59e0b',
+                color: 'white',
+                borderRadius: '20px',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}>
+                {warnings.summary.totalWarnings} {warnings.summary.totalWarnings === 1 ? 'Issue' : 'Issues'}
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              {warnings.warnings.slice(0, 5).map((warning) => (
+                <div key={warning.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '16px',
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  borderRadius: '8px',
+                  border: `1px solid ${borderColor}`
+                }}>
+                  <div style={{
+                    fontSize: '20px'
+                  }}>
+                    {warning.warningType === 'expiration' ? '⏰' : 
+                     warning.warningType === 'critical' ? '🚨' : '⚠️'}
+                  </div>
+                  
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '4px'
+                    }}>
+                      <h4 style={{
+                        margin: '0',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: textColor
+                      }}>
+                        {warning.client.firstName} {warning.client.lastName}
+                      </h4>
+                      <div style={{
+                        padding: '2px 8px',
+                        backgroundColor: warning.warningType === 'expiration' ? '#dc2626' :
+                                      warning.warningType === 'critical' ? '#dc2626' : '#f59e0b',
+                        color: 'white',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}>
+                        {warning.warningType === 'expiration' ? 'EXPIRING' :
+                         warning.warningType === 'critical' ? 'CRITICAL' : 'WARNING'}
+                      </div>
+                    </div>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      color: mutedText
+                    }}>
+                      {warning.template.title}
+                    </p>
+                    <div style={{
+                      marginTop: '8px',
+                      fontSize: '12px',
+                      color: mutedText
+                    }}>
+                      {warning.warningType === 'expiration' ? (
+                        `Expires in ${warning.hoursUntilExpiry} hours`
+                      ) : (
+                        `Sent ${warning.daysSinceSent} days ago`
+                      )}
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => router.push('/admin/agreements')}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }}
+                  >
+                    View
+                  </button>
+                </div>
+              ))}
+              
+              {warnings.warnings.length > 5 && (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '12px',
+                  color: mutedText,
+                  fontSize: '14px'
+                }}>
+                  +{warnings.warnings.length - 5} more issues
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Quick Stats */}
         {loading ? (
@@ -461,80 +626,6 @@ export default function AdminHome() {
           </div>
         </div>
 
-        {/* Smart Fields Help */}
-        <div style={{
-          backgroundColor: cardBg,
-          border: `1px solid ${borderColor}`,
-          borderRadius: '8px',
-          padding: '24px'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '16px'
-          }}>
-            <h2 style={{ margin: '0', fontSize: '20px', color: textColor }}>
-              Smart Fields Reference
-            </h2>
-            <button
-              onClick={() => setShowSmartFields(!showSmartFields)}
-              style={{
-                backgroundColor: showSmartFields ? '#059669' : '#6b7280',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-            >
-              {showSmartFields ? 'Hide Smart Fields' : 'Show Smart Fields'}
-            </button>
-          </div>
-          
-          {showSmartFields && (
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '16px' 
-            }}>
-              {smartFields.map((field, index) => (
-                <div key={index} style={{
-                  padding: '12px',
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                  borderRadius: '6px',
-                  border: `1px solid ${borderColor}`
-                }}>
-                  <div style={{ 
-                    fontFamily: 'monospace', 
-                    fontSize: '14px', 
-                    fontWeight: '600', 
-                    color: '#3b82f6',
-                    marginBottom: '4px'
-                  }}>
-                    {field.field}
-                  </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: textColor, 
-                    marginBottom: '4px' 
-                  }}>
-                    {field.description}
-                  </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: mutedText, 
-                    fontStyle: 'italic' 
-                  }}>
-                    Example: {field.example}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
