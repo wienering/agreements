@@ -1030,13 +1030,14 @@ export default function ClientAgreementPage() {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 99999
+          zIndex: 999999,
+          overflow: 'hidden'
         }}>
           <div style={{
             backgroundColor: isDark ? '#1e293b' : '#ffffff',
@@ -1045,7 +1046,9 @@ export default function ClientAgreementPage() {
             border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
             maxWidth: '500px',
             width: '90%',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            position: 'relative',
+            zIndex: 1000000
           }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
