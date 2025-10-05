@@ -80,9 +80,7 @@ async function handleDuplicateTemplate(data: { templateId: string }) {
         title: `${originalTemplate.title} (Copy)`,
         htmlContent: originalTemplate.htmlContent,
         fieldsSchema: originalTemplate.fieldsSchema as any,
-        version: 1,
-        lastModifiedBy: 'System',
-        changeSummary: 'Duplicated from existing template'
+        version: 1
       }
     });
 
@@ -144,9 +142,7 @@ async function handleExportAgreements(data: {
         template: a.template.title,
         status: a.status,
         createdAt: a.createdAt,
-        signedAt: a.signedAt,
-        packagePrice: a.packagePrice,
-        estimatedRevenue: a.estimatedRevenue
+        signedAt: a.signedAt
       }))
     });
   } catch (error) {

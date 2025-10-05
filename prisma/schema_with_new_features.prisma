@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  eventDate     DateTime?
+  eventType     String?
+  eventLocation String?
+  eventStartTime String?
+  eventDuration String?
+  eventPackage  String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  agreements    Agreement[]
+  retention     ClientRetention?
+}
+
+model Template {
+  id           String   @id @default(cuid())
+  title        String
+  htmlContent  String
+  version      Int      @default(1)
+  fieldsSchema Json
+  // Version control
+  lastModifiedBy String?
+  changeSummary  String?
+  isActive       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agreements Agreement[]
+  fields     AgreementField[]
+  versions   TemplateVersion[]
+}
+
+model Agreement {
+  id           String   @id @default(cuid())
+  clientId     String
+  templateId   String
+  status       AgreementStatus @default(DRAFT)
+  uniqueToken  String   @unique
+  expiresAt    DateTime?
+  signedAt     DateTime?
+  signedFromIP String?
+  mergedHtml   String?
+  cancelledAt  DateTime?
+  cancelledBy  String?
+  cancellationReason String?
+  archived     Boolean  @default(false)
+  archivedAt   DateTime?
+  lastEmailedAt DateTime?
+  emailSendCount Int    @default(0)
+  // Revenue tracking
+  packagePrice Decimal? @db.Decimal(10, 2)
+  estimatedRevenue Decimal? @db.Decimal(10, 2)
+  // Audit tracking
+  firstViewedAt DateTime?
+  lastViewedAt  DateTime?
+  viewCount     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  client       Client   @relation(fields: [clientId], references: [id])
+  template     Template @relation(fields: [templateId], references: [id])
+  fields       AgreementFieldValue[]
+  signature    Signature?
+  auditLogs    AuditLog[]
+  views        AgreementView[]
+}
+
+enum AgreementStatus {
+  DRAFT
+  LIVE
+  SIGNED
+  COMPLETED
+  CANCELLED
+}
+
+model AgreementField {
+  id                String  @id @default(cuid())
+  templateId        String
+  key               String
+  label             String
+  type              String
+  editableByClient  Boolean @default(false)
+  required          Boolean @default(false)
+
+  template          Template @relation(fields: [templateId], references: [id])
+
+  @@unique([templateId, key])
+}
+
+model AgreementFieldValue {
+  id          String   @id @default(cuid())
+  agreementId String
+  key         String
+  value       String
+
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
+
+  @@unique([agreementId, key])
+}
+
+model Signature {
+  id          String   @id @default(cuid())
+  agreementId String   @unique
+  signerName  String
+  signerEmail String
+  method      String
+  imageUrl    String?
+  typedFont   String?
+  signedAt    DateTime @default(now())
+  ip          String?
+  userAgent   String?
+  contentHash String?
+
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  agreementId String?
+  actor       String
+  action      String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  agreement   Agreement? @relation(fields: [agreementId], references: [id])
+}
+
+// Template version control
+model TemplateVersion {
+  id          String   @id @default(cuid())
+  templateId  String
+  version     Int
+  htmlContent String
+  changeSummary String?
+  modifiedBy  String?
+  createdAt   DateTime @default(now())
+
+  template    Template @relation(fields: [templateId], references: [id])
+}
+
+// Client retention tracking
+model ClientRetention {
+  id              String   @id @default(cuid())
+  clientId        String   @unique
+  totalBookings   Int      @default(1)
+  firstBookingAt  DateTime
+  lastBookingAt   DateTime
+  totalRevenue    Decimal  @db.Decimal(10, 2)
+  averageRevenue  Decimal  @db.Decimal(10, 2)
+  isRepeatClient  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  client          Client   @relation(fields: [clientId], references: [id])
+}
+
+// Agreement view tracking
+model AgreementView {
+  id          String   @id @default(cuid())
+  agreementId String
+  viewedAt    DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+  referrer    String?
+
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
+}

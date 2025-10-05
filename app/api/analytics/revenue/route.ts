@@ -27,8 +27,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         status: true,
-        packagePrice: true,
-        estimatedRevenue: true,
         createdAt: true,
         signedAt: true,
         client: {
@@ -46,21 +44,21 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Calculate totals
+    // Calculate totals (using default values for now)
     const totalRevenue = revenueData.reduce((sum, agreement) => {
-      return sum + Number(agreement.estimatedRevenue || agreement.packagePrice || 0);
+      return sum + 0; // Default to 0 until revenue fields are added
     }, 0);
 
     const signedRevenue = revenueData
       .filter(a => a.status === 'SIGNED' || a.status === 'COMPLETED')
       .reduce((sum, agreement) => {
-        return sum + Number(agreement.estimatedRevenue || agreement.packagePrice || 0);
+        return sum + 0; // Default to 0 until revenue fields are added
       }, 0);
 
     const pendingRevenue = revenueData
       .filter(a => a.status === 'LIVE')
       .reduce((sum, agreement) => {
-        return sum + Number(agreement.estimatedRevenue || agreement.packagePrice || 0);
+        return sum + 0; // Default to 0 until revenue fields are added
       }, 0);
 
     // Get average revenue per agreement
@@ -83,7 +81,7 @@ export async function GET(request: NextRequest) {
           agreementCount: 0
         };
       }
-      acc[clientKey].totalRevenue += Number(agreement.estimatedRevenue || agreement.packagePrice || 0);
+      acc[clientKey].totalRevenue += 0; // Default to 0 until revenue fields are added
       acc[clientKey].agreementCount += 1;
       return acc;
     }, {} as any);

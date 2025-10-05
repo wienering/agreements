@@ -64,9 +64,6 @@ export async function GET(request: NextRequest) {
         id: true,
         uniqueToken: true,
         signedAt: true,
-        firstViewedAt: true,
-        lastViewedAt: true,
-        viewCount: true,
         client: {
           select: {
             firstName: true,

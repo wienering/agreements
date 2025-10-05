@@ -39,7 +39,6 @@ model Client {
   updatedAt     DateTime @updatedAt
 
   agreements    Agreement[]
-  retention     ClientRetention?
 }
 
 model Template {
@@ -48,16 +47,11 @@ model Template {
   htmlContent  String
   version      Int      @default(1)
   fieldsSchema Json
-  // Version control
-  lastModifiedBy String?
-  changeSummary  String?
-  isActive       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   agreements Agreement[]
   fields     AgreementField[]
-  versions   TemplateVersion[]
 }
 
 model Agreement {
@@ -77,13 +71,6 @@ model Agreement {
   archivedAt   DateTime?
   lastEmailedAt DateTime?
   emailSendCount Int    @default(0)
-  // Revenue tracking
-  packagePrice Decimal? @db.Decimal(10, 2)
-  estimatedRevenue Decimal? @db.Decimal(10, 2)
-  // Audit tracking
-  firstViewedAt DateTime?
-  lastViewedAt  DateTime?
-  viewCount     Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -92,7 +79,6 @@ model Agreement {
   fields       AgreementFieldValue[]
   signature    Signature?
   auditLogs    AuditLog[]
-  views        AgreementView[]
 }
 
 enum AgreementStatus {
@@ -111,34 +97,33 @@ model AgreementField {
   type              String
   editableByClient  Boolean @default(false)
   required          Boolean @default(false)
+  options           Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   template          Template @relation(fields: [templateId], references: [id])
-
-  @@unique([templateId, key])
+  values            AgreementFieldValue[]
 }
 
 model AgreementFieldValue {
-  id          String   @id @default(cuid())
-  agreementId String
-  key         String
-  value       String
+  id                String  @id @default(cuid())
+  agreementId       String
+  fieldId           String
+  value             String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  agreement   Agreement @relation(fields: [agreementId], references: [id])
-
-  @@unique([agreementId, key])
+  agreement         Agreement @relation(fields: [agreementId], references: [id])
+  field             AgreementField @relation(fields: [fieldId], references: [id])
 }
 
 model Signature {
   id          String   @id @default(cuid())
   agreementId String   @unique
-  signerName  String
-  signerEmail String
-  method      String
-  imageUrl    String?
-  typedFont   String?
+  clientName  String
+  clientEmail String
   signedAt    DateTime @default(now())
-  ip          String?
-  userAgent   String?
+  ipAddress   String?
   contentHash String?
 
   agreement   Agreement @relation(fields: [agreementId], references: [id])
@@ -153,45 +138,4 @@ model AuditLog {
   createdAt   DateTime @default(now())
 
   agreement   Agreement? @relation(fields: [agreementId], references: [id])
-}
-
-// Template version control
-model TemplateVersion {
-  id          String   @id @default(cuid())
-  templateId  String
-  version     Int
-  htmlContent String
-  changeSummary String?
-  modifiedBy  String?
-  createdAt   DateTime @default(now())
-
-  template    Template @relation(fields: [templateId], references: [id])
-}
-
-// Client retention tracking
-model ClientRetention {
-  id              String   @id @default(cuid())
-  clientId        String   @unique
-  totalBookings   Int      @default(1)
-  firstBookingAt  DateTime
-  lastBookingAt   DateTime
-  totalRevenue    Decimal  @db.Decimal(10, 2)
-  averageRevenue  Decimal  @db.Decimal(10, 2)
-  isRepeatClient  Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  client          Client   @relation(fields: [clientId], references: [id])
-}
-
-// Agreement view tracking
-model AgreementView {
-  id          String   @id @default(cuid())
-  agreementId String
-  viewedAt    DateTime @default(now())
-  ipAddress   String?
-  userAgent   String?
-  referrer    String?
-
-  agreement   Agreement @relation(fields: [agreementId], references: [id])
 }

@@ -11,27 +11,8 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Get client retention data
-    const retentionData = await prisma.clientRetention.findMany({
-      where: {
-        createdAt: {
-          gte: startDate
-        }
-      },
-      include: {
-        client: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-            createdAt: true
-          }
-        }
-      },
-      orderBy: {
-        totalBookings: 'desc'
-      }
-    });
+    // Get client retention data (simplified for now)
+    const retentionData: any[] = []; // Empty array until ClientRetention model is added
 
     // Calculate retention metrics
     const totalClients = await prisma.client.count();
@@ -52,9 +33,9 @@ export async function GET(request: NextRequest) {
       .filter(c => c.isRepeatClient)
       .slice(0, 5);
 
-    // Calculate lifetime value
-    const totalLifetimeValue = retentionData.reduce((sum, client) => sum + Number(client.totalRevenue), 0);
-    const averageLifetimeValue = retentionData.length > 0 ? totalLifetimeValue / retentionData.length : 0;
+    // Calculate lifetime value (default values for now)
+    const totalLifetimeValue = 0; // Default to 0 until ClientRetention model is added
+    const averageLifetimeValue = 0; // Default to 0 until ClientRetention model is added
 
     return NextResponse.json({
       retention: {
