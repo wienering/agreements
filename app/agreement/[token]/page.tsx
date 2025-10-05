@@ -114,20 +114,21 @@ export default function ClientAgreementPage() {
         // Email verified successfully
         setIsEmailVerified(true);
         setShowEmailVerification(false);
-        setAgreement(data.agreement);
-        // Process smart fields for the verified agreement
-        const processedAgreement = {
-          ...data.agreement,
-          template: {
-            ...data.agreement.template,
-            htmlContent: processSmartFields(
-              data.agreement.template.htmlContent, 
-              data.agreement.client, 
-              data.agreement.id
-            )
-          }
-        };
-        setAgreement(processedAgreement);
+        // Use the stored agreement data and process smart fields
+        if (agreement) {
+          const processedAgreement = {
+            ...agreement,
+            template: {
+              ...agreement.template,
+              htmlContent: processSmartFields(
+                agreement.template.htmlContent, 
+                agreement.client, 
+                agreement.id
+              )
+            }
+          };
+          setAgreement(processedAgreement);
+        }
       } else {
         setVerificationError(data.error || 'Email verification failed');
       }
@@ -142,6 +143,10 @@ export default function ClientAgreementPage() {
     try {
       const response = await fetch(`/api/agreements/client?token=${token}`);
       if (response.ok) {
+        // Store the agreement data for later use after email verification
+        const data = await response.json();
+        // Store the agreement data temporarily (we'll use it after email verification)
+        setAgreement(data);
         // Show email verification modal instead of loading agreement directly
         setShowEmailVerification(true);
         setLoading(false);
