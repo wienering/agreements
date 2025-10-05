@@ -548,6 +548,23 @@ export default function ClientAgreementPage() {
       }}>
         DEBUG: {debugInfo}
       </div>
+
+      {/* Test element to verify conditional rendering */}
+      {showEmailVerification && (
+        <div style={{
+          position: 'fixed',
+          top: '50px',
+          right: '10px',
+          backgroundColor: '#00ff00',
+          color: 'black',
+          padding: '10px',
+          fontSize: '12px',
+          zIndex: 10001,
+          borderRadius: '4px'
+        }}>
+          MODAL SHOULD BE VISIBLE
+        </div>
+      )}
       {/* Show simple header when email verification is required */}
       {!isEmailVerified && (
         <div style={{
