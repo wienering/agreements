@@ -10,18 +10,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
+    console.log('API: Looking for agreement with token:', token);
+
     const agreement = await prisma.agreement.findFirst({
       where: {
         uniqueToken: token,
-        expiresAt: {
-          gte: new Date()
-        }
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gte: new Date() } }
+        ]
       },
       include: {
         client: true,
         template: true
       }
     });
+
+    console.log('API: Agreement found:', !!agreement);
 
     if (!agreement) {
       return NextResponse.json({ error: 'Agreement not found or expired' }, { status: 404 });

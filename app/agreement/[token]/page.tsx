@@ -149,20 +149,27 @@ export default function ClientAgreementPage() {
 
   const fetchAgreement = useCallback(async () => {
     try {
+      console.log('Fetching agreement with token:', token);
       const response = await fetch(`/api/agreements/client?token=${token}`);
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
+        console.log('Agreement found, showing email verification modal');
         // Only check if agreement exists, don't store any data until email verification
         // Show email verification modal immediately
         setShowEmailVerification(true);
         setLoading(false);
       } else if (response.status === 404) {
+        console.log('Agreement not found or expired');
         setError('Agreement not found or has expired.');
         setLoading(false);
       } else {
+        console.log('Failed to load agreement, status:', response.status);
         setError('Failed to load agreement.');
         setLoading(false);
       }
     } catch (err) {
+      console.log('Error loading agreement:', err);
       setError('Error loading agreement.');
       setLoading(false);
     }
@@ -506,6 +513,15 @@ export default function ClientAgreementPage() {
       </div>
     );
   }
+
+  // Debug logging
+  console.log('Render state:', { 
+    loading, 
+    showEmailVerification, 
+    isEmailVerified, 
+    agreement: !!agreement,
+    error 
+  });
 
   return (
     <div style={{ 
