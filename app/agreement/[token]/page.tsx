@@ -59,6 +59,7 @@ export default function ClientAgreementPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
 
   // Function to process smart fields in HTML content
   const processSmartFields = (html: string, client: any, agreementId: string) => {
@@ -615,6 +616,35 @@ export default function ClientAgreementPage() {
               </div>
             )}
             
+            {/* Terms Agreement Checkbox */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                lineHeight: '1.5',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={hasAgreedToTerms}
+                  onChange={(e) => setHasAgreedToTerms(e.target.checked)}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    marginTop: '2px',
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span>
+                  I have read and agree to the terms of the agreement. By proceeding, I acknowledge that I have reviewed the complete agreement and consent to its terms and conditions.
+                </span>
+              </label>
+            </div>
+            
             <div style={{ 
               display: 'flex', 
               gap: '12px', 
@@ -625,6 +655,7 @@ export default function ClientAgreementPage() {
                   setShowEmailVerification(false);
                   setVerificationEmail('');
                   setVerificationError(null);
+                  setHasAgreedToTerms(false);
                 }}
                 style={{
                   backgroundColor: 'transparent',
@@ -641,14 +672,14 @@ export default function ClientAgreementPage() {
               </button>
               <button
                 onClick={handleEmailVerification}
-                disabled={isVerifying || !verificationEmail.trim()}
+                disabled={isVerifying || !verificationEmail.trim() || !hasAgreedToTerms}
                 style={{
-                  backgroundColor: isVerifying || !verificationEmail.trim() ? '#9ca3af' : '#3b82f6',
+                  backgroundColor: isVerifying || !verificationEmail.trim() || !hasAgreedToTerms ? '#9ca3af' : '#3b82f6',
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
                   borderRadius: '8px',
-                  cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
+                  cursor: isVerifying || !verificationEmail.trim() || !hasAgreedToTerms ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
                   fontWeight: '600',
                   opacity: isVerifying ? 0.7 : 1
@@ -1225,6 +1256,35 @@ export default function ClientAgreementPage() {
               </div>
             )}
             
+            {/* Terms Agreement Checkbox */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                lineHeight: '1.5',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={hasAgreedToTerms}
+                  onChange={(e) => setHasAgreedToTerms(e.target.checked)}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    marginTop: '2px',
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span>
+                  I have read and agree to the terms of the agreement. By proceeding, I acknowledge that I have reviewed the complete agreement and consent to its terms and conditions.
+                </span>
+              </label>
+            </div>
+            
             <div style={{ 
               display: 'flex', 
               gap: '12px', 
@@ -1235,6 +1295,7 @@ export default function ClientAgreementPage() {
                   setShowEmailVerification(false);
                   setVerificationEmail('');
                   setVerificationError(null);
+                  setHasAgreedToTerms(false);
                 }}
                 style={{
                   backgroundColor: 'transparent',
@@ -1251,14 +1312,14 @@ export default function ClientAgreementPage() {
               </button>
               <button
                 onClick={handleEmailVerification}
-                disabled={isVerifying || !verificationEmail.trim()}
+                disabled={isVerifying || !verificationEmail.trim() || !hasAgreedToTerms}
                 style={{
-                  backgroundColor: isVerifying || !verificationEmail.trim() ? '#9ca3af' : '#3b82f6',
+                  backgroundColor: isVerifying || !verificationEmail.trim() || !hasAgreedToTerms ? '#9ca3af' : '#3b82f6',
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
                   borderRadius: '8px',
-                  cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
+                  cursor: isVerifying || !verificationEmail.trim() || !hasAgreedToTerms ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
                   fontWeight: '600',
                   opacity: isVerifying ? 0.7 : 1
