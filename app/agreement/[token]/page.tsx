@@ -513,28 +513,157 @@ export default function ClientAgreementPage() {
             flexWrap: 'wrap'
           }}>
             <div style={{
-              padding: '8px 16px',
+              padding: '12px 16px',
               backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-              borderRadius: '6px',
-              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+              borderRadius: '8px',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+              minWidth: '200px'
             }}>
+              <p style={{
+                margin: '0 0 8px 0',
+                fontSize: '11px',
+                color: isDark ? '#94a3b8' : '#64748b',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                CLIENT
+              </p>
+              <p style={{
+                margin: '0 0 4px 0',
+                fontSize: '16px',
+                color: isDark ? '#f1f5f9' : '#1e293b',
+                fontWeight: '700'
+              }}>
+                {agreement.client.firstName} {agreement.client.lastName}
+              </p>
+              {agreement.client.phone && (
+                <p style={{
+                  margin: '0 0 4px 0',
+                  fontSize: '12px',
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  fontWeight: '500'
+                }}>
+                  📞 {agreement.client.phone}
+                </p>
+              )}
               <p style={{
                 margin: '0',
                 fontSize: '12px',
                 color: isDark ? '#94a3b8' : '#64748b',
                 fontWeight: '500'
               }}>
-                CLIENT
-              </p>
-              <p style={{
-                margin: '0',
-                fontSize: '14px',
-                color: isDark ? '#f1f5f9' : '#1e293b',
-                fontWeight: '600'
-              }}>
-                {agreement.client.firstName} {agreement.client.lastName}
+                ✉️ {agreement.client.email}
               </p>
             </div>
+            
+            {/* Event Information */}
+            {(agreement.client.eventDate || agreement.client.eventType || agreement.client.eventLocation) && (
+              <div style={{
+                padding: '12px 16px',
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                minWidth: '200px'
+              }}>
+                <p style={{
+                  margin: '0 0 8px 0',
+                  fontSize: '11px',
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  EVENT
+                </p>
+                {agreement.client.eventDate && (
+                  <p style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '14px',
+                    color: isDark ? '#f1f5f9' : '#1e293b',
+                    fontWeight: '600'
+                  }}>
+                    📅 {new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { 
+                      timeZone: 'America/Toronto',
+                      weekday: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </p>
+                )}
+                {agreement.client.eventType && (
+                  <p style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '12px',
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    fontWeight: '500'
+                  }}>
+                    🎉 {agreement.client.eventType}
+                  </p>
+                )}
+                {agreement.client.eventLocation && (
+                  <p style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '12px',
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    fontWeight: '500'
+                  }}>
+                    📍 {agreement.client.eventLocation}
+                  </p>
+                )}
+                {agreement.client.eventStartTime && (
+                  <p style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '12px',
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    fontWeight: '500'
+                  }}>
+                    ⏰ {agreement.client.eventStartTime}
+                  </p>
+                )}
+                {agreement.client.eventDuration && (
+                  <p style={{
+                    margin: '0',
+                    fontSize: '12px',
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    fontWeight: '500'
+                  }}>
+                    ⏱️ {agreement.client.eventDuration}
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {/* Package Information */}
+            {agreement.client.eventPackage && (
+              <div style={{
+                padding: '12px 16px',
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                minWidth: '150px'
+              }}>
+                <p style={{
+                  margin: '0 0 8px 0',
+                  fontSize: '11px',
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  PACKAGE
+                </p>
+                <p style={{
+                  margin: '0',
+                  fontSize: '14px',
+                  color: isDark ? '#f1f5f9' : '#1e293b',
+                  fontWeight: '600'
+                }}>
+                  📦 {agreement.client.eventPackage}
+                </p>
+              </div>
+            )}
             {isSigned && (
               <div style={{
                 padding: '8px 16px',
