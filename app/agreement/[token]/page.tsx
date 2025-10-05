@@ -149,8 +149,10 @@ export default function ClientAgreementPage() {
       
       if (response.ok) {
         console.log('✅ Agreement found, showing email verification modal');
-        // Only check if agreement exists, don't store any data until email verification
-        // Show email verification modal immediately
+        const agreementData = await response.json();
+        console.log('📄 Agreement data received:', !!agreementData);
+        // Store agreement data temporarily for email verification
+        setAgreement(agreementData);
         setLoading(false);
         setShowEmailVerification(true);
       } else if (response.status === 404) {
@@ -1032,7 +1034,7 @@ export default function ClientAgreementPage() {
           left: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          backgroundColor: 'rgba(255, 0, 0, 0.9)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
