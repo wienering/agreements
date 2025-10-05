@@ -64,15 +64,23 @@ export default function ClientAgreementPage() {
   // Function to track agreement view
   const trackAgreementView = async () => {
     try {
-      await fetch('/api/agreements/track-view', {
+      console.log('🔍 Client: Calling track-view API with token:', token);
+      const response = await fetch('/api/agreements/track-view', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ token })
       });
+      
+      const data = await response.json();
+      console.log('🔍 Client: Track-view API response:', data);
+      
+      if (!response.ok) {
+        console.error('❌ Client: Track-view API failed:', data);
+      }
     } catch (error) {
-      console.error('Error tracking agreement view:', error);
+      console.error('❌ Client: Error tracking agreement view:', error);
     }
   };
 
@@ -148,6 +156,7 @@ export default function ClientAgreementPage() {
         setAgreement(processedAgreement);
         
         // Track the agreement view
+        console.log('🔍 Client: About to call trackAgreementView()');
         trackAgreementView();
       } else {
         setVerificationError(data.error || 'Email verification failed');
