@@ -415,6 +415,50 @@ export default function AdminHome() {
               Create, manage, and track client agreements.
             </p>
           </div>
+
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '24px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+          }}
+          onClick={() => router.push('/admin/pipeline')}
+          >
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '12px' 
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#06b6d4',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '12px',
+                fontSize: '20px'
+              }}>
+                📊
+              </div>
+              <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Agreement Pipeline</h3>
+            </div>
+            <p style={{ margin: '0', color: mutedText, fontSize: '14px' }}>
+              Track agreements through the client journey and identify bottlenecks.
+            </p>
+          </div>
         </div>
 
         {/* Smart Fields Help */}
