@@ -151,8 +151,8 @@ export default function ClientAgreementPage() {
         console.log('✅ Agreement found, showing email verification modal');
         // Only check if agreement exists, don't store any data until email verification
         // Show email verification modal immediately
-        setShowEmailVerification(true);
         setLoading(false);
+        setShowEmailVerification(true);
       } else if (response.status === 404) {
         console.log('❌ Agreement not found or expired');
         setError('Agreement not found or has expired.');
