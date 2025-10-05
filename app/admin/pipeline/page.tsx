@@ -520,7 +520,7 @@ export default function PipelinePage() {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '20px'
+            gap: '40px'
           }}>
             {pipeline.stages.map((stage, index) => (
               <div 
@@ -627,7 +627,7 @@ export default function PipelinePage() {
                     opacity: 0,
                     visibility: 'hidden',
                     transition: 'all 0.2s ease',
-                    zIndex: 10,
+                    zIndex: 1000,
                     pointerEvents: 'none'
                   }}
                   className="hover-analytics"
