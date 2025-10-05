@@ -565,6 +565,32 @@ export default function ClientAgreementPage() {
           MODAL SHOULD BE VISIBLE
         </div>
       )}
+
+      {/* SIMPLE TEST MODAL - Should be impossible to miss */}
+      {showEmailVerification && (
+        <div style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'yellow',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            backgroundColor: 'red',
+            color: 'white',
+            padding: '50px',
+            fontSize: '30px',
+            border: '10px solid blue'
+          }}>
+            TEST MODAL - IF YOU SEE THIS, MODAL RENDERING WORKS!
+          </div>
+        </div>
+      )}
       {/* Show simple header when email verification is required */}
       {!isEmailVerified && (
         <div style={{
