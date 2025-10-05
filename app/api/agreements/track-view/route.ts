@@ -20,16 +20,19 @@ function getClientIP(request: NextRequest): string {
   return 'Unknown';
 }
 
-// Helper function to create email transporter
+// Helper function to create email transporter (using same config as working email system)
 function createTransporter() {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
+    secure: process.env.SMTP_PORT === '465',
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 }
 
@@ -110,6 +113,17 @@ export async function POST(request: NextRequest) {
     
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+    }
+
+    // Check if SMTP is configured (same check as working email system)
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.log('⚠️ SMTP not configured, skipping email alert');
+      return NextResponse.json({ 
+        success: true, 
+        viewCount: 1,
+        isFirstView: true,
+        emailSkipped: 'SMTP not configured'
+      });
     }
 
     // Get client IP and user agent
