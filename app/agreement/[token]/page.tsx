@@ -396,7 +396,7 @@ export default function ClientAgreementPage() {
       .trim();
   };
 
-  if (loading) {
+  if (loading && !showEmailVerification) {
     return (
       <div style={{ 
         minHeight: '100vh', 
