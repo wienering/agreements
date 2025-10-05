@@ -570,7 +570,7 @@ export default function ClientAgreementPage() {
         </div>
       )}
 
-      {/* ULTRA-SIMPLE TEST MODAL - MOVED TO TOP */}
+      {/* Email Verification Modal */}
       {showEmailVerification && (
         <div style={{
           position: 'fixed',
@@ -578,20 +578,144 @@ export default function ClientAgreementPage() {
           left: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: 'red',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
           zIndex: 999999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
         }}>
           <div style={{
-            backgroundColor: 'yellow',
-            padding: '50px',
-            fontSize: '30px',
-            textAlign: 'center',
-            border: '5px solid black'
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            padding: '40px',
+            borderRadius: '12px',
+            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
           }}>
-            TEST MODAL - IF YOU SEE THIS, MODAL WORKS!
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                fontSize: '24px'
+              }}>
+                🔐
+              </div>
+              <h2 style={{ 
+                margin: '0 0 8px 0', 
+                fontSize: '24px', 
+                fontWeight: '700',
+                color: isDark ? '#f1f5f9' : '#1e293b' 
+              }}>
+                Email Verification Required
+              </h2>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '16px', 
+                color: isDark ? '#94a3b8' : '#64748b',
+                lineHeight: '1.5'
+              }}>
+                Please enter the email address associated with this agreement to continue.
+              </p>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ 
+                display: 'block', 
+                marginBottom: '8px', 
+                fontSize: '14px', 
+                fontWeight: '600',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={verificationEmail}
+                onChange={(e) => setVerificationEmail(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  border: `2px solid ${isDark ? '#334155' : '#d1d5db'}`,
+                  borderRadius: '8px',
+                  backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                  color: isDark ? '#f1f5f9' : '#1e293b',
+                  fontSize: '16px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+                placeholder="Enter your email address"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = isDark ? '#334155' : '#d1d5db';
+                }}
+              />
+            </div>
+            
+            {verificationError && (
+              <div style={{
+                marginBottom: '16px',
+                padding: '12px',
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                color: '#dc2626',
+                fontSize: '14px'
+              }}>
+                {verificationError}
+              </div>
+            )}
+            
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button
+                onClick={() => {
+                  setShowEmailVerification(false);
+                  setVerificationEmail('');
+                  setVerificationError(null);
+                }}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEmailVerification}
+                disabled={isVerifying || !verificationEmail.trim()}
+                style={{
+                  backgroundColor: isVerifying || !verificationEmail.trim() ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  opacity: isVerifying ? 0.7 : 1
+                }}
+              >
+                {isVerifying ? 'Verifying...' : 'Verify Email'}
+              </button>
+            </div>
           </div>
         </div>
       )}
