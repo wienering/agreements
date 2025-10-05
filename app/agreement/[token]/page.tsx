@@ -1028,22 +1028,25 @@ export default function ClientAgreementPage() {
           position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 10000
+          zIndex: 99999,
+          overflow: 'hidden'
         }}>
           <div style={{
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            backgroundColor: '#ff0000',
             padding: '40px',
             borderRadius: '12px',
-            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+            border: '3px solid #00ff00',
             maxWidth: '500px',
             width: '90%',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            position: 'relative',
+            zIndex: 100000
           }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
