@@ -32,10 +32,20 @@ interface Agreement {
   };
 }
 
+interface WarningData {
+  warnings: Array<{
+    id: string;
+    warningType: 'expiration' | 'critical' | 'warning';
+    daysSinceSent?: number;
+    hoursUntilExpiry?: number;
+  }>;
+}
+
 export default function AgreementsPage() {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
+  const [warningData, setWarningData] = useState<WarningData | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sendingToClient, setSendingToClient] = useState(false);
@@ -90,6 +100,7 @@ export default function AgreementsPage() {
     fetchAgreements();
     fetchClients();
     fetchTemplates();
+    fetchWarningData();
   }, []);
 
   // Handle URL parameters for pre-selecting client
@@ -150,6 +161,25 @@ export default function AgreementsPage() {
     } catch (error) {
       console.error('Error fetching templates:', error);
     }
+  };
+
+  const fetchWarningData = async () => {
+    try {
+      const response = await fetch('/api/analytics/warnings');
+      if (response.ok) {
+        const data = await response.json();
+        setWarningData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching warning data:', error);
+    }
+  };
+
+  const getAgreementWarningType = (agreement: Agreement) => {
+    if (!warningData) return null;
+    
+    const warning = warningData.warnings.find(w => w.id === agreement.id);
+    return warning?.warningType || null;
   };
 
   const handleCreateAgreement = async (e: React.FormEvent) => {
@@ -812,13 +842,41 @@ export default function AgreementsPage() {
           </div>
         ) : (
           <div style={{ display: 'grid', gap: '16px' }}>
-            {agreements.map(agreement => (
+            {agreements.map(agreement => {
+              const warningType = getAgreementWarningType(agreement);
+              const getWarningBorderStyle = () => {
+                if (warningType === 'expiration') {
+                  return '3px solid #dc2626'; // Red for expiring
+                } else if (warningType === 'critical') {
+                  return '3px solid #dc2626'; // Red for critical (5+ days)
+                } else if (warningType === 'warning') {
+                  return '3px solid #f59e0b'; // Yellow for warning (3+ days)
+                }
+                return `1px solid ${borderColor}`;
+              };
+
+              return (
               <div key={agreement.id} style={{
                 backgroundColor: cardBg,
-                border: `1px solid ${borderColor}`,
+                border: getWarningBorderStyle(),
                 borderRadius: '8px',
-                padding: '20px'
+                padding: '20px',
+                position: 'relative'
               }}>
+                {/* Warning Indicator */}
+                {warningType && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    fontSize: '16px',
+                    zIndex: 1
+                  }}>
+                    {warningType === 'expiration' ? '⏰' : 
+                     warningType === 'critical' ? '🚨' : '⚠️'}
+                  </div>
+                )}
+                
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
@@ -1122,7 +1180,8 @@ export default function AgreementsPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
