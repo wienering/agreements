@@ -61,6 +61,21 @@ export default function ClientAgreementPage() {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
 
+  // Function to track agreement view
+  const trackAgreementView = async () => {
+    try {
+      await fetch('/api/agreements/track-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token })
+      });
+    } catch (error) {
+      console.error('Error tracking agreement view:', error);
+    }
+  };
+
   // Function to process smart fields in HTML content
   const processSmartFields = (html: string, client: any, agreementId: string) => {
     if (!html || !client) return html;
@@ -131,6 +146,9 @@ export default function ClientAgreementPage() {
           }
         };
         setAgreement(processedAgreement);
+        
+        // Track the agreement view
+        trackAgreementView();
       } else {
         setVerificationError(data.error || 'Email verification failed');
       }
