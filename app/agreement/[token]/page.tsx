@@ -111,32 +111,23 @@ export default function ClientAgreementPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Email verified successfully - now fetch the agreement data
+        // Email verified successfully - use the agreement data from the verification response
         setIsEmailVerified(true);
         setShowEmailVerification(false);
         
-        // Fetch the agreement data now that email is verified
-        try {
-          const agreementResponse = await fetch(`/api/agreements/client?token=${token}`);
-          if (agreementResponse.ok) {
-            const agreementData = await agreementResponse.json();
-            // Process smart fields for the verified agreement
-            const processedAgreement = {
-              ...agreementData,
-              template: {
-                ...agreementData.template,
-                htmlContent: processSmartFields(
-                  agreementData.template.htmlContent, 
-                  agreementData.client, 
-                  agreementData.id
-                )
-              }
-            };
-            setAgreement(processedAgreement);
+        // Process smart fields for the verified agreement
+        const processedAgreement = {
+          ...data.agreement,
+          template: {
+            ...data.agreement.template,
+            htmlContent: processSmartFields(
+              data.agreement.template.htmlContent, 
+              data.agreement.client, 
+              data.agreement.id
+            )
           }
-        } catch (fetchError) {
-          setVerificationError('Failed to load agreement after verification.');
-        }
+        };
+        setAgreement(processedAgreement);
       } else {
         setVerificationError(data.error || 'Email verification failed');
       }
@@ -149,27 +140,21 @@ export default function ClientAgreementPage() {
 
   const fetchAgreement = useCallback(async () => {
     try {
-      console.log('Fetching agreement with token:', token);
       const response = await fetch(`/api/agreements/client?token=${token}`);
-      console.log('Response status:', response.status);
       
       if (response.ok) {
-        console.log('Agreement found, showing email verification modal');
         // Only check if agreement exists, don't store any data until email verification
         // Show email verification modal immediately
         setShowEmailVerification(true);
         setLoading(false);
       } else if (response.status === 404) {
-        console.log('Agreement not found or expired');
         setError('Agreement not found or has expired.');
         setLoading(false);
       } else {
-        console.log('Failed to load agreement, status:', response.status);
         setError('Failed to load agreement.');
         setLoading(false);
       }
     } catch (err) {
-      console.log('Error loading agreement:', err);
       setError('Error loading agreement.');
       setLoading(false);
     }
@@ -514,14 +499,6 @@ export default function ClientAgreementPage() {
     );
   }
 
-  // Debug logging
-  console.log('Render state:', { 
-    loading, 
-    showEmailVerification, 
-    isEmailVerified, 
-    agreement: !!agreement,
-    error 
-  });
 
   return (
     <div style={{ 
