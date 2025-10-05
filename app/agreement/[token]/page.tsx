@@ -523,12 +523,31 @@ export default function ClientAgreementPage() {
     token
   });
 
+  // Visual debug indicator for live site
+  const debugInfo = `Loading: ${loading}, ShowModal: ${showEmailVerification}, Verified: ${isEmailVerified}, Agreement: ${!!agreement}, Error: ${error}`;
+
   return (
     <div style={{ 
       minHeight: '100vh', 
       backgroundColor: isDark ? '#0f172a' : '#f8fafc',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
+      {/* Debug indicator for live site */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        backgroundColor: '#ff0000',
+        color: 'white',
+        padding: '10px',
+        fontSize: '12px',
+        zIndex: 9999,
+        borderRadius: '4px',
+        maxWidth: '300px',
+        wordBreak: 'break-all'
+      }}>
+        DEBUG: {debugInfo}
+      </div>
       {/* Show simple header when email verification is required */}
       {!isEmailVerified && (
         <div style={{
