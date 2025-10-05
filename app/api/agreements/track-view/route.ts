@@ -36,8 +36,17 @@ function createTransporter() {
 // Helper function to send view alert email
 async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: string) {
   try {
+    console.log('📧 Creating email transporter...');
     const transporter = createTransporter();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
+    console.log('📧 SMTP Config:', {
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      user: process.env.SMTP_USER,
+      from: process.env.SMTP_FROM,
+      adminEmail: process.env.ADMIN_EMAIL
+    });
     
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -77,20 +86,27 @@ async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: s
       </div>
     `;
 
-    await transporter.sendMail({
+    console.log('📧 Sending email to:', process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca');
+    console.log('📧 Email subject:', `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`);
+    
+    const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@photoboothguys.ca',
       to: process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca',
       subject: `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`,
       html: emailContent,
     });
+    
+    console.log('📧 Email sent successfully:', result.messageId);
   } catch (error) {
-    console.error('Error sending view alert email:', error);
+    console.error('❌ Error sending view alert email:', error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { token } = await request.json();
+    
+    console.log('🔍 Track view API called with token:', token);
     
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
@@ -122,6 +138,13 @@ export async function POST(request: NextRequest) {
     // Check if this is the first view
     const isFirstView = !agreement.firstViewedAt;
     
+    console.log('📊 Agreement found:', {
+      id: agreement.id,
+      client: `${agreement.client.firstName} ${agreement.client.lastName}`,
+      isFirstView,
+      currentViewCount: agreement.viewCount
+    });
+    
     // Update view tracking
     await prisma.agreement.update({
       where: { id: agreement.id },
@@ -134,7 +157,11 @@ export async function POST(request: NextRequest) {
 
     // Send email alert (only for first view to avoid spam)
     if (isFirstView) {
+      console.log('📧 Sending view alert email for first view...');
       await sendViewAlertEmail(agreement, clientIP, userAgent);
+      console.log('✅ View alert email sent successfully');
+    } else {
+      console.log('📧 Skipping email alert - not first view');
     }
 
     return NextResponse.json({ 
