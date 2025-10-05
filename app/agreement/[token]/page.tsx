@@ -50,6 +50,13 @@ export default function ClientAgreementPage() {
   const [emailAddress, setEmailAddress] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [showEmailSentToast, setShowEmailSentToast] = useState(false);
+  
+  // Email verification states
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   // Function to process smart fields in HTML content
   const processSmartFields = (html: string, client: any, agreementId: string) => {
@@ -79,32 +86,74 @@ export default function ClientAgreementPage() {
     return processedHtml;
   };
 
-  const fetchAgreement = useCallback(async () => {
+  // Email verification function
+  const handleEmailVerification = async () => {
+    if (!verificationEmail.trim()) {
+      setVerificationError('Please enter your email address');
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationError(null);
+
     try {
-      const response = await fetch(`/api/agreements/client?token=${token}`);
-      if (response.ok) {
-        const data = await response.json();
-        // Process smart fields for the fetched agreement
+      const response = await fetch('/api/agreements/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: token,
+          email: verificationEmail.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Email verified successfully
+        setIsEmailVerified(true);
+        setShowEmailVerification(false);
+        setAgreement(data.agreement);
+        // Process smart fields for the verified agreement
         const processedAgreement = {
-          ...data,
+          ...data.agreement,
           template: {
-            ...data.template,
+            ...data.agreement.template,
             htmlContent: processSmartFields(
-              data.template.htmlContent, 
-              data.client, 
-              data.id
+              data.agreement.template.htmlContent, 
+              data.agreement.client, 
+              data.agreement.id
             )
           }
         };
         setAgreement(processedAgreement);
+      } else {
+        setVerificationError(data.error || 'Email verification failed');
+      }
+    } catch (error) {
+      setVerificationError('Network error. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const fetchAgreement = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/agreements/client?token=${token}`);
+      if (response.ok) {
+        // Show email verification modal instead of loading agreement directly
+        setShowEmailVerification(true);
+        setLoading(false);
       } else if (response.status === 404) {
         setError('Agreement not found or has expired.');
+        setLoading(false);
       } else {
         setError('Failed to load agreement.');
+        setLoading(false);
       }
     } catch (err) {
       setError('Error loading agreement.');
-    } finally {
       setLoading(false);
     }
   }, [token]);
@@ -688,12 +737,177 @@ export default function ClientAgreementPage() {
         </div>
       </div>
 
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 24px'
-      }}>
-        {/* Agreement Header */}
+      {/* Email Verification Modal */}
+      {showEmailVerification && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            borderRadius: '12px',
+            padding: '40px',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+          }}>
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '32px'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px auto',
+                fontSize: '24px'
+              }}>
+                🔒
+              </div>
+              <h2 style={{
+                margin: '0 0 16px 0',
+                fontSize: '24px',
+                fontWeight: '700',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                Email Verification Required
+              </h2>
+              <p style={{
+                margin: '0',
+                color: isDark ? '#94a3b8' : '#64748b',
+                fontSize: '16px',
+                lineHeight: '1.5'
+              }}>
+                Please enter the email address associated with this agreement to continue.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={verificationEmail}
+                onChange={(e) => setVerificationEmail(e.target.value)}
+                placeholder="Enter your email address"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                  borderRadius: '8px',
+                  backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                  color: isDark ? '#f1f5f9' : '#1e293b',
+                  fontSize: '16px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = isDark ? '#334155' : '#e2e8f0';
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleEmailVerification();
+                  }
+                }}
+              />
+              {verificationError && (
+                <p style={{
+                  margin: '8px 0 0 0',
+                  color: '#dc2626',
+                  fontSize: '14px'
+                }}>
+                  {verificationError}
+                </p>
+              )}
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={handleEmailVerification}
+                disabled={isVerifying}
+                style={{
+                  backgroundColor: isVerifying ? '#9ca3af' : '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: isVerifying ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  minWidth: '120px'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isVerifying) {
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#2563eb';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isVerifying) {
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#3b82f6';
+                  }
+                }}
+              >
+                {isVerifying ? 'Verifying...' : 'Verify Email'}
+              </button>
+            </div>
+
+            <div style={{
+              marginTop: '24px',
+              padding: '16px',
+              backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+              borderRadius: '8px',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+            }}>
+              <p style={{
+                margin: '0',
+                fontSize: '14px',
+                color: isDark ? '#94a3b8' : '#64748b',
+                textAlign: 'center'
+              }}>
+                🔐 This verification ensures only authorized parties can access the agreement.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Only show agreement content if email is verified */}
+      {isEmailVerified && agreement && (
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 24px'
+        }}>
+          {/* Agreement Header */}
         <div style={{
           backgroundColor: isDark ? '#1e293b' : '#ffffff',
           padding: '40px',
@@ -1388,6 +1602,7 @@ export default function ClientAgreementPage() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
