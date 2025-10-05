@@ -35,6 +35,8 @@ interface AgreementData {
 export default function ClientAgreementPage() {
   const params = useParams();
   const token = params.token as string;
+  
+  console.log('🚀 Component mounted with token:', token);
   const [agreement, setAgreement] = useState<AgreementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,8 +169,12 @@ export default function ClientAgreementPage() {
   }, [token]);
 
   useEffect(() => {
+    console.log('🔄 useEffect triggered with token:', token);
     if (token) {
+      console.log('✅ Token exists, calling fetchAgreement');
       fetchAgreement();
+    } else {
+      console.log('❌ No token found');
     }
   }, [token, fetchAgreement]);
 
@@ -395,6 +401,7 @@ export default function ClientAgreementPage() {
   };
 
   if (loading && !showEmailVerification) {
+    console.log('🔄 Showing loading screen - loading:', loading, 'showEmailVerification:', showEmailVerification);
     return (
       <div style={{ 
         minHeight: '100vh', 
