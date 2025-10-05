@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
@@ -23,119 +17,115 @@ model User {
 }
 
 model Client {
-  id            String   @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String
-  phone         String?
-  eventDate     DateTime?
-  eventType     String?
-  eventLocation String?
+  id             String      @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  eventDate      DateTime?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  eventType      String?
+  eventLocation  String?
   eventStartTime String?
-  eventDuration String?
-  eventPackage  String?
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  agreements    Agreement[]
+  eventDuration  String?
+  eventPackage   String?
+  agreements     Agreement[]
 }
 
 model Template {
-  id           String   @id @default(cuid())
+  id           String           @id @default(cuid())
   title        String
   htmlContent  String
-  version      Int      @default(1)
+  version      Int              @default(1)
   fieldsSchema Json
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  agreements Agreement[]
-  fields     AgreementField[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  agreements   Agreement[]
+  fields       AgreementField[]
 }
 
 model Agreement {
-  id           String   @id @default(cuid())
-  clientId     String
-  templateId   String
-  status       AgreementStatus @default(DRAFT)
-  uniqueToken  String   @unique
-  expiresAt    DateTime?
-  signedAt     DateTime?
-  signedFromIP String?
-  mergedHtml   String?
-  cancelledAt  DateTime?
-  cancelledBy  String?
+  id                 String                @id @default(cuid())
+  clientId           String
+  templateId         String
+  status             AgreementStatus       @default(DRAFT)
+  uniqueToken        String                @unique
+  expiresAt          DateTime?
+  mergedHtml         String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  signedAt           DateTime?
+  signedFromIP       String?
+  cancelledAt        DateTime?
+  cancelledBy        String?
   cancellationReason String?
-  archived     Boolean  @default(false)
-  archivedAt   DateTime?
-  lastEmailedAt DateTime?
-  emailSendCount Int    @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  client       Client   @relation(fields: [clientId], references: [id])
-  template     Template @relation(fields: [templateId], references: [id])
-  fields       AgreementFieldValue[]
-  signature    Signature?
-  auditLogs    AuditLog[]
-}
-
-enum AgreementStatus {
-  DRAFT
-  LIVE
-  SIGNED
-  COMPLETED
-  CANCELLED
+  archived           Boolean               @default(false)
+  archivedAt         DateTime?
+  lastEmailedAt      DateTime?
+  emailSendCount     Int                   @default(0)
+  client             Client                @relation(fields: [clientId], references: [id])
+  template           Template              @relation(fields: [templateId], references: [id])
+  fields             AgreementFieldValue[]
+  signature          Signature?
+  auditLogs          AuditLog[]
 }
 
 model AgreementField {
-  id                String  @id @default(cuid())
-  templateId        String
-  key               String
-  label             String
-  type              String
-  editableByClient  Boolean @default(false)
-  required          Boolean @default(false)
-  options           Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String                @id @default(cuid())
+  templateId       String
+  key              String
+  label            String
+  type             String
+  editableByClient Boolean               @default(false)
+  required         Boolean               @default(false)
+  template         Template              @relation(fields: [templateId], references: [id])
 
-  template          Template @relation(fields: [templateId], references: [id])
-  values            AgreementFieldValue[]
+  @@unique([templateId, key])
 }
 
 model AgreementFieldValue {
-  id                String  @id @default(cuid())
-  agreementId       String
-  fieldId           String
-  value             String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id          String    @id @default(cuid())
+  agreementId String
+  key         String
+  value       String
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
 
-  agreement         Agreement @relation(fields: [agreementId], references: [id])
-  field             AgreementField @relation(fields: [fieldId], references: [id])
+  @@unique([agreementId, key])
 }
 
 model Signature {
-  id          String   @id @default(cuid())
-  agreementId String   @unique
-  clientName  String
-  clientEmail String
-  signedAt    DateTime @default(now())
-  ipAddress   String?
+  id          String    @id @default(cuid())
+  agreementId String    @unique
+  signerName  String
+  signerEmail String
+  method      String
+  imageUrl    String?
+  typedFont   String?
+  signedAt    DateTime  @default(now())
+  ip          String?
+  userAgent   String?
   contentHash String?
-
   agreement   Agreement @relation(fields: [agreementId], references: [id])
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   agreementId String?
   actor       String
   action      String
   metadata    Json?
-  createdAt   DateTime @default(now())
-
+  createdAt   DateTime   @default(now())
   agreement   Agreement? @relation(fields: [agreementId], references: [id])
+}
+
+enum AgreementStatus {
+  DRAFT
+  SENT
+  SIGNED
+  VOID
+  LIVE
+  COMPLETED
+  CANCELLED
 }
