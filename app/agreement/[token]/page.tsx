@@ -569,6 +569,32 @@ export default function ClientAgreementPage() {
           MODAL SHOULD BE VISIBLE
         </div>
       )}
+
+      {/* ULTRA-SIMPLE TEST MODAL - MOVED TO TOP */}
+      {showEmailVerification && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'red',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            backgroundColor: 'yellow',
+            padding: '50px',
+            fontSize: '30px',
+            textAlign: 'center',
+            border: '5px solid black'
+          }}>
+            TEST MODAL - IF YOU SEE THIS, MODAL WORKS!
+          </div>
+        </div>
+      )}
       {/* Show simple header when email verification is required */}
       {!isEmailVerified && (
         <div style={{
@@ -1026,27 +1052,6 @@ export default function ClientAgreementPage() {
         </div>
       )}
 
-      {/* SIMPLE TEST MODAL */}
-      {showEmailVerification && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'red',
-          zIndex: 999999
-        }}>
-          <div style={{
-            backgroundColor: 'yellow',
-            padding: '50px',
-            fontSize: '30px',
-            textAlign: 'center'
-          }}>
-            TEST MODAL - IF YOU SEE THIS, MODAL WORKS!
-          </div>
-        </div>
-      )}
 
       {/* Email Verification Modal */}
       {showEmailVerification && (
