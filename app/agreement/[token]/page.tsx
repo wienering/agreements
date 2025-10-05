@@ -344,11 +344,35 @@ export default function ClientAgreementPage() {
         backgroundColor: isDark ? '#0f172a' : '#f8fafc',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '24px',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
       }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: `4px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+          borderTop: '4px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
-          <p style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}>Loading agreement...</p>
+          <h2 style={{ 
+            color: isDark ? '#f1f5f9' : '#1e293b', 
+            fontSize: '20px',
+            margin: '0 0 8px 0',
+            fontWeight: '600'
+          }}>
+            Loading Agreement
+          </h2>
+          <p style={{ 
+            color: isDark ? '#94a3b8' : '#64748b', 
+            fontSize: '16px',
+            margin: '0'
+          }}>
+            Please wait while we load your agreement...
+          </p>
         </div>
       </div>
     );
@@ -361,12 +385,64 @@ export default function ClientAgreementPage() {
         backgroundColor: isDark ? '#0f172a' : '#f8fafc',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '24px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        padding: '24px'
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
-          <h1 style={{ color: isDark ? '#f1f5f9' : '#1e293b', fontSize: '24px', marginBottom: '8px' }}>Error</h1>
-          <p style={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: '16px' }}>{error || 'Failed to load agreement'}</p>
+        <div style={{
+          backgroundColor: isDark ? '#1e293b' : '#ffffff',
+          padding: '40px',
+          borderRadius: '12px',
+          border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+          textAlign: 'center',
+          maxWidth: '500px',
+          boxShadow: isDark ? '0 10px 25px rgba(0, 0, 0, 0.3)' : '0 10px 25px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: isDark ? '#dc2626' : '#fef2f2',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px auto',
+            fontSize: '24px'
+          }}>
+            ⚠️
+          </div>
+          <h1 style={{ 
+            color: isDark ? '#f1f5f9' : '#1e293b', 
+            fontSize: '24px',
+            margin: '0 0 16px 0',
+            fontWeight: '700'
+          }}>
+            Agreement Not Found
+          </h1>
+          <p style={{ 
+            color: isDark ? '#94a3b8' : '#64748b', 
+            fontSize: '16px',
+            margin: '0 0 24px 0',
+            lineHeight: '1.5'
+          }}>
+            {error || 'Failed to load agreement'}
+          </p>
+          <div style={{
+            padding: '16px',
+            backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+            borderRadius: '8px',
+            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+          }}>
+            <p style={{
+              margin: '0',
+              fontSize: '14px',
+              color: isDark ? '#94a3b8' : '#64748b'
+            }}>
+              Please contact us at <strong>info@photoboothguys.ca</strong> if you believe this is an error.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -378,48 +454,175 @@ export default function ClientAgreementPage() {
     <div style={{ 
       minHeight: '100vh', 
       backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-      padding: '24px'
+      fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: '32px',
-          padding: '24px',
+      {/* Professional Header */}
+      <div style={{
+        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+        borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+        padding: '20px 0',
+        marginBottom: '32px'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: '#3b82f6',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: '700'
+            }}>
+              📸
+            </div>
+            <div>
+              <h1 style={{
+                margin: '0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                Photobooth Guys
+              </h1>
+              <p style={{
+                margin: '0',
+                fontSize: '14px',
+                color: isDark ? '#94a3b8' : '#64748b'
+              }}>
+                Service Agreement
+              </p>
+            </div>
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{
+              padding: '8px 16px',
+              backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+              borderRadius: '6px',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+            }}>
+              <p style={{
+                margin: '0',
+                fontSize: '12px',
+                color: isDark ? '#94a3b8' : '#64748b',
+                fontWeight: '500'
+              }}>
+                CLIENT
+              </p>
+              <p style={{
+                margin: '0',
+                fontSize: '14px',
+                color: isDark ? '#f1f5f9' : '#1e293b',
+                fontWeight: '600'
+              }}>
+                {agreement.client.firstName} {agreement.client.lastName}
+              </p>
+            </div>
+            {isSigned && (
+              <div style={{
+                padding: '8px 16px',
+                backgroundColor: '#065f46',
+                borderRadius: '6px',
+                border: '1px solid #10b981',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ fontSize: '16px' }}>✅</span>
+                <span style={{
+                  color: '#6ee7b7',
+                  fontSize: '14px',
+                  fontWeight: '600'
+                }}>
+                  SIGNED
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '0 24px'
+      }}>
+        {/* Agreement Header */}
+        <div style={{
           backgroundColor: isDark ? '#1e293b' : '#ffffff',
-          borderRadius: '8px',
-          border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+          padding: '40px',
+          borderRadius: '12px',
+          border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+          marginBottom: '32px',
+          textAlign: 'center',
+          boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.05)'
         }}>
           <h1 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: '28px', 
-            fontWeight: '700', 
-            color: isDark ? '#f1f5f9' : '#1e293b' 
+            margin: '0 0 16px 0', 
+            fontSize: '32px', 
+            fontWeight: '800',
+            color: isDark ? '#f1f5f9' : '#1e293b',
+            lineHeight: '1.2'
           }}>
             {agreement.template.title}
           </h1>
           <p style={{ 
-            margin: '0', 
+            margin: '0 0 24px 0', 
             color: isDark ? '#94a3b8' : '#64748b', 
-            fontSize: '16px' 
+            fontSize: '18px',
+            lineHeight: '1.4'
           }}>
-            Client: {agreement.client.firstName} {agreement.client.lastName}
+            Service Agreement for {agreement.client.firstName} {agreement.client.lastName}
           </p>
+          
           {isSigned && (
             <div style={{ 
-              marginTop: '16px',
-              padding: '12px',
-              backgroundColor: isDark ? '#065f46' : '#d1fae5',
-              borderRadius: '6px',
-              border: `1px solid ${isDark ? '#10b981' : '#34d399'}`
+              marginTop: '24px',
+              padding: '20px',
+              backgroundColor: '#065f46',
+              borderRadius: '8px',
+              border: '1px solid #10b981',
+              display: 'inline-block'
             }}>
-              <p style={{ 
-                margin: '0', 
-                color: isDark ? '#6ee7b7' : '#065f46',
-                fontSize: '14px',
-                fontWeight: '500'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                marginBottom: '8px'
               }}>
-                ✅ This agreement has been digitally signed
+                <span style={{ fontSize: '20px' }}>✅</span>
+                <span style={{ 
+                  color: '#6ee7b7',
+                  fontSize: '16px',
+                  fontWeight: '600'
+                }}>
+                  Agreement Successfully Signed
+                </span>
+              </div>
+              <p style={{
+                margin: '0',
+                color: '#a7f3d0',
+                fontSize: '14px'
+              }}>
+                This agreement has been digitally signed and is legally binding.
               </p>
             </div>
           )}
@@ -428,16 +631,18 @@ export default function ClientAgreementPage() {
         {/* Agreement Content */}
         <div style={{
           backgroundColor: isDark ? '#1e293b' : '#ffffff',
-          padding: '32px',
-          borderRadius: '8px',
+          padding: '40px',
+          borderRadius: '12px',
           border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-          marginBottom: '24px'
+          marginBottom: '32px',
+          boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.05)'
         }}>
           <div 
             style={{
               color: isDark ? '#f1f5f9' : '#1e293b',
-              lineHeight: '1.6',
-              fontSize: '14px'
+              lineHeight: '1.7',
+              fontSize: '16px',
+              fontFamily: 'Georgia, serif'
             }}
             dangerouslySetInnerHTML={{ __html: agreement.template.htmlContent }}
           />
@@ -447,18 +652,39 @@ export default function ClientAgreementPage() {
         {isSigned && (
           <div style={{
             backgroundColor: isDark ? '#1e293b' : '#ffffff',
-            padding: '24px',
-            borderRadius: '8px',
+            padding: '32px',
+            borderRadius: '12px',
             border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-            marginBottom: '24px'
+            marginBottom: '32px',
+            boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.05)'
           }}>
-            <h3 style={{ 
-              margin: '0 0 16px 0', 
-              fontSize: '18px', 
-              color: isDark ? '#f1f5f9' : '#1e293b' 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '24px'
             }}>
-              Digital Signature Details
-            </h3>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#065f46',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px'
+              }}>
+                ✍️
+              </div>
+              <h3 style={{ 
+                margin: '0', 
+                fontSize: '20px', 
+                color: isDark ? '#f1f5f9' : '#1e293b',
+                fontWeight: '700'
+              }}>
+                Digital Signature Details
+              </h3>
+            </div>
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
@@ -539,9 +765,10 @@ export default function ClientAgreementPage() {
         {/* Action Buttons */}
         <div style={{ 
           display: 'flex', 
-          gap: '16px', 
+          gap: '20px', 
           justifyContent: 'center',
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
+          marginBottom: '40px'
         }}>
           {isSigned ? (
             <>
@@ -552,15 +779,33 @@ export default function ClientAgreementPage() {
                   backgroundColor: '#3b82f6',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
+                  padding: '16px 32px',
+                  borderRadius: '8px',
                   cursor: isDownloading ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
+                  fontSize: '16px',
+                  fontWeight: '600',
                   opacity: isDownloading ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '12px',
+                  boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)',
+                  transition: 'all 0.2s ease',
+                  minWidth: '180px',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isDownloading) {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDownloading) {
+                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
+                  }
                 }}
               >
                 {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
@@ -573,31 +818,51 @@ export default function ClientAgreementPage() {
                   backgroundColor: '#10b981',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '6px',
+                  padding: '16px 32px',
+                  borderRadius: '8px',
                   cursor: isEmailing ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
+                  fontSize: '16px',
+                  fontWeight: '600',
                   opacity: isEmailing ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  position: 'relative'
+                  gap: '12px',
+                  position: 'relative',
+                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.2s ease',
+                  minWidth: '180px',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isEmailing) {
+                    e.currentTarget.style.backgroundColor = '#059669';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isEmailing) {
+                    e.currentTarget.style.backgroundColor = '#10b981';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
+                  }
                 }}
               >
                 {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
                 {showEmailSentToast && (
                   <span style={{
                     position: 'absolute',
-                    right: '-60px',
+                    right: '-80px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     backgroundColor: '#10b981',
                     color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
                     fontSize: '12px',
-                    animation: 'fadeInOut 3s ease-in-out'
+                    fontWeight: '600',
+                    animation: 'fadeInOut 3s ease-in-out',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                   }}>
                     Sent!
                   </span>
@@ -612,15 +877,33 @@ export default function ClientAgreementPage() {
                 backgroundColor: '#dc2626',
                 color: 'white',
                 border: 'none',
-                padding: '12px 24px',
-                borderRadius: '6px',
+                padding: '20px 40px',
+                borderRadius: '8px',
                 cursor: isSigning ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
+                fontSize: '18px',
+                fontWeight: '700',
                 opacity: isSigning ? 0.7 : 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '12px',
+                boxShadow: '0 6px 12px rgba(220, 38, 38, 0.3)',
+                transition: 'all 0.2s ease',
+                minWidth: '220px',
+                justifyContent: 'center'
+              }}
+              onMouseEnter={(e) => {
+                if (!isSigning) {
+                  e.currentTarget.style.backgroundColor = '#b91c1c';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(220, 38, 38, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSigning) {
+                  e.currentTarget.style.backgroundColor = '#dc2626';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(220, 38, 38, 0.3)';
+                }
               }}
             >
               {isSigning ? '⏳' : '✍️'} {isSigning ? 'Signing...' : 'Sign Agreement'}
@@ -895,6 +1178,86 @@ export default function ClientAgreementPage() {
             100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
           }
         `}</style>
+        
+        {/* Professional Footer */}
+        <div style={{
+          backgroundColor: isDark ? '#1e293b' : '#ffffff',
+          borderTop: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+          padding: '32px 0',
+          marginTop: '60px'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 24px',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '700'
+              }}>
+                📸
+              </div>
+              <h3 style={{
+                margin: '0',
+                fontSize: '18px',
+                fontWeight: '700',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+              }}>
+                Photobooth Guys
+              </h3>
+            </div>
+            <p style={{
+              margin: '0 0 16px 0',
+              fontSize: '14px',
+              color: isDark ? '#94a3b8' : '#64748b'
+            }}>
+              Professional photo booth services for your special events
+            </p>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '24px',
+              flexWrap: 'wrap',
+              fontSize: '12px',
+              color: isDark ? '#64748b' : '#94a3b8'
+            }}>
+              <span>📧 info@photoboothguys.ca</span>
+              <span>📞 647-378-5332</span>
+              <span>🌐 Toronto, Ontario</span>
+            </div>
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+              borderRadius: '6px',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+              fontSize: '12px',
+              color: isDark ? '#94a3b8' : '#64748b'
+            }}>
+              <p style={{ margin: '0' }}>
+                This agreement was generated and signed using our secure digital platform. 
+                All signatures are legally binding and timestamped.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
