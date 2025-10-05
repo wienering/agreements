@@ -111,23 +111,31 @@ export default function ClientAgreementPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Email verified successfully
+        // Email verified successfully - now fetch the agreement data
         setIsEmailVerified(true);
         setShowEmailVerification(false);
-        // Use the stored agreement data and process smart fields
-        if (agreement) {
-          const processedAgreement = {
-            ...agreement,
-            template: {
-              ...agreement.template,
-              htmlContent: processSmartFields(
-                agreement.template.htmlContent, 
-                agreement.client, 
-                agreement.id
-              )
-            }
-          };
-          setAgreement(processedAgreement);
+        
+        // Fetch the agreement data now that email is verified
+        try {
+          const agreementResponse = await fetch(`/api/agreements/client?token=${token}`);
+          if (agreementResponse.ok) {
+            const agreementData = await agreementResponse.json();
+            // Process smart fields for the verified agreement
+            const processedAgreement = {
+              ...agreementData,
+              template: {
+                ...agreementData.template,
+                htmlContent: processSmartFields(
+                  agreementData.template.htmlContent, 
+                  agreementData.client, 
+                  agreementData.id
+                )
+              }
+            };
+            setAgreement(processedAgreement);
+          }
+        } catch (fetchError) {
+          setVerificationError('Failed to load agreement after verification.');
         }
       } else {
         setVerificationError(data.error || 'Email verification failed');
@@ -143,11 +151,8 @@ export default function ClientAgreementPage() {
     try {
       const response = await fetch(`/api/agreements/client?token=${token}`);
       if (response.ok) {
-        // Store the agreement data for later use after email verification
-        const data = await response.json();
-        // Store the agreement data temporarily (we'll use it after email verification)
-        setAgreement(data);
-        // Show email verification modal instead of loading agreement directly
+        // Only check if agreement exists, don't store any data until email verification
+        // Show email verification modal immediately
         setShowEmailVerification(true);
         setLoading(false);
       } else if (response.status === 404) {
@@ -432,7 +437,7 @@ export default function ClientAgreementPage() {
     );
   }
 
-  if (error || !agreement) {
+  if (error) {
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -502,22 +507,82 @@ export default function ClientAgreementPage() {
     );
   }
 
-  const isSigned = agreement.status === 'SIGNED';
-
   return (
     <div style={{ 
       minHeight: '100vh', 
       backgroundColor: isDark ? '#0f172a' : '#f8fafc',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Professional Header */}
-      <div style={{
-        backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-        padding: '20px 0',
-        marginBottom: '32px'
-      }}>
+      {/* Show simple header when email verification is required */}
+      {!isEmailVerified && (
         <div style={{
+          backgroundColor: isDark ? '#1e293b' : '#ffffff',
+          borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+          padding: '20px 0',
+          marginBottom: '32px'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: '700'
+              }}>
+                📸
+              </div>
+              <div>
+                <h1 style={{
+                  margin: '0',
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  color: isDark ? '#f1f5f9' : '#1e293b'
+                }}>
+                  Photobooth Guys
+                </h1>
+                <p style={{
+                  margin: '0',
+                  fontSize: '14px',
+                  color: isDark ? '#94a3b8' : '#64748b'
+                }}>
+                  Service Agreement
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Only show agreement content if email is verified */}
+      {isEmailVerified && agreement && (
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 24px'
+        }}>
+          {/* Professional Header */}
+          <div style={{
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+            padding: '20px 0',
+            marginBottom: '32px'
+          }}>
+            <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
           padding: '0 24px',
@@ -718,7 +783,7 @@ export default function ClientAgreementPage() {
                 </p>
               </div>
             )}
-            {isSigned && (
+            {agreement && agreement.status === 'SIGNED' && (
               <div style={{
                 padding: '8px 16px',
                 backgroundColor: '#065f46',
@@ -905,13 +970,6 @@ export default function ClientAgreementPage() {
         </div>
       )}
 
-      {/* Only show agreement content if email is verified */}
-      {isEmailVerified && agreement && (
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 24px'
-        }}>
           {/* Agreement Header */}
         <div style={{
           backgroundColor: isDark ? '#1e293b' : '#ffffff',
@@ -940,7 +998,7 @@ export default function ClientAgreementPage() {
             Service Agreement for {agreement.client.firstName} {agreement.client.lastName}
           </p>
           
-          {isSigned && (
+          {agreement && agreement.status === 'SIGNED' && (
             <div style={{ 
               marginTop: '24px',
               padding: '20px',
@@ -997,7 +1055,7 @@ export default function ClientAgreementPage() {
         </div>
 
         {/* Signature Details (if signed) */}
-        {isSigned && (
+        {agreement && agreement.status === 'SIGNED' && (
           <div style={{
             backgroundColor: isDark ? '#1e293b' : '#ffffff',
             padding: '32px',
@@ -1118,7 +1176,7 @@ export default function ClientAgreementPage() {
           flexWrap: 'wrap',
           marginBottom: '40px'
         }}>
-          {isSigned ? (
+          {agreement && agreement.status === 'SIGNED' ? (
             <>
               <button
                 onClick={handleDownloadPDF}
