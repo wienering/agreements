@@ -599,6 +599,11 @@ export default function ClientAgreementPage() {
                 type="email"
                 value={verificationEmail}
                 onChange={(e) => setVerificationEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isVerifying && verificationEmail.trim()) {
+                    handleEmailVerification();
+                  }
+                }}
                 style={{
                   width: '100%',
                   padding: '16px',
@@ -1209,6 +1214,11 @@ export default function ClientAgreementPage() {
                 type="email"
                 value={verificationEmail}
                 onChange={(e) => setVerificationEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isVerifying && verificationEmail.trim()) {
+                    handleEmailVerification();
+                  }
+                }}
                 style={{
                   width: '100%',
                   padding: '16px',
