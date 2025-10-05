@@ -36,7 +36,6 @@ export default function ClientAgreementPage() {
   const params = useParams();
   const token = params.token as string;
   
-  console.log('🚀 Component mounted with token:', token);
   
   const [agreement, setAgreement] = useState<AgreementData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,7 +113,7 @@ export default function ClientAgreementPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Email verified successfully - use the agreement data from the verification response
+        // Email verified successfully - NOW we can safely load agreement data
         setIsEmailVerified(true);
         setShowEmailVerification(false);
         
@@ -143,41 +142,28 @@ export default function ClientAgreementPage() {
 
   const fetchAgreement = useCallback(async () => {
     try {
-      console.log('🔍 Fetching agreement with token:', token);
       const response = await fetch(`/api/agreements/client?token=${token}`);
-      console.log('📡 Response status:', response.status);
       
       if (response.ok) {
-        console.log('✅ Agreement found, showing email verification modal');
-        const agreementData = await response.json();
-        console.log('📄 Agreement data received:', !!agreementData);
-        // Store agreement data temporarily for email verification
-        setAgreement(agreementData);
+        // DO NOT store agreement data - only check if it exists
         setLoading(false);
         setShowEmailVerification(true);
       } else if (response.status === 404) {
-        console.log('❌ Agreement not found or expired');
         setError('Agreement not found or has expired.');
         setLoading(false);
       } else {
-        console.log('❌ Failed to load agreement, status:', response.status);
         setError('Failed to load agreement.');
         setLoading(false);
       }
     } catch (err) {
-      console.log('❌ Error loading agreement:', err);
       setError('Error loading agreement.');
       setLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
-    console.log('🔄 useEffect triggered with token:', token);
     if (token) {
-      console.log('✅ Token exists, calling fetchAgreement');
       fetchAgreement();
-    } else {
-      console.log('❌ No token found');
     }
   }, [token, fetchAgreement]);
 
@@ -517,18 +503,6 @@ export default function ClientAgreementPage() {
 
 
 
-  // Debug logging
-  console.log('🎨 Render state:', { 
-    loading, 
-    showEmailVerification, 
-    isEmailVerified, 
-    agreement: !!agreement,
-    error,
-    token
-  });
-
-  // Visual debug indicator for live site
-  const debugInfo = `Loading: ${loading}, ShowModal: ${showEmailVerification}, Verified: ${isEmailVerified}, Agreement: ${!!agreement}, Error: ${error}`;
 
   return (
     <div style={{ 
@@ -536,39 +510,6 @@ export default function ClientAgreementPage() {
       backgroundColor: isDark ? '#0f172a' : '#f8fafc',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Debug indicator for live site */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        backgroundColor: '#ff0000',
-        color: 'white',
-        padding: '10px',
-        fontSize: '12px',
-        zIndex: 9999,
-        borderRadius: '4px',
-        maxWidth: '300px',
-        wordBreak: 'break-all'
-      }}>
-        DEBUG: {debugInfo}
-      </div>
-
-      {/* Test element to verify conditional rendering */}
-      {showEmailVerification && (
-        <div style={{
-          position: 'fixed',
-          top: '50px',
-          right: '10px',
-          backgroundColor: '#00ff00',
-          color: 'black',
-          padding: '10px',
-          fontSize: '12px',
-          zIndex: 10001,
-          borderRadius: '4px'
-        }}>
-          MODAL SHOULD BE VISIBLE
-        </div>
-      )}
 
       {/* Email Verification Modal */}
       {showEmailVerification && (
