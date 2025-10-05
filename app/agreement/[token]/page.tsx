@@ -1771,22 +1771,28 @@ export default function ClientAgreementPage() {
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={handleConfirmSign}
-                  disabled={isSigning || !hasAgreedToTerms}
-                  style={{
-                    backgroundColor: isSigning || !hasAgreedToTerms ? '#9ca3af' : '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: isSigning || !hasAgreedToTerms ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    opacity: isSigning ? 0.7 : 1
-                  }}
+                <div 
+                  title={!hasAgreedToTerms && !isSigning ? "Please accept the terms and conditions to sign the agreement" : ""}
+                  style={{ position: 'relative' }}
                 >
-                  {isSigning ? 'Signing...' : 'Sign Agreement'}
-                </button>
+                  <button
+                    onClick={handleConfirmSign}
+                    disabled={isSigning || !hasAgreedToTerms}
+                    style={{
+                      backgroundColor: isSigning || !hasAgreedToTerms ? '#9ca3af' : '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      cursor: isSigning || !hasAgreedToTerms ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      opacity: isSigning ? 0.7 : 1,
+                      position: 'relative'
+                    }}
+                  >
+                    {isSigning ? 'Signing...' : 'Sign Agreement'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
