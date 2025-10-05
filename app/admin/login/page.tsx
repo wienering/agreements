@@ -8,6 +8,10 @@ import Link from 'next/link';
 export default function AdminLogin() {
   const [email, setEmail] = useState('agreements@photoboothguys.ca');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [environment, setEnvironment] = useState('Production');
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -17,10 +21,61 @@ export default function AdminLogin() {
     }
   }, [status, router]);
 
+  // Detect environment
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      setEnvironment('Development');
+    } else if (hostname.includes('staging') || hostname.includes('dev')) {
+      setEnvironment('Staging');
+    } else {
+      setEnvironment('Production');
+    }
+  }, []);
+
+  // Resend countdown timer
+  useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => {
+        setResendCountdown(resendCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (resendCountdown === 0 && !canResend) {
+      setCanResend(true);
+    }
+  }, [resendCountdown, canResend]);
+
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
       await signIn('email', { email });
+      // Show success toast
+      setShowSuccessToast(true);
+      setCanResend(false);
+      setResendCountdown(30); // 30 second cooldown
+      
+      // Hide toast after 5 seconds
+      setTimeout(() => {
+        setShowSuccessToast(false);
+      }, 5000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!canResend) return;
+    
+    setIsLoading(true);
+    try {
+      await signIn('email', { email });
+      setShowSuccessToast(true);
+      setCanResend(false);
+      setResendCountdown(30);
+      
+      setTimeout(() => {
+        setShowSuccessToast(false);
+      }, 5000);
     } finally {
       setIsLoading(false);
     }
@@ -50,6 +105,49 @@ export default function AdminLogin() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
+          <div className="rounded-lg bg-green-50 border border-green-200 p-4 shadow-lg dark:bg-green-900/20 dark:border-green-800">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  Magic link sent securely!
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-300">
+                  Check your email for the login link
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Environment Indicator */}
+      <div className="fixed top-4 left-4 z-40">
+        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+          environment === 'Production' 
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200' 
+            : environment === 'Staging'
+            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200'
+            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200'
+        }`}>
+          <div className={`w-2 h-2 rounded-full mr-2 ${
+            environment === 'Production' 
+              ? 'bg-green-400' 
+              : environment === 'Staging'
+              ? 'bg-yellow-400'
+              : 'bg-red-400'
+          }`}></div>
+          {environment} Ready
+        </div>
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/70 backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -118,6 +216,33 @@ export default function AdminLogin() {
                   'Send Magic Link'
                 )}
               </button>
+
+              {/* Resend Button */}
+              {!canResend && resendCountdown > 0 && (
+                <div className="text-center">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Resend available in {resendCountdown}s
+                  </p>
+                </div>
+              )}
+
+              {canResend && (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isLoading}
+                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-offset-slate-900"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-transparent mr-2"></div>
+                      Resending...
+                    </div>
+                  ) : (
+                    'Resend Magic Link'
+                  )}
+                </button>
+              )}
             </form>
 
             <div className="mt-6 text-center">

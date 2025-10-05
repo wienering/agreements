@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 
 interface AgreementData {
@@ -60,6 +60,13 @@ export default function ClientAgreementPage() {
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
+  
+  // Signing animation states
+  const [showSignSuccess, setShowSignSuccess] = useState(false);
+  const [signSuccessMessage, setSignSuccessMessage] = useState('');
+  
+  // Focus management
+  const signButtonRef = useRef<HTMLButtonElement>(null);
 
   // Function to track agreement view
   const trackAgreementView = async () => {
@@ -305,6 +312,14 @@ export default function ClientAgreementPage() {
     setClientEmail(agreement.client.email);
     setShowSignModal(true);
     setSignError(null);
+    
+    // Auto-focus the first input after modal opens
+    setTimeout(() => {
+      const firstInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }, 100);
   };
 
   const handleConfirmSign = async () => {
@@ -349,6 +364,17 @@ export default function ClientAgreementPage() {
           }
         };
         setAgreement(processedAgreement);
+        
+        // Show success animation
+        setSignSuccessMessage('Agreement signed successfully. A copy has been emailed to you.');
+        setShowSignSuccess(true);
+        
+        // Redirect to thank-you page after 3 seconds
+        setTimeout(() => {
+          setShowSignSuccess(false);
+          // Navigate to thank-you page with agreement data
+          window.location.href = `/agreement/${token}/thank-you`;
+        }, 3000);
       } else {
         const errorData = await response.json();
         setSignError(errorData.error || 'Failed to sign agreement');
@@ -533,11 +559,129 @@ export default function ClientAgreementPage() {
 
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
+    <>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+          from { 
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        @keyframes checkmarkPulse {
+          0% {
+            transform: scale(0.8);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+          }
+          50% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+          }
+        }
+        
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+      `}</style>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+      {/* Success Animation */}
+      {showSignSuccess && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 999999,
+          animation: 'fadeIn 0.3s ease-in-out'
+        }}>
+          <div style={{
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            padding: '40px',
+            borderRadius: '16px',
+            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+            textAlign: 'center',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            animation: 'slideIn 0.4s ease-out'
+          }}>
+            {/* Animated Checkmark */}
+            <div style={{
+              width: '80px',
+              height: '80px',
+              backgroundColor: '#10b981',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px auto',
+              fontSize: '32px',
+              color: 'white',
+              animation: 'checkmarkPulse 0.6s ease-in-out',
+              boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)',
+              animationFillMode: 'forwards'
+            }}>
+              ✓
+            </div>
+            
+            <h2 style={{
+              margin: '0 0 16px 0',
+              fontSize: '24px',
+              fontWeight: '700',
+              color: isDark ? '#f1f5f9' : '#1e293b'
+            }}>
+              Success!
+            </h2>
+            
+            <p style={{
+              margin: '0 0 24px 0',
+              fontSize: '16px',
+              color: isDark ? '#94a3b8' : '#64748b',
+              lineHeight: '1.5'
+            }}>
+              {signSuccessMessage}
+            </p>
+            
+            <div style={{
+              padding: '16px',
+              backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+              borderRadius: '8px',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+              fontSize: '14px',
+              color: isDark ? '#94a3b8' : '#64748b'
+            }}>
+              <p style={{ margin: '0' }}>
+                Your agreement is now legally binding and has been securely stored.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Email Verification Modal */}
       {showEmailVerification && (
@@ -1616,6 +1760,7 @@ export default function ClientAgreementPage() {
             </>
           ) : (
             <button
+              ref={signButtonRef}
               onClick={handleSignAgreement}
               disabled={isSigning}
               style={{
@@ -1700,14 +1845,26 @@ export default function ClientAgreementPage() {
                   type="text"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
+                  onFocus={(e) => {
+                    e.target.style.backgroundColor = isDark ? '#1e293b' : '#f8fafc';
+                    e.target.style.borderColor = '#3b82f6';
+                    e.target.style.transform = 'scale(1.02)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.backgroundColor = isDark ? '#0f172a' : '#ffffff';
+                    e.target.style.borderColor = isDark ? '#334155' : '#d1d5db';
+                    e.target.style.transform = 'scale(1)';
+                  }}
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: window.innerWidth < 768 ? '16px' : '12px',
                     border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
                     borderRadius: '6px',
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
                     color: isDark ? '#f1f5f9' : '#1e293b',
-                    fontSize: '14px'
+                    fontSize: window.innerWidth < 768 ? '16px' : '14px',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
                   }}
                   placeholder="Enter your full name"
                 />
@@ -1727,14 +1884,26 @@ export default function ClientAgreementPage() {
                   type="email"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
+                  onFocus={(e) => {
+                    e.target.style.backgroundColor = isDark ? '#1e293b' : '#f8fafc';
+                    e.target.style.borderColor = '#3b82f6';
+                    e.target.style.transform = 'scale(1.02)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.backgroundColor = isDark ? '#0f172a' : '#ffffff';
+                    e.target.style.borderColor = isDark ? '#334155' : '#d1d5db';
+                    e.target.style.transform = 'scale(1)';
+                  }}
                   style={{
                     width: '100%',
-                    padding: '12px',
+                    padding: window.innerWidth < 768 ? '16px' : '12px',
                     border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
                     borderRadius: '6px',
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
                     color: isDark ? '#f1f5f9' : '#1e293b',
-                    fontSize: '14px'
+                    fontSize: window.innerWidth < 768 ? '16px' : '14px',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
                   }}
                   placeholder="Enter your email address"
                 />
@@ -1790,11 +1959,18 @@ export default function ClientAgreementPage() {
               }}>
                 <button
                   onClick={() => {
-                    setShowSignModal(false);
-                    setClientName('');
-                    setClientEmail('');
-                    setSignError(null);
-                    setHasAgreedToTerms(false);
+        setShowSignModal(false);
+        setClientName('');
+        setClientEmail('');
+        setSignError(null);
+        setHasAgreedToTerms(false);
+        
+        // Return focus to sign button
+        setTimeout(() => {
+          if (signButtonRef.current) {
+            signButtonRef.current.focus();
+          }
+        }, 100);
                   }}
                   style={{
                     backgroundColor: 'transparent',
@@ -1950,15 +2126,6 @@ export default function ClientAgreementPage() {
           </div>
         )}
 
-        {/* Toast Animation */}
-        <style jsx>{`
-          @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
-            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-          }
-        `}</style>
         
         {/* Professional Footer */}
         <div style={{
@@ -2041,6 +2208,7 @@ export default function ClientAgreementPage() {
         </div>
       </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -18,6 +18,7 @@ interface Client {
   eventStartTime?: string;
   eventDuration?: string;
   eventPackage?: string;
+  packagePrice?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +40,7 @@ export default function ClientsPage() {
     eventStartTime: '',
     eventDuration: '',
     eventPackage: '',
+    packagePrice: '',
     notes: ''
   });
   const { isDark } = useDarkMode();
@@ -90,7 +92,7 @@ export default function ClientsPage() {
         const createdClient = await response.json();
         setClients([createdClient, ...clients]);
         setShowAddForm(false);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
         showToast('Client added successfully!');
       } else {
         try {
@@ -130,7 +132,7 @@ export default function ClientsPage() {
         setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
         setShowAddForm(false);
         setEditingClient(null);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
         showToast('Client updated successfully!');
       } else {
         try {
@@ -163,6 +165,7 @@ export default function ClientsPage() {
       eventStartTime: client.eventStartTime || '',
       eventDuration: client.eventDuration || '',
       eventPackage: client.eventPackage || '',
+      packagePrice: client.packagePrice ? client.packagePrice.toString() : '',
       notes: client.notes || ''
     });
     setShowAddForm(true);
@@ -171,7 +174,7 @@ export default function ClientsPage() {
   const handleCancelEdit = () => {
     setShowAddForm(false);
     setEditingClient(null);
-    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', notes: '' });
+    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
   };
 
   const handleDeleteClient = async (clientId: string) => {
@@ -554,6 +557,34 @@ export default function ClientsPage() {
                       fontSize: '14px'
                     }}
                     placeholder="e.g., Premium Package, Basic Package"
+                  />
+                </div>
+
+                {/* Package Price */}
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '8px', 
+                    fontWeight: '500', 
+                    color: textColor 
+                  }}>
+                    Package Price
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newClient.packagePrice}
+                    onChange={(e) => setNewClient({ ...newClient, packagePrice: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                    placeholder="e.g., 1500.00"
                   />
                 </div>
 

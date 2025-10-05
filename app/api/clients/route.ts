@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       eventStartTime,
       eventDuration,
       eventPackage,
+      packagePrice,
       notes 
     } = body;
 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
         eventStartTime: eventStartTime || null,
         eventDuration: eventDuration || null,
         eventPackage: eventPackage || null,
+        packagePrice: packagePrice ? parseFloat(packagePrice) : null,
         notes: notes || null,
       },
     });

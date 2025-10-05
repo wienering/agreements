@@ -31,6 +31,7 @@ model Client {
   eventStartTime String?
   eventDuration  String?
   eventPackage   String?
+  packagePrice   Decimal? @db.Decimal(10, 2)
   agreements     Agreement[]
 }
 

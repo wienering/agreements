@@ -10,6 +10,8 @@ interface PipelineStage {
   color: string;
   description: string;
   conversionRate?: number;
+  avgDaysInStage?: number;
+  trend?: number[];
 }
 
 interface DropOff {
@@ -64,6 +66,7 @@ export default function PipelinePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDays, setSelectedDays] = useState(30);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const fetchPipelineData = async (days: number) => {
     try {
@@ -116,6 +119,37 @@ export default function PipelinePage() {
     };
     return icons[status as keyof typeof icons] || '📄';
   };
+
+  // Color threshold logic
+  const getPerformanceColor = (value: number, thresholds: { green: number; yellow: number }) => {
+    if (value >= thresholds.green) return '#10b981'; // Green
+    if (value >= thresholds.yellow) return '#f59e0b'; // Yellow
+    return '#dc2626'; // Red
+  };
+
+  const getConversionRateColor = (rate: number) => {
+    return getPerformanceColor(rate, { green: 70, yellow: 50 });
+  };
+
+  const getAvgDaysColor = (days: number) => {
+    return getPerformanceColor(days, { green: 3, yellow: 7 }); // Lower is better
+  };
+
+  // Quick filter handlers
+  const toggleFilter = (filter: string) => {
+    setActiveFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
+  const quickFilters = [
+    { id: 'weddings', label: 'Weddings', icon: '💒' },
+    { id: 'corporate', label: 'Corporate', icon: '🏢' },
+    { id: 'repeat', label: 'Repeat', icon: '🔄' },
+    { id: 'new', label: 'New Client', icon: '✨' }
+  ];
 
   if (loading) {
     return (
@@ -189,11 +223,18 @@ export default function PipelinePage() {
   const { pipeline, recentActivity, timeRange } = data;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
+    <>
+      <style jsx>{`
+        .funnel-stage:hover .hover-analytics {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+      `}</style>
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
       {/* Header */}
       <div style={{
         backgroundColor: isDark ? '#1e293b' : '#ffffff',
@@ -232,32 +273,93 @@ export default function PipelinePage() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px'
+              gap: '20px',
+              flexWrap: 'wrap'
             }}>
-              <label style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: isDark ? '#f1f5f9' : '#1e293b'
+              {/* Quick Filters */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: 'wrap'
               }}>
-                Time Range:
-              </label>
-              <select
-                value={selectedDays}
-                onChange={(e) => setSelectedDays(parseInt(e.target.value))}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
-                  backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                  color: isDark ? '#f1f5f9' : '#1e293b',
-                  fontSize: '14px'
-                }}
-              >
-                <option value={7}>Last 7 days</option>
-                <option value={30}>Last 30 days</option>
-                <option value={90}>Last 90 days</option>
-                <option value={365}>Last year</option>
-              </select>
+                <span style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: isDark ? '#f1f5f9' : '#1e293b'
+                }}>
+                  Filters:
+                </span>
+                {quickFilters.map(filter => (
+                  <button
+                    key={filter.id}
+                    onClick={() => toggleFilter(filter.id)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      border: 'none',
+                      backgroundColor: activeFilters.includes(filter.id) 
+                        ? '#3b82f6' 
+                        : isDark ? '#334155' : '#e2e8f0',
+                      color: activeFilters.includes(filter.id) 
+                        ? 'white' 
+                        : isDark ? '#f1f5f9' : '#1e293b',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!activeFilters.includes(filter.id)) {
+                        e.currentTarget.style.backgroundColor = isDark ? '#475569' : '#d1d5db';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!activeFilters.includes(filter.id)) {
+                        e.currentTarget.style.backgroundColor = isDark ? '#334155' : '#e2e8f0';
+                      }
+                    }}
+                  >
+                    <span>{filter.icon}</span>
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Time Range */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <label style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: isDark ? '#f1f5f9' : '#1e293b'
+                }}>
+                  Time Range:
+                </label>
+                <select
+                  value={selectedDays}
+                  onChange={(e) => setSelectedDays(parseInt(e.target.value))}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
+                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    color: isDark ? '#f1f5f9' : '#1e293b',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value={7}>Last 7 days</option>
+                  <option value={30}>Last 30 days</option>
+                  <option value={90}>Last 90 days</option>
+                  <option value={365}>Last year</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -304,15 +406,28 @@ export default function PipelinePage() {
             padding: '24px',
             borderRadius: '12px',
             border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-            textAlign: 'center'
+            textAlign: 'center',
+            position: 'relative'
           }}>
             <div style={{
               fontSize: '32px',
               fontWeight: '800',
-              color: '#10b981',
-              marginBottom: '8px'
+              color: getConversionRateColor(pipeline.metrics.overallConversionRate),
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
             }}>
               {pipeline.metrics.overallConversionRate.toFixed(1)}%
+              {/* Mini trend sparkline */}
+              <div style={{
+                width: '40px',
+                height: '20px',
+                background: 'linear-gradient(45deg, #10b981 0%, #34d399 50%, #10b981 100%)',
+                borderRadius: '10px',
+                opacity: 0.7
+              }} />
             </div>
             <div style={{
               fontSize: '14px',
@@ -328,15 +443,28 @@ export default function PipelinePage() {
             padding: '24px',
             borderRadius: '12px',
             border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-            textAlign: 'center'
+            textAlign: 'center',
+            position: 'relative'
           }}>
             <div style={{
               fontSize: '32px',
               fontWeight: '800',
-              color: '#f59e0b',
-              marginBottom: '8px'
+              color: getAvgDaysColor(pipeline.metrics.avgTimeToSign),
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
             }}>
               {pipeline.metrics.avgTimeToSign}
+              {/* Mini trend sparkline */}
+              <div style={{
+                width: '40px',
+                height: '20px',
+                background: 'linear-gradient(45deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)',
+                borderRadius: '10px',
+                opacity: 0.7
+              }} />
             </div>
             <div style={{
               fontSize: '14px',
@@ -395,15 +523,33 @@ export default function PipelinePage() {
             gap: '20px'
           }}>
             {pipeline.stages.map((stage, index) => (
-              <div key={stage.stage} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '20px',
-                padding: '20px',
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                borderRadius: '8px',
-                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
-              }}>
+              <div 
+                key={stage.stage} 
+                className="funnel-stage"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '20px',
+                  padding: '20px',
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  borderRadius: '8px',
+                  border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark ? '#0f172a' : '#f8fafc';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                title={`${stage.count} agreements – avg ${stage.avgDaysInStage || 0} days in stage`}
+              >
                 <div style={{
                   width: '60px',
                   height: '60px',
@@ -465,6 +611,76 @@ export default function PipelinePage() {
                   }}>
                     {stage.description}
                   </p>
+                  
+                  {/* Hover Analytics */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '0',
+                    right: '0',
+                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                    border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginTop: '8px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    opacity: 0,
+                    visibility: 'hidden',
+                    transition: 'all 0.2s ease',
+                    zIndex: 10,
+                    pointerEvents: 'none'
+                  }}
+                  className="hover-analytics"
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px'
+                    }}>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: isDark ? '#f1f5f9' : '#1e293b'
+                      }}>
+                        Stage Analytics
+                      </span>
+                      <span style={{
+                        fontSize: '12px',
+                        color: stage.color,
+                        fontWeight: '600'
+                      }}>
+                        {stage.count} agreements
+                      </span>
+                    </div>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px',
+                      fontSize: '11px'
+                    }}>
+                      <div>
+                        <span style={{ color: isDark ? '#94a3b8' : '#64748b' }}>Avg Days:</span>
+                        <span style={{ 
+                          color: isDark ? '#f1f5f9' : '#1e293b',
+                          fontWeight: '600',
+                          marginLeft: '4px'
+                        }}>
+                          {stage.avgDaysInStage || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span style={{ color: isDark ? '#94a3b8' : '#64748b' }}>Conversion:</span>
+                        <span style={{ 
+                          color: stage.conversionRate ? getConversionRateColor(stage.conversionRate) : (isDark ? '#f1f5f9' : '#1e293b'),
+                          fontWeight: '600',
+                          marginLeft: '4px'
+                        }}>
+                          {stage.conversionRate ? `${stage.conversionRate.toFixed(1)}%` : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Progress Bar */}
@@ -636,6 +852,7 @@ export default function PipelinePage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -14,6 +14,7 @@ const clientUpdateSchema = z.object({
   eventStartTime: z.string().optional().nullable(),
   eventDuration: z.string().optional().nullable(),
   eventPackage: z.string().optional().nullable(),
+  packagePrice: z.union([z.string(), z.number()]).optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -38,6 +39,7 @@ export async function PUT(request: NextRequest) {
         eventStartTime: validatedData.eventStartTime,
         eventDuration: validatedData.eventDuration,
         eventPackage: validatedData.eventPackage,
+        packagePrice: validatedData.packagePrice ? parseFloat(validatedData.packagePrice.toString()) : null,
         notes: validatedData.notes,
       },
     });

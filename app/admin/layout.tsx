@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminLayout({
   children,
@@ -95,7 +96,7 @@ export default function AdminLayout({
         boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
         display: 'flex',
         flexDirection: 'column',
-        position: isMobile ? 'fixed' : 'relative',
+        position: 'fixed',
         top: 0,
         left: 0,
         height: '100vh',
@@ -246,7 +247,7 @@ export default function AdminLayout({
       <div style={{ 
         flex: 1, 
         backgroundColor: mainBg,
-        marginLeft: isMobile ? '0' : '0',
+        marginLeft: isMobile ? '0' : '250px',
         width: isMobile ? '100%' : 'auto'
       }}>
         {/* Mobile Header */}
@@ -302,7 +303,20 @@ export default function AdminLayout({
             <div style={{ width: '40px' }} /> {/* Spacer for centering */}
           </div>
         )}
-        {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ 
+              duration: 0.3, 
+              ease: "easeInOut" 
+            }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

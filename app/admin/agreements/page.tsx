@@ -70,6 +70,11 @@ export default function AgreementsPage() {
   const [adminName, setAdminName] = useState('');
   const [cancellationConfirm, setCancellationConfirm] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  
+  // Email preview state
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [previewAgreement, setPreviewAgreement] = useState<Agreement | null>(null);
+  
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
     const date = new Date();
@@ -265,6 +270,11 @@ export default function AgreementsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePreviewEmail = (agreement: Agreement) => {
+    setPreviewAgreement(agreement);
+    setShowEmailPreview(true);
   };
 
   const handleSendToClient = async (agreement: Agreement) => {
@@ -878,6 +888,37 @@ export default function AgreementsPage() {
                      warningType === 'critical' ? '🚨' : '⚠️'}
                   </div>
                 )}
+
+                {/* Confidence Indicator for Unresponsive Clients */}
+                {agreement.status === 'LIVE' && agreement.lastEmailedAt && (() => {
+                  const daysSinceEmailed = Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24));
+                  const isUnresponsive = daysSinceEmailed >= 3;
+                  const needsPersonalFollowUp = daysSinceEmailed >= 5;
+                  
+                  if (isUnresponsive) {
+                    return (
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        left: '8px',
+                        backgroundColor: needsPersonalFollowUp ? '#dc2626' : '#f59e0b',
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        zIndex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        {needsPersonalFollowUp ? '🚨' : '⚠️'}
+                        {needsPersonalFollowUp ? 'Needs Personal Follow-up' : 'Might need personal follow-up'}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 
                 <div style={{ 
                   display: 'flex', 
@@ -887,8 +928,70 @@ export default function AgreementsPage() {
                   flexDirection: isMobile ? 'column' : 'row',
                   gap: isMobile ? '12px' : '0'
                 }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor }}>
+                  <div style={{ position: 'relative' }}>
+                    <h3 style={{ 
+                      margin: '0 0 4px 0', 
+                      fontSize: '16px', 
+                      color: textColor,
+                      cursor: 'pointer',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => {
+                      // Show engagement tooltip
+                      const tooltip = document.createElement('div');
+                      tooltip.id = 'engagement-tooltip';
+                      tooltip.style.cssText = `
+                        position: absolute;
+                        top: -10px;
+                        left: 0;
+                        background: ${isDark ? '#1e293b' : '#ffffff'};
+                        border: 1px solid ${isDark ? '#334155' : '#e2e8f0'};
+                        border-radius: 8px;
+                        padding: 12px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        z-index: 1000;
+                        min-width: 200px;
+                        font-size: 12px;
+                        color: ${isDark ? '#f1f5f9' : '#1e293b'};
+                      `;
+                      
+                      const daysSinceEmailed = agreement.lastEmailedAt ? 
+                        Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                      
+                      tooltip.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px; color: ${isDark ? '#f1f5f9' : '#1e293b'}">
+                          📊 Engagement Log
+                        </div>
+                        <div style="margin-bottom: 4px">
+                          <strong>Email Sent:</strong> ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''}
+                        </div>
+                        ${agreement.lastEmailedAt ? `
+                          <div style="margin-bottom: 4px">
+                            <strong>Last Emailed:</strong> ${new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                          </div>
+                          <div style="margin-bottom: 4px">
+                            <strong>Days Since:</strong> ${daysSinceEmailed} day${daysSinceEmailed && daysSinceEmailed > 1 ? 's' : ''}
+                          </div>
+                        ` : ''}
+                        <div style="margin-bottom: 4px">
+                          <strong>Status:</strong> ${agreement.status}
+                        </div>
+                        ${agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3 ? `
+                          <div style="color: #f59e0b; font-weight: 600; margin-top: 8px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}">
+                            ⚠️ Client may need follow-up
+                          </div>
+                        ` : ''}
+                      `;
+                      
+                      e.currentTarget.appendChild(tooltip);
+                    }}
+                    onMouseLeave={(e) => {
+                      const tooltip = document.getElementById('engagement-tooltip');
+                      if (tooltip) {
+                        tooltip.remove();
+                      }
+                    }}
+                    >
                       {agreement.client.firstName} {agreement.client.lastName}
                     </h3>
                     <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
@@ -1445,6 +1548,22 @@ export default function AgreementsPage() {
                   title="Open client view in new tab"
                 >
                   Preview Client View
+                </button>
+                <button
+                  onClick={() => handlePreviewEmail(selectedAgreement)}
+                  style={{
+                    backgroundColor: '#8b5cf6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                  title="Preview the email that will be sent to the client"
+                >
+                  📧 Preview Email
                 </button>
                 <button
                   onClick={() => handleSendToClient(selectedAgreement)}
@@ -2009,6 +2128,290 @@ export default function AgreementsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Email Preview Modal */}
+        {showEmailPreview && previewAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              padding: '32px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px'
+              }}>
+                <h2 style={{
+                  margin: '0',
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: textColor
+                }}>
+                  📧 Email Preview
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowEmailPreview(false);
+                    setPreviewAgreement(null);
+                  }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: textColor,
+                    padding: '4px'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '24px',
+                marginBottom: '24px'
+              }}>
+                <h3 style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: textColor
+                }}>
+                  Email Details
+                </h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '16px',
+                  marginBottom: '20px'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: isDark ? '#94a3b8' : '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '4px'
+                    }}>
+                      To
+                    </label>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      color: textColor,
+                      fontWeight: '500'
+                    }}>
+                      {previewAgreement.client.email}
+                    </p>
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: isDark ? '#94a3b8' : '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '4px'
+                    }}>
+                      Client Name
+                    </label>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      color: textColor,
+                      fontWeight: '500'
+                    }}>
+                      {previewAgreement.client.firstName} {previewAgreement.client.lastName}
+                    </p>
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: isDark ? '#94a3b8' : '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '4px'
+                    }}>
+                      Expires
+                    </label>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      color: textColor,
+                      fontWeight: '500'
+                    }}>
+                      {new Date(previewAgreement.expiresAt).toLocaleDateString('en-CA', {
+                        timeZone: 'America/Toronto',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: isDark ? '#94a3b8' : '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '4px'
+                    }}>
+                      Template
+                    </label>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      color: textColor,
+                      fontWeight: '500'
+                    }}>
+                      {previewAgreement.template.title}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '24px',
+                marginBottom: '24px'
+              }}>
+                <h3 style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: textColor
+                }}>
+                  Email Content Preview
+                </h3>
+                <div style={{
+                  backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '6px',
+                  padding: '20px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  color: textColor
+                }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <strong>Subject:</strong> Your Photo Booth Agreement - {previewAgreement.client.firstName} {previewAgreement.client.lastName}
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <strong>From:</strong> Photobooth Guys &lt;info@photoboothguys.ca&gt;
+                  </div>
+                  <div style={{
+                    borderTop: `1px solid ${borderColor}`,
+                    paddingTop: '16px',
+                    marginTop: '16px'
+                  }}>
+                    <p style={{ margin: '0 0 12px 0' }}>
+                      Hi {previewAgreement.client.firstName},
+                    </p>
+                    <p style={{ margin: '0 0 12px 0' }}>
+                      Your photo booth agreement is ready for review and signature. Please click the link below to view and sign your agreement.
+                    </p>
+                    <div style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      display: 'inline-block',
+                      margin: '12px 0',
+                      textDecoration: 'none',
+                      fontWeight: '600'
+                    }}>
+                      View & Sign Agreement →
+                    </div>
+                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: isDark ? '#94a3b8' : '#64748b' }}>
+                      This agreement expires on {new Date(previewAgreement.expiresAt).toLocaleDateString('en-CA', {
+                        timeZone: 'America/Toronto',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  onClick={() => {
+                    setShowEmailPreview(false);
+                    setPreviewAgreement(null);
+                  }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: textColor,
+                    border: `1px solid ${borderColor}`,
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEmailPreview(false);
+                    setPreviewAgreement(null);
+                    handleSendToClient(previewAgreement);
+                  }}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Send Email
+                </button>
+              </div>
             </div>
           </div>
         )}

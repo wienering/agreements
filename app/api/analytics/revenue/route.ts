@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
           select: {
             firstName: true,
             lastName: true,
-            email: true
+            email: true,
+            packagePrice: true
           }
         },
         template: {
@@ -44,21 +45,24 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Calculate totals (using default values for now)
+    // Calculate totals using client package price
     const totalRevenue = revenueData.reduce((sum, agreement) => {
-      return sum + 0; // Default to 0 until revenue fields are added
+      const price = agreement.client.packagePrice ? parseFloat(agreement.client.packagePrice.toString()) : 0;
+      return sum + price;
     }, 0);
 
     const signedRevenue = revenueData
       .filter(a => a.status === 'SIGNED' || a.status === 'COMPLETED')
       .reduce((sum, agreement) => {
-        return sum + 0; // Default to 0 until revenue fields are added
+        const price = agreement.client.packagePrice ? parseFloat(agreement.client.packagePrice.toString()) : 0;
+        return sum + price;
       }, 0);
 
     const pendingRevenue = revenueData
       .filter(a => a.status === 'LIVE')
       .reduce((sum, agreement) => {
-        return sum + 0; // Default to 0 until revenue fields are added
+        const price = agreement.client.packagePrice ? parseFloat(agreement.client.packagePrice.toString()) : 0;
+        return sum + price;
       }, 0);
 
     // Get average revenue per agreement
@@ -81,7 +85,8 @@ export async function GET(request: NextRequest) {
           agreementCount: 0
         };
       }
-      acc[clientKey].totalRevenue += 0; // Default to 0 until revenue fields are added
+      const price = agreement.client.packagePrice ? parseFloat(agreement.client.packagePrice.toString()) : 0;
+      acc[clientKey].totalRevenue += price;
       acc[clientKey].agreementCount += 1;
       return acc;
     }, {} as any);
