@@ -90,6 +90,20 @@ export async function POST(request: NextRequest) {
     const currentSendCount = agreement.emailSendCount || 0;
     const newSendCount = currentSendCount + 1;
     
+    // Format expiration date for display
+    const formatExpirationDate = (expiresAt: Date | null) => {
+      if (!expiresAt) return 'No expiration date set';
+      return expiresAt.toLocaleDateString('en-CA', { 
+        timeZone: 'America/Toronto',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    const expirationDate = formatExpirationDate(agreement.expiresAt);
+    
     // Different messaging based on send count
     let emailSubject, emailTitle, emailMessage, emailUrgency;
     
@@ -97,17 +111,17 @@ export async function POST(request: NextRequest) {
       emailSubject = `Service Agreement Ready - ${agreement.client.firstName}`;
       emailTitle = "Service Agreement Ready for Review";
       emailMessage = "Your service agreement is ready for review and digital signature. Please click the button below to access your agreement.";
-      emailUrgency = "This agreement expires on the specified date. Please review and sign before the expiration date.";
+      emailUrgency = `This agreement expires on ${expirationDate}. Please review and sign before the expiration date.`;
     } else if (newSendCount === 2) {
       emailSubject = `Reminder: Service Agreement Pending - ${agreement.client.firstName}`;
       emailTitle = "Reminder: Your Service Agreement is Waiting";
       emailMessage = "This is a friendly reminder that your service agreement is still waiting for your review and signature. We want to make sure everything is ready for your event.";
-      emailUrgency = "Please review and sign your agreement to secure your booking.";
+      emailUrgency = `Please review and sign your agreement to secure your booking. This agreement expires on ${expirationDate}.`;
     } else {
       emailSubject = `Final Notice: Service Agreement - ${agreement.client.firstName}`;
       emailTitle = "Final Notice: Service Agreement Signature Required";
       emailMessage = "This is our final notice regarding your service agreement. We need your signature to proceed with your booking and ensure everything is ready for your event.";
-      emailUrgency = "Please sign your agreement immediately to avoid any delays in your service.";
+      emailUrgency = `Please sign your agreement immediately to avoid any delays in your service. This agreement expires on ${expirationDate}.`;
     }
 
     // Create email content

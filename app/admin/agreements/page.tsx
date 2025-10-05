@@ -48,7 +48,9 @@ export default function AgreementsPage() {
   const [warningData, setWarningData] = useState<WarningData | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sendingToClient, setSendingToClient] = useState(false);
+  const [sendingToClient, setSendingToClient] = useState<Record<string, boolean>>({});
+  const [deletingAgreement, setDeletingAgreement] = useState<Record<string, boolean>>({});
+  const [archivingAgreement, setArchivingAgreement] = useState<Record<string, boolean>>({});
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [saving, setSaving] = useState(false);
@@ -267,7 +269,7 @@ export default function AgreementsPage() {
 
   const handleSendToClient = async (agreement: Agreement) => {
     try {
-      setSendingToClient(true);
+      setSendingToClient(prev => ({ ...prev, [agreement.id]: true }));
       const response = await fetch('/api/agreements/send', {
         method: 'POST',
         headers: {
@@ -305,13 +307,13 @@ export default function AgreementsPage() {
       console.error('Error sending agreement:', error);
       showToast('Failed to send agreement. Please try again later.', 'error');
     } finally {
-      setSendingToClient(false);
+      setSendingToClient(prev => ({ ...prev, [agreement.id]: false }));
     }
   };
 
   const handleResendEmail = async (agreement: Agreement) => {
     try {
-      setSendingToClient(true);
+      setSendingToClient(prev => ({ ...prev, [agreement.id]: true }));
       const response = await fetch('/api/agreements/send', {
         method: 'POST',
         headers: {
@@ -351,7 +353,7 @@ export default function AgreementsPage() {
       console.error('Error resending agreement:', error);
       showToast('Failed to resend agreement. Please try again later.', 'error');
     } finally {
-      setSendingToClient(false);
+      setSendingToClient(prev => ({ ...prev, [agreement.id]: false }));
     }
   };
 
@@ -360,7 +362,7 @@ export default function AgreementsPage() {
       return;
     }
 
-    setLoading(true);
+    setDeletingAgreement(prev => ({ ...prev, [agreementId]: true }));
     try {
       const response = await fetch(`/api/agreements/delete`, {
         method: 'DELETE',
@@ -381,7 +383,7 @@ export default function AgreementsPage() {
       console.error('Error deleting agreement:', error);
       showToast('Failed to delete agreement', 'error');
     } finally {
-      setLoading(false);
+      setDeletingAgreement(prev => ({ ...prev, [agreementId]: false }));
     }
   };
 
@@ -576,8 +578,8 @@ export default function AgreementsPage() {
       return;
     }
 
+    setArchivingAgreement(prev => ({ ...prev, [agreementId]: true }));
     try {
-      setLoading(true);
       const response = await fetch('/api/agreements/archive', {
         method: 'POST',
         headers: {
@@ -597,7 +599,7 @@ export default function AgreementsPage() {
       console.error('Error archiving agreement:', error);
       showToast('Error archiving agreement', 'error');
     } finally {
-      setLoading(false);
+      setArchivingAgreement(prev => ({ ...prev, [agreementId]: false }));
     }
   };
 
@@ -1036,91 +1038,91 @@ export default function AgreementsPage() {
                   {(agreement.status === 'LIVE' || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
                     <button
                       onClick={() => handleResendEmail(agreement)}
-                      disabled={sendingToClient}
+                      disabled={sendingToClient[agreement.id]}
                       style={{
-                        backgroundColor: sendingToClient ? '#9ca3af' : '#f59e0b',
+                        backgroundColor: sendingToClient[agreement.id] ? '#9ca3af' : '#f59e0b',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '4px',
-                        cursor: sendingToClient ? 'not-allowed' : 'pointer',
+                        cursor: sendingToClient[agreement.id] ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         fontWeight: '500',
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        if (!sendingToClient) {
+                        if (!sendingToClient[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#d97706';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!sendingToClient) {
+                        if (!sendingToClient[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#f59e0b';
                         }
                       }}
                       title={`Resend email to client (Previously sent ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''})`}
                     >
-                      {sendingToClient ? 'Sending...' : 'Resend Email'}
+                      {sendingToClient[agreement.id] ? 'Sending...' : 'Resend Email'}
                     </button>
                   )}
                   {agreement.status === 'DRAFT' && (
                     <button
                       onClick={() => handleSendToClient(agreement)}
-                      disabled={sendingToClient}
+                      disabled={sendingToClient[agreement.id]}
                       style={{
-                        backgroundColor: sendingToClient ? '#9ca3af' : '#dc2626',
+                        backgroundColor: sendingToClient[agreement.id] ? '#9ca3af' : '#dc2626',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '4px',
-                        cursor: sendingToClient ? 'not-allowed' : 'pointer',
+                        cursor: sendingToClient[agreement.id] ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         fontWeight: '500',
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        if (!sendingToClient) {
+                        if (!sendingToClient[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#b91c1c';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!sendingToClient) {
+                        if (!sendingToClient[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#dc2626';
                         }
                       }}
                       title="Send agreement to client"
                     >
-                      {sendingToClient ? 'Sending...' : 'Send to Client'}
+                      {sendingToClient[agreement.id] ? 'Sending...' : 'Send to Client'}
                     </button>
                   )}
                   {agreement.status === 'DRAFT' && (
                     <button
                       onClick={() => handleDeleteAgreement(agreement.id)}
-                      disabled={loading}
+                      disabled={deletingAgreement[agreement.id]}
                       style={{
-                        backgroundColor: loading ? '#9ca3af' : '#6b7280',
+                        backgroundColor: deletingAgreement[agreement.id] ? '#9ca3af' : '#6b7280',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '4px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
+                        cursor: deletingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         fontWeight: '500',
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        if (!loading) {
+                        if (!deletingAgreement[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#4b5563';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!loading) {
+                        if (!deletingAgreement[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#6b7280';
                         }
                       }}
                       title="Delete this agreement permanently (only DRAFT agreements can be deleted)"
                     >
-                      {loading ? 'Deleting...' : 'Delete'}
+                      {deletingAgreement[agreement.id] ? 'Deleting...' : 'Delete'}
                     </button>
                   )}
                   {agreement.status === 'SIGNED' && (
@@ -1151,31 +1153,31 @@ export default function AgreementsPage() {
                   {(agreement.status === 'SIGNED' || agreement.status === 'COMPLETED') && (
                     <button
                       onClick={() => handleArchiveAgreement(agreement.id)}
-                      disabled={loading}
+                      disabled={archivingAgreement[agreement.id]}
                       style={{
-                        backgroundColor: loading ? '#9ca3af' : '#6b7280',
+                        backgroundColor: archivingAgreement[agreement.id] ? '#9ca3af' : '#6b7280',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '4px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
+                        cursor: archivingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         fontWeight: '500',
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        if (!loading) {
+                        if (!archivingAgreement[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#4b5563';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!loading) {
+                        if (!archivingAgreement[agreement.id]) {
                           e.currentTarget.style.backgroundColor = '#6b7280';
                         }
                       }}
                       title="Archive this agreement"
                     >
-                      {loading ? 'Archiving...' : 'Archive'}
+                      {archivingAgreement[agreement.id] ? 'Archiving...' : 'Archive'}
                     </button>
                   )}
                 </div>
