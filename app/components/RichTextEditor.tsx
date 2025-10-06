@@ -144,7 +144,7 @@ export function RichTextPreview({
     const eventStartTime = clientData?.eventStartTime || '2:00 PM';
     const eventDuration = clientData?.eventDuration || '4 hours';
     const eventPackage = clientData?.eventPackage || 'Premium Package';
-    const eventPrice = clientData?.packagePrice ? "$${clientData.packagePrice}" : '$150.00';
+    const eventPrice = clientData?.packagePrice ? `$${clientData.packagePrice}` : '$150.00';
     
     // Replace client fields with clean, readable styling
     processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${firstName}</strong>`);
