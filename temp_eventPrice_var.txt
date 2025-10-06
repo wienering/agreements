@@ -1,2 +1,0 @@
-﻿    const eventPackage = clientData?.eventPackage || 'Premium Package';
-    const eventPrice = clientData?.packagePrice ? \\$\$\{clientData.packagePrice\}\ : '\.00';
