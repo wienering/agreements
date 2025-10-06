@@ -1,0 +1,2 @@
+﻿    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, \<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">\$\{eventPackage\}</strong>\);
+    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, \<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">\$\{eventPrice\}</strong>\);
