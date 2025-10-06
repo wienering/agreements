@@ -292,47 +292,6 @@ export default function ThankYouPage() {
           }
         }
         
-        @keyframes legalSealGlow {
-          0% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-            transform: scale(1);
-          }
-          50% {
-            box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6);
-            transform: scale(1.05);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-            transform: scale(1);
-          }
-        }
-        
-        @keyframes embossEffect {
-          0% {
-            text-shadow: 0 1px 0 #ffffff, 0 -1px 0 #000000;
-            transform: translateY(0);
-          }
-          50% {
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 -1px 0 #ffffff;
-            transform: translateY(-1px);
-          }
-          100% {
-            text-shadow: 0 1px 0 #ffffff, 0 -1px 0 #000000;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes gradientShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
       `}</style>
       <div style={{ 
         minHeight: '100vh', 
@@ -386,7 +345,7 @@ export default function ThankYouPage() {
               color: isDark ? '#94a3b8' : '#64748b',
               lineHeight: '1.6'
             }}>
-              Your agreement has been successfully signed and is now legally binding.
+              Your agreement has been successfully signed and is now binding.
             </p>
             
             <div style={{
@@ -751,71 +710,6 @@ export default function ThankYouPage() {
             </div>
           </div>
 
-          {/* Animated Legal Seal */}
-          <div style={{
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
-            padding: '24px',
-            borderRadius: '12px',
-            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-            textAlign: 'center',
-            animation: 'fadeIn 1.4s ease-out 0.8s both'
-          }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '20px 32px',
-              backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-              borderRadius: '12px',
-              border: `2px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-              fontSize: '16px',
-              color: isDark ? '#94a3b8' : '#64748b',
-              position: 'relative',
-              animation: 'legalSealGlow 2s ease-in-out infinite',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-            }}>
-              <span style={{ 
-                fontSize: '24px',
-                animation: 'embossEffect 1.5s ease-in-out infinite'
-              }}>⚖️</span>
-              <span style={{ 
-                fontWeight: '700',
-                fontSize: '16px',
-                letterSpacing: '0.5px',
-                animation: 'embossEffect 1.5s ease-in-out infinite'
-              }}>
-                Legally Binding | Timestamped
-              </span>
-              <span style={{ 
-                fontSize: '24px',
-                animation: 'embossEffect 1.5s ease-in-out infinite'
-              }}>🔒</span>
-              
-              {/* Animated border effect */}
-              <div style={{
-                position: 'absolute',
-                top: '-2px',
-                left: '-2px',
-                right: '-2px',
-                bottom: '-2px',
-                borderRadius: '12px',
-                background: 'linear-gradient(45deg, #3b82f6, #8b5cf6, #3b82f6)',
-                backgroundSize: '200% 200%',
-                animation: 'gradientShift 3s ease infinite',
-                zIndex: -1,
-                opacity: 0.6
-              }} />
-            </div>
-            
-            <p style={{
-              margin: '16px 0 0 0',
-              fontSize: '12px',
-              color: isDark ? '#64748b' : '#94a3b8',
-              fontStyle: 'italic'
-            }}>
-              This agreement has been digitally signed and timestamped for legal compliance
-            </p>
-          </div>
         </div>
 
         {/* Email Modal */}
