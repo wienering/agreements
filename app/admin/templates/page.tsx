@@ -693,7 +693,7 @@ export default function TemplatesPage() {
               borderRadius: '8px',
               border: `1px solid ${borderColor}`,
               width: '100%',
-              maxWidth: '95vw',
+              maxWidth: '1200px',
               maxHeight: '95vh',
               overflow: 'auto',
               display: 'flex',
@@ -755,7 +755,7 @@ export default function TemplatesPage() {
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                   borderRadius: '6px',
                   border: `1px solid ${borderColor}`,
-                  minHeight: '70vh'
+                  minHeight: '80vh'
                 }}>
                   <RichTextPreview 
                     html={viewingTemplate.htmlContent}
@@ -860,4 +860,6 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
+
 
