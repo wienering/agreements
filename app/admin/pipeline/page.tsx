@@ -615,19 +615,19 @@ export default function PipelinePage() {
                   {/* Hover Analytics */}
                   <div style={{
                     position: 'absolute',
-                    top: '100%',
+                    bottom: '100%',
                     left: '0',
                     right: '0',
                     backgroundColor: isDark ? '#1e293b' : '#ffffff',
                     border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
                     borderRadius: '8px',
                     padding: '12px',
-                    marginTop: '8px',
+                    marginBottom: '8px',
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                     opacity: 0,
                     visibility: 'hidden',
                     transition: 'all 0.2s ease',
-                    zIndex: 1000,
+                    zIndex: 9999,
                     pointerEvents: 'none'
                   }}
                   className="hover-analytics"
