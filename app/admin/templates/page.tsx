@@ -631,7 +631,6 @@ export default function TemplatesPage() {
                   borderRadius: '6px',
                   border: `1px solid ${borderColor}`,
                   maxHeight: '200px',
-                  overflow: 'auto',
                   position: 'relative'
                 }}>
                   <div style={{ 
