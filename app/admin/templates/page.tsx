@@ -343,6 +343,86 @@ export default function TemplatesPage() {
               }}>
                 {`{{client.notes}}`}
               </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{event.type}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{event.location}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{event.startTime}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{event.duration}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{event.package}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{event.price}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{agreement.date}}`}
+              </div>
+              <div style={{ 
+                padding: '8px 12px', 
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                color: textColor
+              }}>
+                {`{{agreement.id}}`}
+              </div>
             </div>
             <p style={{ 
               margin: '12px 0 0 0', 
@@ -860,6 +940,9 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
+
+
 
 
 
