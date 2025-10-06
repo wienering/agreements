@@ -550,8 +550,8 @@ export default function TemplatesPage() {
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                   borderRadius: '6px',
                   border: `1px solid ${borderColor}`,
-                  maxHeight: '120px',
-                  overflow: 'hidden',
+                  maxHeight: '200px',
+                  overflow: 'auto',
                   position: 'relative'
                 }}>
                   <div style={{ 
@@ -693,9 +693,9 @@ export default function TemplatesPage() {
               borderRadius: '8px',
               border: `1px solid ${borderColor}`,
               width: '100%',
-              maxWidth: '900px',
-              maxHeight: '90vh',
-              overflow: 'hidden',
+              maxWidth: '95vw',
+              maxHeight: '95vh',
+              overflow: 'auto',
               display: 'flex',
               flexDirection: 'column'
             }}>
@@ -755,7 +755,7 @@ export default function TemplatesPage() {
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                   borderRadius: '6px',
                   border: `1px solid ${borderColor}`,
-                  minHeight: '400px'
+                  minHeight: '70vh'
                 }}>
                   <RichTextPreview 
                     html={viewingTemplate.htmlContent}
@@ -860,3 +860,4 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
