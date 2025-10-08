@@ -23,6 +23,7 @@ export default function TemplatesPage() {
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [viewingTemplate, setViewingTemplate] = useState<Template | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     htmlContent: '',
@@ -31,6 +32,84 @@ export default function TemplatesPage() {
   const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
+
+  // Copy smart field to clipboard
+  const copyToClipboard = async (field: string) => {
+    try {
+      await navigator.clipboard.writeText(field);
+      setCopiedField(field);
+      showToast(`${field} copied to clipboard!`, 'success');
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedField(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      showToast('Failed to copy to clipboard', 'error');
+    }
+  };
+
+  // Smart Field Component
+  const SmartFieldItem = ({ field }: { field: string }) => {
+    const isCopied = copiedField === field;
+    
+    return (
+      <div 
+        onClick={() => copyToClipboard(field)}
+        style={{ 
+          padding: '8px 12px', 
+          backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+          borderRadius: '4px',
+          fontSize: '14px',
+          fontFamily: 'monospace',
+          color: textColor,
+          cursor: 'pointer',
+          position: 'relative',
+          transition: 'all 0.2s ease',
+          border: isCopied ? '2px solid #10b981' : '2px solid transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = isDark ? '#0f172a' : '#f8fafc';
+        }}
+        title="Click to copy to clipboard"
+      >
+        <span>{field}</span>
+        {isCopied && (
+          <div style={{
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+            backgroundColor: '#10b981',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: '8px',
+            animation: 'pulse 0.5s ease-in-out'
+          }}>
+            <svg 
+              width="10" 
+              height="10" 
+              viewBox="0 0 20 20" 
+              fill="white"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                clipRule="evenodd" 
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Check if device is mobile
   useEffect(() => {
@@ -195,6 +274,13 @@ export default function TemplatesPage() {
       backgroundColor: mainBg,
       padding: isMobile ? '16px' : '24px'
     }}>
+      <style jsx>{`
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
       <ToastContainer />
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
@@ -283,146 +369,20 @@ export default function TemplatesPage() {
               gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', 
               gap: '12px' 
             }}>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{client.firstName}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{client.lastName}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{client.email}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{client.phone}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{client.eventDate}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{client.notes}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{event.type}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{event.location}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{event.startTime}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{event.duration}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{event.package}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{event.price}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{agreement.date}}`}
-              </div>
-              <div style={{ 
-                padding: '8px 12px', 
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-                color: textColor
-              }}>
-                {`{{agreement.id}}`}
-              </div>
+              <SmartFieldItem field="{{client.firstName}}" />
+              <SmartFieldItem field="{{client.lastName}}" />
+              <SmartFieldItem field="{{client.email}}" />
+              <SmartFieldItem field="{{client.phone}}" />
+              <SmartFieldItem field="{{client.eventDate}}" />
+              <SmartFieldItem field="{{client.notes}}" />
+              <SmartFieldItem field="{{event.type}}" />
+              <SmartFieldItem field="{{event.location}}" />
+              <SmartFieldItem field="{{event.startTime}}" />
+              <SmartFieldItem field="{{event.duration}}" />
+              <SmartFieldItem field="{{event.package}}" />
+              <SmartFieldItem field="{{event.price}}" />
+              <SmartFieldItem field="{{agreement.date}}" />
+              <SmartFieldItem field="{{agreement.id}}" />
             </div>
             <p style={{ 
               margin: '12px 0 0 0', 
