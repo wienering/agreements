@@ -16,6 +16,7 @@ interface AgreementData {
     eventStartTime: string | null;
     eventDuration: string | null;
     eventPackage: string | null;
+    packagePrice: string | null;
     notes: string | null;
   };
   template: {
@@ -111,6 +112,7 @@ export default function ClientAgreementPage() {
     processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
     processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
     processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${client.packagePrice}` : '');
     
     // Replace agreement fields
     processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
