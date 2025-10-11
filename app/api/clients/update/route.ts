@@ -26,6 +26,23 @@ export async function PUT(request: NextRequest) {
     const validatedData = clientUpdateSchema.parse(body);
     console.log('Validated data:', validatedData);
 
+    // Check if this client has any signed agreements
+    const signedAgreements = await prisma.agreement.findMany({
+      where: {
+        clientId: validatedData.id,
+        status: 'SIGNED'
+      },
+      select: { id: true, uniqueToken: true }
+    });
+
+    if (signedAgreements.length > 0) {
+      console.error('Attempted to modify client with signed agreements:', validatedData.id, 'Signed agreements:', signedAgreements);
+      return NextResponse.json({ 
+        error: 'Cannot modify client data when they have signed agreements. Client data is locked once an agreement is signed to maintain legal integrity.',
+        signedAgreements: signedAgreements.map(a => ({ id: a.id, token: a.uniqueToken }))
+      }, { status: 403 });
+    }
+
     const updatedClient = await prisma.client.update({
       where: { id: validatedData.id },
       data: {

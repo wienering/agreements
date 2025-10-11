@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, htmlContent, fieldsSchema } = body;
+    const { title, internalTitle, htmlContent, fieldsSchema } = body;
 
     // Validate required fields
     if (!title || !htmlContent) {
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const template = await prisma.template.create({
       data: {
         title,
+        internalTitle: internalTitle || null,
         htmlContent,
         fieldsSchema: fieldsSchema || {},
       },

@@ -9,6 +9,7 @@ import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor
 interface Template {
   id: string;
   title: string;
+  internalTitle?: string | null;
   htmlContent: string;
   fieldsSchema: any;
   version: number;
@@ -26,6 +27,7 @@ export default function TemplatesPage() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
+    internalTitle: '',
     htmlContent: '',
     fieldsSchema: {}
   });
@@ -156,7 +158,7 @@ export default function TemplatesPage() {
         const createdTemplate = await response.json();
         setTemplates([createdTemplate, ...templates]);
         setShowAddForm(false);
-        setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
+        setNewTemplate({ title: '', internalTitle: '', htmlContent: '', fieldsSchema: {} });
         showToast('Template created successfully!');
       } else {
         const error = await response.json();
@@ -189,7 +191,7 @@ export default function TemplatesPage() {
         setTemplates(templates.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
         setShowAddForm(false);
         setEditingTemplate(null);
-        setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
+        setNewTemplate({ title: '', internalTitle: '', htmlContent: '', fieldsSchema: {} });
         showToast('Template updated successfully!');
       } else {
         const error = await response.json();
@@ -207,7 +209,7 @@ export default function TemplatesPage() {
   const handleCancelEdit = () => {
     setShowAddForm(false);
     setEditingTemplate(null);
-    setNewTemplate({ title: '', htmlContent: '', fieldsSchema: {} });
+    setNewTemplate({ title: '', internalTitle: '', htmlContent: '', fieldsSchema: {} });
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
@@ -248,6 +250,7 @@ export default function TemplatesPage() {
     setEditingTemplate(template);
     setNewTemplate({
       title: template.title,
+      internalTitle: template.internalTitle || '',
       htmlContent: template.htmlContent,
       fieldsSchema: template.fieldsSchema
     });
@@ -414,7 +417,7 @@ export default function TemplatesPage() {
                   fontWeight: '500', 
                   color: textColor 
                 }}>
-                  Title
+                  Title (shown to clients)
                 </label>
                 <input
                   type="text"
@@ -430,8 +433,40 @@ export default function TemplatesPage() {
                     color: textColor,
                     fontSize: '14px'
                   }}
-                  placeholder="Enter template title"
+                  placeholder="Enter template title (this will be shown to clients)"
                 />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '8px', 
+                  fontWeight: '500', 
+                  color: textColor 
+                }}>
+                  Internal Title (for organization only)
+                </label>
+                <input
+                  type="text"
+                  value={newTemplate.internalTitle || ''}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, internalTitle: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '4px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '14px'
+                  }}
+                  placeholder="Enter internal title (e.g., 'Photobooth Guys Agreement - UP')"
+                />
+                <p style={{ 
+                  margin: '4px 0 0 0', 
+                  fontSize: '12px', 
+                  color: mutedText 
+                }}>
+                  This is only visible to you for organizing templates. Clients will only see the title above.
+                </p>
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ 
@@ -562,8 +597,13 @@ export default function TemplatesPage() {
                 }}>
                   <div>
                     <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
-                      {template.title}
+                      {template.internalTitle || template.title}
                     </h3>
+                    {template.internalTitle && (
+                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
+                        Client Title: {template.title}
+                      </p>
+                    )}
                     <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                       Version {template.version}
                     </p>

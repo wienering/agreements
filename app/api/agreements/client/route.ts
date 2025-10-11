@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
       processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
       processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${client.packagePrice}` : '');
+      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${Number(client.packagePrice).toFixed(2)}` : '');
       
       // Replace agreement fields
       processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
@@ -72,11 +72,20 @@ export async function GET(request: NextRequest) {
       processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
     }
 
+    // Convert Decimal fields to numbers for JSON serialization
+    const client = {
+      ...agreement.client,
+      packagePrice: agreement.client.packagePrice ? Number(agreement.client.packagePrice) : null
+    };
+
     // Return the agreement with processed HTML
+    // Only return public title to clients, not internal title
+    const { internalTitle, ...publicTemplate } = agreement.template;
     return NextResponse.json({
       ...agreement,
+      client,
       template: {
-        ...agreement.template,
+        ...publicTemplate,
         htmlContent: processedHtml
       }
     });

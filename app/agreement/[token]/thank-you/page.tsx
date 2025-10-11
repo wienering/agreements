@@ -476,7 +476,7 @@ export default function ThankYouPage() {
                     fontSize: '14px',
                     color: isDark ? '#94a3b8' : '#64748b'
                   }}>
-                    ${agreement.client.packagePrice.toFixed(2)}
+                    ${typeof agreement.client.packagePrice === 'number' ? agreement.client.packagePrice.toFixed(2) : agreement.client.packagePrice}
                   </p>
                 )}
               </div>

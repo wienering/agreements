@@ -120,6 +120,14 @@ export async function POST(request: NextRequest) {
       // Don't fail the signing process if email fails
     }
 
+    // Send thank you email to the client
+    try {
+      await sendClientThankYouEmail(updatedAgreement, request);
+    } catch (emailError) {
+      console.error('Failed to send client thank you email:', emailError);
+      // Don't fail the signing process if email fails
+    }
+
     return NextResponse.json({
       message: 'Agreement signed successfully',
       agreement: updatedAgreement
@@ -286,6 +294,167 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
     console.log('Signed agreement notification sent successfully');
   } catch (error) {
     console.error('Failed to send notification email:', error);
+    throw error;
+  }
+}
+
+// Function to send thank you email to client
+async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
+  // Check if SMTP is configured
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log('SMTP not configured, skipping client thank you email');
+    return;
+  }
+
+  // Get the base URL from request headers or environment
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const host = request.headers.get('host') || 'localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+  const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
+
+  // Create email transporter
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_PORT === '465',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+  });
+
+  // Create email content
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #3b82f6; margin: 0; }
+        .content { margin-bottom: 30px; }
+        .agreement-details { 
+          border: 1px solid #eee; 
+          padding: 20px; 
+          border-radius: 8px; 
+          margin: 20px 0; 
+          background-color: #f9f9f9;
+        }
+        .button { 
+          display: inline-block; 
+          background-color: #2563eb !important; 
+          color: white !important; 
+          padding: 18px 36px; 
+          text-decoration: none; 
+          border-radius: 6px; 
+          margin: 10px 5px;
+          font-weight: 700;
+          font-size: 18px;
+          font-family: Arial, sans-serif;
+          text-align: center;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          border: none;
+          transition: all 0.2s ease;
+          min-width: 220px;
+          text-shadow: none;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          letter-spacing: 0.5px;
+        }
+        .button:hover { 
+          background-color: #1d4ed8; 
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+          transform: translateY(-1px);
+        }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
+        .thank-you { background-color: #dbeafe; border: 1px solid #93c5fd; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .next-steps { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .contact-info { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Photobooth Guys</h1>
+          <p>Thank You for Choosing Us!</p>
+        </div>
+        
+        <div class="content">
+          <div class="thank-you">
+            <h2 style="margin: 0 0 16px 0; color: #1e40af; font-size: 28px;">🎉 Thank You, ${agreement.client.firstName}!</h2>
+            <p style="margin: 0; font-size: 18px; color: #1e40af; font-weight: 600;">
+              Your agreement has been successfully signed and we're excited to work with you!
+            </p>
+          </div>
+          
+          <p>Dear ${agreement.client.firstName},</p>
+          
+          <p>Thank you for choosing <strong>Photobooth Guys</strong> for your special event! We're thrilled to be part of your celebration and look forward to creating amazing memories together.</p>
+          
+          <div class="agreement-details">
+            <h3>Your Agreement Details:</h3>
+            <p><strong>Event Type:</strong> ${agreement.client.eventType || 'To be confirmed'}</p>
+            <p><strong>Event Date:</strong> ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'To be confirmed'}</p>
+            <p><strong>Package:</strong> ${agreement.client.eventPackage || 'Standard Package'}</p>
+            ${agreement.client.packagePrice ? `<p><strong>Investment:</strong> $${Number(agreement.client.packagePrice).toFixed(2)}</p>` : ''}
+            <p><strong>Agreement ID:</strong> ${agreement.id}</p>
+            <p><strong>Signed On:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
+          </div>
+          
+          <div class="next-steps">
+            <h3>What's Next?</h3>
+            <ul>
+              <li><strong>Template Selection:</strong> Choose your photo booth template to match your event theme</li>
+              <li><strong>Event Planning:</strong> We'll be in touch closer to your event date to finalize details</li>
+              <li><strong>Questions:</strong> Don't hesitate to reach out if you have any questions</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${agreementUrl}" class="button">View Your Agreement</a>
+          </div>
+          
+          <div class="contact-info">
+            <h3>Need Help or Have Questions?</h3>
+            <p>Our team is here to help make your event perfect!</p>
+            <p><strong>📧 Email:</strong> info@photoboothguys.ca</p>
+            <p><strong>📞 Phone:</strong> 647-378-5332</p>
+            <p><strong>🌐 Website:</strong> <a href="https://photoboothguys.ca" style="color: #3b82f6;">photoboothguys.ca</a></p>
+          </div>
+          
+          <p>Once again, thank you for choosing Photobooth Guys. We can't wait to make your event unforgettable!</p>
+          
+          <p>Best regards,<br>
+          <strong>The Photobooth Guys Team</strong></p>
+        </div>
+        
+        <div class="footer">
+          <p>Photobooth Guys - Creating Memories, One Photo at a Time</p>
+          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Send email
+  const mailOptions = {
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: agreement.client.email,
+    subject: `Thank You for Choosing Photobooth Guys - ${agreement.template.title}`,
+    html: emailHtml,
+  };
+
+  try {
+    await transporter.verify();
+    await transporter.sendMail(mailOptions);
+    console.log('Client thank you email sent successfully to:', agreement.client.email);
+  } catch (error) {
+    console.error('Failed to send client thank you email:', error);
     throw error;
   }
 }

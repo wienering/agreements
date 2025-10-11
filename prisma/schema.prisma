@@ -38,6 +38,7 @@ model Client {
 model Template {
   id           String           @id @default(cuid())
   title        String
+  internalTitle String?         // Internal name for organization (not shown to clients)
   htmlContent  String
   version      Int              @default(1)
   fieldsSchema Json

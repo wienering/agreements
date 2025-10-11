@@ -17,6 +17,28 @@ export async function PUT(request: NextRequest) {
     const validatedData = updateStatusSchema.parse(body);
     console.log('Validated data:', validatedData);
 
+    // First check if the agreement exists and get its current status
+    const existingAgreement = await prisma.agreement.findUnique({
+      where: { id: validatedData.id },
+      select: { status: true }
+    });
+
+    if (!existingAgreement) {
+      return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
+    }
+
+    // Prevent status changes to signed agreements (except for specific allowed transitions)
+    if (existingAgreement.status === 'SIGNED') {
+      // Only allow certain status changes from SIGNED
+      const allowedTransitions = ['COMPLETED', 'CANCELLED'];
+      if (!allowedTransitions.includes(validatedData.status)) {
+        console.error('Attempted to change status of signed agreement:', validatedData.id, 'from', existingAgreement.status, 'to', validatedData.status);
+        return NextResponse.json({ 
+          error: 'Cannot change status of signed agreements except to COMPLETED or CANCELLED. Once an agreement is signed, it becomes legally binding.' 
+        }, { status: 403 });
+      }
+    }
+
     const updatedAgreement = await prisma.agreement.update({
       where: { id: validatedData.id },
       data: {

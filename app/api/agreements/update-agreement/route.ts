@@ -16,15 +16,23 @@ export async function PUT(request: NextRequest) {
     console.log('Validated data:', validatedData);
     const id = validatedData.id;
 
-    // First get the agreement to find the template ID
+    // First get the agreement to find the template ID and check status
     const agreement = await prisma.agreement.findUnique({
       where: { id },
-      select: { templateId: true }
+      select: { templateId: true, status: true }
     });
 
     if (!agreement) {
       console.error('Agreement not found:', id);
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
+    }
+
+    // Prevent modifications to signed agreements
+    if (agreement.status === 'SIGNED') {
+      console.error('Attempted to modify signed agreement:', id);
+      return NextResponse.json({ 
+        error: 'Cannot modify signed agreements. Once an agreement is signed, it becomes legally binding and immutable.' 
+      }, { status: 403 });
     }
 
     console.log('Found agreement, template ID:', agreement.templateId);
