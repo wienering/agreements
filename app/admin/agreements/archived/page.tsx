@@ -33,6 +33,7 @@ export default function ArchivedAgreementsPage() {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [deletingAgreement, setDeletingAgreement] = useState<Record<string, boolean>>({});
   const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
@@ -98,6 +99,36 @@ export default function ArchivedAgreementsPage() {
       showToast('Error unarchiving agreement', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAgreement = async (agreementId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this archived agreement? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingAgreement(prev => ({ ...prev, [agreementId]: true }));
+    try {
+      const response = await fetch(`/api/agreements/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: agreementId }),
+      });
+
+      if (response.ok) {
+        setAgreements(agreements.filter(a => a.id !== agreementId));
+        showToast('Archived agreement deleted successfully!', 'success');
+      } else {
+        const error = await response.json();
+        showToast(`Error: ${error.error || 'Failed to delete agreement'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting agreement:', error);
+      showToast('Failed to delete agreement', 'error');
+    } finally {
+      setDeletingAgreement(prev => ({ ...prev, [agreementId]: false }));
     }
   };
 
@@ -318,6 +349,34 @@ export default function ArchivedAgreementsPage() {
                     title="Unarchive this agreement"
                   >
                     {loading ? 'Unarchiving...' : 'Unarchive'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteAgreement(agreement.id)}
+                    disabled={deletingAgreement[agreement.id]}
+                    style={{
+                      backgroundColor: deletingAgreement[agreement.id] ? '#9ca3af' : '#dc2626',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: deletingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!deletingAgreement[agreement.id]) {
+                        e.currentTarget.style.backgroundColor = '#b91c1c';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!deletingAgreement[agreement.id]) {
+                        e.currentTarget.style.backgroundColor = '#dc2626';
+                      }
+                    }}
+                    title="Permanently delete this archived agreement"
+                  >
+                    {deletingAgreement[agreement.id] ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>
