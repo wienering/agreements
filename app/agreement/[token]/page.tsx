@@ -1535,7 +1535,11 @@ export default function ClientAgreementPage() {
               fontSize: '16px',
               fontFamily: 'Georgia, serif'
             }}
-            dangerouslySetInnerHTML={{ __html: agreement.template.htmlContent }}
+            dangerouslySetInnerHTML={{ 
+              __html: agreement.status === 'SIGNED' && agreement.mergedHtml 
+                ? agreement.mergedHtml 
+                : agreement.template.htmlContent 
+            }}
           />
         </div>
 
