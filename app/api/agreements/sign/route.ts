@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
       processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
       processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${Number(client.packagePrice).toFixed(2)}` : '');
       
       // Replace agreement fields
       processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
@@ -96,6 +97,8 @@ export async function POST(request: NextRequest) {
 
     // Create a snapshot of the agreement content at the time of signing
     const signedHtmlContent = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    console.log('🔍 SIGN API: Created snapshot length:', signedHtmlContent.length);
+    console.log('🔍 SIGN API: Snapshot preview:', signedHtmlContent.substring(0, 200) + '...');
 
     // Update agreement status to SIGNED and save the snapshot
     const updatedAgreement = await prisma.agreement.update({

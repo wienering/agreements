@@ -64,11 +64,17 @@ export async function GET(request: NextRequest) {
     // For signed agreements, use the saved snapshot to prevent changes
     // For unsigned agreements, process the template in real-time
     let processedHtml;
+    console.log('🔍 CLIENT API: Agreement status:', agreement.status);
+    console.log('🔍 CLIENT API: Has mergedHtml:', !!agreement.mergedHtml);
+    console.log('🔍 CLIENT API: mergedHtml length:', agreement.mergedHtml?.length || 0);
+    
     if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
       // Use the saved snapshot for signed agreements
+      console.log('🔍 CLIENT API: Using saved snapshot for signed agreement');
       processedHtml = agreement.mergedHtml;
     } else {
       // Process the template in real-time for unsigned agreements
+      console.log('🔍 CLIENT API: Processing template in real-time');
       processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
     }
 
