@@ -67,14 +67,28 @@ export async function GET(request: NextRequest) {
     console.log('🔍 CLIENT API: Agreement status:', agreement.status);
     console.log('🔍 CLIENT API: Has mergedHtml:', !!agreement.mergedHtml);
     console.log('🔍 CLIENT API: mergedHtml length:', agreement.mergedHtml?.length || 0);
+    console.log('🔍 CLIENT API: Template content length:', agreement.template.htmlContent?.length || 0);
     
-    if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
-      // Use the saved snapshot for signed agreements
-      console.log('🔍 CLIENT API: Using saved snapshot for signed agreement');
-      processedHtml = agreement.mergedHtml;
+    if (agreement.status === 'SIGNED') {
+      if (agreement.mergedHtml && agreement.mergedHtml.trim().length > 0) {
+        // Use the saved snapshot for signed agreements
+        console.log('🔍 CLIENT API: Using saved snapshot for signed agreement');
+        console.log('🔍 CLIENT API: Snapshot is different from template:', agreement.mergedHtml !== agreement.template.htmlContent);
+        processedHtml = agreement.mergedHtml;
+      } else {
+        // Fallback: create snapshot now if it's missing (shouldn't happen)
+        console.log('🔍 CLIENT API: WARNING - Signed agreement missing snapshot, creating one now');
+        processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+        
+        // Save the snapshot for future use
+        await prisma.agreement.update({
+          where: { id: agreement.id },
+          data: { mergedHtml: processedHtml }
+        });
+      }
     } else {
       // Process the template in real-time for unsigned agreements
-      console.log('🔍 CLIENT API: Processing template in real-time');
+      console.log('🔍 CLIENT API: Processing template in real-time for unsigned agreement');
       processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
     }
 
