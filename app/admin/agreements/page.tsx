@@ -126,13 +126,13 @@ export default function AgreementsPage() {
         }));
         // Show the create form
         setShowCreateForm(true);
-        // Clean up URL parameters
-        window.history.replaceState({}, '', '/admin/agreements');
+        // Clean up URL parameters using Next.js router to prevent double loading
+        router.replace('/admin/agreements', { scroll: false });
       } catch (error) {
         console.error('Error parsing client data from URL:', error);
       }
     }
-  }, []);
+  }, [router]);
 
   const fetchAgreements = async () => {
     try {
@@ -773,7 +773,7 @@ export default function AgreementsPage() {
                     <option value="">Select a template</option>
                     {templates.map(template => (
                       <option key={template.id} value={template.id}>
-                        {template.title}
+                        {template.internalTitle || template.title}
                       </option>
                     ))}
                   </select>
