@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
@@ -24,6 +24,7 @@ interface Client {
 }
 
 export default function ClientsPage() {
+  const hasFetchedData = useRef(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,9 @@ export default function ClientsPage() {
 
   // Fetch clients on component mount
   useEffect(() => {
+    if (hasFetchedData.current) return;
+    hasFetchedData.current = true;
+    
     fetchClients();
   }, []);
 

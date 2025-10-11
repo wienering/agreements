@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
@@ -42,6 +42,7 @@ interface WarningData {
 }
 
 export default function AgreementsPage() {
+  const hasFetchedData = useRef(false);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -104,6 +105,9 @@ export default function AgreementsPage() {
 
   // Fetch data on component mount
   useEffect(() => {
+    if (hasFetchedData.current) return;
+    hasFetchedData.current = true;
+    
     fetchAgreements();
     fetchClients();
     fetchTemplates();
