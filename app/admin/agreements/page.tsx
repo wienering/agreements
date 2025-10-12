@@ -7,6 +7,9 @@ import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import SearchableSelect from '../../components/SearchableSelect';
 
+// Module-level variable to prevent double loading even across component remounts
+let hasLoadedData = false;
+
 interface Agreement {
   id: string;
   uniqueToken: string;
@@ -105,8 +108,18 @@ export default function AgreementsPage() {
 
   // Fetch data on component mount
   useEffect(() => {
-    if (hasFetchedData.current) return;
+    console.log('🔄 Agreements Page: useEffect triggered');
+    console.log('   - hasLoadedData (module-level):', hasLoadedData);
+    console.log('   - hasFetchedData.current (ref):', hasFetchedData.current);
+    
+    if (hasLoadedData || hasFetchedData.current) {
+      console.log('⏭️ Agreements Page: Skipping fetch - already loaded');
+      return;
+    }
+    
+    hasLoadedData = true;
     hasFetchedData.current = true;
+    console.log('📡 Agreements Page: Starting data fetch...');
     
     fetchAgreements();
     fetchClients();
