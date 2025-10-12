@@ -149,6 +149,11 @@ export async function POST(request: NextRequest) {
               line-height: 1.6;
               margin-bottom: 20px;
               text-align: justify;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+              overflow-wrap: anywhere;
+              max-width: 100%;
+              word-break: break-word;
             }
             .agreement-content p {
               margin: 8px 0;
@@ -163,6 +168,10 @@ export async function POST(request: NextRequest) {
             }
             .agreement-content li {
               margin: 4px 0;
+            }
+            .agreement-content * {
+              word-wrap: break-word;
+              overflow-wrap: anywhere;
             }
             .signature-section {
               margin-top: 30px;

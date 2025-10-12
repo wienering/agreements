@@ -436,7 +436,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
         </div>
         
         <div class="footer">
-          <p>Photobooth Guys - Creating Memories, One Photo at a Time</p>
+          <p>Photobooth Guys</p>
           <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
         </div>
       </div>
