@@ -114,11 +114,12 @@ export default function AgreementsPage() {
     fetchWarningData();
   }, []);
 
-  // Handle URL parameters for pre-selecting client
+  // Handle URL parameters for pre-selecting client or template
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const createParam = urlParams.get('create');
     const clientParam = urlParams.get('client');
+    const templateIdParam = urlParams.get('templateId');
     
     if (createParam === 'true' && clientParam) {
       try {
@@ -141,6 +142,22 @@ export default function AgreementsPage() {
         }
       } catch (error) {
         console.error('Error parsing client data from URL:', error);
+      }
+    } else if (templateIdParam) {
+      // Set the template ID in the new agreement form
+      setNewAgreement(prev => ({
+        ...prev,
+        templateId: templateIdParam
+      }));
+      
+      // Wait a bit for data to load before showing form
+      setTimeout(() => {
+        setShowCreateForm(true);
+      }, 100);
+      
+      // Clean up URL parameters
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/admin/agreements');
       }
     }
   }, []);
