@@ -42,25 +42,13 @@ interface WarningData {
 }
 
 export default function AgreementsPage() {
-  const mountId = useRef(`mount-${Date.now()}-${Math.random()}`);
   const hasFetchedData = useRef(false);
-  const isLoadingData = useRef(false);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [warningData, setWarningData] = useState<WarningData | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  console.log(`🔷 [${mountId.current}] Component render`);
-  
-  // Track unmount
-  useEffect(() => {
-    console.log(`✅ [${mountId.current}] Component MOUNTED`);
-    return () => {
-      console.log(`❌ [${mountId.current}] Component UNMOUNTED`);
-    };
-  }, []);
   const [sendingToClient, setSendingToClient] = useState<Record<string, boolean>>({});
   const [deletingAgreement, setDeletingAgreement] = useState<Record<string, boolean>>({});
   const [archivingAgreement, setArchivingAgreement] = useState<Record<string, boolean>>({});
@@ -117,78 +105,13 @@ export default function AgreementsPage() {
 
   // Fetch data on component mount
   useEffect(() => {
-    const timestamp = new Date().toISOString();
-    const cacheKey = 'agreements_page_cache';
-    const cacheTimestamp = 'agreements_page_cache_time';
-    const cacheDuration = 30000; // 30 seconds
-    
-    console.log(`🔄 [${mountId.current}] useEffect triggered at ${timestamp}`);
-    console.log(`   - hasFetchedData.current: ${hasFetchedData.current}`);
-    console.log(`   - isLoadingData.current: ${isLoadingData.current}`);
-    
-    // Check if we have cached data
-    try {
-      const cachedData = sessionStorage.getItem(cacheKey);
-      const cachedTime = sessionStorage.getItem(cacheTimestamp);
-      
-      if (cachedData && cachedTime) {
-        const age = Date.now() - parseInt(cachedTime);
-        if (age < cacheDuration) {
-          console.log(`💾 [${mountId.current}] Using cached data (age: ${age}ms)`);
-          const data = JSON.parse(cachedData);
-          setAgreements(data.agreements || []);
-          setClients(data.clients || []);
-          setTemplates(data.templates || []);
-          setWarningData(data.warningData || null);
-          hasFetchedData.current = true;
-          return;
-        } else {
-          console.log(`🗑️ [${mountId.current}] Cache expired (age: ${age}ms), clearing`);
-          sessionStorage.removeItem(cacheKey);
-          sessionStorage.removeItem(cacheTimestamp);
-        }
-      }
-    } catch (error) {
-      console.warn(`⚠️ [${mountId.current}] Error reading cache:`, error);
-    }
-    
-    // Skip if already fetched in this component instance OR currently loading
-    if (hasFetchedData.current || isLoadingData.current) {
-      console.log(`⏭️ [${mountId.current}] SKIPPING fetch - already loaded or loading`);
-      return;
-    }
-    
-    // Mark as loading and fetched
-    isLoadingData.current = true;
+    if (hasFetchedData.current) return;
     hasFetchedData.current = true;
-    console.log(`📡 [${mountId.current}] STARTING data fetch...`);
-    console.log(`   Setting isLoadingData = true, hasFetchedData = true`);
     
-    // Fetch all data
-    Promise.all([
-      fetchAgreements(),
-      fetchClients(),
-      fetchTemplates(),
-      fetchWarningData()
-    ]).then(([agreementsData, clientsData, templatesData, warningDataData]) => {
-      // Cache the data after successful fetch
-      try {
-        const dataToCache = {
-          agreements: agreementsData,
-          clients: clientsData,
-          templates: templatesData,
-          warningData: warningDataData
-        };
-        sessionStorage.setItem(cacheKey, JSON.stringify(dataToCache));
-        sessionStorage.setItem(cacheTimestamp, Date.now().toString());
-        console.log(`💾 [${mountId.current}] Data cached successfully`);
-      } catch (error) {
-        console.warn(`⚠️ [${mountId.current}] Error caching data:`, error);
-      }
-    }).finally(() => {
-      isLoadingData.current = false;
-      console.log(`✅ [${mountId.current}] ALL data fetch completed, isLoadingData = false`);
-    });
+    fetchAgreements();
+    fetchClients();
+    fetchTemplates();
+    fetchWarningData();
   }, []);
 
   // Handle URL parameters for pre-selecting client
@@ -196,16 +119,10 @@ export default function AgreementsPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const createParam = urlParams.get('create');
     const clientParam = urlParams.get('client');
-    const sessionKey = 'pending_agreement_client';
     
-    // Check URL params first
     if (createParam === 'true' && clientParam) {
       try {
         const clientData = JSON.parse(decodeURIComponent(clientParam));
-        console.log(`🔗 [${mountId.current}] URL params found, client ID:`, clientData.id);
-        
-        // Store in sessionStorage for persistence across remounts
-        sessionStorage.setItem(sessionKey, JSON.stringify(clientData));
         
         // Set the client ID in the new agreement form
         setNewAgreement(prev => ({
@@ -214,110 +131,66 @@ export default function AgreementsPage() {
         }));
         
         // Wait a bit for data to load before showing form
-        // This ensures clients list is populated for the dropdown
         setTimeout(() => {
-          console.log(`📝 [${mountId.current}] Opening create form with client ${clientData.id}`);
           setShowCreateForm(true);
         }, 100);
         
-        // Clean up URL parameters without triggering a navigation/reload
+        // Clean up URL parameters
         if (typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/admin/agreements');
         }
       } catch (error) {
-        console.error(`❌ [${mountId.current}] Error parsing client data from URL:`, error);
-      }
-    } else {
-      // Check sessionStorage for pending client (in case of remount)
-      try {
-        const storedClientData = sessionStorage.getItem(sessionKey);
-        if (storedClientData) {
-          const clientData = JSON.parse(storedClientData);
-          console.log(`💾 [${mountId.current}] Found pending client in sessionStorage:`, clientData.id);
-          
-          // Set the client ID in the new agreement form
-          setNewAgreement(prev => ({
-            ...prev,
-            clientId: clientData.id
-          }));
-          
-          // Wait a bit for data to load before showing form
-          setTimeout(() => {
-            console.log(`📝 [${mountId.current}] Opening create form with client ${clientData.id}`);
-            setShowCreateForm(true);
-          }, 100);
-          
-          // Clear from sessionStorage after using it
-          sessionStorage.removeItem(sessionKey);
-        }
-      } catch (error) {
-        console.error(`❌ [${mountId.current}] Error reading stored client data:`, error);
+        console.error('Error parsing client data from URL:', error);
       }
     }
   }, []);
 
   const fetchAgreements = async () => {
-    console.log(`📡 [${mountId.current}] fetchAgreements called`);
     try {
       const response = await fetch('/api/agreements');
       if (response.ok) {
         const data = await response.json();
         setAgreements(data);
-        console.log(`✅ [${mountId.current}] fetchAgreements completed`);
-        return data;
       }
     } catch (error) {
-      console.error(`❌ [${mountId.current}] Error fetching agreements:`, error);
+      console.error('Error fetching agreements:', error);
     }
-    return [];
   };
 
   const fetchClients = async () => {
-    console.log(`📡 [${mountId.current}] fetchClients called`);
     try {
       const response = await fetch('/api/clients');
       if (response.ok) {
         const data = await response.json();
         setClients(data);
-        console.log(`✅ [${mountId.current}] fetchClients completed`);
-        return data;
       }
     } catch (error) {
-      console.error(`❌ [${mountId.current}] Error fetching clients:`, error);
+      console.error('Error fetching clients:', error);
     }
-    return [];
   };
 
   const fetchTemplates = async () => {
-    console.log(`📡 [${mountId.current}] fetchTemplates called`);
     try {
       const response = await fetch('/api/templates');
       if (response.ok) {
         const data = await response.json();
         setTemplates(data);
-        console.log(`✅ [${mountId.current}] fetchTemplates completed`);
-        return data;
       }
     } catch (error) {
-      console.error(`❌ [${mountId.current}] Error fetching templates:`, error);
+      console.error('Error fetching templates:', error);
     }
-    return [];
   };
 
   const fetchWarningData = async () => {
-    console.log(`📡 [${mountId.current}] fetchWarningData called`);
     try {
       const response = await fetch('/api/analytics/warnings');
       if (response.ok) {
         const data = await response.json();
         setWarningData(data);
-        console.log(`✅ [${mountId.current}] fetchWarningData completed`);
-        return data;
       }
     } catch (error) {
-      console.error(`❌ [${mountId.current}] Error fetching warning data:`, error);
+      console.error('Error fetching warning data:', error);
     }
-    return null;
   };
 
   const getAgreementWarningType = (agreement: Agreement) => {
