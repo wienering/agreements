@@ -118,9 +118,39 @@ export default function AgreementsPage() {
   // Fetch data on component mount
   useEffect(() => {
     const timestamp = new Date().toISOString();
+    const cacheKey = 'agreements_page_cache';
+    const cacheTimestamp = 'agreements_page_cache_time';
+    const cacheDuration = 30000; // 30 seconds
+    
     console.log(`🔄 [${mountId.current}] useEffect triggered at ${timestamp}`);
     console.log(`   - hasFetchedData.current: ${hasFetchedData.current}`);
     console.log(`   - isLoadingData.current: ${isLoadingData.current}`);
+    
+    // Check if we have cached data
+    try {
+      const cachedData = sessionStorage.getItem(cacheKey);
+      const cachedTime = sessionStorage.getItem(cacheTimestamp);
+      
+      if (cachedData && cachedTime) {
+        const age = Date.now() - parseInt(cachedTime);
+        if (age < cacheDuration) {
+          console.log(`💾 [${mountId.current}] Using cached data (age: ${age}ms)`);
+          const data = JSON.parse(cachedData);
+          setAgreements(data.agreements || []);
+          setClients(data.clients || []);
+          setTemplates(data.templates || []);
+          setWarningData(data.warningData || null);
+          hasFetchedData.current = true;
+          return;
+        } else {
+          console.log(`🗑️ [${mountId.current}] Cache expired (age: ${age}ms), clearing`);
+          sessionStorage.removeItem(cacheKey);
+          sessionStorage.removeItem(cacheTimestamp);
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️ [${mountId.current}] Error reading cache:`, error);
+    }
     
     // Skip if already fetched in this component instance OR currently loading
     if (hasFetchedData.current || isLoadingData.current) {
@@ -140,7 +170,22 @@ export default function AgreementsPage() {
       fetchClients(),
       fetchTemplates(),
       fetchWarningData()
-    ]).finally(() => {
+    ]).then(([agreementsData, clientsData, templatesData, warningDataData]) => {
+      // Cache the data after successful fetch
+      try {
+        const dataToCache = {
+          agreements: agreementsData,
+          clients: clientsData,
+          templates: templatesData,
+          warningData: warningDataData
+        };
+        sessionStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        sessionStorage.setItem(cacheTimestamp, Date.now().toString());
+        console.log(`💾 [${mountId.current}] Data cached successfully`);
+      } catch (error) {
+        console.warn(`⚠️ [${mountId.current}] Error caching data:`, error);
+      }
+    }).finally(() => {
       isLoadingData.current = false;
       console.log(`✅ [${mountId.current}] ALL data fetch completed, isLoadingData = false`);
     });
@@ -181,10 +226,12 @@ export default function AgreementsPage() {
         const data = await response.json();
         setAgreements(data);
         console.log(`✅ [${mountId.current}] fetchAgreements completed`);
+        return data;
       }
     } catch (error) {
       console.error(`❌ [${mountId.current}] Error fetching agreements:`, error);
     }
+    return [];
   };
 
   const fetchClients = async () => {
@@ -195,10 +242,12 @@ export default function AgreementsPage() {
         const data = await response.json();
         setClients(data);
         console.log(`✅ [${mountId.current}] fetchClients completed`);
+        return data;
       }
     } catch (error) {
       console.error(`❌ [${mountId.current}] Error fetching clients:`, error);
     }
+    return [];
   };
 
   const fetchTemplates = async () => {
@@ -209,10 +258,12 @@ export default function AgreementsPage() {
         const data = await response.json();
         setTemplates(data);
         console.log(`✅ [${mountId.current}] fetchTemplates completed`);
+        return data;
       }
     } catch (error) {
       console.error(`❌ [${mountId.current}] Error fetching templates:`, error);
     }
+    return [];
   };
 
   const fetchWarningData = async () => {
@@ -223,10 +274,12 @@ export default function AgreementsPage() {
         const data = await response.json();
         setWarningData(data);
         console.log(`✅ [${mountId.current}] fetchWarningData completed`);
+        return data;
       }
     } catch (error) {
       console.error(`❌ [${mountId.current}] Error fetching warning data:`, error);
     }
+    return null;
   };
 
   const getAgreementWarningType = (agreement: Agreement) => {
