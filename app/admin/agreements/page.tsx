@@ -130,13 +130,16 @@ export default function AgreementsPage() {
         }));
         // Show the create form
         setShowCreateForm(true);
-        // Clean up URL parameters using Next.js router to prevent double loading
-        router.replace('/admin/agreements', { scroll: false });
+        // Clean up URL parameters without triggering a navigation/reload
+        // Use window.history.replaceState instead of router.replace to avoid re-render
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/admin/agreements');
+        }
       } catch (error) {
         console.error('Error parsing client data from URL:', error);
       }
     }
-  }, [router]);
+  }, []);
 
   const fetchAgreements = async () => {
     try {
