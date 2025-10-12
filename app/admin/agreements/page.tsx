@@ -1144,6 +1144,32 @@ export default function AgreementsPage() {
                     Edit
                   </button>
                   <button
+                    onClick={() => {
+                      const clientLink = `${window.location.origin}/agreement/${agreement.uniqueToken}`;
+                      window.open(clientLink, '_blank');
+                    }}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                    }}
+                    title="View agreement as client would see it"
+                  >
+                    View Agreement
+                  </button>
+                  <button
                     onClick={() => handleCopyLink(agreement.uniqueToken)}
                     style={{
                       backgroundColor: '#3b82f6',
