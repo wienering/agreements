@@ -42,6 +42,7 @@ interface WarningData {
 }
 
 export default function AgreementsPage() {
+  const mountId = useRef(`mount-${Date.now()}-${Math.random()}`);
   const hasFetchedData = useRef(false);
   const isLoadingData = useRef(false);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
@@ -50,6 +51,16 @@ export default function AgreementsPage() {
   const [warningData, setWarningData] = useState<WarningData | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  console.log(`🔷 [${mountId.current}] Component render`);
+  
+  // Track unmount
+  useEffect(() => {
+    console.log(`✅ [${mountId.current}] Component MOUNTED`);
+    return () => {
+      console.log(`❌ [${mountId.current}] Component UNMOUNTED`);
+    };
+  }, []);
   const [sendingToClient, setSendingToClient] = useState<Record<string, boolean>>({});
   const [deletingAgreement, setDeletingAgreement] = useState<Record<string, boolean>>({});
   const [archivingAgreement, setArchivingAgreement] = useState<Record<string, boolean>>({});
@@ -106,20 +117,22 @@ export default function AgreementsPage() {
 
   // Fetch data on component mount
   useEffect(() => {
-    console.log('🔄 Agreements Page: useEffect triggered');
-    console.log('   - hasFetchedData.current:', hasFetchedData.current);
-    console.log('   - isLoadingData.current:', isLoadingData.current);
+    const timestamp = new Date().toISOString();
+    console.log(`🔄 [${mountId.current}] useEffect triggered at ${timestamp}`);
+    console.log(`   - hasFetchedData.current: ${hasFetchedData.current}`);
+    console.log(`   - isLoadingData.current: ${isLoadingData.current}`);
     
     // Skip if already fetched in this component instance OR currently loading
     if (hasFetchedData.current || isLoadingData.current) {
-      console.log('⏭️ Agreements Page: Skipping fetch - already loaded or loading');
+      console.log(`⏭️ [${mountId.current}] SKIPPING fetch - already loaded or loading`);
       return;
     }
     
     // Mark as loading and fetched
     isLoadingData.current = true;
     hasFetchedData.current = true;
-    console.log('📡 Agreements Page: Starting data fetch...');
+    console.log(`📡 [${mountId.current}] STARTING data fetch...`);
+    console.log(`   Setting isLoadingData = true, hasFetchedData = true`);
     
     // Fetch all data
     Promise.all([
@@ -129,7 +142,7 @@ export default function AgreementsPage() {
       fetchWarningData()
     ]).finally(() => {
       isLoadingData.current = false;
-      console.log('✅ Agreements Page: Data fetch completed');
+      console.log(`✅ [${mountId.current}] ALL data fetch completed, isLoadingData = false`);
     });
   }, []);
 
@@ -161,50 +174,58 @@ export default function AgreementsPage() {
   }, []);
 
   const fetchAgreements = async () => {
+    console.log(`📡 [${mountId.current}] fetchAgreements called`);
     try {
       const response = await fetch('/api/agreements');
       if (response.ok) {
         const data = await response.json();
         setAgreements(data);
+        console.log(`✅ [${mountId.current}] fetchAgreements completed`);
       }
     } catch (error) {
-      console.error('Error fetching agreements:', error);
+      console.error(`❌ [${mountId.current}] Error fetching agreements:`, error);
     }
   };
 
   const fetchClients = async () => {
+    console.log(`📡 [${mountId.current}] fetchClients called`);
     try {
       const response = await fetch('/api/clients');
       if (response.ok) {
         const data = await response.json();
         setClients(data);
+        console.log(`✅ [${mountId.current}] fetchClients completed`);
       }
     } catch (error) {
-      console.error('Error fetching clients:', error);
+      console.error(`❌ [${mountId.current}] Error fetching clients:`, error);
     }
   };
 
   const fetchTemplates = async () => {
+    console.log(`📡 [${mountId.current}] fetchTemplates called`);
     try {
       const response = await fetch('/api/templates');
       if (response.ok) {
         const data = await response.json();
         setTemplates(data);
+        console.log(`✅ [${mountId.current}] fetchTemplates completed`);
       }
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      console.error(`❌ [${mountId.current}] Error fetching templates:`, error);
     }
   };
 
   const fetchWarningData = async () => {
+    console.log(`📡 [${mountId.current}] fetchWarningData called`);
     try {
       const response = await fetch('/api/analytics/warnings');
       if (response.ok) {
         const data = await response.json();
         setWarningData(data);
+        console.log(`✅ [${mountId.current}] fetchWarningData completed`);
       }
     } catch (error) {
-      console.error('Error fetching warning data:', error);
+      console.error(`❌ [${mountId.current}] Error fetching warning data:`, error);
     }
   };
 
