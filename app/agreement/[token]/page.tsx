@@ -224,8 +224,7 @@ export default function ClientAgreementPage() {
     
     setIsDownloading(true);
     try {
-      // Try PDFKit endpoint first (most reliable)
-      let response = await fetch('/api/agreements/pdf-pdfkit', {
+      const response = await fetch('/api/agreements/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -235,52 +234,17 @@ export default function ClientAgreementPage() {
         }),
       });
 
-      // If PDFKit fails, try the manual PDF endpoint
-      if (!response.ok) {
-        console.log('PDFKit endpoint failed, trying manual PDF...');
-        response = await fetch('/api/agreements/pdf-js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token,
-          }),
-        });
-      }
-
-      // If manual PDF fails, try the original Puppeteer endpoint
-      if (!response.ok) {
-        console.log('Manual PDF endpoint failed, trying Puppeteer...');
-        response = await fetch('/api/agreements/pdf', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token,
-          }),
-        });
-      }
-
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const isTextFile = response.headers.get('content-type')?.includes('text/plain');
-        const extension = isTextFile ? 'txt' : 'pdf';
-        a.download = `agreement-${agreement.client.firstName}-${agreement.client.lastName}-${agreement.id}.${extension}`;
+        a.download = `agreement-${agreement.client.firstName}-${agreement.client.lastName}-${agreement.id}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
-        if (isTextFile) {
-          alert('PDF generation is temporarily unavailable. A text version has been downloaded instead.');
-        } else {
-          alert('PDF downloaded successfully!');
-        }
+        alert('PDF downloaded successfully!');
       } else {
         alert('Failed to download agreement. Please try again later.');
       }
