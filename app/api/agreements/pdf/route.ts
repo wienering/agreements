@@ -44,9 +44,9 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
   
   // Set up fonts and margins
   const pageWidth = 210; // A4 width in mm
-  const margin = 20;
+  const margin = 25; // Increased left margin
   const maxWidth = pageWidth - (margin * 2);
-  let yPosition = 20;
+  let yPosition = 25; // Start below top margin
 
   // Helper function to add text with word wrapping
   const addText = (text: string, fontSize: number = 10, isBold: boolean = false, align: 'left' | 'center' | 'right' = 'left') => {
@@ -61,9 +61,18 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
     lines.forEach((line: string) => {
       if (yPosition > 280) { // Start new page if needed
         doc.addPage();
-        yPosition = 20;
+        yPosition = 25; // Reset to top margin
       }
-      doc.text(line, margin, yPosition, { align });
+      
+      // Calculate x position based on alignment
+      let xPosition = margin;
+      if (align === 'center') {
+        xPosition = pageWidth / 2;
+      } else if (align === 'right') {
+        xPosition = pageWidth - margin;
+      }
+      
+      doc.text(line, xPosition, yPosition, { align });
       yPosition += fontSize * 0.4; // Line height
     });
   };
@@ -76,26 +85,26 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
 
   // Client Information
   addText('CLIENT INFORMATION:', 12, true);
-  yPosition += 2;
+  yPosition += 3;
   addText(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
   addText(`Email: ${agreement.client.email}`);
   addText(`Phone: ${agreement.client.phone || 'Not provided'}`);
   addText(`Event Date: ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString() : 'Not specified'}`);
-  yPosition += 5;
+  yPosition += 8;
 
   // Event Details
   addText('EVENT DETAILS:', 12, true);
-  yPosition += 2;
+  yPosition += 3;
   addText(`Event Type: ${agreement.client.eventType || 'Not specified'}`);
   addText(`Location: ${agreement.client.eventLocation || 'Not specified'}`);
   addText(`Start Time: ${agreement.client.eventStartTime || 'Not specified'}`);
   addText(`Duration: ${agreement.client.eventDuration || 'Not specified'}`);
   addText(`Package: ${agreement.client.eventPackage || 'Not specified'}`);
-  yPosition += 5;
+  yPosition += 8;
 
   // Agreement Content
   addText('AGREEMENT CONTENT:', 12, true);
-  yPosition += 2;
+  yPosition += 3;
   
   // Split text into lines and add each line with proper wrapping
   const lines = formattedText.split('\n');
@@ -110,7 +119,7 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
 
   // Digital Signature
   addText('DIGITAL SIGNATURE:', 12, true);
-  yPosition += 2;
+  yPosition += 3;
   addText('This agreement has been digitally signed by:');
   addText(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
   addText(`Email: ${agreement.client.email}`);
@@ -118,7 +127,7 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
   addText(`IP Address: ${agreement.signedFromIP || 'N/A'}`);
   addText(`Agreement ID: ${agreement.id}`);
   addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
-  yPosition += 10;
+  yPosition += 8;
 
   // Footer
   addText('This document is legally binding and represents the complete agreement between the parties.', 8, false, 'center');
