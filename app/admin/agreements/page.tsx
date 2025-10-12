@@ -7,9 +7,6 @@ import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import SearchableSelect from '../../components/SearchableSelect';
 
-// Module-level variable to prevent double loading even across component remounts
-let hasLoadedData = false;
-
 interface Agreement {
   id: string;
   uniqueToken: string;
@@ -46,6 +43,7 @@ interface WarningData {
 
 export default function AgreementsPage() {
   const hasFetchedData = useRef(false);
+  const isLoadingData = useRef(false);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -109,22 +107,30 @@ export default function AgreementsPage() {
   // Fetch data on component mount
   useEffect(() => {
     console.log('🔄 Agreements Page: useEffect triggered');
-    console.log('   - hasLoadedData (module-level):', hasLoadedData);
-    console.log('   - hasFetchedData.current (ref):', hasFetchedData.current);
+    console.log('   - hasFetchedData.current:', hasFetchedData.current);
+    console.log('   - isLoadingData.current:', isLoadingData.current);
     
-    if (hasLoadedData || hasFetchedData.current) {
-      console.log('⏭️ Agreements Page: Skipping fetch - already loaded');
+    // Skip if already fetched in this component instance OR currently loading
+    if (hasFetchedData.current || isLoadingData.current) {
+      console.log('⏭️ Agreements Page: Skipping fetch - already loaded or loading');
       return;
     }
     
-    hasLoadedData = true;
+    // Mark as loading and fetched
+    isLoadingData.current = true;
     hasFetchedData.current = true;
     console.log('📡 Agreements Page: Starting data fetch...');
     
-    fetchAgreements();
-    fetchClients();
-    fetchTemplates();
-    fetchWarningData();
+    // Fetch all data
+    Promise.all([
+      fetchAgreements(),
+      fetchClients(),
+      fetchTemplates(),
+      fetchWarningData()
+    ]).finally(() => {
+      isLoadingData.current = false;
+      console.log('✅ Agreements Page: Data fetch completed');
+    });
   }, []);
 
   // Handle URL parameters for pre-selecting client
