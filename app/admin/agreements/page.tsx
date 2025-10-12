@@ -1145,8 +1145,8 @@ export default function AgreementsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const clientLink = `${window.location.origin}/agreement/${agreement.uniqueToken}`;
-                      window.open(clientLink, '_blank');
+                      const adminPreviewLink = `${window.location.origin}/admin/preview/${agreement.uniqueToken}`;
+                      window.open(adminPreviewLink, '_blank');
                     }}
                     style={{
                       backgroundColor: '#3b82f6',
