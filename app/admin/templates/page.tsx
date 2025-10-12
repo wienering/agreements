@@ -1030,8 +1030,7 @@ export default function TemplatesPage() {
                   padding: '16px',
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc',
                   borderRadius: '6px',
-                  border: `1px solid ${borderColor}`,
-                  minHeight: '80vh'
+                  border: `1px solid ${borderColor}`
                 }}>
                   <RichTextPreview 
                     html={viewingTemplate.htmlContent}
