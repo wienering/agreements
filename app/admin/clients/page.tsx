@@ -26,6 +26,8 @@ interface Client {
 export default function ClientsPage() {
   const hasFetchedData = useRef(false);
   const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -66,6 +68,25 @@ export default function ClientsPage() {
     
     fetchClients();
   }, []);
+
+  // Filter clients based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredClients(clients);
+    } else {
+      const filtered = clients.filter(client => 
+        client.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.eventType && client.eventType.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.eventLocation && client.eventLocation.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.eventPackage && client.eventPackage.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.notes && client.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredClients(filtered);
+    }
+  }, [clients, searchTerm]);
 
   const fetchClients = async () => {
     try {
@@ -280,6 +301,92 @@ export default function ClientsPage() {
           >
             + New Client
           </button>
+        </div>
+
+        {/* Search Bar */}
+        <div style={{
+          backgroundColor: cardBg,
+          border: `1px solid ${borderColor}`,
+          borderRadius: '8px',
+          padding: '16px',
+          marginBottom: '24px'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              flex: 1,
+              width: isMobile ? '100%' : 'auto'
+            }}>
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 20 20" 
+                fill="none" 
+                style={{ color: mutedText }}
+              >
+                <path 
+                  d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16ZM19 19l-4.35-4.35" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search clients by name, email, phone, event details, or notes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '4px',
+                  backgroundColor: cardBg,
+                  color: textColor,
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+              />
+            </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: mutedText,
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Clear search"
+              >
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <div style={{ 
+              marginTop: '8px', 
+              fontSize: '14px', 
+              color: mutedText 
+            }}>
+              {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} found
+            </div>
+          )}
         </div>
 
         {/* Add/Edit Form */}
@@ -656,7 +763,7 @@ export default function ClientsPage() {
         )}
 
         {/* Clients List */}
-        {clients.length === 0 ? (
+        {filteredClients.length === 0 ? (
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
@@ -665,12 +772,12 @@ export default function ClientsPage() {
             textAlign: 'center'
           }}>
             <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
-              No clients found. Add your first client to get started.
+              {searchTerm ? 'No clients found matching your search.' : 'No clients found. Add your first client to get started.'}
             </p>
           </div>
         ) : (
           <div style={{ display: 'grid', gap: '16px' }}>
-            {clients.map(client => (
+            {filteredClients.map(client => (
               <div key={client.id} style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,

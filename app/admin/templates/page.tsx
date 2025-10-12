@@ -5,6 +5,25 @@ import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Template {
   id: string;
@@ -13,6 +32,7 @@ interface Template {
   htmlContent: string;
   fieldsSchema: any;
   version: number;
+  order: number;
   createdAt: string;
 }
 
@@ -34,6 +54,45 @@ export default function TemplatesPage() {
   const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = templates.findIndex((template) => template.id === active.id);
+      const newIndex = templates.findIndex((template) => template.id === over?.id);
+
+      const newTemplates = arrayMove(templates, oldIndex, newIndex);
+      setTemplates(newTemplates);
+
+      // Update order in database
+      try {
+        const templateIds = newTemplates.map(template => template.id);
+        await fetch('/api/templates/reorder', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ templateIds }),
+        });
+        showToast('Templates reordered successfully!');
+      } catch (error) {
+        console.error('Error reordering templates:', error);
+        showToast('Failed to save new order', 'error');
+        // Revert the change
+        fetchTemplates();
+      }
+    }
+  };
 
   // Copy smart field to clipboard
   const copyToClipboard = async (field: string) => {
@@ -109,6 +168,253 @@ export default function TemplatesPage() {
             </svg>
           </div>
         )}
+      </div>
+    );
+  };
+
+  // Sortable Template Item Component
+  const SortableTemplateItem = ({ template }: { template: Template }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: template.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          ...style,
+          backgroundColor: cardBg,
+          border: `1px solid ${borderColor}`,
+          borderRadius: '8px',
+          padding: '20px',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          position: 'relative',
+          transition: 'all 0.2s ease',
+          boxShadow: isDragging ? '0 8px 25px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}
+        onMouseEnter={(e) => {
+          if (!isDragging) {
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            e.currentTarget.style.borderColor = isDark ? '#4b5563' : '#cbd5e1';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isDragging) {
+            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+            e.currentTarget.style.borderColor = borderColor;
+          }
+        }}
+      >
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            width: '24px',
+            height: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'grab',
+            color: isDark ? '#94a3b8' : '#64748b',
+            backgroundColor: isDark ? '#374151' : '#f1f5f9',
+            borderRadius: '4px',
+            border: `1px solid ${borderColor}`,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease',
+            zIndex: 10
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = isDark ? '#4b5563' : '#e2e8f0';
+            e.currentTarget.style.color = isDark ? '#f1f5f9' : '#1e293b';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f1f5f9';
+            e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b';
+          }}
+          title="Drag to reorder"
+        >
+          ⋮⋮
+        </div>
+
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'start', 
+          marginBottom: '12px',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '8px' : '0',
+          paddingRight: '30px' // Make room for drag handle
+        }}>
+          <div>
+            <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
+              {template.internalTitle || template.title}
+            </h3>
+            {template.internalTitle && (
+              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
+                Client Title: {template.title}
+              </p>
+            )}
+            <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+              Version {template.version}
+            </p>
+            <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+              {template.htmlContent.length} characters
+            </p>
+          </div>
+          <span style={{ 
+            fontSize: '12px', 
+            color: mutedText,
+            backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            alignSelf: isMobile ? 'flex-start' : 'auto'
+          }}>
+            Created {new Date(template.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+          </span>
+        </div>
+        
+        {/* Template Preview - Small */}
+        <div style={{ 
+          marginBottom: '12px',
+          padding: '12px',
+          backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+          borderRadius: '6px',
+          border: `1px solid ${borderColor}`,
+          maxHeight: '200px',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          position: 'relative'
+        }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: mutedText, 
+            marginBottom: '8px',
+            fontWeight: '500'
+          }}>
+            Preview:
+          </div>
+          <RichTextPreview 
+            html={template.htmlContent}
+            isDark={isDark}
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              padding: '0',
+              fontSize: '14px',
+              lineHeight: '1.4'
+            }}
+          />
+          {/* Fade overlay at bottom */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '30px',
+            background: `linear-gradient(transparent, ${isDark ? '#0f172a' : '#f8fafc'})`,
+            pointerEvents: 'none'
+          }}></div>
+        </div>
+        
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px',
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
+          <button
+            onClick={() => handleViewTemplate(template)}
+            style={{
+              backgroundColor: '#7c3aed',
+              color: 'white',
+              border: 'none',
+              padding: isMobile ? '10px 16px' : '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              width: isMobile ? '100%' : 'auto',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#6d28d9';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#7c3aed';
+            }}
+            title="View full template content"
+          >
+            View/Edit
+          </button>
+          <button
+            onClick={() => handleUseTemplate(template.id)}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              padding: isMobile ? '10px 16px' : '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              width: isMobile ? '100%' : 'auto',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#2563eb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
+            }}
+            title="Use this template to create an agreement"
+          >
+            Use Template
+          </button>
+          <button
+            onClick={() => handleDeleteTemplate(template.id)}
+            disabled={loading}
+            style={{
+              backgroundColor: loading ? '#9ca3af' : '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: isMobile ? '10px 16px' : '8px 16px',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              width: isMobile ? '100%' : 'auto',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = '#b91c1c';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = '#dc2626';
+              }
+            }}
+            title="Delete this template permanently"
+          >
+            {loading ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
       </div>
     );
   };
@@ -579,179 +885,22 @@ export default function TemplatesPage() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '16px' }}>
-            {templates.map(template => (
-              <div key={template.id} style={{
-                backgroundColor: cardBg,
-                border: `1px solid ${borderColor}`,
-                borderRadius: '8px',
-                padding: '20px'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'start', 
-                  marginBottom: '12px',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? '8px' : '0'
-                }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
-                      {template.internalTitle || template.title}
-                    </h3>
-                    {template.internalTitle && (
-                      <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
-                        Client Title: {template.title}
-                      </p>
-                    )}
-                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                      Version {template.version}
-                    </p>
-                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                      {template.htmlContent.length} characters
-                    </p>
-                  </div>
-                  <span style={{ 
-                    fontSize: '12px', 
-                    color: mutedText,
-                    backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    alignSelf: isMobile ? 'flex-start' : 'auto'
-                  }}>
-                    Created {new Date(template.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
-                  </span>
-                </div>
-                
-                {/* Template Preview - Small */}
-                <div style={{ 
-                  marginBottom: '12px',
-                  padding: '12px',
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                  borderRadius: '6px',
-                  border: `1px solid ${borderColor}`,
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  position: 'relative'
-                }}>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: mutedText, 
-                    marginBottom: '8px',
-                    fontWeight: '500'
-                  }}>
-                    Preview:
-                  </div>
-                  <RichTextPreview 
-                    html={template.htmlContent}
-                    isDark={isDark}
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      padding: '0',
-                      fontSize: '14px',
-                      lineHeight: '1.4'
-                    }}
-                  />
-                  {/* Fade overlay at bottom */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '30px',
-                    background: `linear-gradient(transparent, ${isDark ? '#0f172a' : '#f8fafc'})`,
-                    pointerEvents: 'none'
-                  }}></div>
-                </div>
-                
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '8px',
-                  flexDirection: isMobile ? 'column' : 'row'
-                }}>
-                  <button
-                    onClick={() => handleViewTemplate(template)}
-                    style={{
-                      backgroundColor: '#7c3aed',
-                      color: 'white',
-                      border: 'none',
-                      padding: isMobile ? '10px 16px' : '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#6d28d9';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#7c3aed';
-                    }}
-                    title="View full template content"
-                  >
-                    View/Edit
-                  </button>
-                  <button
-                    onClick={() => handleUseTemplate(template.id)}
-                    style={{
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: isMobile ? '10px 16px' : '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
-                    }}
-                    title="Use this template to create an agreement"
-                  >
-                    Use Template
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTemplate(template.id)}
-                    disabled={loading}
-                    style={{
-                      backgroundColor: loading ? '#9ca3af' : '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      padding: isMobile ? '10px 16px' : '8px 16px',
-                      borderRadius: '4px',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      width: isMobile ? '100%' : 'auto',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#b91c1c';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#dc2626';
-                      }
-                    }}
-                    title="Delete this template permanently"
-                  >
-                    {loading ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={templates.map(template => template.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div style={{ display: 'grid', gap: '16px' }}>
+                {templates.map(template => (
+                  <SortableTemplateItem key={template.id} template={template} />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
 
         {/* View/Edit Template Modal */}

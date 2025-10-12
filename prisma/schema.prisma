@@ -42,6 +42,7 @@ model Template {
   htmlContent  String
   version      Int              @default(1)
   fieldsSchema Json
+  order        Int              @default(0)  // For drag-and-drop reordering
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   agreements   Agreement[]
