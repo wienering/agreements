@@ -45,6 +45,7 @@ export default function TemplatesPage() {
   const [viewingTemplate, setViewingTemplate] = useState<Template | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [expandedPreviews, setExpandedPreviews] = useState<Set<string>>(new Set());
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     internalTitle: '',
@@ -92,6 +93,19 @@ export default function TemplatesPage() {
         fetchTemplates();
       }
     }
+  };
+
+  // Toggle preview expansion
+  const togglePreview = (templateId: string) => {
+    setExpandedPreviews(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(templateId)) {
+        newSet.delete(templateId);
+      } else {
+        newSet.add(templateId);
+      }
+      return newSet;
+    });
   };
 
   // Copy smart field to clipboard
@@ -173,7 +187,7 @@ export default function TemplatesPage() {
   };
 
   // Sortable Template Item Component
-  const SortableTemplateItem = ({ template }: { template: Template }) => {
+  const SortableTemplateItem = ({ template, isExpanded, onTogglePreview }: { template: Template; isExpanded: boolean; onTogglePreview: (templateId: string) => void }) => {
     const {
       attributes,
       listeners,
@@ -289,17 +303,13 @@ export default function TemplatesPage() {
           </span>
         </div>
         
-        {/* Template Preview - Small */}
+        {/* Template Preview - Collapsible */}
         <div style={{ 
           marginBottom: '12px',
           padding: '12px',
           backgroundColor: isDark ? '#0f172a' : '#f8fafc',
           borderRadius: '6px',
-          border: `1px solid ${borderColor}`,
-          maxHeight: '200px',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          position: 'relative'
+          border: `1px solid ${borderColor}`
         }}>
           <div style={{ 
             fontSize: '12px', 
@@ -310,7 +320,7 @@ export default function TemplatesPage() {
             Preview:
           </div>
           <RichTextPreview 
-            html={template.htmlContent}
+            html={isExpanded ? template.htmlContent : template.htmlContent.substring(0, 200) + (template.htmlContent.length > 200 ? '...' : '')}
             isDark={isDark}
             style={{
               backgroundColor: 'transparent',
@@ -320,16 +330,47 @@ export default function TemplatesPage() {
               lineHeight: '1.4'
             }}
           />
-          {/* Fade overlay at bottom */}
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '30px',
-            background: `linear-gradient(transparent, ${isDark ? '#0f172a' : '#f8fafc'})`,
-            pointerEvents: 'none'
-          }}></div>
+          {template.htmlContent.length > 200 && (
+            <button
+              onClick={() => onTogglePreview(template.id)}
+              style={{
+                backgroundColor: 'transparent',
+                color: isDark ? '#60a5fa' : '#3b82f6',
+                border: 'none',
+                padding: '8px 0',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '500',
+                textDecoration: 'underline',
+                marginTop: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = isDark ? '#93c5fd' : '#2563eb';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = isDark ? '#60a5fa' : '#3b82f6';
+              }}
+            >
+              {isExpanded ? (
+                <>
+                  <span>Show Less</span>
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                  </svg>
+                </>
+              ) : (
+                <>
+                  <span>Show More</span>
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </>
+              )}
+            </button>
+          )}
         </div>
         
         <div style={{ 
@@ -896,7 +937,12 @@ export default function TemplatesPage() {
             >
               <div style={{ display: 'grid', gap: '16px' }}>
                 {templates.map(template => (
-                  <SortableTemplateItem key={template.id} template={template} />
+                  <SortableTemplateItem 
+                    key={template.id} 
+                    template={template} 
+                    isExpanded={expandedPreviews.has(template.id)}
+                    onTogglePreview={togglePreview}
+                  />
                 ))}
               </div>
             </SortableContext>
