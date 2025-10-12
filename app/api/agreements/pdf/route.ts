@@ -1,24 +1,135 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import puppeteer from 'puppeteer';
+import PDFDocument from 'pdfkit';
 import { z } from 'zod';
 
-// Fallback PDF generation using HTML to PDF conversion
-const generateFallbackPDF = async (htmlContent: string, clientName: string, clientEmail: string, agreementId: string) => {
-  // For now, return a simple text-based response
-  // In production, you might want to use a service like PDFShift, HTML/CSS to PDF API, or similar
-  const textContent = `
-AGREEMENT - ${clientName}
-Email: ${clientEmail}
-Agreement ID: ${agreementId}
-Generated: ${new Date().toLocaleDateString()}
+// Fallback PDF generation using PDFKit
+const generateFallbackPDF = async (htmlContent: string, clientName: string, clientEmail: string, agreementId: string, agreement: any) => {
+  // Convert HTML to plain text with proper formatting
+  const convertHtmlToText = (html: string) => {
+    return html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<h[1-6][^>]*>/gi, '\n\n')
+      .replace(/<\/h[1-6]>/gi, '\n\n')
+      .replace(/<strong[^>]*>/gi, '')
+      .replace(/<\/strong>/gi, '')
+      .replace(/<b[^>]*>/gi, '')
+      .replace(/<\/b>/gi, '')
+      .replace(/<em[^>]*>/gi, '')
+      .replace(/<\/em>/gi, '')
+      .replace(/<i[^>]*>/gi, '')
+      .replace(/<\/i>/gi, '')
+      .replace(/<ul[^>]*>/gi, '\n')
+      .replace(/<\/ul>/gi, '\n')
+      .replace(/<ol[^>]*>/gi, '\n')
+      .replace(/<\/ol>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<div[^>]*>/gi, '\n')
+      .replace(/<\/div>/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      .replace(/^\s+|\s+$/g, '')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n /g, '\n')
+      .replace(/ \n/g, '\n');
+  };
 
-${htmlContent.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
+  const formattedText = convertHtmlToText(htmlContent);
 
-This is a text version of the agreement. For a properly formatted PDF, please contact support.
-  `;
+  // Create PDF using PDFKit
+  const doc = new PDFDocument({
+    size: 'LETTER',
+    margins: {
+      top: 36,
+      bottom: 36,
+      left: 36,
+      right: 36
+    }
+  });
+
+  // Collect PDF data
+  const chunks: Buffer[] = [];
+  doc.on('data', (chunk) => chunks.push(chunk));
   
-  return Buffer.from(textContent, 'utf-8');
+  // Wait for PDF to finish
+  const pdfPromise = new Promise<Buffer>((resolve) => {
+    doc.on('end', () => {
+      resolve(Buffer.concat(chunks));
+    });
+  });
+
+  // Add header
+  doc.fontSize(20).font('Helvetica-Bold').text('AGREEMENT DOCUMENT', { align: 'center' });
+  doc.moveDown(0.5);
+  
+  doc.fontSize(14).text('Photobooth Guys - Service Agreement', { align: 'center' });
+  doc.moveDown(1.5);
+
+  // Client Information
+  doc.fontSize(12).text('CLIENT INFORMATION:', { underline: true });
+  doc.moveDown(0.3);
+  doc.fontSize(10).text(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
+  doc.text(`Email: ${agreement.client.email}`);
+  doc.text(`Phone: ${agreement.client.phone || 'Not provided'}`);
+  doc.text(`Event Date: ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString() : 'Not specified'}`);
+  doc.moveDown(0.5);
+
+  // Event Details
+  doc.fontSize(12).text('EVENT DETAILS:', { underline: true });
+  doc.moveDown(0.3);
+  doc.fontSize(10).text(`Event Type: ${agreement.client.eventType || 'Not specified'}`);
+  doc.text(`Location: ${agreement.client.eventLocation || 'Not specified'}`);
+  doc.text(`Start Time: ${agreement.client.eventStartTime || 'Not specified'}`);
+  doc.text(`Duration: ${agreement.client.eventDuration || 'Not specified'}`);
+  doc.text(`Package: ${agreement.client.eventPackage || 'Not specified'}`);
+  doc.moveDown(0.5);
+
+  // Agreement Content
+  doc.fontSize(12).text('AGREEMENT CONTENT:', { underline: true });
+  doc.moveDown(0.3);
+  doc.fontSize(10);
+  
+  // Split text into lines and add each line separately to ensure proper line breaks
+  const lines = formattedText.split('\n');
+  lines.forEach((line, index) => {
+    if (line.trim()) {
+      doc.text(line.trim(), { align: 'justify' });
+      if (index < lines.length - 1) {
+        doc.moveDown(0.2);
+      }
+    } else {
+      doc.moveDown(0.3);
+    }
+  });
+  doc.moveDown(1);
+
+  // Digital Signature
+  doc.fontSize(12).text('DIGITAL SIGNATURE:', { underline: true });
+  doc.moveDown(0.3);
+  doc.fontSize(10).text('This agreement has been digitally signed by:');
+  doc.moveDown(0.3);
+  doc.text(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
+  doc.text(`Email: ${agreement.client.email}`);
+  doc.text(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`);
+  doc.text(`IP Address: ${agreement.signedFromIP || 'N/A'}`);
+  doc.text(`Agreement ID: ${agreement.id}`);
+  doc.text(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
+  doc.moveDown(0.5);
+
+  doc.fontSize(8).text('This document is legally binding and represents the complete agreement between the parties.', { align: 'center' });
+  doc.moveDown(0.3);
+  doc.text('Photobooth Guys', { align: 'center' });
+  doc.text('Contact: info@photoboothguys.ca', { align: 'center' });
+
+  // Finalize PDF
+  doc.end();
+
+  // Wait for PDF to be generated
+  return await pdfPromise;
 };
 
 const pdfRequestSchema = z.object({
@@ -329,7 +440,8 @@ export async function POST(request: NextRequest) {
         processedHtml, 
         `${agreement.client.firstName} ${agreement.client.lastName}`, 
         agreement.client.email, 
-        agreement.id
+        agreement.id,
+        agreement
       );
     }
 
