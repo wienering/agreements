@@ -196,24 +196,62 @@ export default function AgreementsPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const createParam = urlParams.get('create');
     const clientParam = urlParams.get('client');
+    const sessionKey = 'pending_agreement_client';
     
+    // Check URL params first
     if (createParam === 'true' && clientParam) {
       try {
         const clientData = JSON.parse(decodeURIComponent(clientParam));
+        console.log(`🔗 [${mountId.current}] URL params found, client ID:`, clientData.id);
+        
+        // Store in sessionStorage for persistence across remounts
+        sessionStorage.setItem(sessionKey, JSON.stringify(clientData));
+        
         // Set the client ID in the new agreement form
         setNewAgreement(prev => ({
           ...prev,
           clientId: clientData.id
         }));
-        // Show the create form
-        setShowCreateForm(true);
+        
+        // Wait a bit for data to load before showing form
+        // This ensures clients list is populated for the dropdown
+        setTimeout(() => {
+          console.log(`📝 [${mountId.current}] Opening create form with client ${clientData.id}`);
+          setShowCreateForm(true);
+        }, 100);
+        
         // Clean up URL parameters without triggering a navigation/reload
-        // Use window.history.replaceState instead of router.replace to avoid re-render
         if (typeof window !== 'undefined') {
           window.history.replaceState({}, '', '/admin/agreements');
         }
       } catch (error) {
-        console.error('Error parsing client data from URL:', error);
+        console.error(`❌ [${mountId.current}] Error parsing client data from URL:`, error);
+      }
+    } else {
+      // Check sessionStorage for pending client (in case of remount)
+      try {
+        const storedClientData = sessionStorage.getItem(sessionKey);
+        if (storedClientData) {
+          const clientData = JSON.parse(storedClientData);
+          console.log(`💾 [${mountId.current}] Found pending client in sessionStorage:`, clientData.id);
+          
+          // Set the client ID in the new agreement form
+          setNewAgreement(prev => ({
+            ...prev,
+            clientId: clientData.id
+          }));
+          
+          // Wait a bit for data to load before showing form
+          setTimeout(() => {
+            console.log(`📝 [${mountId.current}] Opening create form with client ${clientData.id}`);
+            setShowCreateForm(true);
+          }, 100);
+          
+          // Clear from sessionStorage after using it
+          sessionStorage.removeItem(sessionKey);
+        }
+      } catch (error) {
+        console.error(`❌ [${mountId.current}] Error reading stored client data:`, error);
       }
     }
   }, []);
