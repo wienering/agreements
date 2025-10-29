@@ -17,41 +17,41 @@ model User {
 }
 
 model Client {
-  id             String      @id @default(cuid())
+  id             String          @id @default(cuid())
   firstName      String
   lastName       String
   email          String
   phone          String?
-  address        String?
   eventDate      DateTime?
   notes          String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   eventType      String?
   eventLocation  String?
   eventStartTime String?
   eventDuration  String?
   eventPackage   String?
-  packagePrice   Decimal? @db.Decimal(10, 2)
-  phoneAddedAt   DateTime?
+  packagePrice   Decimal?        @db.Decimal(10, 2)
+  address        String?
   addressAddedAt DateTime?
+  phoneAddedAt   DateTime?
   agreements     Agreement[]
   sessions       ClientSession[]
-  clientNotes    ClientNote[] @relation("ClientNotes")
+  clientNotes    ClientNote[]    @relation("ClientNotes")
 }
 
 model Template {
-  id           String           @id @default(cuid())
-  title        String
-  internalTitle String?         // Internal name for organization (not shown to clients)
-  htmlContent  String
-  version      Int              @default(1)
-  fieldsSchema Json
-  order        Int              @default(0)  // For drag-and-drop reordering
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  agreements   Agreement[]
-  fields       AgreementField[]
+  id            String           @id @default(cuid())
+  title         String
+  htmlContent   String
+  version       Int              @default(1)
+  fieldsSchema  Json
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  internalTitle String?
+  order         Int              @default(0)
+  agreements    Agreement[]
+  fields        AgreementField[]
 }
 
 model Agreement {
@@ -85,14 +85,14 @@ model Agreement {
 }
 
 model AgreementField {
-  id               String                @id @default(cuid())
+  id               String   @id @default(cuid())
   templateId       String
   key              String
   label            String
   type             String
-  editableByClient Boolean               @default(false)
-  required         Boolean               @default(false)
-  template         Template              @relation(fields: [templateId], references: [id])
+  editableByClient Boolean  @default(false)
+  required         Boolean  @default(false)
+  template         Template @relation(fields: [templateId], references: [id])
 
   @@unique([templateId, key])
 }
@@ -132,6 +132,31 @@ model AuditLog {
   agreement   Agreement? @relation(fields: [agreementId], references: [id])
 }
 
+model ClientSession {
+  id             String   @id @default(cuid())
+  clientId       String
+  sessionToken   String   @unique
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  client         Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+}
+
+model ClientNote {
+  id          String     @id @default(cuid())
+  clientId    String
+  agreementId String?
+  content     String
+  createdAt   DateTime   @default(now())
+  client      Client     @relation("ClientNotes", fields: [clientId], references: [id])
+  agreement   Agreement? @relation(fields: [agreementId], references: [id])
+
+  @@index([clientId])
+  @@index([agreementId])
+}
+
 enum AgreementStatus {
   DRAFT
   SENT
@@ -140,29 +165,4 @@ enum AgreementStatus {
   LIVE
   COMPLETED
   CANCELLED
-}
-
-model ClientSession {
-  id              String   @id @default(cuid())
-  clientId        String
-  sessionToken    String   @unique
-  expiresAt       DateTime
-  createdAt       DateTime @default(now())
-  lastActivityAt DateTime @default(now())
-  client          Client   @relation(fields: [clientId], references: [id])
-
-  @@index([clientId])
-}
-
-model ClientNote {
-  id          String    @id @default(cuid())
-  clientId    String
-  agreementId String?
-  content     String
-  createdAt   DateTime  @default(now())
-  client      Client    @relation("ClientNotes", fields: [clientId], references: [id])
-  agreement   Agreement? @relation(fields: [agreementId], references: [id])
-
-  @@index([clientId])
-  @@index([agreementId])
 }
