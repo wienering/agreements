@@ -2,16 +2,18 @@ import { prisma } from '@/lib/prisma';
 import { SessionWithClient } from './auth';
 
 /**
- * Verify that an agreement belongs to a client
+ * Verify that an agreement belongs to a client (by email)
  */
 export async function verifyAgreementOwnership(
   agreementId: string,
-  clientId: string
+  clientEmail: string
 ): Promise<{ valid: true; agreement: any } | { valid: false; error: string }> {
   const agreement = await prisma.agreement.findFirst({
     where: {
       id: agreementId,
-      clientId: clientId,
+      client: {
+        email: clientEmail.toLowerCase(),
+      },
       archived: false,
     },
     include: {
@@ -31,10 +33,10 @@ export async function verifyAgreementOwnership(
 }
 
 /**
- * Get client's agreements with filters
+ * Get client's agreements with filters (by email)
  */
 export async function getClientAgreements(
-  clientId: string,
+  clientEmail: string,
   options: {
     status?: string;
     search?: string;
@@ -59,7 +61,9 @@ export async function getClientAgreements(
 
   // Build where clause
   const whereClause: any = {
-    clientId,
+    client: {
+      email: clientEmail.toLowerCase(),
+    },
     archived,
   };
 

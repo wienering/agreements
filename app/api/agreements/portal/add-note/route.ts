@@ -47,12 +47,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = addNoteSchema.parse(body);
 
-    // If agreementId is provided, verify it belongs to this client
+    // If agreementId is provided, verify it belongs to this client (by email)
     if (validatedData.agreementId) {
       const agreement = await prisma.agreement.findFirst({
         where: {
           id: validatedData.agreementId,
-          clientId: session.client.id
+          client: {
+            email: session.client.email.toLowerCase(),
+          }
         }
       });
 

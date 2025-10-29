@@ -17,11 +17,13 @@ export async function GET(
 
     const { id: agreementId } = await params;
 
-    // Get agreement details
+    // Get agreement details - use email to match all client records with same email
     const agreement = await prisma.agreement.findFirst({
       where: {
         id: agreementId,
-        clientId: session.client.id
+        client: {
+          email: session.client.email.toLowerCase(),
+        }
       },
       include: {
         client: true,

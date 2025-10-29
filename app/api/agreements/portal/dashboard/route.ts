@@ -60,9 +60,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    // Build where clause
+    // Build where clause - use email to match all client records with same email
     const whereClause: any = {
-      clientId: session.client.id,
+      client: {
+        email: session.client.email.toLowerCase(),
+      },
       archived: false
     };
 
@@ -108,7 +110,7 @@ export async function GET(request: NextRequest) {
       where: whereClause
     });
 
-    console.log(`[Dashboard] Client ID: ${session.client.id}, Total agreements: ${totalCount}`);
+    console.log(`[Dashboard] Client Email: ${session.client.email}, Total agreements: ${totalCount}`);
 
     // Get agreements with pagination
     const agreements = await prisma.agreement.findMany({
@@ -150,7 +152,7 @@ export async function GET(request: NextRequest) {
       return processedHtml;
     };
 
-    console.log(`[Dashboard] Found ${agreements.length} agreements for client ${session.client.id}`);
+    console.log(`[Dashboard] Found ${agreements.length} agreements for client email ${session.client.email}`);
 
     // Process agreements with HTML content
     const processedAgreements = agreements.map(agreement => {
@@ -200,11 +202,13 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Get status counts for filters
+    // Get status counts for filters - use email to match all client records
     const statusCounts = await prisma.agreement.groupBy({
       by: ['status'],
       where: {
-        clientId: session.client.id,
+        client: {
+          email: session.client.email.toLowerCase(),
+        },
         archived: false
       },
       _count: {

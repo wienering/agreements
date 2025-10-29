@@ -50,11 +50,13 @@ export async function GET(request: NextRequest) {
     let agreements;
 
     if (agreementId) {
-      // Export single agreement
+      // Export single agreement - use email to match all client records
       const agreement = await prisma.agreement.findFirst({
         where: {
           id: agreementId,
-          clientId: session.client.id,
+          client: {
+            email: session.client.email.toLowerCase(),
+          },
           archived: false
         },
         include: {
@@ -72,10 +74,12 @@ export async function GET(request: NextRequest) {
 
       agreements = [agreement];
     } else {
-      // Export all agreements
+      // Export all agreements - use email to match all client records with same email
       agreements = await prisma.agreement.findMany({
         where: {
-          clientId: session.client.id,
+          client: {
+            email: session.client.email.toLowerCase(),
+          },
           archived: false
         },
         include: {

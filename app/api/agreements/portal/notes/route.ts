@@ -42,17 +42,33 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const agreementId = searchParams.get('agreementId');
 
-    // Build where clause
+    // Find all client IDs with the same email to match notes from all client records
+    const matchingClients = await prisma.client.findMany({
+      where: {
+        email: session.client.email.toLowerCase(),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const matchingClientIds = matchingClients.map(client => client.id);
+
+    // Build where clause - match notes from all clients with same email
     const whereClause: any = {
-      clientId: session.client.id
+      clientId: {
+        in: matchingClientIds,
+      },
     };
 
     if (agreementId) {
-      // Verify agreement belongs to this client
+      // Verify agreement belongs to this client (by email)
       const agreement = await prisma.agreement.findFirst({
         where: {
           id: agreementId,
-          clientId: session.client.id
+          client: {
+            email: session.client.email.toLowerCase(),
+          }
         }
       });
 
