@@ -12,8 +12,21 @@ interface Agreement {
   createdAt: string;
   signedAt: string | null;
   cancelledAt: string | null;
+  firstViewedAt: string | null;
+  lastViewedAt: string | null;
+  viewCount: number;
   templateName: string;
   mergedHtml: string | null;
+  paymentStatus: string | null;
+  stripePaymentLink: string | null;
+  stripeReceiptLink: string | null;
+  galleryLink: string | null;
+  nextAction: string | null;
+  backdropLink: {
+    id: string;
+    name: string;
+    url: string;
+  } | null;
   notes: Array<{
     id: string;
     content: string;
@@ -294,6 +307,141 @@ export default function AgreementDetail() {
         </div>
       </div>
 
+      {/* Action Buttons Section */}
+      <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h2>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href={`/api/agreements/portal/pdf/${agreement.id}`}
+            download
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            📥 Download PDF
+          </a>
+
+          {agreement.status === 'SIGNED' && (
+            <a
+              href={`/agreement/${agreement.uniqueToken}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              ✅ View Signed Version
+            </a>
+          )}
+
+          {agreement.stripePaymentLink && (
+            <a
+              href={agreement.stripePaymentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              💳 Make Payment
+            </a>
+          )}
+
+          {agreement.stripeReceiptLink && (
+            <a
+              href={agreement.stripeReceiptLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              🧾 View Receipt
+            </a>
+          )}
+
+          <a
+            href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            🎨 Choose Template
+          </a>
+
+          {agreement.backdropLink && (
+            <a
+              href={agreement.backdropLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              🖼️ {agreement.backdropLink.name}
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Gallery Delivery Section */}
+      {agreement.galleryLink && (
+        <div className="mb-8 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-900/10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-3xl">📸</div>
+            <div>
+              <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">
+                Your Event Gallery is Ready!
+              </h2>
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                View and download your event photos
+              </p>
+            </div>
+          </div>
+          <a
+            href={agreement.galleryLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-700"
+          >
+            View Your Event Gallery →
+          </a>
+        </div>
+      )}
+
+      {/* Activity Timeline */}
+      <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Activity Timeline</h2>
+        <div className="space-y-4">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+              <span className="text-lg">📤</span>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-slate-900 dark:text-white">Agreement Sent</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(agreement.createdAt)}</p>
+            </div>
+          </div>
+
+          {agreement.firstViewedAt && (
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                <span className="text-lg">👁️</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-900 dark:text-white">First Viewed</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(agreement.firstViewedAt)}</p>
+                {agreement.viewCount > 1 && (
+                  <p className="text-xs text-slate-500 dark:text-slate-500">Viewed {agreement.viewCount} times total</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {agreement.signedAt && (
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
+                <span className="text-lg">✅</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-900 dark:text-white">Agreement Signed</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(agreement.signedAt)}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Agreement Details */}
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
@@ -409,6 +557,72 @@ export default function AgreementDetail() {
                   <p className="text-sm text-slate-900 dark:text-white">{client.eventPackage}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Resource Center Section */}
+      <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">📚 Resources & Links</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+          Helpful resources for your photobooth event
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <a
+            href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
+          >
+            <div className="text-2xl">🎨</div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-white">Template Chooser</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Browse and select your print template design</p>
+            </div>
+          </a>
+
+          {agreement.backdropLink ? (
+            <a
+              href={agreement.backdropLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
+            >
+              <div className="text-2xl">🖼️</div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">{agreement.backdropLink.name}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Choose your backdrop for the event</p>
+              </div>
+            </a>
+          ) : (
+            <div className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+              <div className="text-2xl">🖼️</div>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">Choose Your Backdrop</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Contact us for backdrop selection options</p>
+              </div>
+            </div>
+          )}
+
+          <a
+            href="https://www.photoboothguys.ca/photobooth-questions/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
+          >
+            <div className="text-2xl">❓</div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-white">FAQ</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Frequently asked questions about our service</p>
+            </div>
+          </a>
+
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="text-2xl">📋</div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-white">Photo Booth Tips</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Tips for getting the best photos at your event</p>
             </div>
           </div>
         </div>

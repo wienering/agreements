@@ -11,6 +11,18 @@ interface Agreement {
   createdAt: string;
   signedAt: string | null;
   expiresAt: string | null;
+  firstViewedAt: string | null;
+  lastViewedAt: string | null;
+  paymentStatus: string | null;
+  stripePaymentLink: string | null;
+  stripeReceiptLink: string | null;
+  galleryLink: string | null;
+  nextAction: string | null;
+  backdropLink: {
+    id: string;
+    name: string;
+    url: string;
+  } | null;
   summary: {
     templateTitle: string;
     status: string;
@@ -45,6 +57,11 @@ interface DashboardData {
     email: string;
     phone: string | null;
     address: string | null;
+    eventDate: string | null;
+    eventType: string | null;
+    eventLocation: string | null;
+    eventPackage: string | null;
+    packagePrice: number | null;
   };
 }
 
@@ -54,6 +71,7 @@ export default function PortalDashboard() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const router = useRouter();
 
   const fetchDashboardData = async () => {
@@ -168,6 +186,9 @@ export default function PortalDashboard() {
     );
   }
 
+  // Find the most relevant agreement for next action display
+  const relevantAgreement = data?.agreements.find(a => a.nextAction) || data?.agreements[0];
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Header */}
@@ -182,6 +203,104 @@ export default function PortalDashboard() {
 
       {data && (
         <>
+          {/* Client Overview Section */}
+          <div className="mb-8 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <button
+              onClick={() => setOverviewCollapsed(!overviewCollapsed)}
+              className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">👤</div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                    Your Event Overview
+                  </h2>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {data.client.firstName} {data.client.lastName}
+                    {data.client.eventDate && ` • ${new Date(data.client.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`}
+                  </p>
+                </div>
+              </div>
+              <svg
+                className={`h-5 w-5 text-slate-400 transition-transform ${overviewCollapsed ? '' : 'rotate-180'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {!overviewCollapsed && (
+              <div className="border-t border-slate-200 dark:border-slate-800 p-6">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {/* Package Booked */}
+                  {data.client.eventPackage && (
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📦 Package Booked</h3>
+                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{data.client.eventPackage}</p>
+                      {data.client.packagePrice && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400">${data.client.packagePrice.toFixed(2)}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Payment Status */}
+                  {relevantAgreement?.paymentStatus && (
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">💳 Payment Status</h3>
+                      <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                        {relevantAgreement.paymentStatus}
+                      </span>
+                      {relevantAgreement.stripePaymentLink && (
+                        <a
+                          href={relevantAgreement.stripePaymentLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 block text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                        >
+                          Make Payment →
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Contact Method */}
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📞 Contact Method</h3>
+                    <div className="space-y-1">
+                      <p className="text-sm text-slate-900 dark:text-white">✉️ {data.client.email}</p>
+                      {data.client.phone && (
+                        <p className="text-sm text-slate-900 dark:text-white">📱 {data.client.phone}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Event Location */}
+                  {data.client.eventLocation && (
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📍 Event Location</h3>
+                      <p className="text-sm text-slate-900 dark:text-white">{data.client.eventLocation}</p>
+                      {data.client.eventType && (
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{data.client.eventType}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Next Action - Full width */}
+                  {relevantAgreement?.nextAction && (
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
+                        <h3 className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-2">⚡ Next Action</h3>
+                        <p className="text-base font-semibold text-amber-900 dark:text-amber-100">{relevantAgreement.nextAction}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
           {/* Filters */}
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
@@ -244,61 +363,130 @@ export default function PortalDashboard() {
           ) : (
             <div className="space-y-4">
               {data.agreements.map((agreement) => (
-                <Link
+                <div
                   key={agreement.id}
-                  href={`/portal/agreement/${agreement.id}`}
-                  className="block rounded-lg border border-slate-200 bg-white p-6 transition hover:border-emerald-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-400"
+                  className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                          {agreement.summary.templateTitle}
-                        </h3>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
-                            agreement.status
-                          )}`}
-                        >
-                          {agreement.status}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400">
-                        <span>Created: {formatDate(agreement.createdAt)}</span>
-                        {agreement.summary.signedAt && (
-                          <span>• Signed: {formatDate(agreement.summary.signedAt)}</span>
-                        )}
-                        {agreement.summary.expiresAt && (
-                          <span>
-                            • {agreement.summary.isExpired ? 'Expired' : 'Expires'}:{' '}
-                            {formatDate(agreement.summary.expiresAt)}
-                            {agreement.summary.daysUntilExpiry !== null &&
-                              !agreement.summary.isExpired && (
-                                <span className="ml-1">
-                                  ({agreement.summary.daysUntilExpiry} days)
-                                </span>
-                              )}
+                  <Link
+                    href={`/portal/agreement/${agreement.id}`}
+                    className="block p-6 transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                            {agreement.summary.templateTitle}
+                          </h3>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
+                              agreement.status
+                            )}`}
+                          >
+                            {agreement.status}
                           </span>
+                        </div>
+
+                        {/* Activity Timeline */}
+                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 mb-3">
+                          <span>📤 Sent: {formatDate(agreement.createdAt)}</span>
+                          {agreement.firstViewedAt && (
+                            <span>• 👁️ Viewed: {formatDate(agreement.firstViewedAt)}</span>
+                          )}
+                          {agreement.summary.signedAt && (
+                            <span>• ✅ Signed: {formatDate(agreement.summary.signedAt)}</span>
+                          )}
+                        </div>
+
+                        {/* Payment Status Badge */}
+                        {agreement.paymentStatus && (
+                          <div className="mb-2">
+                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                              💳 {agreement.paymentStatus}
+                            </span>
+                          </div>
                         )}
+
+                        {/* Gallery Link */}
+                        {agreement.galleryLink && (
+                          <div className="mb-2">
+                            <span className="inline-flex items-center text-sm text-emerald-600 dark:text-emerald-400">
+                              📸 Gallery Available
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <svg
+                          className="h-5 w-5 text-slate-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <svg
-                        className="h-5 w-5 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                  </Link>
+
+                  {/* Quick Actions */}
+                  <div className="border-t border-slate-200 dark:border-slate-800 px-6 py-4 bg-slate-50 dark:bg-slate-800/50">
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/portal/agreement/${agreement.id}`}
+                        className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                        📄 View Details
+                      </Link>
+                      
+                      {agreement.summary.isSigned && (
+                        <a
+                          href={`/agreement/${agreement.uniqueToken}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        >
+                          ✅ View Signed Version
+                        </a>
+                      )}
+
+                      {agreement.stripePaymentLink && (
+                        <a
+                          href={agreement.stripePaymentLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200 dark:hover:bg-blue-900/30"
+                        >
+                          💳 Make Payment
+                        </a>
+                      )}
+
+                      {agreement.stripeReceiptLink && (
+                        <a
+                          href={agreement.stripeReceiptLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        >
+                          🧾 View Receipt
+                        </a>
+                      )}
+
+                      <a
+                        href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                      >
+                        🎨 Choose Template
+                      </a>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

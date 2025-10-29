@@ -117,7 +117,8 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         template: true,
-        signature: true
+        signature: true,
+        backdropLink: true
       },
       orderBy,
       skip: offset,
@@ -182,6 +183,16 @@ export async function GET(request: NextRequest) {
         viewCount: agreement.viewCount,
         firstViewedAt: agreement.firstViewedAt,
         lastViewedAt: agreement.lastViewedAt,
+        paymentStatus: agreement.paymentStatus,
+        stripePaymentLink: agreement.stripePaymentLink,
+        stripeReceiptLink: agreement.stripeReceiptLink,
+        galleryLink: agreement.galleryLink,
+        nextAction: agreement.nextAction,
+        backdropLink: agreement.backdropLink ? {
+          id: agreement.backdropLink.id,
+          name: agreement.backdropLink.name,
+          url: agreement.backdropLink.url
+        } : null,
         client: client,
         template: {
           ...publicTemplate,
@@ -251,6 +262,11 @@ export async function GET(request: NextRequest) {
         address: session.client.address,
         phoneAddedAt: session.client.phoneAddedAt,
         addressAddedAt: session.client.addressAddedAt,
+        eventDate: session.client.eventDate,
+        eventType: session.client.eventType,
+        eventLocation: session.client.eventLocation,
+        eventPackage: session.client.eventPackage,
+        packagePrice: session.client.packagePrice ? Number(session.client.packagePrice) : null,
       }
     });
 

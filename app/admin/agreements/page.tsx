@@ -63,6 +63,15 @@ export default function AgreementsPage() {
   const [editingStatusAgreementId, setEditingStatusAgreementId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Portal enhancements state
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [stripePaymentLink, setStripePaymentLink] = useState('');
+  const [stripeReceiptLink, setStripeReceiptLink] = useState('');
+  const [galleryLink, setGalleryLink] = useState('');
+  const [nextAction, setNextAction] = useState('');
+  const [backdropLinks, setBackdropLinks] = useState<any[]>([]);
+  const [selectedBackdropLinkId, setSelectedBackdropLinkId] = useState('');
+  
   // Cancellation state
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellingAgreement, setCancellingAgreement] = useState<Agreement | null>(null);
@@ -112,6 +121,7 @@ export default function AgreementsPage() {
     fetchClients();
     fetchTemplates();
     fetchWarningData();
+    fetchBackdropLinks();
   }, []);
 
   // Handle URL parameters for pre-selecting client or template
@@ -171,6 +181,18 @@ export default function AgreementsPage() {
       }
     } catch (error) {
       console.error('Error fetching agreements:', error);
+    }
+  };
+
+  const fetchBackdropLinks = async () => {
+    try {
+      const response = await fetch('/api/agreements/backdrop-links');
+      if (response.ok) {
+        const data = await response.json();
+        setBackdropLinks(data.backdropLinks || []);
+      }
+    } catch (error) {
+      console.error('Error fetching backdrop links:', error);
     }
   };
 
@@ -257,6 +279,13 @@ export default function AgreementsPage() {
   const handleEditAgreement = (agreement: Agreement) => {
     setSelectedAgreement(agreement);
     setEditingContent(agreement.template.htmlContent);
+    // Load portal enhancement fields
+    setPaymentStatus((agreement as any).paymentStatus || '');
+    setStripePaymentLink((agreement as any).stripePaymentLink || '');
+    setStripeReceiptLink((agreement as any).stripeReceiptLink || '');
+    setGalleryLink((agreement as any).galleryLink || '');
+    setNextAction((agreement as any).nextAction || '');
+    setSelectedBackdropLinkId((agreement as any).backdropLinkId || '');
   };
 
   const handleSaveAgreement = async () => {
@@ -295,6 +324,63 @@ export default function AgreementsPage() {
     } catch (error) {
       console.error('Error saving agreement:', error);
       showToast('Failed to save agreement', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePortalFields = async () => {
+    if (!selectedAgreement) return;
+    
+    setSaving(true);
+    try {
+      // Update payment info
+      await fetch(`/api/agreements/update-payment-info`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          paymentStatus: paymentStatus || '',
+          stripePaymentLink: stripePaymentLink || '',
+          stripeReceiptLink: stripeReceiptLink || ''
+        }),
+      });
+
+      // Update gallery link
+      await fetch(`/api/agreements/update-gallery-link`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          galleryLink: galleryLink || ''
+        }),
+      });
+
+      // Update next action
+      await fetch(`/api/agreements/update-next-action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          nextAction: nextAction || ''
+        }),
+      });
+
+      // Update backdrop link
+      await fetch(`/api/agreements/set-backdrop-link`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          backdropLinkId: selectedBackdropLinkId || null
+        }),
+      });
+
+      showToast('Portal fields updated successfully!');
+      fetchAgreements(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating portal fields:', error);
+      showToast('Failed to update portal fields', 'error');
     } finally {
       setSaving(false);
     }
@@ -1557,6 +1643,179 @@ export default function AgreementsPage() {
                     borderColor: borderColor
                   }}
                 />
+              </div>
+
+              {/* Portal Enhancement Fields */}
+              <div style={{ 
+                marginTop: '24px', 
+                padding: '16px', 
+                backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                borderRadius: '8px',
+                border: `1px solid ${borderColor}`
+              }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
+                  Client Portal Settings
+                </h3>
+
+                {/* Payment Status */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                    Payment Status
+                  </label>
+                  <select
+                    value={paymentStatus}
+                    onChange={(e) => setPaymentStatus(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">Not Set</option>
+                    <option value="Not paid">Not paid</option>
+                    <option value="Deposit paid">Deposit paid</option>
+                    <option value="Balance due">Balance due</option>
+                    <option value="Fully paid">Fully paid</option>
+                  </select>
+                </div>
+
+                {/* Stripe Payment Link */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                    Stripe Payment Link
+                  </label>
+                  <input
+                    type="url"
+                    value={stripePaymentLink}
+                    onChange={(e) => setStripePaymentLink(e.target.value)}
+                    placeholder="https://buy.stripe.com/..."
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                {/* Stripe Receipt Link */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                    Stripe Receipt Link
+                  </label>
+                  <input
+                    type="url"
+                    value={stripeReceiptLink}
+                    onChange={(e) => setStripeReceiptLink(e.target.value)}
+                    placeholder="https://stripe.com/receipts/..."
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                {/* Gallery Link */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                    Event Gallery Link
+                  </label>
+                  <input
+                    type="url"
+                    value={galleryLink}
+                    onChange={(e) => setGalleryLink(e.target.value)}
+                    placeholder="https://gallery.example.com/event..."
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                {/* Next Action */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                    Next Action (displayed to client)
+                  </label>
+                  <input
+                    type="text"
+                    value={nextAction}
+                    onChange={(e) => setNextAction(e.target.value)}
+                    placeholder="e.g., Template approval pending..."
+                    maxLength={500}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                {/* Backdrop Link Selection */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                    Backdrop Selection Link
+                  </label>
+                  <select
+                    value={selectedBackdropLinkId}
+                    onChange={(e) => setSelectedBackdropLinkId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '4px',
+                      backgroundColor: cardBg,
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">No backdrop link</option>
+                    {backdropLinks.map(link => (
+                      <option key={link.id} value={link.id}>{link.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Update Portal Fields Button */}
+                <button
+                  onClick={handleUpdatePortalFields}
+                  disabled={saving}
+                  style={{
+                    width: '100%',
+                    backgroundColor: saving ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px',
+                    borderRadius: '6px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginTop: '8px'
+                  }}
+                >
+                  {saving ? 'Updating...' : 'Update Portal Settings'}
+                </button>
               </div>
               
               {/* Actions */}

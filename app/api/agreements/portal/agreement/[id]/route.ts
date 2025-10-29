@@ -31,7 +31,8 @@ export async function GET(
         notes: {
           orderBy: { createdAt: 'desc' }
         },
-        signature: true
+        signature: true,
+        backdropLink: true
       }
     });
 
@@ -52,8 +53,21 @@ export async function GET(
         createdAt: agreement.createdAt.toISOString(),
         signedAt: agreement.signedAt?.toISOString() || null,
         cancelledAt: agreement.cancelledAt?.toISOString() || null,
+        firstViewedAt: agreement.firstViewedAt?.toISOString() || null,
+        lastViewedAt: agreement.lastViewedAt?.toISOString() || null,
+        viewCount: agreement.viewCount,
         templateName: agreement.template.title,
         mergedHtml: agreement.mergedHtml,
+        paymentStatus: agreement.paymentStatus,
+        stripePaymentLink: agreement.stripePaymentLink,
+        stripeReceiptLink: agreement.stripeReceiptLink,
+        galleryLink: agreement.galleryLink,
+        nextAction: agreement.nextAction,
+        backdropLink: agreement.backdropLink ? {
+          id: agreement.backdropLink.id,
+          name: agreement.backdropLink.name,
+          url: agreement.backdropLink.url
+        } : null,
         notes: agreement.notes.map(note => ({
           id: note.id,
           content: note.content,
