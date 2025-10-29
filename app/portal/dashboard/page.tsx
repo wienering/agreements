@@ -300,7 +300,7 @@ export default function PortalDashboard() {
               </div>
             )}
           </div>
-        </>
+
           {/* Filters */}
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
