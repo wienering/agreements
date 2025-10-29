@@ -22,6 +22,7 @@ model Client {
   lastName       String
   email          String
   phone          String?
+  address        String?
   eventDate      DateTime?
   notes          String?
   createdAt      DateTime    @default(now())
@@ -32,7 +33,11 @@ model Client {
   eventDuration  String?
   eventPackage   String?
   packagePrice   Decimal? @db.Decimal(10, 2)
+  phoneAddedAt   DateTime?
+  addressAddedAt DateTime?
   agreements     Agreement[]
+  sessions       ClientSession[]
+  notes          ClientNote[]
 }
 
 model Template {
@@ -76,6 +81,7 @@ model Agreement {
   fields             AgreementFieldValue[]
   signature          Signature?
   auditLogs          AuditLog[]
+  notes              ClientNote[]
 }
 
 model AgreementField {
@@ -134,4 +140,29 @@ enum AgreementStatus {
   LIVE
   COMPLETED
   CANCELLED
+}
+
+model ClientSession {
+  id              String   @id @default(cuid())
+  clientEmail     String
+  sessionToken    String   @unique
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  client          Client   @relation(fields: [clientEmail], references: [email])
+
+  @@index([clientEmail])
+}
+
+model ClientNote {
+  id          String    @id @default(cuid())
+  clientId    String
+  agreementId String?
+  content     String
+  createdAt   DateTime  @default(now())
+  client      Client    @relation(fields: [clientId], references: [id])
+  agreement   Agreement? @relation(fields: [agreementId], references: [id])
+
+  @@index([clientId])
+  @@index([agreementId])
 }
