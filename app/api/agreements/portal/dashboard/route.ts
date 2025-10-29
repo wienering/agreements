@@ -41,6 +41,15 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Check if client is loaded
+    if (!session.client) {
+      console.error('Session client not loaded:', sessionToken);
+      return NextResponse.json({ 
+        error: 'Client data not found',
+        code: 'CLIENT_NOT_FOUND'
+      }, { status: 500 });
+    }
+
     // Get query parameters for filtering and search
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
