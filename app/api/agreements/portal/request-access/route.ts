@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { verificationCodeStore } from '../shared/verification-codes';
 
 const requestAccessSchema = z.object({
   email: z.string().email('Valid email is required'),
 });
-
-// Store verification codes temporarily (in production, use Redis or similar)
-const verificationCodes = new Map<string, { code: string; expiresAt: Date }>();
 
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -114,7 +112,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Store verification code temporarily (in production, use Redis or similar)
-    verificationCodes.set(emailLower, { code: verificationCode, expiresAt });
+    verificationCodeStore.set(emailLower, verificationCode, expiresAt);
 
     // Check SMTP configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {

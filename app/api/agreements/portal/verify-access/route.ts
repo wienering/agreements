@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-
-// Store verification codes temporarily (in production, use Redis or similar)
-const verificationCodes = new Map<string, { code: string; expiresAt: Date }>();
+import { verificationCodeStore } from '../shared/verification-codes';
 
 const verifyAccessSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -20,7 +18,7 @@ export async function POST(request: NextRequest) {
     const code = validatedData.code;
 
     // Check if verification code exists and is valid
-    const storedCode = verificationCodes.get(email);
+    const storedCode = verificationCodeStore.get(email);
     
     if (!storedCode) {
       return NextResponse.json({ 
@@ -35,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (new Date() > storedCode.expiresAt) {
-      verificationCodes.delete(email);
+      verificationCodeStore.delete(email);
       return NextResponse.json({ 
         error: 'Verification code has expired. Please request a new code.' 
       }, { status: 400 });
@@ -75,7 +73,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Clean up verification code
-    verificationCodes.delete(email);
+    verificationCodeStore.delete(email);
 
     // Return session info and client data
     return NextResponse.json({
