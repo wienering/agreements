@@ -24,6 +24,32 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get client email for session deletion
+    const client = await prisma.client.findUnique({
+      where: { id: validatedData.id },
+      select: { email: true }
+    });
+
+    if (!client) {
+      return NextResponse.json({ 
+        error: 'Client not found' 
+      }, { status: 404 });
+    }
+
+    // Delete associated ClientNotes first (required relation)
+    await prisma.clientNote.deleteMany({
+      where: {
+        clientId: validatedData.id
+      }
+    });
+
+    // Delete associated ClientSessions
+    await prisma.clientSession.deleteMany({
+      where: {
+        clientEmail: client.email
+      }
+    });
+
     // Delete the client
     await prisma.client.delete({
       where: { id: validatedData.id }
