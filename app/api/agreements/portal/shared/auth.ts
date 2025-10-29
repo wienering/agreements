@@ -122,7 +122,7 @@ export function withAuth<T = any>(
     const authResult = await authenticateSession(request);
     
     if (authResult.error) {
-      return authResult.error;
+      return authResult.error as NextResponse<T>;
     }
 
     return handler(request, authResult.session!);
