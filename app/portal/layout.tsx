@@ -112,8 +112,8 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
     router.push('/portal/login');
   };
 
-  // Don't show layout for login page
-  if (typeof window !== 'undefined' && window.location.pathname === '/portal/login') {
+  // Don't show layout for login page or landing page
+ 细心 if (typeof window !== 'undefined' && (window.location.pathname === '/portal/login' || window.location.pathname === '/portal')) {
     return <>{children}</>;
   }
 
@@ -178,7 +178,12 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-slate-500 dark:text-slate-400">
           <span>© {new Date().getFullYear()} Photobooth Guys • Client Portal</span>
           <div className="flex items-center gap-4">
-            <span className="text-xs">Secure • Read-Only Access</span>
+            <span className="text-xs">Secure • Encrypted</span>
+            {!isLoggedIn && (
+              <Link href="/portal/login" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs font-medium">
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </footer>
