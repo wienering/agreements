@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     notifications.push(...systemNotifications);
 
     // Sort notifications by priority and date
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
     notifications.sort((a, b) => {
       if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
         return priorityOrder[b.priority] - priorityOrder[a.priority];

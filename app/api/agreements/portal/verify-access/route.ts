@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-import { verificationCodes } from '../request-access/route';
+
+// Store verification codes temporarily (in production, use Redis or similar)
+const verificationCodes = new Map<string, { code: string; expiresAt: Date }>();
 
 const verifyAccessSchema = z.object({
   email: z.string().email('Valid email is required'),
