@@ -38,7 +38,7 @@ export default function BackdropLinksPage() {
       const response = await fetch('/api/agreements/backdrop-links');
       if (response.ok) {
         const data = await response.json();
-        setBackdropLinks(data);
+        setBackdropLinks(data.backdropLinks || []);
       }
     } catch (error) {
       console.error('Error fetching backdrop links:', error);
