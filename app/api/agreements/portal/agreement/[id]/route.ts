@@ -1,43 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { authenticateSession } from '../../shared/auth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized', code: 'MISSING_TOKEN' },
-        { status: 401 }
-      );
+    // Authenticate session
+    const authResult = await authenticateSession(request);
+    if (authResult.error) {
+      return authResult.error;
     }
 
-    const sessionToken = authHeader.substring(7);
-
-    // Validate session
-    const session = await prisma.clientSession.findUnique({
-      where: { sessionToken },
-      include: {
-        client: true
-      }
-    });
-
-    if (!session || session.expiresAt < new Date()) {
-      return NextResponse.json(
-        { error: 'Session expired', code: 'SESSION_EXPIRED' },
-        { status: 401 }
-      );
-    }
-
-    // Update last activity
-    await prisma.clientSession.update({
-      where: { id: session.id },
-      data: { lastActivityAt: new Date() }
-    });
+    const session = authResult.session;
 
     const { id: agreementId } = await params;
 
@@ -45,16 +21,15 @@ export async function GET(
     const agreement = await prisma.agreement.findFirst({
       where: {
         id: agreementId,
-        client: {
-          email: session.client.email
-        }
+        clientId: session.client.id
       },
       include: {
         client: true,
         template: true,
         notes: {
           orderBy: { createdAt: 'desc' }
-        }
+        },
+        signature: true
       }
     });
 
