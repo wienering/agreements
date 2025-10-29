@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -39,7 +39,7 @@ export async function GET(
       data: { lastActivityAt: new Date() }
     });
 
-    const agreementId = params.id;
+    const { id: agreementId } = await params;
 
     // Get agreement details
     const agreement = await prisma.agreement.findFirst({
