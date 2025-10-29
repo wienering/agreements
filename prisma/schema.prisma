@@ -37,7 +37,7 @@ model Client {
   addressAddedAt DateTime?
   agreements     Agreement[]
   sessions       ClientSession[]
-  notes          ClientNote[]
+  clientNotes    ClientNote[] @relation("ClientNotes")
 }
 
 model Template {
@@ -144,14 +144,14 @@ enum AgreementStatus {
 
 model ClientSession {
   id              String   @id @default(cuid())
-  clientEmail     String
+  clientId        String
   sessionToken    String   @unique
   expiresAt       DateTime
   createdAt       DateTime @default(now())
   lastActivityAt DateTime @default(now())
-  client          Client   @relation(fields: [clientEmail], references: [email])
+  client          Client   @relation(fields: [clientId], references: [id])
 
-  @@index([clientEmail])
+  @@index([clientId])
 }
 
 model ClientNote {
@@ -160,7 +160,7 @@ model ClientNote {
   agreementId String?
   content     String
   createdAt   DateTime  @default(now())
-  client      Client    @relation(fields: [clientId], references: [id])
+  client      Client    @relation("ClientNotes", fields: [clientId], references: [id])
   agreement   Agreement? @relation(fields: [agreementId], references: [id])
 
   @@index([clientId])
