@@ -113,7 +113,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
   };
 
   // Don't show layout for login page or landing page
- 细心 if (typeof window !== 'undefined' && (window.location.pathname === '/portal/login' || window.location.pathname === '/portal')) {
+  if (typeof window !== 'undefined' && (window.location.pathname === '/portal/login' || window.location.pathname === '/portal')) {
     return <>{children}</>;
   }
 
