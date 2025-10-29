@@ -368,7 +368,7 @@ export default function AgreementDetail() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              🖼️ {agreement.backdropLink.name}
+              🖼️ Choose Your Backdrop
             </a>
           )}
         </div>
@@ -591,8 +591,8 @@ export default function AgreementDetail() {
             >
               <div className="text-2xl">🖼️</div>
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">{agreement.backdropLink.name}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Choose your backdrop for the event</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white">Choose Your Backdrop For Your Event</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Browse our backdrop options and make your selection</p>
               </div>
             </a>
           ) : (
