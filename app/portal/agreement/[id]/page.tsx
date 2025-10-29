@@ -436,7 +436,7 @@ export default function AgreementDetail() {
         {/* Notes List */}
         {agreement.notes.length === 0 ? (
           <div className="text-center py-8">
-            <div className="text-4xl mb-4">=ƒô¥</div>
+            <div className="text-4xl mb-4">=ï¿½ï¿½ï¿½</div>
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No Notes Yet</h3>
             <p className="text-slate-600 dark:text-slate-300">
               Add your first note using the form above.
