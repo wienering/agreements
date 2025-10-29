@@ -9,16 +9,21 @@ interface PortalLayoutProps {
 }
 
 export default function PortalLayout({ children }: PortalLayoutProps) {
-  const [sessionTimeLeft, setSessionTimeLeft] = useState<number | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
 
   // Check if user is logged in and get session info
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       const token = localStorage.getItem('portal_session_token');
       if (!token) {
-        setIsLoggedIn(false);
+        if (mounted) {
+          setIsLoggedIn(false);
+          setIsChecking(false);
+        }
         return;
       }
 
@@ -29,55 +34,43 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setIsLoggedIn(true);
-          
-          // Calculate time left
-          const expiresAt = new Date(data.session.expiresAt);
-          const now = new Date();
-          const timeLeft = Math.max(0, expiresAt.getTime() - now.getTime());
-          setSessionTimeLeft(timeLeft);
-        } else {
-          // Session expired or invalid
-          localStorage.removeItem('portal_session_token');
-          setIsLoggedIn(false);
-          router.push('/portal/login');
+        if (mounted) {
+          if (response.ok) {
+            setIsLoggedIn(true);
+          } else {
+            // Session expired or invalid
+            localStorage.removeItem('portal_session_token');
+            setIsLoggedIn(false);
+            // Only redirect if not already on login page
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/portal/login')) {
+              router.push('/portal/login');
+            }
+          }
+          setIsChecking(false);
         }
       } catch (error) {
         console.error('Session check failed:', error);
-        localStorage.removeItem('portal_session_token');
-        setIsLoggedIn(false);
-        router.push('/portal/login');
+        if (mounted) {
+          // Only remove session if we get a network error (not on initial load)
+          // This prevents logging out on double refresh
+          if (error instanceof TypeError && error.message.includes('fetch')) {
+            // Network error - keep session for now
+            setIsLoggedIn(!!localStorage.getItem('portal_session_token'));
+          } else {
+            localStorage.removeItem('portal_session_token');
+            setIsLoggedIn(false);
+          }
+          setIsChecking(false);
+        }
       }
     };
 
     checkSession();
 
-    // Update session timer every minute
-    const timer = setInterval(() => {
-      if (sessionTimeLeft !== null) {
-        const newTimeLeft = Math.max(0, sessionTimeLeft - 60000); // Subtract 1 minute
-        setSessionTimeLeft(newTimeLeft);
-        
-        if (newTimeLeft === 0) {
-          // Session expired
-          localStorage.removeItem('portal_session_token');
-          setIsLoggedIn(false);
-          router.push('/portal/login');
-        }
-      }
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, [sessionTimeLeft, router]);
-
-  // Format time left for display
-  const formatTimeLeft = (timeLeft: number) => {
-    const minutes = Math.floor(timeLeft / 60000);
-    const seconds = Math.floor((timeLeft % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -121,13 +114,13 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           </div>
           
           <div className="flex items-center gap-4">
-            {/* Session Timer */}
-            {isLoggedIn && sessionTimeLeft !== null && (
+            {/* Session Status */}
+            {isLoggedIn && (
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
                   <span className="text-slate-600 dark:text-slate-300">
-                    Session: {formatTimeLeft(sessionTimeLeft)}
+                    Session Active
                   </span>
                 </div>
               </div>

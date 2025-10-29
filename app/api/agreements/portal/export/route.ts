@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
     if (format === 'csv') {
       return generateCSVResponse(exportData);
     } else if (format === 'pdf') {
-      return generatePDFResponse(exportData, session.client);
+      return await generatePDFResponse(exportData, session.client);
     } else {
       // Default JSON response
       return NextResponse.json({
@@ -230,27 +230,131 @@ function generateCSVResponse(data: any[]): NextResponse {
   });
 }
 
-function generatePDFResponse(data: any[], client: any): NextResponse {
-  // For now, return a simple text response
-  // In production, you'd use a PDF library like puppeteer or pdfkit
-  const pdfContent = `
-AGREEMENTS EXPORT FOR ${client.firstName} ${client.lastName}
-Generated: ${new Date().toLocaleString()}
+async function generatePDFResponse(data: any[], client: any): Promise<NextResponse> {
+  // Import jsPDF dynamically to avoid SSR issues
+  const jsPDF = (await import('jspdf')).default;
+  
+  // Convert HTML to plain text with proper formatting
+  const convertHtmlToText = (html: string) => {
+    return html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<h[1-6][^>]*>/gi, '\n\n')
+      .replace(/<\/h[1-6]>/gi, '\n\n')
+      .replace(/<strong[^>]*>/gi, '')
+      .replace(/<\/strong>/gi, '')
+      .replace(/<b[^>]*>/gi, '')
+      .replace(/<\/b>/gi, '')
+      .replace(/<em[^>]*>/gi, '')
+      .replace(/<\/em>/gi, '')
+      .replace(/<i[^>]*>/gi, '')
+      .replace(/<\/i>/gi, '')
+      .replace(/<ul[^>]*>/gi, '\n')
+      .replace(/<\/ul>/gi, '\n')
+      .replace(/<ol[^>]*>/gi, '\n')
+      .replace(/<\/ol>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<div[^>]*>/gi, '\n')
+      .replace(/<\/div>/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      .replace(/^\s+|\s+$/g, '')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n /g, '\n')
+      .replace(/ \n/g, '\n');
+  };
 
-${data.map((item, index) => `
-${index + 1}. Agreement ID: ${item.id}
-   Status: ${item.status}
-   Template: ${item.templateTitle}
-   Created: ${item.createdAt}
-   Signed: ${item.signedAt || 'Not signed'}
-   Expires: ${item.expiresAt || 'No expiration'}
-`).join('\n')}
-  `;
+  // Create PDF using jsPDF
+  const doc = new jsPDF('p', 'mm', 'letter');
+  
+  // Set up fonts and margins
+  const pageWidth = 210; // A4 width in mm
+  const margin = 25;
+  const maxWidth = pageWidth - (margin * 2);
+  let yPosition = 25;
 
-  return new NextResponse(pdfContent, {
+  // Helper function to add text with word wrapping
+  const addText = (text: string, fontSize: number = 10, isBold: boolean = false, align: 'left' | 'center' | 'right' = 'left') => {
+    doc.setFontSize(fontSize);
+    if (isBold) {
+      doc.setFont('helvetica', 'bold');
+    } else {
+      doc.setFont('helvetica', 'normal');
+    }
+    
+    const lines = doc.splitTextToSize(text, maxWidth);
+    lines.forEach((line: string) => {
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 25;
+      }
+      
+      let xPosition = margin;
+      if (align === 'center') {
+        xPosition = pageWidth / 2;
+      } else if (align === 'right') {
+        xPosition = pageWidth - margin;
+      }
+      
+      doc.text(line, xPosition, yPosition, { align });
+      yPosition += fontSize * 0.4;
+    });
+  };
+
+  // Header
+  addText('AGREEMENT EXPORT', 20, true, 'center');
+  yPosition += 5;
+  addText(`Client: ${client.firstName} ${client.lastName}`, 14, true, 'center');
+  yPosition += 5;
+  addText(`Generated: ${new Date().toLocaleString()}`, 10, false, 'center');
+  yPosition += 10;
+
+  // Process each agreement
+  data.forEach((item, index) => {
+    if (index > 0) {
+      doc.addPage();
+      yPosition = 25;
+    }
+
+    addText(`AGREEMENT ${index + 1}`, 16, true);
+    yPosition += 8;
+    addText(`Agreement ID: ${item.id}`, 12, false);
+    addText(`Status: ${item.status}`, 12, false);
+    addText(`Template: ${item.templateTitle}`, 12, false);
+    addText(`Created: ${new Date(item.createdAt).toLocaleString()}`, 12, false);
+    if (item.signedAt) {
+      addText(`Signed: ${new Date(item.signedAt).toLocaleString()}`, 12, false);
+    }
+    if (item.expiresAt) {
+      addText(`Expires: ${new Date(item.expiresAt).toLocaleString()}`, 12, false);
+    }
+    yPosition += 8;
+
+    // Add HTML content if available
+    if (item.htmlContent) {
+      addText('AGREEMENT CONTENT:', 12, true);
+      yPosition += 3;
+      const formattedText = convertHtmlToText(item.htmlContent);
+      const lines = formattedText.split('\n');
+      lines.forEach((line) => {
+        if (line.trim()) {
+          addText(line.trim(), 10, false);
+        } else {
+          yPosition += 3;
+        }
+      });
+    }
+  });
+
+  // Get PDF as buffer
+  const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+
+  return new NextResponse(pdfBuffer as any, {
     headers: {
-      'Content-Type': 'text/plain',
-      'Content-Disposition': `attachment; filename="agreements-export-${new Date().toISOString().split('T')[0]}.txt"`
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="agreements-export-${new Date().toISOString().split('T')[0]}.pdf"`
     }
   });
 }

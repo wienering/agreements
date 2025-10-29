@@ -94,26 +94,34 @@ export default function AgreementDetail() {
     }
   }, [agreementId, router]);
 
-  // Activity tracking for session refresh
+  // Activity tracking for session refresh (throttled to prevent excessive calls)
   useEffect(() => {
+    let lastRefresh = 0;
+    const REFRESH_INTERVAL = 60000; // Only refresh once per minute
+
     const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastRefresh < REFRESH_INTERVAL) {
+        return; // Skip if we refreshed recently
+      }
+
       const token = localStorage.getItem('portal_session_token');
       if (token) {
-        // Refresh session on activity
+        lastRefresh = now;
+        // Refresh session on activity - silently fail to avoid disrupting user
         fetch('/api/agreements/portal/session', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         }).catch(() => {
-          // If session refresh fails, redirect to login
-          localStorage.removeItem('portal_session_token');
-          router.push('/portal/login');
+          // Silently fail on network errors to prevent logout on refresh
+          console.debug('Session refresh failed (likely network issue)');
         });
       }
     };
 
-    // Add event listeners for user activity
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    // Add throttled event listeners for user activity
+    const events = ['mousedown', 'keypress', 'scroll'];
     events.forEach(event => {
       document.addEventListener(event, handleActivity, true);
     });
@@ -191,7 +199,9 @@ export default function AgreementDetail() {
     if (!token) return;
 
     try {
-      const response = await fetch(`/api/agreements/portal/export?agreementId=${agreementId}&format=${format}`, {
+      // For PDF export, we need to include HTML content
+      const includeHtml = format === 'pdf';
+      const response = await fetch(`/api/agreements/portal/export?agreementId=${agreementId}&format=${format}&includeHtml=${includeHtml}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -208,7 +218,8 @@ export default function AgreementDetail() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        setError('Failed to export agreement');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to export agreement' }));
+        setError(errorData.error || 'Failed to export agreement');
       }
     } catch (error) {
       setError('Network error. Please try again.');
