@@ -1,0 +1,219 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  phone         String?
+  eventDate     DateTime?
+  eventType     String?
+  eventLocation String?
+  eventStartTime String?
+  eventDuration String?
+  eventPackage  String?
+  packagePrice  Decimal?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Portal enhancements
+  address           String?
+  phoneAddedAt      DateTime?
+  addressAddedAt    DateTime?
+
+  agreements Agreement[]
+  sessions   ClientSession[]
+  clientNotes ClientNote[]
+}
+
+model Template {
+  id           String   @id @default(cuid())
+  title        String
+  internalTitle String?
+  htmlContent  String
+  version      Int      @default(1)
+  order        Int      @default(0)
+  fieldsSchema Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agreements Agreement[]
+  fields     AgreementField[]
+}
+
+model Agreement {
+  id           String   @id @default(cuid())
+  clientId     String
+  templateId   String
+  status       AgreementStatus @default(DRAFT)
+  uniqueToken  String   @unique
+  expiresAt    DateTime?
+  mergedHtml   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Signing and tracking fields
+  signedAt         DateTime?
+  signedFromIP     String?
+  viewCount        Int      @default(0)
+  firstViewedAt    DateTime?
+  lastViewedAt     DateTime?
+  
+  // Cancellation fields
+  cancelledAt      DateTime?
+  cancelledBy      String?
+  cancellationReason String?
+  archived         Boolean  @default(false)
+  archivedAt       DateTime?
+  
+  // Email tracking
+  lastEmailedAt    DateTime?
+  emailSendCount   Int      @default(0)
+  
+  // Portal enhancement fields
+  paymentStatus      String?
+  stripePaymentLink  String?
+  stripeReceiptLink  String?
+  galleryLink        String?
+  nextAction         String?
+  backdropLinkId     String?
+
+  client       Client   @relation(fields: [clientId], references: [id])
+  template     Template @relation(fields: [templateId], references: [id])
+  backdropLink BackdropLink? @relation(fields: [backdropLinkId], references: [id], onDelete: SetNull)
+  fields       AgreementFieldValue[]
+  signature    Signature?
+  auditLogs    AuditLog[]
+  notes        ClientNote[]
+  
+  @@index([clientId])
+  @@index([templateId])
+  @@index([backdropLinkId])
+}
+
+model BackdropLink {
+  id           String      @id @default(cuid())
+  name         String
+  url          String
+  displayOrder Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  agreements   Agreement[]
+  
+  @@index([displayOrder])
+}
+
+model ClientSession {
+  id              String   @id @default(cuid())
+  clientEmail     String
+  sessionToken    String   @unique
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  lastActivityAt  DateTime @default(now())
+  
+  client          Client   @relation(fields: [clientEmail], references: [email])
+  
+  @@index([clientEmail])
+  @@index([sessionToken])
+}
+
+model ClientNote {
+  id          String   @id @default(cuid())
+  clientId    String
+  agreementId String?
+  content     String
+  createdAt   DateTime @default(now())
+  
+  client      Client     @relation(fields: [clientId], references: [id])
+  agreement   Agreement? @relation(fields: [agreementId], references: [id])
+  
+  @@index([clientId])
+  @@index([agreementId])
+}
+
+enum AgreementStatus {
+  DRAFT
+  SENT
+  SIGNED
+  VOID
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+model AgreementField {
+  id                String  @id @default(cuid())
+  templateId        String
+  key               String
+  label             String
+  type              String
+  editableByClient  Boolean @default(false)
+  required          Boolean @default(false)
+
+  template          Template @relation(fields: [templateId], references: [id])
+
+  @@unique([templateId, key])
+}
+
+model AgreementFieldValue {
+  id          String   @id @default(cuid())
+  agreementId String
+  key         String
+  value       String
+
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
+
+  @@unique([agreementId, key])
+}
+
+model Signature {
+  id          String   @id @default(cuid())
+  agreementId String   @unique
+  signerName  String
+  signerEmail String
+  method      String
+  imageUrl    String?
+  typedFont   String?
+  signedAt    DateTime @default(now())
+  ip          String?
+  userAgent   String?
+  contentHash String?
+
+  agreement   Agreement @relation(fields: [agreementId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  agreementId String?
+  actor       String
+  action      String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  agreement   Agreement? @relation(fields: [agreementId], references: [id])
+}
+

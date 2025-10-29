@@ -20,7 +20,7 @@ export async function cleanupExpiredSessions() {
       },
       select: {
         id: true,
-        clientId: true,
+        clientEmail: true,
         expiresAt: true
       }
     });
@@ -47,7 +47,7 @@ export async function cleanupExpiredSessions() {
       deletedCount: deleteResult.count,
       expiredSessions: expiredSessions.map(session => ({
         id: session.id,
-        clientId: session.clientId,
+        clientEmail: session.clientEmail,
         expiredAt: session.expiresAt
       }))
     };
