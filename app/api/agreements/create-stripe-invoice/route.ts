@@ -125,6 +125,22 @@ export async function POST(request: NextRequest) {
 
     const clientName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || agreement.client.email;
 
+    // Build package description for invoice items
+    const eventPackage = agreement.client.eventPackage || '';
+    const baseDescription = eventPackage 
+      ? `Photo Booth Rental ${eventPackage}` 
+      : 'Photo Booth Rental';
+    
+    // Prepare event date for supply date (period) if available
+    const eventDate = agreement.client.eventDate;
+    const periodDates = eventDate ? {
+      start: Math.floor(new Date(eventDate).getTime() / 1000),
+      end: Math.floor(new Date(eventDate).getTime() / 1000), // Same day for service date
+    } : undefined;
+
+    // Thank you memo
+    const thankYouMemo = 'Thanks for choosing Photobooth Guys for your event! We appreciate your business.';
+
     // Find or create Stripe customer
     let customerId: string;
     
@@ -167,6 +183,7 @@ export async function POST(request: NextRequest) {
         collection_method: 'send_invoice',
         due_date: Math.floor(today.getTime() / 1000), // Unix timestamp
         description: `Deposit for ${clientName}`,
+        footer: thankYouMemo,
         metadata: {
           agreementId: agreement.id,
           invoiceType: 'deposit',
@@ -178,7 +195,8 @@ export async function POST(request: NextRequest) {
         customer: customerId,
         invoice: depositInvoice.id,
         amount: Math.round(invoiceDetails.depositAmount * 100), // Convert to cents
-        description: 'Deposit',
+        description: `${baseDescription} Deposit`,
+        period: periodDates,
       });
 
       // Finalize the invoice
@@ -214,6 +232,7 @@ export async function POST(request: NextRequest) {
         description: invoiceDetails.needsTwoInvoices 
           ? `Remaining balance for ${clientName}`
           : `Invoice for ${clientName}`,
+        footer: thankYouMemo,
         metadata: {
           agreementId: agreement.id,
           invoiceType: invoiceDetails.needsTwoInvoices ? 'remaining' : 'full',
@@ -225,7 +244,10 @@ export async function POST(request: NextRequest) {
         customer: customerId,
         invoice: remainingInvoice.id,
         amount: Math.round(remainingOrFullAmount * 100), // Convert to cents
-        description: invoiceDetails.needsTwoInvoices ? 'Remaining Balance' : 'Total Amount',
+        description: invoiceDetails.needsTwoInvoices 
+          ? `${baseDescription} Balance`
+          : baseDescription,
+        period: periodDates,
       });
 
       // Finalize the invoice
