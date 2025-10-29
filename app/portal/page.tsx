@@ -192,7 +192,7 @@ export default function PortalLandingPage() {
               Need Help?
             </h3>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-              If you're having trouble accessing your portal or have questions about your photo booth rental agreement, please contact us. We're here to help ensure your event experience is seamless.
+              If you&apos;re having trouble accessing your portal or have questions about your photo booth rental agreement, please contact us. We&apos;re here to help ensure your event experience is seamless.
             </p>
             <a
               href="mailto:info@photoboothguys.ca"
