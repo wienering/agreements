@@ -108,6 +108,8 @@ export async function GET(request: NextRequest) {
       where: whereClause
     });
 
+    console.log(`[Dashboard] Client ID: ${session.client.id}, Total agreements: ${totalCount}`);
+
     // Get agreements with pagination
     const agreements = await prisma.agreement.findMany({
       where: whereClause,
@@ -147,6 +149,8 @@ export async function GET(request: NextRequest) {
       
       return processedHtml;
     };
+
+    console.log(`[Dashboard] Found ${agreements.length} agreements for client ${session.client.id}`);
 
     // Process agreements with HTML content
     const processedAgreements = agreements.map(agreement => {
