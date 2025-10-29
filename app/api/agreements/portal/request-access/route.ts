@@ -104,22 +104,8 @@ export async function POST(request: NextRequest) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Store verification code in database (better than memory for production)
-    await prisma.clientSession.upsert({
-      where: { 
-        sessionToken: `verification_${emailLower}` 
-      },
-      update: {
-        expiresAt,
-        lastActivityAt: new Date(),
-      },
-      create: {
-        clientEmail: emailLower,
-        sessionToken: `verification_${emailLower}`,
-        expiresAt,
-        lastActivityAt: new Date(),
-      }
-    });
+    // Store verification code temporarily (in production, use Redis or similar)
+    verificationCodes.set(emailLower, { code: verificationCode, expiresAt });
 
     // Check SMTP configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {

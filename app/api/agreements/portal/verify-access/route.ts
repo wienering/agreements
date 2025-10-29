@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Create client session
     await prisma.clientSession.create({
       data: {
-        clientEmail: email,
+        clientId: client.id,
         sessionToken,
         expiresAt,
         lastActivityAt: new Date(),
