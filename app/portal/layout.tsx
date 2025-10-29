@@ -11,6 +11,7 @@ interface PortalLayoutProps {
 export default function PortalLayout({ children }: PortalLayoutProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [clientFirstName, setClientFirstName] = useState<string | null>(null);
   const router = useRouter();
 
   // Check if user is logged in and get session info
@@ -23,6 +24,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
         if (mounted) {
           setIsLoggedIn(false);
           setIsChecking(false);
+          setClientFirstName(null);
         }
         return;
       }
@@ -36,11 +38,24 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
 
         if (mounted) {
           if (response.ok) {
+            const data = await response.json();
             setIsLoggedIn(true);
+            setClientFirstName(data.client?.firstName || null);
+            
+            // Update document title
+            if (typeof document !== 'undefined' && data.client?.firstName) {
+              document.title = `Client Portal - ${data.client.firstName}`;
+            } else if (typeof document !== 'undefined') {
+              document.title = 'Client Portal';
+            }
           } else {
             // Session expired or invalid
             localStorage.removeItem('portal_session_token');
             setIsLoggedIn(false);
+            setClientFirstName(null);
+            if (typeof document !== 'undefined') {
+              document.title = 'Client Portal';
+            }
             // Only redirect if not already on login page
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/portal/login')) {
               router.push('/portal/login');
@@ -59,6 +74,10 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           } else {
             localStorage.removeItem('portal_session_token');
             setIsLoggedIn(false);
+            setClientFirstName(null);
+            if (typeof document !== 'undefined') {
+              document.title = 'Client Portal';
+            }
           }
           setIsChecking(false);
         }
@@ -109,7 +128,9 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
             </div>
             <div className="leading-tight">
               <p className="text-sm text-emerald-600 dark:text-emerald-400">Photobooth Guys</p>
-              <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100">Client Portal</h1>
+              <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Client Portal{clientFirstName ? ` - ${clientFirstName}` : ''}
+              </h1>
             </div>
           </div>
           
