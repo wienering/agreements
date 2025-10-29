@@ -85,6 +85,13 @@ export default function AgreementsPage() {
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [previewAgreement, setPreviewAgreement] = useState<Agreement | null>(null);
   
+  // Invoice creation state
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceAgreement, setInvoiceAgreement] = useState<Agreement | null>(null);
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [invoiceResult, setInvoiceResult] = useState<any>(null);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
     const date = new Date();
@@ -697,6 +704,60 @@ export default function AgreementsPage() {
     setCancellationConfirm('');
   };
 
+  // Invoice creation functions
+  const handleCreateInvoice = (agreement: Agreement) => {
+    setInvoiceAgreement(agreement);
+    setShowInvoiceModal(true);
+    setInvoiceResult(null);
+    setInvoiceError(null);
+  };
+
+  const handleConfirmCreateInvoice = async () => {
+    if (!invoiceAgreement) return;
+
+    try {
+      setCreatingInvoice(true);
+      setInvoiceError(null);
+      setInvoiceResult(null);
+
+      const response = await fetch('/api/agreements/create-stripe-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agreementId: invoiceAgreement.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setInvoiceResult(data);
+        showToast(`Successfully created ${data.invoices?.length || 1} invoice(s)!`, 'success');
+        // Refresh agreements to get updated stripePaymentLink
+        fetchAgreements();
+      } else {
+        setInvoiceError(data.error || data.message || 'Failed to create invoice');
+        showToast(`Error: ${data.error || data.message || 'Failed to create invoice'}`, 'error');
+      }
+    } catch (error: any) {
+      console.error('Error creating invoice:', error);
+      setInvoiceError(error.message || 'Failed to create invoice');
+      showToast('Failed to create invoice', 'error');
+    } finally {
+      setCreatingInvoice(false);
+    }
+  };
+
+  const closeInvoiceModal = () => {
+    setShowInvoiceModal(false);
+    setInvoiceAgreement(null);
+    setInvoiceResult(null);
+    setInvoiceError(null);
+    setCreatingInvoice(false);
+  };
+
   const handleArchiveAgreement = async (agreementId: string) => {
     if (!confirm('Are you sure you want to archive this agreement? It will be moved to the archived section.')) {
       return;
@@ -1228,6 +1289,34 @@ export default function AgreementsPage() {
                     title="Edit agreement content"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => handleCreateInvoice(agreement)}
+                    disabled={!agreement.client.email}
+                    style={{
+                      backgroundColor: !agreement.client.email ? '#9ca3af' : '#8b5cf6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: !agreement.client.email ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (agreement.client.email) {
+                        e.currentTarget.style.backgroundColor = '#7c3aed';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (agreement.client.email) {
+                        e.currentTarget.style.backgroundColor = '#8b5cf6';
+                      }
+                    }}
+                    title={!agreement.client.email ? 'Client email is required to create invoice' : 'Create Stripe invoice for this agreement'}
+                  >
+                    💳 Create Invoice
                   </button>
                   <button
                     onClick={() => {
@@ -2437,6 +2526,424 @@ export default function AgreementsPage() {
                       }}
                     >
                       {cancelling ? 'Cancelling...' : 'CANCEL AGREEMENT'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Invoice Creation Modal */}
+        {showInvoiceModal && invoiceAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              padding: '32px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px'
+              }}>
+                <h2 style={{
+                  margin: '0',
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: textColor
+                }}>
+                  💳 Create Stripe Invoice
+                </h2>
+                <button
+                  onClick={closeInvoiceModal}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: textColor,
+                    padding: '4px'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Loading State */}
+              {creatingInvoice && (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px 20px'
+                }}>
+                  <div style={{
+                    fontSize: '48px',
+                    marginBottom: '16px'
+                  }}>
+                    ⏳
+                  </div>
+                  <p style={{
+                    margin: '0',
+                    color: textColor,
+                    fontSize: '16px'
+                  }}>
+                    Creating invoice...
+                  </p>
+                </div>
+              )}
+
+              {/* Success State */}
+              {!creatingInvoice && invoiceResult && invoiceResult.success && (
+                <div>
+                  <div style={{
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #86efac',
+                    borderRadius: '6px',
+                    padding: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#16a34a', fontSize: '18px' }}>
+                      ✅ Invoice Created Successfully!
+                    </h4>
+                    <p style={{ margin: '0', color: '#166534', fontSize: '14px' }}>
+                      {invoiceResult.message || `Successfully created ${invoiceResult.invoices?.length || 1} invoice(s). The invoice(s) have been sent to the client via email.`}
+                    </p>
+                  </div>
+
+                  {invoiceResult.invoices && invoiceResult.invoices.length > 0 && (
+                    <div style={{
+                      backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '8px',
+                      padding: '20px',
+                      marginBottom: '24px'
+                    }}>
+                      <h3 style={{
+                        margin: '0 0 16px 0',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: textColor
+                      }}>
+                        Invoice Details
+                      </h3>
+                      {invoiceResult.invoices.map((invoice: any, index: number) => (
+                        <div key={index} style={{
+                          padding: '16px',
+                          backgroundColor: cardBg,
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '6px',
+                          marginBottom: index < invoiceResult.invoices.length - 1 ? '12px' : '0'
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '12px'
+                          }}>
+                            <span style={{
+                              backgroundColor: invoice.type === 'deposit' ? '#fef3c7' : invoice.type === 'remaining' ? '#dbeafe' : '#e0e7ff',
+                              color: invoice.type === 'deposit' ? '#92400e' : invoice.type === 'remaining' ? '#1e40af' : '#3730a3',
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              textTransform: 'uppercase'
+                            }}>
+                              {invoice.type === 'deposit' ? 'Deposit' : invoice.type === 'remaining' ? 'Remaining Balance' : 'Full Amount'}
+                            </span>
+                            <span style={{
+                              fontSize: '18px',
+                              fontWeight: '700',
+                              color: textColor
+                            }}>
+                              ${invoice.amount.toFixed(2)}
+                            </span>
+                          </div>
+                          <div style={{
+                            fontSize: '14px',
+                            color: mutedText,
+                            marginBottom: '8px'
+                          }}>
+                            <strong>Due Date:</strong> {new Date(invoice.dueDate).toLocaleDateString('en-CA', {
+                              timeZone: 'America/Toronto',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          {invoice.invoiceUrl && (
+                            <a
+                              href={invoice.invoiceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-block',
+                                backgroundColor: '#3b82f6',
+                                color: 'white',
+                                padding: '8px 16px',
+                                borderRadius: '4px',
+                                textDecoration: 'none',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                marginTop: '8px'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#2563eb';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = '#3b82f6';
+                              }}
+                            >
+                              View Invoice →
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                      {invoiceResult.customerId && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: mutedText,
+                          marginTop: '12px',
+                          paddingTop: '12px',
+                          borderTop: `1px solid ${borderColor}`
+                        }}>
+                          <strong>Stripe Customer ID:</strong> {invoiceResult.customerId}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'flex-end'
+                  }}>
+                    <button
+                      onClick={closeInvoiceModal}
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 24px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {!creatingInvoice && invoiceError && (
+                <div>
+                  <div style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '6px',
+                    padding: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px' }}>
+                      ❌ Error Creating Invoice
+                    </h4>
+                    <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
+                      {invoiceError}
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'flex-end'
+                  }}>
+                    <button
+                      onClick={closeInvoiceModal}
+                      style={{
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 24px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Initial State */}
+              {!creatingInvoice && !invoiceResult && !invoiceError && (
+                <div>
+                  <div style={{
+                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '8px',
+                    padding: '20px',
+                    marginBottom: '24px'
+                  }}>
+                    <h3 style={{
+                      margin: '0 0 16px 0',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: textColor
+                    }}>
+                      Agreement Information
+                    </h3>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                      gap: '16px'
+                    }}>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: isDark ? '#94a3b8' : '#64748b',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginBottom: '4px'
+                        }}>
+                          Client
+                        </label>
+                        <p style={{
+                          margin: '0',
+                          fontSize: '14px',
+                          color: textColor,
+                          fontWeight: '500'
+                        }}>
+                          {invoiceAgreement.client.firstName} {invoiceAgreement.client.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: isDark ? '#94a3b8' : '#64748b',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginBottom: '4px'
+                        }}>
+                          Email
+                        </label>
+                        <p style={{
+                          margin: '0',
+                          fontSize: '14px',
+                          color: textColor,
+                          fontWeight: '500'
+                        }}>
+                          {invoiceAgreement.client.email || 'Not set'}
+                        </p>
+                      </div>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: isDark ? '#94a3b8' : '#64748b',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginBottom: '4px'
+                        }}>
+                          Template
+                        </label>
+                        <p style={{
+                          margin: '0',
+                          fontSize: '14px',
+                          color: textColor,
+                          fontWeight: '500'
+                        }}>
+                          {invoiceAgreement.template.title}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    backgroundColor: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: '6px',
+                    padding: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <p style={{
+                      margin: '0',
+                      color: '#92400e',
+                      fontSize: '14px',
+                      lineHeight: '1.6'
+                    }}>
+                      <strong>Note:</strong> This will create a Stripe invoice and send it to the client via email. 
+                      The invoice due dates will be calculated based on the event date:
+                      <br />
+                      • If event date is more than 7 days away: $100 deposit due today, remaining amount due 7 days before event
+                      <br />
+                      • If event date is 7 days or less: Full amount due today
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    justifyContent: 'flex-end'
+                  }}>
+                    <button
+                      onClick={closeInvoiceModal}
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: mutedText,
+                        border: `1px solid ${borderColor}`,
+                        padding: '12px 24px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmCreateInvoice}
+                      disabled={!invoiceAgreement.client.email}
+                      style={{
+                        backgroundColor: !invoiceAgreement.client.email ? '#9ca3af' : '#8b5cf6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '12px 24px',
+                        borderRadius: '4px',
+                        cursor: !invoiceAgreement.client.email ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Create Invoice
                     </button>
                   </div>
                 </div>
