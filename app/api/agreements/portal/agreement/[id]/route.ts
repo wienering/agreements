@@ -51,6 +51,7 @@ export async function GET(
       },
       include: {
         client: true,
+        template: true,
         notes: {
           orderBy: { createdAt: 'desc' }
         }
@@ -74,7 +75,7 @@ export async function GET(
         createdAt: agreement.createdAt.toISOString(),
         signedAt: agreement.signedAt?.toISOString() || null,
         cancelledAt: agreement.cancelledAt?.toISOString() || null,
-        templateName: agreement.templateName,
+        templateName: agreement.template.title,
         mergedHtml: agreement.mergedHtml,
         notes: agreement.notes.map(note => ({
           id: note.id,
