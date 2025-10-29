@@ -249,7 +249,7 @@ export default function BackdropLinksPage() {
                 No backdrop links yet
               </p>
               <p style={{ margin: '0' }}>
-                Click "Add Backdrop Link" to create your first backdrop selection URL
+                Click &quot;Add Backdrop Link&quot; to create your first backdrop selection URL
               </p>
             </div>
           ) : (
