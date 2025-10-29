@@ -668,6 +668,50 @@ export default function AdminHome() {
               Revenue tracking, client retention, audit logs, and quick actions.
             </p>
           </div>
+
+          <div style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '24px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+          }}
+          onClick={() => router.push('/admin/backdrop-links')}
+          >
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '12px' 
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#ec4899',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '12px',
+                fontSize: '20px'
+              }}>
+                🖼️
+              </div>
+              <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Backdrop Links</h3>
+            </div>
+            <p style={{ margin: '0', color: mutedText, fontSize: '14px' }}>
+              Manage backdrop selection URLs for the client portal.
+            </p>
+          </div>
         </div>
 
       </div>
