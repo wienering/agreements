@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -66,7 +66,7 @@ interface DashboardData {
   isAdminPreview?: boolean;
 }
 
-export default function PortalAdminPreview() {
+function PortalAdminPreviewContent() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
@@ -122,6 +122,7 @@ export default function PortalAdminPreview() {
 
   useEffect(() => {
     fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
@@ -129,6 +130,7 @@ export default function PortalAdminPreview() {
     if (!loading && data) {
       fetchDashboardData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const getStatusColor = (status: string) => {
@@ -497,5 +499,20 @@ export default function PortalAdminPreview() {
         </>
       )}
     </div>
+  );
+}
+
+export default function PortalAdminPreview() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300">Loading...</p>
+        </div>
+      </div>
+    }>
+      <PortalAdminPreviewContent />
+    </Suspense>
   );
 }
