@@ -1952,6 +1952,31 @@ export default function AgreementsPage() {
                   Preview Client View
                 </button>
                 <button
+                  onClick={() => {
+                    if (selectedAgreement?.client?.email) {
+                      // Open portal admin preview in a new tab
+                      const portalUrl = `${window.location.origin}/portal/admin-preview?email=${encodeURIComponent(selectedAgreement.client.email)}`;
+                      window.open(portalUrl, '_blank');
+                    } else {
+                      alert('Client email not found');
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                  title="View client portal (admin preview)"
+                  disabled={!selectedAgreement?.client?.email}
+                >
+                  🔍 View Client Portal
+                </button>
+                <button
                   onClick={() => handlePreviewEmail(selectedAgreement)}
                   style={{
                     backgroundColor: '#8b5cf6',
