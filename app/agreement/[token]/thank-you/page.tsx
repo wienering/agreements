@@ -634,6 +634,58 @@ export default function ThankYouPage() {
                   fontWeight: '600',
                   color: isDark ? '#f1f5f9' : '#1e293b'
                 }}>
+                  🔗 Access Your Client Portal
+                </h3>
+                <p style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '14px',
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  lineHeight: '1.5'
+                }}>
+                  View all your agreements, track payment status, access your event gallery, and manage your event details in one convenient place.
+                </p>
+                <a
+                  href="/portal/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 20px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#059669';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#10b981';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Open Client Portal →
+                </a>
+              </div>
+              
+              <div style={{
+                padding: '20px',
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`
+              }}>
+                <h3 style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: isDark ? '#f1f5f9' : '#1e293b'
+                }}>
                   📸 Choose Your Print Template
                 </h3>
                 <p style={{

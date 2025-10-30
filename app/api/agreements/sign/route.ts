@@ -411,6 +411,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
           <div class="next-steps">
             <h3>What's Next?</h3>
             <ul>
+              <li><strong>Client Portal Access:</strong> Use your email to access your personal portal for managing all event details</li>
               <li><strong>Template Selection:</strong> Choose your photo booth template to match your event theme</li>
               <li><strong>Event Planning:</strong> We'll be in touch closer to your event date to finalize details</li>
               <li><strong>Questions:</strong> Don't hesitate to reach out if you have any questions</li>
@@ -419,6 +420,22 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${agreementUrl}" class="button">View Your Agreement</a>
+            <a href="${baseUrl}/portal/login" class="button" style="background-color: #10b981 !important;">Access Client Portal</a>
+          </div>
+          
+          <div class="contact-info">
+            <h3>Your Client Portal</h3>
+            <p>Access your personal client portal using your email address (${agreement.client.email}) to:</p>
+            <ul>
+              <li>View all your agreements and their current status</li>
+              <li>Track payment information and make payments online</li>
+              <li>Access your event gallery when photos are ready</li>
+              <li>Update your event details and preferences</li>
+              <li>Download copies of signed agreements anytime</li>
+            </ul>
+            <p style="text-align: center; margin: 20px 0;">
+              <a href="${baseUrl}/portal/login" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">Open Client Portal →</a>
+            </p>
           </div>
           
           <div class="contact-info">
