@@ -4,8 +4,8 @@
  * Plugin URI: https://your-domain.com
  * Description: Automatically sends booking data from Bookly WordPress plugin to your Agreements app when a booking is created. Creates or updates client records automatically.
  * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://your-domain.com
+ * Author: Photobooth Guys
+ * Author URI: https://www.photoboothguys.ca
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: bookly-agreements-integration
@@ -91,9 +91,20 @@ class Bookly_Agreements_Integration {
         }
         
         // Hook into Bookly booking creation - try multiple hook names
+        // Log when hooks are registered
+        $this->log_success('Registering Bookly hooks...');
+        
         add_action('bookly_booking_created', array($this, 'send_booking_to_agreements'), 10, 1);
         add_action('bookly_appointment_created', array($this, 'send_booking_to_agreements'), 10, 1);
         add_action('bookly_new_booking', array($this, 'send_booking_to_agreements'), 10, 1);
+        
+        // Additional hooks to try (some Bookly versions use these)
+        add_action('bookly_after_appointment_created', array($this, 'send_booking_to_agreements'), 10, 1);
+        add_action('bookly_after_booking_created', array($this, 'send_booking_to_agreements'), 10, 1);
+        add_action('bookly_appointment_saved', array($this, 'send_booking_to_agreements'), 10, 1);
+        
+        // Log all hook registrations
+        $this->log_success('Hooks registered: bookly_booking_created, bookly_appointment_created, bookly_new_booking, bookly_after_appointment_created, bookly_after_booking_created, bookly_appointment_saved');
         
         // Alternative: Thank you page approach (uncomment if needed)
         // add_action('template_redirect', array($this, 'catch_thank_you_page'));
@@ -524,15 +535,83 @@ class Bookly_Agreements_Integration {
             <hr>
             
             <h2>Testing & Troubleshooting</h2>
+            
+            <h3>Test Webhook Connection</h3>
+            <form method="post" action="" style="margin: 20px 0;">
+                <?php wp_nonce_field('bookly_test_webhook'); ?>
+                <input type="hidden" name="bookly_test_action" value="test_webhook">
+                <p>Click this button to send a test booking to your Agreements app:</p>
+                <button type="submit" class="button button-primary">Test Webhook Now</button>
+            </form>
+            
+            <?php
+            // Handle test webhook
+            if (isset($_POST['bookly_test_action']) && $_POST['bookly_test_action'] === 'test_webhook' && check_admin_referer('bookly_test_webhook')) {
+                $test_payload = array(
+                    'email' => 'test@example.com',
+                    'firstName' => 'Test',
+                    'lastName' => 'Client',
+                    'bookingDate' => date('Y-m-d'),
+                    'bookingTime' => '10:00',
+                    'serviceName' => 'Test Service',
+                    'phone' => '123-456-7890',
+                );
+                
+                $response = $this->send_webhook($test_payload);
+                
+                if (is_wp_error($response)) {
+                    echo '<div class="notice notice-error"><p><strong>Test Failed:</strong> ' . esc_html($response->get_error_message()) . '</p></div>';
+                } else {
+                    $response_code = wp_remote_retrieve_response_code($response);
+                    $response_body = wp_remote_retrieve_body($response);
+                    
+                    if ($response_code >= 200 && $response_code < 300) {
+                        echo '<div class="notice notice-success"><p><strong>Test Successful!</strong> Response (' . $response_code . '): ' . esc_html($response_body) . '</p></div>';
+                    } else {
+                        echo '<div class="notice notice-error"><p><strong>Test Failed:</strong> HTTP ' . $response_code . ' - ' . esc_html($response_body) . '</p></div>';
+                    }
+                }
+            }
+            ?>
+            
+            <h3>Check Integration Status</h3>
+            <table class="form-table">
+                <tr>
+                    <th>Integration Enabled:</th>
+                    <td><?php echo $this->settings['enabled'] ? '<span style="color:green;">✓ Yes</span>' : '<span style="color:red;">✗ No</span>'; ?></td>
+                </tr>
+                <tr>
+                    <th>Webhook URL:</th>
+                    <td><?php echo !empty($this->settings['webhook_url']) ? esc_html($this->settings['webhook_url']) : '<span style="color:red;">Not configured</span>'; ?></td>
+                </tr>
+                <tr>
+                    <th>Last Booking Test:</th>
+                    <td>Create a test booking in Bookly and check logs below</td>
+                </tr>
+            </table>
+            
+            <h3>Debug Logs</h3>
             <p>After configuring, create a test booking in Bookly and check the WordPress error log for messages:</p>
             <ul>
-                <li><code>Bookly Integration: Successfully sent booking X to Agreements app</code> ✅</li>
-                <li><code>Bookly Integration: Webhook error - ...</code> ❌</li>
+                <li><code>Bookly Agreements Integration: Hook triggered!</code> - Hook is firing ✅</li>
+                <li><code>Bookly Agreements Integration: Processing booking ID: X</code> - Processing booking ✅</li>
+                <li><code>Bookly Agreements Integration: Successfully sent booking X</code> - Success ✅</li>
+                <li><code>Bookly Agreements Integration ERROR: ...</code> - Error occurred ❌</li>
             </ul>
-            <p>To enable WordPress debug logging, add these lines to <code>wp-config.php</code>:</p>
+            <p><strong>To enable WordPress debug logging, add these lines to <code>wp-config.php</code>:</strong></p>
             <pre><code>define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
 define('WP_DEBUG_DISPLAY', false);</code></pre>
+            <p>The log file will be at: <code>wp-content/debug.log</code></p>
+            
+            <h3>Check Active Hooks</h3>
+            <p>Current hooks registered:</p>
+            <ul>
+                <li><code>bookly_booking_created</code></li>
+                <li><code>bookly_appointment_created</code></li>
+                <li><code>bookly_new_booking</code></li>
+            </ul>
+            <p><strong>Note:</strong> If you don't see "Hook triggered!" in logs, none of these hooks are firing. Your Bookly version may use different hook names. Check Bookly documentation or contact support.</p>
         </div>
         <?php
     }
