@@ -177,37 +177,66 @@ class Bookly_Agreements_Integration {
         
         if (!$booking_id) {
             $this->log_error('No booking ID provided');
-            return;
+            return false;
         }
+        
+        // Check if plugin is enabled and configured
+        if (!$this->settings['enabled']) {
+            $this->log_error('Integration is disabled in settings');
+            return false;
+        }
+        
+        if (empty($this->settings['webhook_url'])) {
+            $this->log_error('Webhook URL is not configured. Please set it in Settings → Bookly → Agreements');
+            return false;
+        }
+        
+        $this->log_success("Processing booking ID: $booking_id");
         
         // Fetch booking details from Bookly
         $booking_details = $this->get_booking_details($booking_id);
         
         if (!$booking_details) {
             $this->log_error("Could not fetch booking details for ID: $booking_id");
-            return;
+            return false;
         }
         
-        $this->log_success("Fetched booking details: " . print_r($booking_details, true));
+        // Check if we got email (required field)
+        if (empty($booking_details['customer_email'])) {
+            $this->log_error("No customer email found for booking ID: $booking_id. Booking details: " . print_r($booking_details, true));
+            return false;
+        }
+        
+        $this->log_success("Fetched booking details. Email: " . $booking_details['customer_email']);
         
         // Prepare payload for Agreements app
         $payload = $this->prepare_payload($booking_details);
         
-        $this->log_success("Prepared payload: " . json_encode($payload));
+        // Verify email is in payload (required)
+        if (empty($payload['email'])) {
+            $this->log_error("No email in prepared payload for booking ID: $booking_id. Payload: " . json_encode($payload));
+            return false;
+        }
+        
+        $this->log_success("Prepared payload with email: " . $payload['email']);
         
         // Send to Agreements app
         $response = $this->send_webhook($payload);
         
         if (is_wp_error($response)) {
-            $this->log_error('Webhook error - ' . $response->get_error_message());
+            $error_msg = $response->get_error_message();
+            $this->log_error("Webhook error for booking $booking_id: $error_msg");
+            return false;
         } else {
             $response_code = wp_remote_retrieve_response_code($response);
+            $response_body = wp_remote_retrieve_body($response);
+            
             if ($response_code >= 200 && $response_code < 300) {
-                $response_body = wp_remote_retrieve_body($response);
-                $this->log_success("Successfully sent booking $booking_id to Agreements app. Response: $response_body");
+                $this->log_success("Successfully sent booking $booking_id to Agreements app. Response ($response_code): $response_body");
+                return true;
             } else {
-                $response_body = wp_remote_retrieve_body($response);
-                $this->log_error("Webhook failed with code $response_code: $response_body");
+                $this->log_error("Webhook failed for booking $booking_id. Code: $response_code, Response: $response_body");
+                return false;
             }
         }
     }
@@ -354,10 +383,22 @@ class Bookly_Agreements_Integration {
             $payload['templateId'] = $this->settings['template_id'];
         }
         
-        // Remove null values to keep payload clean
-        return array_filter($payload, function($value) {
+        // IMPORTANT: Always keep email, even if empty, so we can validate it
+        // Remove null values but keep email
+        $filtered = array_filter($payload, function($value, $key) {
+            // Always keep email for validation
+            if ($key === 'email') {
+                return true;
+            }
             return $value !== null && $value !== '';
-        });
+        }, ARRAY_FILTER_USE_BOTH);
+        
+        // Ensure email is in the result
+        if (isset($payload['email'])) {
+            $filtered['email'] = $payload['email'];
+        }
+        
+        return $filtered;
     }
     
     /**
@@ -394,7 +435,16 @@ class Bookly_Agreements_Integration {
             return new WP_Error('no_url', 'Webhook URL is not configured');
         }
         
+        // Verify email is in payload before sending
+        if (empty($payload['email'])) {
+            $this->log_error('Cannot send webhook: Email is missing from payload. Payload: ' . json_encode($payload));
+            return new WP_Error('no_email', 'Email is required in payload');
+        }
+        
         $body = json_encode($payload);
+        
+        $this->log_success('Sending webhook to: ' . $this->settings['webhook_url']);
+        $this->log_success('Payload size: ' . strlen($body) . ' bytes');
         
         $args = array(
             'method' => 'POST',
@@ -413,7 +463,18 @@ class Bookly_Agreements_Integration {
             $args['headers']['X-Signature'] = $signature; // Alternative header name
         }
         
-        return wp_remote_post($this->settings['webhook_url'], $args);
+        $response = wp_remote_post($this->settings['webhook_url'], $args);
+        
+        // Log the actual request details for debugging
+        if (is_wp_error($response)) {
+            $this->log_error('WP_Remote_Post Error: ' . $response->get_error_code() . ' - ' . $response->get_error_message());
+        } else {
+            $response_code = wp_remote_retrieve_response_code($response);
+            $response_body = wp_remote_retrieve_body($response);
+            $this->log_success("Webhook response code: $response_code, body length: " . strlen($response_body));
+        }
+        
+        return $response;
     }
     
     /**
@@ -484,31 +545,64 @@ class Bookly_Agreements_Integration {
             return array('found' => 0, 'processed' => 0, 'errors' => array('Table does not exist'));
         }
         
+        // Get bookings with customer info to verify we can access email
         $query = "
-            SELECT ca.id 
+            SELECT ca.id, ca.customer_id, ca.status, c.email as has_email
             FROM {$bookly_customer_appointments_table} ca
+            LEFT JOIN {$wpdb->prefix}bookly_customers c ON ca.customer_id = c.id
             WHERE ca.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
             AND ca.status IN ('approved', 'done', 'waitlisted')
             ORDER BY ca.created_at DESC
             LIMIT 50
         ";
         
-        $recent_bookings = $wpdb->get_col($query);
+        $recent_bookings_data = $wpdb->get_results($query, ARRAY_A);
         
-        if (empty($recent_bookings)) {
+        if (empty($recent_bookings_data)) {
             return array('found' => 0, 'processed' => 0, 'errors' => array());
         }
         
         $processed = 0;
         $errors = array();
+        $recent_bookings = array();
+        
+        // Extract booking IDs and check for emails
+        foreach ($recent_bookings_data as $booking_data) {
+            $booking_id = $booking_data['id'];
+            $recent_bookings[] = $booking_id;
+            
+            // Pre-check: Does this booking have an email?
+            if (empty($booking_data['has_email'])) {
+                $errors[] = "Booking ID $booking_id: Customer has no email in database (customer_id: " . $booking_data['customer_id'] . ")";
+            }
+        }
         
         foreach ($recent_bookings as $booking_id) {
             try {
+                // First verify we can get booking details
+                $booking_details = $this->get_booking_details($booking_id);
+                if (!$booking_details) {
+                    $errors[] = "Booking ID $booking_id: Could not fetch booking details from database";
+                    continue;
+                }
+                
+                // Check for required email
+                if (empty($booking_details['customer_email'])) {
+                    $errors[] = "Booking ID $booking_id: No customer email found";
+                    continue;
+                }
+                
                 // Send booking data
-                $this->send_booking_to_agreements($booking_id);
-                $processed++;
+                $result = $this->send_booking_to_agreements($booking_id);
+                
+                // Check if it actually succeeded
+                if ($result === true) {
+                    $processed++;
+                } else {
+                    $errors[] = "Booking ID $booking_id: Failed to send (check logs for details)";
+                }
             } catch (Exception $e) {
-                $errors[] = "Booking ID $booking_id: " . $e->getMessage();
+                $errors[] = "Booking ID $booking_id: Exception - " . $e->getMessage();
             }
         }
         
@@ -720,12 +814,35 @@ class Bookly_Agreements_Integration {
                 $result = $this->check_recent_bookings();
                 if ($result && isset($result['found'])) {
                     if ($result['found'] > 0) {
-                        echo '<div class="notice notice-success"><p><strong>Sync Complete!</strong> Found ' . esc_html($result['found']) . ' recent booking(s), processed ' . esc_html($result['processed']) . '.</p></div>';
+                        $message = '<strong>Sync Complete!</strong> Found ' . esc_html($result['found']) . ' recent booking(s), successfully processed ' . esc_html($result['processed']) . '.';
+                        if ($result['processed'] < $result['found']) {
+                            $message .= ' Some bookings failed - check details below.';
+                        }
+                        echo '<div class="notice notice-' . ($result['processed'] > 0 ? 'success' : 'warning') . '"><p>' . $message . '</p></div>';
+                        
                         if (!empty($result['errors'])) {
-                            echo '<div class="notice notice-warning"><p><strong>Some errors occurred:</strong><br>' . esc_html(implode('<br>', $result['errors'])) . '</p></div>';
+                            echo '<div class="notice notice-warning"><p><strong>Errors occurred:</strong><br>' . esc_html(implode('<br>', $result['errors'])) . '</p></div>';
+                        }
+                        
+                        if ($result['processed'] == 0) {
+                            echo '<div class="notice notice-warning"><p><strong>Bookings found but none processed.</strong><br>';
+                            if (!empty($result['errors'])) {
+                                echo 'Errors:<br><ul style="margin-left:20px;">';
+                                foreach ($result['errors'] as $error) {
+                                    echo '<li>' . esc_html($error) . '</li>';
+                                }
+                                echo '</ul>';
+                            } else {
+                                echo 'Possible causes:<br>
+                                - Booking details couldn\'t be fetched from database<br>
+                                - Email missing from booking data<br>
+                                - Webhook request failed<br>
+                                Check your server\'s error logs or PHP error logs for detailed messages.';
+                            }
+                            echo '</p></div>';
                         }
                     } else {
-                        echo '<div class="notice notice-info"><p>No recent bookings found (last 24 hours).</p></div>';
+                        echo '<div class="notice notice-info"><p>No recent bookings found (last 24 hours with approved/done/waitlisted status).</p></div>';
                     }
                 } else {
                     echo '<div class="notice notice-error"><p>Error checking bookings. Check database connection.</p></div>';
