@@ -223,6 +223,41 @@ function mapBooklyToClient(data: z.infer<typeof booklyWebhookSchema>) {
   };
 }
 
+// GET handler - returns endpoint information (helpful for testing/verification)
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    message: 'Bookly Webhook Endpoint',
+    endpoint: '/api/agreements/bookly-webhook',
+    method: 'POST',
+    description: 'This endpoint receives booking data from Bookly WordPress plugin',
+    status: 'active',
+    requiredFields: {
+      email: 'string (required) - Customer email address'
+    },
+    optionalFields: {
+      firstName: 'string - Customer first name',
+      lastName: 'string - Customer last name',
+      phone: 'string - Customer phone number',
+      bookingDate: 'string - Booking/appointment date',
+      bookingTime: 'string - Booking/appointment time',
+      serviceName: 'string - Service name',
+      location: 'string - Booking location',
+      duration: 'string - Service duration',
+      price: 'number - Service price',
+      notes: 'string - Additional notes'
+    },
+    examplePayload: {
+      email: 'customer@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      bookingDate: '2024-01-15',
+      bookingTime: '10:00',
+      serviceName: 'Photography Session'
+    },
+    note: 'This endpoint only accepts POST requests. Use POST method to send booking data.'
+  }, { status: 200 });
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get raw body for signature verification
