@@ -295,9 +295,9 @@ class Bookly_Agreements_Integration {
                 c.phone as customer_phone,
                 c.notes as customer_notes,
                 a.start_date,
-                DATE_FORMAT(a.start_date, '%%H:%%i') as start_time,
+                DATE_FORMAT(a.start_date, '%%h:%%i %%p') as start_time,
                 a.end_date,
-                DATE_FORMAT(a.end_date, '%%H:%%i') as end_time,
+                DATE_FORMAT(a.end_date, '%%h:%%i %%p') as end_time,
                 a.location_id as location,
                 s.title as service_name,
                 s.duration,
@@ -318,6 +318,21 @@ class Bookly_Agreements_Integration {
             // Fallback: Try using Bookly's internal functions if available
             return $this->get_booking_fallback($booking_id);
         }
+        
+        // Extract address from custom_fields JSON (field ID 21883)
+        $location_address = '';
+        if (!empty($booking_basic['custom_fields'])) {
+            $custom_fields = json_decode($booking_basic['custom_fields'], true);
+            if (is_array($custom_fields)) {
+                foreach ($custom_fields as $field) {
+                    if (isset($field['id']) && $field['id'] == 21883 && !empty($field['value'])) {
+                        $location_address = $field['value'];
+                        break;
+                    }
+                }
+            }
+        }
+        $booking['location_address'] = $location_address;
         
         // If customer_email is empty but we found the customer separately, use that
         if (empty($booking['customer_email']) && $customer && !empty($customer['email'])) {
@@ -346,9 +361,9 @@ class Bookly_Agreements_Integration {
                 
                 if ($appointment) {
                     $booking['start_date'] = $appointment['start_date'] ?? '';
-                    $booking['start_time'] = $appointment['start_date'] ? date('H:i', strtotime($appointment['start_date'])) : '';
+                    $booking['start_time'] = $appointment['start_date'] ? date('g:i A', strtotime($appointment['start_date'])) : '';
                     $booking['end_date'] = $appointment['end_date'] ?? '';
-                    $booking['end_time'] = $appointment['end_date'] ? date('H:i', strtotime($appointment['end_date'])) : '';
+                    $booking['end_time'] = $appointment['end_date'] ? date('g:i A', strtotime($appointment['end_date'])) : '';
                     $booking['location'] = $appointment['location_id'] ?? '';
                     
                     // Get service if we have service_id
@@ -362,6 +377,19 @@ class Bookly_Agreements_Integration {
                             $booking['service_name'] = $service['title'] ?? '';
                             $booking['duration'] = $service['duration'] ?? '';
                             $booking['price'] = $service['price'] ?? '';
+                        }
+                    }
+                }
+            }
+            
+            // Ensure location_address is set if it wasn't already (in case JOIN didn't work)
+            if (empty($booking['location_address']) && !empty($booking_basic['custom_fields'])) {
+                $custom_fields = json_decode($booking_basic['custom_fields'], true);
+                if (is_array($custom_fields)) {
+                    foreach ($custom_fields as $field) {
+                        if (isset($field['id']) && $field['id'] == 21883 && !empty($field['value'])) {
+                            $booking['location_address'] = $field['value'];
+                            break;
                         }
                     }
                 }
@@ -428,6 +456,15 @@ class Bookly_Agreements_Integration {
         $start_date = $booking_details['start_date'] ?? '';
         $start_time = $booking_details['start_time'] ?? '';
         
+        // Format duration from seconds to decimal hours
+        $duration_formatted = '';
+        if (!empty($booking_details['duration'])) {
+            $duration_formatted = $this->format_duration($booking_details['duration']);
+        }
+        
+        // Get location address (prefer extracted address over location_id)
+        $event_location = $booking_details['location_address'] ?? $booking_details['location'] ?? null;
+        
         // Prepare payload matching the webhook schema
         $payload = array(
             'email' => $booking_details['customer_email'] ?? '',
@@ -444,12 +481,12 @@ class Bookly_Agreements_Integration {
             // Service information
             'serviceName' => $booking_details['service_name'] ?? null,
             'eventType' => $booking_details['service_name'] ?? null,
-            'duration' => $booking_details['duration'] ?? null,
-            'eventDuration' => $booking_details['duration'] ?? null,
+            'duration' => $duration_formatted ?: null,
+            'eventDuration' => $duration_formatted ?: null,
             
             // Location
-            'location' => $booking_details['location'] ?? null,
-            'eventLocation' => $booking_details['location'] ?? null,
+            'location' => $event_location,
+            'eventLocation' => $event_location,
             
             // Price
             'price' => $booking_details['price'] ?? null,
@@ -481,6 +518,21 @@ class Bookly_Agreements_Integration {
         }
         
         return $filtered;
+    }
+    
+    /**
+     * Format duration from seconds to decimal hours format
+     * 
+     * @param int|string $seconds Duration in seconds
+     * @return string Formatted duration (e.g., "2.5 hours")
+     */
+    private function format_duration($seconds) {
+        if (empty($seconds) || !is_numeric($seconds)) {
+            return '';
+        }
+        
+        $hours = round($seconds / 3600, 1);
+        return $hours . ' hours';
     }
     
     /**
