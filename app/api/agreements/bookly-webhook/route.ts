@@ -1,0 +1,401 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+import { randomBytes } from 'crypto';
+import { createHmac } from 'crypto';
+
+// Flexible schema to handle various Bookly payload formats
+const booklyWebhookSchema = z.object({
+  // Customer information - support multiple formats
+  email: z.string().email('Valid email is required'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  fullName: z.string().optional(), // Alternative to firstName/lastName
+  phone: z.string().optional(),
+  
+  // Booking/Appointment information
+  bookingDate: z.string().optional(), // ISO date string or date format
+  bookingTime: z.string().optional(),
+  appointmentDate: z.string().optional(), // Alternative field name
+  appointmentTime: z.string().optional(), // Alternative field name
+  
+  // Service information
+  serviceName: z.string().optional(),
+  serviceType: z.string().optional(),
+  eventType: z.string().optional(),
+  eventPackage: z.string().optional(),
+  
+  // Location
+  location: z.string().optional(),
+  eventLocation: z.string().optional(),
+  address: z.string().optional(),
+  
+  // Duration and pricing
+  duration: z.string().optional(),
+  eventDuration: z.string().optional(),
+  price: z.union([z.string(), z.number()]).optional(),
+  packagePrice: z.union([z.string(), z.number()]).optional(),
+  
+  // Notes and additional info
+  notes: z.string().optional(),
+  customerNotes: z.string().optional(),
+  customFields: z.record(z.any()).optional(),
+  
+  // Nested structures (in case Bookly sends structured data)
+  customer: z.object({
+    email: z.string().email().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    fullName: z.string().optional(),
+    phone: z.string().optional(),
+    notes: z.string().optional(),
+  }).optional(),
+  
+  appointment: z.object({
+    date: z.string().optional(),
+    time: z.string().optional(),
+    startDate: z.string().optional(),
+    startTime: z.string().optional(),
+    location: z.string().optional(),
+    duration: z.string().optional(),
+  }).optional(),
+  
+  service: z.object({
+    name: z.string().optional(),
+    type: z.string().optional(),
+    duration: z.string().optional(),
+    price: z.union([z.string(), z.number()]).optional(),
+  }).optional(),
+  
+  // Optional agreement creation
+  templateId: z.string().optional(),
+  
+  // Webhook signature (optional)
+  signature: z.string().optional(),
+}).refine(
+  (data) => {
+    // Email must be present either at root level or in customer object
+    return data.email || data.customer?.email;
+  },
+  {
+    message: 'Email is required (either at root level or in customer object)',
+  }
+);
+
+// Helper function to verify webhook signature (optional)
+function verifyWebhookSignature(
+  payload: string,
+  signature: string | null,
+  secret: string | undefined
+): boolean {
+  if (!secret || !signature) {
+    // If no secret configured, allow requests (for testing/optional security)
+    return true;
+  }
+
+  try {
+    const hmac = createHmac('sha256', secret);
+    hmac.update(payload);
+    const expectedSignature = hmac.digest('hex');
+    
+    // Support both hex and base64 signatures
+    return (
+      signature === expectedSignature ||
+      signature === Buffer.from(expectedSignature, 'hex').toString('base64')
+    );
+  } catch (error) {
+    console.error('Error verifying webhook signature:', error);
+    return false;
+  }
+}
+
+// Helper function to split full name into first and last name
+function splitName(fullName: string | undefined): { firstName: string; lastName: string } {
+  if (!fullName) {
+    return { firstName: '', lastName: '' };
+  }
+  
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: '' };
+  }
+  
+  const lastName = parts.pop() || '';
+  const firstName = parts.join(' ');
+  return { firstName, lastName };
+}
+
+// Helper function to parse date string
+function parseDate(dateStr: string | undefined): Date | null {
+  if (!dateStr) return null;
+  
+  try {
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+}
+
+// Helper function to parse price
+function parsePrice(price: string | number | undefined): number | null {
+  if (price === undefined || price === null) return null;
+  
+  if (typeof price === 'number') {
+    return price;
+  }
+  
+  // Remove currency symbols and parse
+  const cleaned = String(price).replace(/[^0-9.-]/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? null : parsed;
+}
+
+// Map Bookly data to Client model fields
+function mapBooklyToClient(data: z.infer<typeof booklyWebhookSchema>) {
+  // Extract email (priority: root > customer object)
+  const email = data.email || data.customer?.email || '';
+  
+  // Extract name fields
+  let firstName = data.firstName || data.customer?.firstName || '';
+  let lastName = data.lastName || data.customer?.lastName || '';
+  
+  // If full name provided and firstName/lastName missing, split it
+  if ((!firstName && !lastName) && (data.fullName || data.customer?.fullName)) {
+    const split = splitName(data.fullName || data.customer?.fullName);
+    firstName = split.firstName;
+    lastName = split.lastName;
+  }
+  
+  // Extract phone
+  const phone = data.phone || data.customer?.phone || null;
+  
+  // Extract date/time (try multiple field names)
+  const bookingDateStr = data.bookingDate || data.appointmentDate || 
+                        data.appointment?.date || data.appointment?.startDate || null;
+  const bookingTimeStr = data.bookingTime || data.appointmentTime || 
+                        data.appointment?.time || data.appointment?.startTime || null;
+  
+  // Extract service/event info
+  const eventType = data.serviceName || data.serviceType || data.eventType || 
+                   data.service?.name || data.service?.type || null;
+  const eventPackage = data.eventPackage || null;
+  
+  // Extract location
+  const eventLocation = data.location || data.eventLocation || data.address ||
+                       data.appointment?.location || null;
+  
+  // Extract duration
+  const eventDuration = data.duration || data.eventDuration || 
+                       data.appointment?.duration || data.service?.duration || null;
+  
+  // Extract price
+  const price = parsePrice(data.price || data.packagePrice || data.service?.price);
+  
+  // Extract notes
+  const notes = data.notes || data.customerNotes || data.customer?.notes || null;
+  
+  // Combine date and time if both provided
+  let eventDate: Date | null = null;
+  if (bookingDateStr) {
+    if (bookingTimeStr) {
+      // Try to combine date and time
+      const combined = `${bookingDateStr}T${bookingTimeStr}`;
+      eventDate = parseDate(combined) || parseDate(bookingDateStr);
+    } else {
+      eventDate = parseDate(bookingDateStr);
+    }
+  }
+  
+  return {
+    email: email.toLowerCase().trim(),
+    firstName: firstName.trim() || 'Customer',
+    lastName: lastName.trim() || '',
+    phone,
+    eventDate,
+    eventStartTime: bookingTimeStr || null,
+    eventType,
+    eventPackage,
+    eventLocation,
+    eventDuration,
+    packagePrice: price,
+    notes,
+  };
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Get raw body for signature verification
+    const rawBody = await request.text();
+    let payload: any;
+    
+    try {
+      payload = JSON.parse(rawBody);
+    } catch (error) {
+      console.error('Invalid JSON payload:', error);
+      return NextResponse.json(
+        { error: 'Invalid JSON payload' },
+        { status: 400 }
+      );
+    }
+
+    // Optional webhook signature verification
+    const webhookSecret = process.env.BOOKLY_WEBHOOK_SECRET;
+    const signature = request.headers.get('x-bookly-signature') || 
+                     request.headers.get('x-signature') ||
+                     payload.signature || null;
+    
+    if (webhookSecret && signature) {
+      const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        return NextResponse.json(
+          { error: 'Invalid webhook signature' },
+          { status: 401 }
+        );
+      }
+    }
+
+    // Validate payload
+    const validatedData = booklyWebhookSchema.parse(payload);
+
+    console.log('📥 Bookly webhook received:', {
+      email: validatedData.email || validatedData.customer?.email,
+      hasAppointment: !!validatedData.appointment,
+      hasService: !!validatedData.service,
+    });
+
+    // Map Bookly data to Client model
+    const clientData = mapBooklyToClient(validatedData);
+
+    if (!clientData.email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    // Upsert client (create or update by email)
+    const client = await prisma.client.upsert({
+      where: { email: clientData.email },
+      update: {
+        // Update booking-related fields, preserve existing non-null fields if new ones are null
+        firstName: clientData.firstName || undefined,
+        lastName: clientData.lastName || undefined,
+        phone: clientData.phone || undefined,
+        eventDate: clientData.eventDate || undefined,
+        eventStartTime: clientData.eventStartTime || undefined,
+        eventType: clientData.eventType || undefined,
+        eventPackage: clientData.eventPackage || undefined,
+        eventLocation: clientData.eventLocation || undefined,
+        eventDuration: clientData.eventDuration || undefined,
+        packagePrice: clientData.packagePrice !== null ? clientData.packagePrice : undefined,
+        notes: clientData.notes || undefined,
+      },
+      create: {
+        email: clientData.email,
+        firstName: clientData.firstName,
+        lastName: clientData.lastName,
+        phone: clientData.phone,
+        eventDate: clientData.eventDate,
+        eventStartTime: clientData.eventStartTime,
+        eventType: clientData.eventType,
+        eventPackage: clientData.eventPackage,
+        eventLocation: clientData.eventLocation,
+        eventDuration: clientData.eventDuration,
+        packagePrice: clientData.packagePrice,
+        notes: clientData.notes,
+      },
+    });
+
+    console.log(`✅ Client ${client.id} ${client.createdAt === client.updatedAt ? 'created' : 'updated'}:`, client.email);
+
+    // Optional: Create agreement automatically
+    const templateId = validatedData.templateId || process.env.BOOKLY_DEFAULT_TEMPLATE_ID;
+    let agreement = null;
+
+    if (templateId) {
+      try {
+        // Verify template exists
+        const template = await prisma.template.findUnique({
+          where: { id: templateId },
+        });
+
+        if (!template) {
+          console.warn(`⚠️ Template ${templateId} not found, skipping agreement creation`);
+        } else {
+          // Generate unique token for agreement
+          const uniqueToken = randomBytes(32).toString('hex');
+
+          agreement = await prisma.agreement.create({
+            data: {
+              clientId: client.id,
+              templateId: templateId,
+              uniqueToken,
+              status: 'DRAFT',
+              expiresAt: null,
+            },
+            include: {
+              client: true,
+              template: true,
+            },
+          });
+
+          console.log(`✅ Agreement ${agreement.id} created for client ${client.email}`);
+        }
+      } catch (error) {
+        // Log error but don't fail the webhook - client was created successfully
+        console.error('Error creating agreement:', error);
+      }
+    }
+
+    // Return success response
+    return NextResponse.json({
+      success: true,
+      message: 'Booking data processed successfully',
+      client: {
+        id: client.id,
+        email: client.email,
+        firstName: client.firstName,
+        lastName: client.lastName,
+      },
+      ...(agreement && {
+        agreement: {
+          id: agreement.id,
+          status: agreement.status,
+          uniqueToken: agreement.uniqueToken,
+        },
+      }),
+    }, { status: 200 });
+
+  } catch (error: any) {
+    console.error('❌ Error processing Bookly webhook:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Handle Prisma errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'Duplicate email constraint violation' },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        error: 'Failed to process booking data',
+        message: error.message || 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
