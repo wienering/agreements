@@ -259,17 +259,36 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let rawBody = '';
+  
   try {
     // Get raw body for signature verification
-    const rawBody = await request.text();
+    rawBody = await request.text();
+    
+    // Log incoming request for debugging
+    console.log('📥 Bookly webhook received - Headers:', {
+      'content-type': request.headers.get('content-type'),
+      'user-agent': request.headers.get('user-agent'),
+      'x-bookly-signature': request.headers.get('x-bookly-signature'),
+      bodyLength: rawBody.length,
+    });
+    
     let payload: any;
     
     try {
       payload = JSON.parse(rawBody);
+      console.log('📥 Bookly webhook payload received:', {
+        hasEmail: !!payload.email,
+        hasCustomer: !!payload.customer,
+        keys: Object.keys(payload),
+        payloadPreview: JSON.stringify(payload).substring(0, 500),
+      });
     } catch (error) {
-      console.error('Invalid JSON payload:', error);
+      console.error('❌ Invalid JSON payload:', error);
+      console.error('❌ Raw body:', rawBody.substring(0, 500));
       return NextResponse.json(
-        { error: 'Invalid JSON payload' },
+        { error: 'Invalid JSON payload', details: error instanceof Error ? error.message : 'Unknown error' },
         { status: 400 }
       );
     }
@@ -376,7 +395,9 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          console.log(`✅ Agreement ${agreement.id} created for client ${client.email}`);
+          if (agreement) {
+            console.log(`✅ Agreement ${agreement.id} created for client ${client.email}`);
+          }
         }
       } catch (error) {
         // Log error but don't fail the webhook - client was created successfully
@@ -394,13 +415,13 @@ export async function POST(request: NextRequest) {
         firstName: client.firstName,
         lastName: client.lastName,
       },
-      ...(agreement && {
+      ...(agreement ? {
         agreement: {
           id: agreement.id,
           status: agreement.status,
           uniqueToken: agreement.uniqueToken,
         },
-      }),
+      } : {}),
     }, { status: 200 });
 
   } catch (error: any) {

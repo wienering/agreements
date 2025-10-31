@@ -105,6 +105,8 @@ class Bookly_Agreements_Integration {
      * @param int|array $booking_data Booking ID or booking data array
      */
     public function send_booking_to_agreements($booking_data) {
+        $this->log_success('Hook triggered! Booking data received: ' . print_r($booking_data, true));
+        
         // Get booking ID
         $booking_id = is_array($booking_data) 
             ? ($booking_data['id'] ?? $booking_data['booking_id'] ?? null) 
@@ -123,8 +125,12 @@ class Bookly_Agreements_Integration {
             return;
         }
         
+        $this->log_success("Fetched booking details: " . print_r($booking_details, true));
+        
         // Prepare payload for Agreements app
         $payload = $this->prepare_payload($booking_details);
+        
+        $this->log_success("Prepared payload: " . json_encode($payload));
         
         // Send to Agreements app
         $response = $this->send_webhook($payload);
@@ -134,7 +140,8 @@ class Bookly_Agreements_Integration {
         } else {
             $response_code = wp_remote_retrieve_response_code($response);
             if ($response_code >= 200 && $response_code < 300) {
-                $this->log_success("Successfully sent booking $booking_id to Agreements app");
+                $response_body = wp_remote_retrieve_body($response);
+                $this->log_success("Successfully sent booking $booking_id to Agreements app. Response: $response_body");
             } else {
                 $response_body = wp_remote_retrieve_body($response);
                 $this->log_error("Webhook failed with code $response_code: $response_body");
