@@ -284,19 +284,20 @@ class Bookly_Agreements_Integration {
         }
         
         // Try to get booking data from database with JOINs
+        // Note: Using correct field names based on actual Bookly database structure
         $query = $wpdb->prepare("
             SELECT 
                 ca.id as booking_id,
                 ca.appointment_id,
                 ca.customer_id,
-                c.name as customer_name,
+                COALESCE(c.full_name, CONCAT(c.first_name, ' ', c.last_name), '') as customer_name,
                 c.email as customer_email,
                 c.phone as customer_phone,
                 c.notes as customer_notes,
                 a.start_date,
-                a.start_time,
+                DATE_FORMAT(a.start_date, '%%H:%%i') as start_time,
                 a.end_date,
-                a.end_time,
+                DATE_FORMAT(a.end_date, '%%H:%%i') as end_time,
                 a.location_id as location,
                 s.title as service_name,
                 s.duration,
@@ -322,8 +323,49 @@ class Bookly_Agreements_Integration {
         if (empty($booking['customer_email']) && $customer && !empty($customer['email'])) {
             $this->log_success("Email missing from JOIN, using direct customer query. Email: " . $customer['email']);
             $booking['customer_email'] = $customer['email'];
-            $booking['customer_name'] = $customer['name'] ?? $booking['customer_name'] ?? '';
+            $booking['customer_name'] = !empty($customer['full_name']) ? $customer['full_name'] : (trim(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '')) ?: $booking['customer_name'] ?? '');
             $booking['customer_phone'] = $customer['phone'] ?? $booking['customer_phone'] ?? '';
+        }
+        
+        // Fallback: If JOIN still didn't work, build from separate queries
+        if (empty($booking['customer_email']) && $customer) {
+            $this->log_success("Building booking data from separate queries");
+            $booking['customer_email'] = $customer['email'] ?? '';
+            $booking['customer_name'] = !empty($customer['full_name']) ? $customer['full_name'] : trim(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? ''));
+            $booking['customer_phone'] = $customer['phone'] ?? '';
+            $booking['customer_notes'] = $customer['notes'] ?? '';
+        }
+        
+        // Get appointment data separately if JOIN didn't work
+        if ($booking && empty($booking['start_date'])) {
+            $appointment_id = $booking_basic['appointment_id'] ?? null;
+            if ($appointment_id) {
+                $appointment = $wpdb->get_row($wpdb->prepare("
+                    SELECT * FROM {$bookly_appointments_table} WHERE id = %d
+                ", $appointment_id), ARRAY_A);
+                
+                if ($appointment) {
+                    $booking['start_date'] = $appointment['start_date'] ?? '';
+                    $booking['start_time'] = $appointment['start_date'] ? date('H:i', strtotime($appointment['start_date'])) : '';
+                    $booking['end_date'] = $appointment['end_date'] ?? '';
+                    $booking['end_time'] = $appointment['end_date'] ? date('H:i', strtotime($appointment['end_date'])) : '';
+                    $booking['location'] = $appointment['location_id'] ?? '';
+                    
+                    // Get service if we have service_id
+                    $service_id = $appointment['service_id'] ?? null;
+                    if ($service_id) {
+                        $service = $wpdb->get_row($wpdb->prepare("
+                            SELECT * FROM {$bookly_services_table} WHERE id = %d
+                        ", $service_id), ARRAY_A);
+                        
+                        if ($service) {
+                            $booking['service_name'] = $service['title'] ?? '';
+                            $booking['duration'] = $service['duration'] ?? '';
+                            $booking['price'] = $service['price'] ?? '';
+                        }
+                    }
+                }
+            }
         }
         
         // Log what we got for debugging
