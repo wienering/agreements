@@ -256,11 +256,39 @@ class Bookly_Agreements_Integration {
         $bookly_appointments_table = $wpdb->prefix . 'bookly_appointments';
         $bookly_services_table = $wpdb->prefix . 'bookly_services';
         
-        // Try to get booking data from database
+        // First, let's get the basic booking info to see what we have
+        $booking_basic = $wpdb->get_row($wpdb->prepare("
+            SELECT ca.*, ca.customer_id
+            FROM {$bookly_customer_appointments_table} ca
+            WHERE ca.id = %d
+        ", $booking_id), ARRAY_A);
+        
+        if (!$booking_basic) {
+            $this->log_error("Booking ID $booking_id not found in bookly_customer_appointments table");
+            return null;
+        }
+        
+        $customer_id = $booking_basic['customer_id'];
+        $this->log_success("Booking ID $booking_id has customer_id: $customer_id");
+        
+        // Now get customer info separately
+        $customer = $wpdb->get_row($wpdb->prepare("
+            SELECT * FROM {$bookly_customers_table} WHERE id = %d
+        ", $customer_id), ARRAY_A);
+        
+        if (!$customer) {
+            $this->log_error("Customer ID $customer_id not found in bookly_customers table");
+            // Continue anyway, maybe email is elsewhere
+        } else {
+            $this->log_success("Customer found. Email: " . ($customer['email'] ?? 'NOT SET') . ", Name: " . ($customer['name'] ?? 'NOT SET'));
+        }
+        
+        // Try to get booking data from database with JOINs
         $query = $wpdb->prepare("
             SELECT 
                 ca.id as booking_id,
                 ca.appointment_id,
+                ca.customer_id,
                 c.name as customer_name,
                 c.email as customer_email,
                 c.phone as customer_phone,
@@ -269,7 +297,7 @@ class Bookly_Agreements_Integration {
                 a.start_time,
                 a.end_date,
                 a.end_time,
-                a.location,
+                a.location_id as location,
                 s.title as service_name,
                 s.duration,
                 s.price,
@@ -285,9 +313,21 @@ class Bookly_Agreements_Integration {
         $booking = $wpdb->get_row($query, ARRAY_A);
         
         if (!$booking) {
+            $this->log_error("Failed to get booking with JOIN query for ID: $booking_id");
             // Fallback: Try using Bookly's internal functions if available
             return $this->get_booking_fallback($booking_id);
         }
+        
+        // If customer_email is empty but we found the customer separately, use that
+        if (empty($booking['customer_email']) && $customer && !empty($customer['email'])) {
+            $this->log_success("Email missing from JOIN, using direct customer query. Email: " . $customer['email']);
+            $booking['customer_email'] = $customer['email'];
+            $booking['customer_name'] = $customer['name'] ?? $booking['customer_name'] ?? '';
+            $booking['customer_phone'] = $customer['phone'] ?? $booking['customer_phone'] ?? '';
+        }
+        
+        // Log what we got for debugging
+        $this->log_success("Final booking data - Email: " . ($booking['customer_email'] ?? 'MISSING') . ", Name: " . ($booking['customer_name'] ?? 'MISSING'));
         
         return $booking;
     }
