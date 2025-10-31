@@ -425,9 +425,16 @@ class Bookly_Agreements_Integration {
         
         // Save settings if form was submitted
         if (isset($_POST['submit']) && check_admin_referer('bookly_agreements_settings')) {
-            update_option(self::OPTION_NAME, $this->settings);
+            // Get and sanitize the posted settings
+            $input = isset($_POST[self::OPTION_NAME]) ? $_POST[self::OPTION_NAME] : array();
+            $sanitized = $this->sanitize_settings($input);
+            
+            // Save the sanitized settings
+            update_option(self::OPTION_NAME, $sanitized);
             echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
-            $this->load_settings(); // Reload settings
+            
+            // Reload settings to show updated values
+            $this->load_settings();
         }
         
         ?>
