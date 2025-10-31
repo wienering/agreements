@@ -840,6 +840,111 @@ class Bookly_Agreements_Integration {
             }
             ?>
             
+            <h3>Debug Booking Data</h3>
+            <form method="post" action="" style="margin: 20px 0;">
+                <?php wp_nonce_field('bookly_debug_booking'); ?>
+                <input type="hidden" name="bookly_debug_action" value="debug_booking">
+                <p>Enter a booking ID to see what data is retrieved from the database:</p>
+                <input type="number" name="debug_booking_id" placeholder="Booking ID (e.g. 647)" style="width: 200px;" required>
+                <button type="submit" class="button">Debug Booking</button>
+            </form>
+            
+            <?php
+            // Handle debug action
+            if (isset($_POST['bookly_debug_action']) && $_POST['bookly_debug_action'] === 'debug_booking' && check_admin_referer('bookly_debug_booking')) {
+                $debug_id = intval($_POST['debug_booking_id']);
+                if ($debug_id) {
+                    global $wpdb;
+                    
+                    echo '<div class="notice notice-info"><p><strong>Debug Results for Booking ID ' . $debug_id . ':</strong></p>';
+                    
+                    // Step 1: Get booking record
+                    $bookly_customer_appointments_table = $wpdb->prefix . 'bookly_customer_appointments';
+                    $booking_record = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$bookly_customer_appointments_table} WHERE id = %d", $debug_id), ARRAY_A);
+                    
+                    echo '<h4>Step 1: Booking Record</h4>';
+                    if ($booking_record) {
+                        echo '<pre style="background: #f5f5f5; padding: 15px; overflow-x: auto; max-height: 300px;">';
+                        echo htmlspecialchars(print_r($booking_record, true));
+                        echo '</pre>';
+                        
+                        $customer_id = $booking_record['customer_id'] ?? null;
+                        $appointment_id = $booking_record['appointment_id'] ?? null;
+                        echo '<p><strong>Customer ID:</strong> ' . ($customer_id ? $customer_id : 'NOT SET') . '</p>';
+                        echo '<p><strong>Appointment ID:</strong> ' . ($appointment_id ? $appointment_id : 'NOT SET') . '</p>';
+                    } else {
+                        echo '<p style="color:red;">✗ Booking not found!</p>';
+                        echo '</div>';
+                        return;
+                    }
+                    
+                    // Step 2: Get customer record
+                    if ($customer_id) {
+                        $bookly_customers_table = $wpdb->prefix . 'bookly_customers';
+                        $customer_record = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$bookly_customers_table} WHERE id = %d", $customer_id), ARRAY_A);
+                        
+                        echo '<h4>Step 2: Customer Record (ID: ' . $customer_id . ')</h4>';
+                        if ($customer_record) {
+                            echo '<pre style="background: #f5f5f5; padding: 15px; overflow-x: auto; max-height: 300px;">';
+                            echo htmlspecialchars(print_r($customer_record, true));
+                            echo '</pre>';
+                            echo '<p><strong>Email:</strong> ' . (!empty($customer_record['email']) ? '<span style="color:green;">' . esc_html($customer_record['email']) . '</span>' : '<span style="color:red;">NOT SET</span>') . '</p>';
+                        } else {
+                            echo '<p style="color:red;">✗ Customer not found!</p>';
+                        }
+                    }
+                    
+                    // Step 3: Get appointment record
+                    if ($appointment_id) {
+                        $bookly_appointments_table = $wpdb->prefix . 'bookly_appointments';
+                        $appointment_record = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$bookly_appointments_table} WHERE id = %d", $appointment_id), ARRAY_A);
+                        
+                        echo '<h4>Step 3: Appointment Record (ID: ' . $appointment_id . ')</h4>';
+                        if ($appointment_record) {
+                            echo '<pre style="background: #f5f5f5; padding: 15px; overflow-x: auto; max-height: 300px;">';
+                            echo htmlspecialchars(print_r($appointment_record, true));
+                            echo '</pre>';
+                            
+                            $service_id = $appointment_record['service_id'] ?? null;
+                            if ($service_id) {
+                                // Step 4: Get service record
+                                $bookly_services_table = $wpdb->prefix . 'bookly_services';
+                                $service_record = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$bookly_services_table} WHERE id = %d", $service_id), ARRAY_A);
+                                
+                                echo '<h4>Step 4: Service Record (ID: ' . $service_id . ')</h4>';
+                                if ($service_record) {
+                                    echo '<pre style="background: #f5f5f5; padding: 15px; overflow-x: auto; max-height: 300px;">';
+                                    echo htmlspecialchars(print_r($service_record, true));
+                                    echo '</pre>';
+                                }
+                            }
+                        } else {
+                            echo '<p style="color:red;">✗ Appointment not found!</p>';
+                        }
+                    }
+                    
+                    // Step 5: Try the integrated query
+                    echo '<h4>Step 5: Integrated Query Result</h4>';
+                    $booking_details = $this->get_booking_details($debug_id);
+                    if ($booking_details) {
+                        echo '<pre style="background: #f5f5f5; padding: 15px; overflow-x: auto; max-height: 300px;">';
+                        echo htmlspecialchars(print_r($booking_details, true));
+                        echo '</pre>';
+                        
+                        if (!empty($booking_details['customer_email'])) {
+                            echo '<p style="color:green; font-weight:bold;">✓ Email found: ' . esc_html($booking_details['customer_email']) . '</p>';
+                        } else {
+                            echo '<p style="color:red; font-weight:bold;">✗ Email is MISSING from booking details</p>';
+                        }
+                    } else {
+                        echo '<p style="color:red;">✗ Could not retrieve booking details</p>';
+                    }
+                    
+                    echo '</div>';
+                }
+            }
+            ?>
+            
             <h3>Sync Recent Bookings</h3>
             <form method="post" action="" style="margin: 20px 0;">
                 <?php wp_nonce_field('bookly_sync_bookings'); ?>
