@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Bookly to Agreements App Integration
- * Plugin URI: https://your-domain.com
+ * Plugin URI: https://www.photoboothguys.ca
  * Description: Automatically sends booking data from Bookly WordPress plugin to your Agreements app when a booking is created. Creates or updates client records automatically.
  * Version: 1.0.0
  * Author: Photobooth Guys
@@ -106,8 +106,10 @@ class Bookly_Agreements_Integration {
         // Log all hook registrations
         $this->log_success('Hooks registered: bookly_booking_created, bookly_appointment_created, bookly_new_booking, bookly_after_appointment_created, bookly_after_booking_created, bookly_appointment_saved');
         
-        // Alternative: Thank you page approach (uncomment if needed)
-        // add_action('template_redirect', array($this, 'catch_thank_you_page'));
+        // Alternative: Thank you page approach
+        // Enable this if hooks aren't working
+        // Uncomment the line below to use thank you page method
+        add_action('template_redirect', array($this, 'catch_thank_you_page'), 10);
     }
     
     /**
@@ -368,22 +370,47 @@ class Bookly_Agreements_Integration {
      * Alternative: Catch booking data from thank you page
      */
     public function catch_thank_you_page() {
-        // Only run on the thank you page
-        if (!is_page('thank-you') && !isset($_涉及['bookly_booking_id'])) {
-            return;
+        // This runs on every page load to catch Bookly booking data
+        // Bookly usually sets cookies or session data after booking
+        
+        // Method 1: Check for Bookly cookie (most common)
+        if (isset($_COOKIE['bookly_appointment_id'])) {
+            $booking_id = intval($_COOKIE['bookly_appointment_id']);
+            if ($booking_id) {
+                $this->log_success("Found booking ID from cookie: $booking_id");
+                $this->send_booking_to_agreements($booking_id);
+                return;
+            }
         }
         
-        // Get booking ID from URL or cookie
-        $booking_id = isset($_GET['bookly_booking_id']) 
-            ? intval($_GET['bookly_booking_id']) 
-            : null;
-        
-        if (!$booking_id && isset($_COOKIE['bookly_booking_id'])) {
-            $booking_id = intval($_COOKIE['bookly_booking_id']);
+        // Method 2: Check for booking ID in URL
+        if (isset($_GET['bookly_booking_id'])) {
+            $booking_id = intval($_GET['bookly_booking_id']);
+            if ($booking_id) {
+                $this->log_success("Found booking ID from URL: $booking_id");
+                $this->send_booking_to_agreements($booking_id);
+                return;
+            }
         }
         
-        if ($booking_id) {
-            $this->send_booking_to_agreements($booking_id);
+        // Method 3: Check session (if Bookly uses sessions)
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['bookly_appointment_id'])) {
+            $booking_id = intval($_SESSION['bookly_appointment_id']);
+            if ($booking_id) {
+                $this->log_success("Found booking ID from session: $booking_id");
+                $this->send_booking_to_agreements($booking_id);
+                return;
+            }
+        }
+        
+        // Method 4: Try to get from POST data
+        if (isset($_POST['bookly_appointment_id'])) {
+            $booking_id = intval($_POST['bookly_appointment_id']);
+            if ($booking_id) {
+                $this->log_success("Found booking ID from POST: $booking_id");
+                $this->send_booking_to_agreements($booking_id);
+                return;
+            }
         }
     }
     
@@ -610,8 +637,13 @@ define('WP_DEBUG_DISPLAY', false);</code></pre>
                 <li><code>bookly_booking_created</code></li>
                 <li><code>bookly_appointment_created</code></li>
                 <li><code>bookly_new_booking</code></li>
+                <li><code>bookly_after_appointment_created</code></li>
+                <li><code>bookly_after_booking_created</code></li>
+                <li><code>bookly_appointment_saved</code></li>
             </ul>
-            <p><strong>Note:</strong> If you don't see "Hook triggered!" in logs, none of these hooks are firing. Your Bookly version may use different hook names. Check Bookly documentation or contact support.</p>
+            <p><strong>Alternative Method:</strong> If hooks aren't firing, we're also listening on the thank you page (template_redirect hook) to catch booking data from cookies/sessions/URL.</p>
+            <p><strong>Debug Mode:</strong> With WP_DEBUG enabled, check your debug.log for messages starting with "🔍 BOOKLY HOOK DETECTED:" to see which hooks Bookly actually fires.</p>
+            <p><strong>Note:</strong> If you don't see "Hook triggered!" in logs after creating a booking, the hooks may not be firing. Check debug.log for detected hooks or try the thank you page method.</p>
         </div>
         <?php
     }
@@ -638,6 +670,28 @@ function bookly_agreements_integration_init() {
     Bookly_Agreements_Integration::get_instance();
 }
 add_action('plugins_loaded', 'bookly_agreements_integration_init');
+
+/**
+ * Hook detector - logs all Bookly-related hooks for debugging
+ * This helps identify which hooks Bookly actually fires
+ */
+function bookly_detect_hooks() {
+    // Only enable in debug mode to avoid cluttering logs
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        return;
+    }
+    
+    add_action('all', function($hook) {
+        // Listen for any hook that might be related to Bookly
+        if (stripos($hook, 'bookly') !== false || 
+            stripos($hook, 'appointment') !== false || 
+            stripos($hook, 'booking') !== false ||
+            stripos($hook, 'customer_appointment') !== false) {
+            error_log("🔍 BOOKLY HOOK DETECTED: $hook");
+        }
+    }, 999);
+}
+add_action('init', 'bookly_detect_hooks', 1);
 
 /**
  * Activation hook
