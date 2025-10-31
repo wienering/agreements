@@ -107,9 +107,59 @@ class Bookly_Agreements_Integration {
         $this->log_success('Hooks registered: bookly_booking_created, bookly_appointment_created, bookly_new_booking, bookly_after_appointment_created, bookly_after_booking_created, bookly_appointment_saved');
         
         // Alternative: Thank you page approach
-        // Enable this if hooks aren't working
-        // Uncomment the line below to use thank you page method
         add_action('template_redirect', array($this, 'catch_thank_you_page'), 10);
+        
+        // Backup: Check for new bookings on admin pages (runs every time admin loads)
+        // This ensures we catch bookings even if hooks don't fire
+        add_action('admin_init', array($this, 'check_new_bookings_on_admin_load'), 999);
+    }
+    
+    /**
+     * Check for new bookings when admin pages load
+     * This is a backup method if hooks aren't firing
+     */
+    public function check_new_bookings_on_admin_load() {
+        // Only run occasionally (every 2 minutes max) to avoid performance issues
+        $last_check = get_transient('bookly_last_check');
+        if ($last_check && (time() - $last_check) < 120) {
+            return;
+        }
+        
+        // Update last check time
+        set_transient('bookly_last_check', time(), 300);
+        
+        // Check for very recent bookings (last 5 minutes)
+        global $wpdb;
+        $bookly_customer_appointments_table = $wpdb->prefix . 'bookly_customer_appointments';
+        
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$bookly_customer_appointments_table'");
+        if (!$table_exists) {
+            return;
+        }
+        
+        // Get bookings from last 5 minutes
+        $query = "
+            SELECT ca.id 
+            FROM {$bookly_customer_appointments_table} ca
+            WHERE ca.created_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+            AND ca.status IN ('approved', 'done', 'waitlisted')
+            ORDER BY ca.created_at DESC
+            LIMIT 5
+        ";
+        
+        $new_bookings = $wpdb->get_col($query);
+        
+        if (!empty($new_bookings)) {
+            foreach ($new_bookings as $booking_id) {
+                // Check if we've already processed this booking
+                $processed_key = 'bookly_processed_' . $booking_id;
+                if (!get_transient($processed_key)) {
+                    $this->send_booking_to_agreements($booking_id);
+                    // Mark as processed (expires in 24 hours)
+                    set_transient($processed_key, true, 86400);
+                }
+            }
+        }
     }
     
     /**
@@ -415,6 +465,61 @@ class Bookly_Agreements_Integration {
     }
     
     /**
+     * Check for recent bookings and process them
+     * This can be called manually or automatically
+     */
+    public function check_recent_bookings() {
+        global $wpdb;
+        
+        if (!$this->settings['enabled'] || empty($this->settings['webhook_url'])) {
+            return array('found' => 0, 'processed' => 0, 'errors' => array());
+        }
+        
+        // Get bookings from last 24 hours that are approved/completed
+        $bookly_customer_appointments_table = $wpdb->prefix . 'bookly_customer_appointments';
+        
+        // Check if table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$bookly_customer_appointments_table'");
+        if (!$table_exists) {
+            return array('found' => 0, 'processed' => 0, 'errors' => array('Table does not exist'));
+        }
+        
+        $query = "
+            SELECT ca.id 
+            FROM {$bookly_customer_appointments_table} ca
+            WHERE ca.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+            AND ca.status IN ('approved', 'done', 'waitlisted')
+            ORDER BY ca.created_at DESC
+            LIMIT 50
+        ";
+        
+        $recent_bookings = $wpdb->get_col($query);
+        
+        if (empty($recent_bookings)) {
+            return array('found' => 0, 'processed' => 0, 'errors' => array());
+        }
+        
+        $processed = 0;
+        $errors = array();
+        
+        foreach ($recent_bookings as $booking_id) {
+            try {
+                // Send booking data
+                $this->send_booking_to_agreements($booking_id);
+                $processed++;
+            } catch (Exception $e) {
+                $errors[] = "Booking ID $booking_id: " . $e->getMessage();
+            }
+        }
+        
+        return array(
+            'found' => count($recent_bookings), 
+            'processed' => $processed,
+            'errors' => $errors
+        );
+    }
+    
+    /**
      * Add admin menu
      */
     public function add_admin_menu() {
@@ -597,6 +702,33 @@ class Bookly_Agreements_Integration {
                     } else {
                         echo '<div class="notice notice-error"><p><strong>Test Failed:</strong> HTTP ' . $response_code . ' - ' . esc_html($response_body) . '</p></div>';
                     }
+                }
+            }
+            ?>
+            
+            <h3>Sync Recent Bookings</h3>
+            <form method="post" action="" style="margin: 20px 0;">
+                <?php wp_nonce_field('bookly_sync_bookings'); ?>
+                <input type="hidden" name="bookly_sync_action" value="sync_recent">
+                <p>Check for bookings from the last 24 hours and send them to Agreements app. Useful if hooks aren't firing.</p>
+                <button type="submit" class="button button-primary">Check & Sync Recent Bookings</button>
+            </form>
+            
+            <?php
+            // Handle sync action
+            if (isset($_POST['bookly_sync_action']) && $_POST['bookly_sync_action'] === 'sync_recent' && check_admin_referer('bookly_sync_bookings')) {
+                $result = $this->check_recent_bookings();
+                if ($result && isset($result['found'])) {
+                    if ($result['found'] > 0) {
+                        echo '<div class="notice notice-success"><p><strong>Sync Complete!</strong> Found ' . esc_html($result['found']) . ' recent booking(s), processed ' . esc_html($result['processed']) . '.</p></div>';
+                        if (!empty($result['errors'])) {
+                            echo '<div class="notice notice-warning"><p><strong>Some errors occurred:</strong><br>' . esc_html(implode('<br>', $result['errors'])) . '</p></div>';
+                        }
+                    } else {
+                        echo '<div class="notice notice-info"><p>No recent bookings found (last 24 hours).</p></div>';
+                    }
+                } else {
+                    echo '<div class="notice notice-error"><p>Error checking bookings. Check database connection.</p></div>';
                 }
             }
             ?>
