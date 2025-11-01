@@ -810,7 +810,6 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                 Professional photo booth services for your special events
               </p>
             </footer>
-          </main>
         </div>
       </>
     );
