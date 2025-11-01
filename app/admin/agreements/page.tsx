@@ -1345,6 +1345,32 @@ export default function AgreementsPage() {
                     View Agreement
                   </button>
                   <button
+                    onClick={() => {
+                      const attendantLink = `${window.location.origin}/attendant/${agreement.id}`;
+                      window.open(attendantLink, '_blank');
+                    }}
+                    style={{
+                      backgroundColor: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#059669';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#10b981';
+                    }}
+                    title="View attendant page (event details for staff)"
+                  >
+                    Attendant View
+                  </button>
+                  <button
                     onClick={() => handleCopyLink(agreement.uniqueToken)}
                     style={{
                       backgroundColor: '#3b82f6',
@@ -1950,6 +1976,27 @@ export default function AgreementsPage() {
                   title="Open client view in new tab"
                 >
                   Preview Client View
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedAgreement?.id) {
+                      const attendantLink = `${window.location.origin}/attendant/${selectedAgreement.id}`;
+                      window.open(attendantLink, '_blank');
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                  title="View attendant page (event details for staff)"
+                >
+                  👥 Attendant View
                 </button>
                 <button
                   onClick={() => {
