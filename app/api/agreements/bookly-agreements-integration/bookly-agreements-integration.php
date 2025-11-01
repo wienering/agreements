@@ -319,6 +319,15 @@ class Bookly_Agreements_Integration {
             return $this->get_booking_fallback($booking_id);
         }
         
+        // Format time to remove leading zero from hour (8:00 PM instead of 08:00 PM)
+        if (!empty($booking['start_time'])) {
+            // Remove leading zero from hour if present
+            $booking['start_time'] = preg_replace('/^0(\d):/', '$1:', $booking['start_time']);
+        }
+        if (!empty($booking['end_time'])) {
+            $booking['end_time'] = preg_replace('/^0(\d):/', '$1:', $booking['end_time']);
+        }
+        
         // Extract address from custom_fields JSON (field ID 21883)
         $location_address = '';
         if (!empty($booking_basic['custom_fields'])) {
@@ -479,8 +488,7 @@ class Bookly_Agreements_Integration {
             'appointmentTime' => $start_time,
             
             // Service information
-            'serviceName' => $booking_details['service_name'] ?? null,
-            'eventType' => $booking_details['service_name'] ?? null,
+            // Note: serviceName and eventType removed per user request - only duration is sent
             'duration' => $duration_formatted ?: null,
             'eventDuration' => $duration_formatted ?: null,
             
