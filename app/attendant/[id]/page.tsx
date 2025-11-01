@@ -616,7 +616,7 @@ function NotFoundError() {
             lineHeight: '1.5',
           }}
         >
-          We couldn't find the event details for the provided link. The link may
+          We could not find the event details for the provided link. The link may
           be incorrect or the event may have been removed.
         </p>
         <div
