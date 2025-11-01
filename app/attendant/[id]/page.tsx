@@ -55,41 +55,26 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       <>
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          * {
-            box-sizing: border-box;
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
         `}} />
         <div
           style={{
             minHeight: '100vh',
-            backgroundColor: '#0a0f1e',
-            background: 'linear-gradient(180deg, #0a0f1e 0%, #0f172a 100%)',
+            backgroundColor: '#f8fafc',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            color: '#f8fafc',
-            animation: 'fadeIn 0.4s ease-out',
-            lineHeight: '1.6',
+            color: '#1e293b',
+            animation: 'fadeIn 0.3s ease-out',
           }}
         >
           {/* Header */}
           <header
             style={{
-              backgroundColor: 'rgba(30, 41, 59, 0.8)',
-              backdropFilter: 'blur(12px)',
-              borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
-              padding: '20px 0',
-              position: 'sticky',
-              top: 0,
-              zIndex: 100,
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: '#ffffff',
+              borderBottom: '1px solid #e2e8f0',
+              padding: '24px 0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
             }}
           >
             <div
@@ -104,17 +89,16 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             >
               <div
                 style={{
-                  width: '48px',
-                  height: '48px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                  borderRadius: '12px',
+                  width: '44px',
+                  height: '44px',
+                  backgroundColor: '#3b82f6',
+                  borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
                   fontSize: '20px',
-                  fontWeight: '700',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                  fontWeight: '600',
                 }}
               >
                 📸
@@ -123,21 +107,20 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                 <h1
                   style={{
                     margin: '0',
-                    fontSize: '22px',
+                    fontSize: '24px',
                     fontWeight: '700',
-                    color: '#ffffff',
-                    letterSpacing: '-0.02em',
+                    color: '#0f172a',
+                    letterSpacing: '-0.01em',
                   }}
                 >
                   Photobooth Guys
                 </h1>
                 <p
                   style={{
-                    margin: '2px 0 0 0',
-                    fontSize: '13px',
-                    color: '#94a3b8',
+                    margin: '4px 0 0 0',
+                    fontSize: '14px',
+                    color: '#64748b',
                     fontWeight: '500',
-                    letterSpacing: '0.02em',
                   }}
                 >
                   Event Information
@@ -158,81 +141,42 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             {client.firstName && (
               <div
                 style={{
-                  backgroundColor: 'rgba(30, 41, 59, 0.6)',
-                  backdropFilter: 'blur(10px)',
-                  padding: '40px',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(148, 163, 184, 0.1)',
-                  marginBottom: '32px',
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                  animation: 'fadeIn 0.5s ease-out 0.1s both',
+                  backgroundColor: '#ffffff',
+                  padding: '32px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  marginBottom: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
                 }}
               >
-                <div
+                <h2
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginBottom: '32px',
-                    paddingBottom: '24px',
-                    borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+                    margin: '0 0 24px 0',
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: '#0f172a',
+                    paddingBottom: '16px',
+                    borderBottom: '1px solid #e2e8f0',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '56px',
-                      height: '56px',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                      borderRadius: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
-                    }}
-                  >
-                    👤
-                  </div>
-                  <div>
-                    <h2
-                      style={{
-                        margin: '0',
-                        fontSize: '28px',
-                        fontWeight: '700',
-                        color: '#ffffff',
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      Client Information
-                    </h2>
-                    <p
-                      style={{
-                        margin: '4px 0 0 0',
-                        fontSize: '14px',
-                        color: '#94a3b8',
-                        fontWeight: '500',
-                      }}
-                    >
-                      Contact details for this event
-                    </p>
-                  </div>
-                </div>
+                  Client Information
+                </h2>
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '32px',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                    gap: '24px',
                   }}
                 >
                   <div>
                     <p
                       style={{
-                        margin: '0 0 12px 0',
-                        fontSize: '11px',
+                        margin: '0 0 8px 0',
+                        fontSize: '12px',
                         color: '#64748b',
                         fontWeight: '600',
                         textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
+                        letterSpacing: '0.05em',
                       }}
                     >
                       First Name
@@ -240,10 +184,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <p
                       style={{
                         margin: '0',
-                        fontSize: '20px',
-                        color: '#ffffff',
+                        fontSize: '18px',
+                        color: '#0f172a',
                         fontWeight: '600',
-                        letterSpacing: '-0.01em',
                       }}
                     >
                       {client.firstName}
@@ -253,12 +196,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Contact Number
@@ -266,10 +209,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                         }}
                       >
                         {client.phone}
@@ -289,82 +231,43 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               backdropLink?.name) && (
               <div
                 style={{
-                  backgroundColor: 'rgba(30, 41, 59, 0.6)',
-                  backdropFilter: 'blur(10px)',
-                  padding: '40px',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(148, 163, 184, 0.1)',
-                  marginBottom: '32px',
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1)',
-                  animation: 'fadeIn 0.5s ease-out 0.2s both',
+                  backgroundColor: '#ffffff',
+                  padding: '32px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  marginBottom: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
                 }}
               >
-                <div
+                <h2
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginBottom: '32px',
-                    paddingBottom: '24px',
-                    borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+                    margin: '0 0 24px 0',
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: '#0f172a',
+                    paddingBottom: '16px',
+                    borderBottom: '1px solid #e2e8f0',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '56px',
-                      height: '56px',
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      borderRadius: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
-                    }}
-                  >
-                    📅
-                  </div>
-                  <div>
-                    <h2
-                      style={{
-                        margin: '0',
-                        fontSize: '28px',
-                        fontWeight: '700',
-                        color: '#ffffff',
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      Event Details
-                    </h2>
-                    <p
-                      style={{
-                        margin: '4px 0 0 0',
-                        fontSize: '14px',
-                        color: '#94a3b8',
-                        fontWeight: '500',
-                      }}
-                    >
-                      Complete event information
-                    </p>
-                  </div>
-                </div>
+                  Event Details
+                </h2>
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '32px',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                    gap: '24px',
                   }}
                 >
                   {formattedEventDate && (
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Event Date
@@ -372,10 +275,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                         }}
                       >
                         {formattedEventDate}
@@ -387,12 +289,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Start Time
@@ -400,10 +302,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                         }}
                       >
                         {client.eventStartTime}
@@ -415,12 +316,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Duration
@@ -428,10 +329,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                         }}
                       >
                         {client.eventDuration}
@@ -443,12 +343,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Address
@@ -456,10 +356,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                           lineHeight: '1.5',
                         }}
                       >
@@ -472,12 +371,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Event Type
@@ -485,10 +384,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                         }}
                       >
                         {client.eventType}
@@ -500,12 +398,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     <div>
                       <p
                         style={{
-                          margin: '0 0 12px 0',
-                          fontSize: '11px',
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
                           color: '#64748b',
                           fontWeight: '600',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.1em',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         Backdrop Choice
@@ -513,10 +411,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       <p
                         style={{
                           margin: '0',
-                          fontSize: '20px',
-                          color: '#ffffff',
+                          fontSize: '18px',
+                          color: '#0f172a',
                           fontWeight: '600',
-                          letterSpacing: '-0.01em',
                         }}
                       >
                         {backdropLink.name}
@@ -530,64 +427,56 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             {/* Footer */}
             <footer
               style={{
-                marginTop: '64px',
-                paddingTop: '40px',
-                borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+                marginTop: '48px',
+                paddingTop: '32px',
+                borderTop: '1px solid #e2e8f0',
+                textAlign: 'center',
               }}
             >
               <div
                 style={{
-                  textAlign: 'center',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '8px',
                 }}
               >
                 <div
                   style={{
-                    display: 'inline-flex',
+                    width: '32px',
+                    height: '32px',
+                    backgroundColor: '#3b82f6',
+                    borderRadius: '8px',
+                    display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '12px',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '600',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '36px',
-                      height: '36px',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '16px',
-                      fontWeight: '700',
-                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.25)',
-                    }}
-                  >
-                    📸
-                  </div>
-                  <h3
-                    style={{
-                      margin: '0',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: '#ffffff',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    Photobooth Guys
-                  </h3>
+                  📸
                 </div>
-                <p
+                <h3
                   style={{
                     margin: '0',
-                    fontSize: '14px',
-                    color: '#64748b',
-                    fontWeight: '400',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: '#0f172a',
                   }}
                 >
-                  Professional photo booth services for your special events
-                </p>
+                  Photobooth Guys
+                </h3>
               </div>
+              <p
+                style={{
+                  margin: '0',
+                  fontSize: '14px',
+                  color: '#64748b',
+                }}
+              >
+                Professional photo booth services for your special events
+              </p>
             </footer>
           </main>
         </div>
@@ -605,8 +494,7 @@ function NotFoundError() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#0a0f1e',
-        background: 'linear-gradient(180deg, #0a0f1e 0%, #0f172a 100%)',
+        backgroundColor: '#f8fafc',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -616,48 +504,45 @@ function NotFoundError() {
     >
       <div
         style={{
-          backgroundColor: 'rgba(30, 41, 59, 0.8)',
-          backdropFilter: 'blur(12px)',
+          backgroundColor: '#ffffff',
           padding: '48px',
-          borderRadius: '16px',
-          border: '1px solid rgba(148, 163, 184, 0.1)',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
           textAlign: 'center',
-          maxWidth: '560px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+          maxWidth: '520px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
         }}
       >
         <div
           style={{
-            width: '72px',
-            height: '72px',
-            background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-            borderRadius: '16px',
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#fef2f2',
+            borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 24px auto',
-            fontSize: '32px',
-            boxShadow: '0 4px 12px rgba(220, 38, 38, 0.25)',
+            fontSize: '28px',
           }}
         >
           ⚠️
         </div>
         <h1
           style={{
-            color: '#ffffff',
-            fontSize: '28px',
+            color: '#0f172a',
+            fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700',
-            letterSpacing: '-0.02em',
           }}
         >
           Event Details Not Found
         </h1>
         <p
           style={{
-            color: '#94a3b8',
+            color: '#64748b',
             fontSize: '16px',
-            margin: '0 0 32px 0',
+            margin: '0 0 24px 0',
             lineHeight: '1.6',
           }}
         >
@@ -666,30 +551,30 @@ function NotFoundError() {
         </p>
         <div
           style={{
-            padding: '20px',
-            backgroundColor: 'rgba(15, 23, 42, 0.6)',
-            borderRadius: '12px',
-            border: '1px solid rgba(148, 163, 184, 0.1)',
-            marginBottom: '32px',
+            padding: '16px',
+            backgroundColor: '#f8fafc',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0',
+            marginBottom: '24px',
           }}
         >
           <p
             style={{
               margin: '0',
               fontSize: '14px',
-              color: '#94a3b8',
+              color: '#64748b',
               lineHeight: '1.6',
             }}
           >
             Please contact us at{' '}
-            <strong style={{ color: '#60a5fa', fontWeight: '600' }}>info@photoboothguys.ca</strong>{' '}
+            <strong style={{ color: '#3b82f6', fontWeight: '600' }}>info@photoboothguys.ca</strong>{' '}
             if you believe this is an error.
           </p>
         </div>
         <div
           style={{
             paddingTop: '24px',
-            borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+            borderTop: '1px solid #e2e8f0',
           }}
         >
           <div
@@ -701,17 +586,16 @@ function NotFoundError() {
           >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                width: '32px',
+                height: '32px',
+                backgroundColor: '#3b82f6',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 fontSize: '16px',
-                fontWeight: '700',
-                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.25)',
+                fontWeight: '600',
               }}
             >
               📸
@@ -719,10 +603,9 @@ function NotFoundError() {
             <h3
               style={{
                 margin: '0',
-                fontSize: '18px',
+                fontSize: '16px',
                 fontWeight: '700',
-                color: '#ffffff',
-                letterSpacing: '-0.01em',
+                color: '#0f172a',
               }}
             >
               Photobooth Guys
