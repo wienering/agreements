@@ -62,19 +62,19 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
         <div
           style={{
             minHeight: '100vh',
-            backgroundColor: '#f8fafc',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            color: '#1e293b',
+            backgroundColor: '#0f172a',
+            fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+            color: '#f1f5f9',
             animation: 'fadeIn 0.3s ease-out',
           }}
         >
           {/* Header */}
           <header
             style={{
-              backgroundColor: '#ffffff',
-              borderBottom: '1px solid #e2e8f0',
+              backgroundColor: '#1e293b',
+              borderBottom: '1px solid #334155',
               padding: '24px 0',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
           >
             <div
@@ -109,7 +109,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     margin: '0',
                     fontSize: '24px',
                     fontWeight: '700',
-                    color: '#0f172a',
+                    color: '#ffffff',
                     letterSpacing: '-0.01em',
                   }}
                 >
@@ -119,7 +119,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   style={{
                     margin: '4px 0 0 0',
                     fontSize: '14px',
-                    color: '#64748b',
+                    color: '#94a3b8',
                     fontWeight: '500',
                   }}
                 >
@@ -141,12 +141,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             {client.firstName && (
               <div
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: '#1e293b',
                   padding: '32px',
                   borderRadius: '12px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #334155',
                   marginBottom: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h2
@@ -154,9 +154,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     margin: '0 0 24px 0',
                     fontSize: '20px',
                     fontWeight: '700',
-                    color: '#0f172a',
+                    color: '#ffffff',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid #e2e8f0',
+                    borderBottom: '1px solid #334155',
                   }}
                 >
                   Client Information
@@ -173,7 +173,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       style={{
                         margin: '0 0 8px 0',
                         fontSize: '12px',
-                        color: '#64748b',
+                        color: '#94a3b8',
                         fontWeight: '600',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
@@ -185,7 +185,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       style={{
                         margin: '0',
                         fontSize: '18px',
-                        color: '#0f172a',
+                        color: '#f1f5f9',
                         fontWeight: '600',
                       }}
                     >
@@ -198,7 +198,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -210,7 +210,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                         }}
                       >
@@ -231,12 +231,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               backdropLink?.name) && (
               <div
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: '#1e293b',
                   padding: '32px',
                   borderRadius: '12px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #334155',
                   marginBottom: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h2
@@ -244,9 +244,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     margin: '0 0 24px 0',
                     fontSize: '20px',
                     fontWeight: '700',
-                    color: '#0f172a',
+                    color: '#ffffff',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid #e2e8f0',
+                    borderBottom: '1px solid #334155',
                   }}
                 >
                   Event Details
@@ -264,7 +264,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -276,7 +276,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                         }}
                       >
@@ -291,7 +291,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -303,7 +303,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                         }}
                       >
@@ -318,7 +318,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -330,7 +330,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                         }}
                       >
@@ -345,7 +345,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -357,7 +357,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                           lineHeight: '1.5',
                         }}
@@ -373,7 +373,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -385,7 +385,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                         }}
                       >
@@ -400,7 +400,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -412,7 +412,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#0f172a',
+                          color: '#f1f5f9',
                           fontWeight: '600',
                         }}
                       >
@@ -429,7 +429,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               style={{
                 marginTop: '48px',
                 paddingTop: '32px',
-                borderTop: '1px solid #e2e8f0',
+                borderTop: '1px solid #334155',
                 textAlign: 'center',
               }}
             >
@@ -462,7 +462,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     margin: '0',
                     fontSize: '16px',
                     fontWeight: '700',
-                    color: '#0f172a',
+                    color: '#ffffff',
                   }}
                 >
                   Photobooth Guys
@@ -472,7 +472,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                 style={{
                   margin: '0',
                   fontSize: '14px',
-                  color: '#64748b',
+                  color: '#94a3b8',
                 }}
               >
                 Professional photo booth services for your special events
@@ -494,30 +494,30 @@ function NotFoundError() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#0f172a',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
         padding: '32px',
       }}
     >
       <div
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: '#1e293b',
           padding: '48px',
           borderRadius: '12px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid #334155',
           textAlign: 'center',
           maxWidth: '520px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
         <div
           style={{
             width: '64px',
             height: '64px',
-            backgroundColor: '#fef2f2',
+            backgroundColor: '#dc2626',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -530,7 +530,7 @@ function NotFoundError() {
         </div>
         <h1
           style={{
-            color: '#0f172a',
+            color: '#ffffff',
             fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700',
@@ -540,7 +540,7 @@ function NotFoundError() {
         </h1>
         <p
           style={{
-            color: '#64748b',
+            color: '#94a3b8',
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.6',
@@ -552,9 +552,9 @@ function NotFoundError() {
         <div
           style={{
             padding: '16px',
-            backgroundColor: '#f8fafc',
+            backgroundColor: '#0f172a',
             borderRadius: '8px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #334155',
             marginBottom: '24px',
           }}
         >
@@ -562,19 +562,19 @@ function NotFoundError() {
             style={{
               margin: '0',
               fontSize: '14px',
-              color: '#64748b',
+              color: '#94a3b8',
               lineHeight: '1.6',
             }}
           >
             Please contact us at{' '}
-            <strong style={{ color: '#3b82f6', fontWeight: '600' }}>info@photoboothguys.ca</strong>{' '}
+            <strong style={{ color: '#60a5fa', fontWeight: '600' }}>info@photoboothguys.ca</strong>{' '}
             if you believe this is an error.
           </p>
         </div>
         <div
           style={{
             paddingTop: '24px',
-            borderTop: '1px solid #e2e8f0',
+            borderTop: '1px solid #334155',
           }}
         >
           <div
@@ -605,7 +605,7 @@ function NotFoundError() {
                 margin: '0',
                 fontSize: '16px',
                 fontWeight: '700',
-                color: '#0f172a',
+                color: '#ffffff',
               }}
             >
               Photobooth Guys
