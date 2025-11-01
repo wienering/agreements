@@ -92,6 +92,7 @@ export default function AgreementsPage() {
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [invoiceResult, setInvoiceResult] = useState<any>(null);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [invoiceType, setInvoiceType] = useState<'default' | 'total-only'>('default');
   
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
@@ -711,6 +712,7 @@ export default function AgreementsPage() {
     setShowInvoiceModal(true);
     setInvoiceResult(null);
     setInvoiceError(null);
+    setInvoiceType('default');
   };
 
   const handleConfirmCreateInvoice = async () => {
@@ -728,6 +730,7 @@ export default function AgreementsPage() {
         },
         body: JSON.stringify({
           agreementId: invoiceAgreement.id,
+          invoiceType: invoiceType,
         }),
       });
 
@@ -757,6 +760,7 @@ export default function AgreementsPage() {
     setInvoiceResult(null);
     setInvoiceError(null);
     setCreatingInvoice(false);
+    setInvoiceType('default');
   };
 
   const handleArchiveAgreement = async (agreementId: string) => {
@@ -2966,6 +2970,40 @@ export default function AgreementsPage() {
                   </div>
 
                   <div style={{
+                    marginBottom: '24px'
+                  }}>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: isDark ? '#94a3b8' : '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '8px'
+                    }}>
+                      Invoice Type
+                    </label>
+                    <select
+                      value={invoiceType}
+                      onChange={(e) => setInvoiceType(e.target.value as 'default' | 'total-only')}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        fontSize: '14px',
+                        backgroundColor: cardBg,
+                        color: textColor,
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="default">Default (Deposit + Remaining)</option>
+                      <option value="total-only">Total Amount Only</option>
+                    </select>
+                  </div>
+
+                  <div style={{
                     backgroundColor: '#fffbeb',
                     border: '1px solid #fde68a',
                     borderRadius: '6px',
@@ -2979,11 +3017,21 @@ export default function AgreementsPage() {
                       lineHeight: '1.6'
                     }}>
                       <strong>Note:</strong> This will create a Stripe invoice and send it to the client via email. 
-                      The invoice due dates will be calculated based on the event date:
-                      <br />
-                      • If event date is more than 7 days away: $100 deposit due today, remaining amount due 7 days before event
-                      <br />
-                      • If event date is 7 days or less: Full amount due today
+                      {invoiceType === 'default' ? (
+                        <>
+                          <br />
+                          The invoice due dates will be calculated based on the event date:
+                          <br />
+                          • If event date is more than 7 days away: $100 deposit due today, remaining amount due 7 days before event
+                          <br />
+                          • If event date is 7 days or less: Full amount due today
+                        </>
+                      ) : (
+                        <>
+                          <br />
+                          A single invoice will be created for the full amount, due 1 week before the event date.
+                        </>
+                      )}
                     </p>
                   </div>
 

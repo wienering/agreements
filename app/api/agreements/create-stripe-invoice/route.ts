@@ -5,21 +5,54 @@ import Stripe from 'stripe';
 
 const createInvoiceSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
+  invoiceType: z.enum(['default', 'total-only']).optional().default('default'),
 });
 
 /**
  * Calculate invoice due dates based on event date
  * Rules:
- * - If event date is > 7 days in the future:
- *   - Deposit: $100 due today
- *   - Remaining amount: due 7 days before event date
- * - If event date is ≤ 7 days in the future:
- *   - Entire amount: due today
+ * - If invoiceType is 'total-only':
+ *   - Single invoice for full amount, due 7 days before event date (or today if no event date)
+ * - If invoiceType is 'default':
+ *   - If event date is > 7 days in the future:
+ *     - Deposit: $100 due today
+ *     - Remaining amount: due 7 days before event date
+ *   - If event date is ≤ 7 days in the future:
+ *     - Entire amount: due today
  */
-function calculateInvoiceDetails(eventDate: Date | null, totalAmount: number) {
+function calculateInvoiceDetails(eventDate: Date | null, totalAmount: number, invoiceType: 'default' | 'total-only' = 'default') {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Handle "Total Amount Only" invoice type
+  if (invoiceType === 'total-only') {
+    if (!eventDate) {
+      // No event date - due today
+      return {
+        depositAmount: 0,
+        remainingAmount: totalAmount,
+        depositDueDate: today,
+        remainingDueDate: today,
+        needsTwoInvoices: false,
+      };
+    }
+
+    // Calculate 7 days before event date
+    const event = new Date(eventDate);
+    event.setHours(0, 0, 0, 0);
+    const remainingDueDate = new Date(event);
+    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
+
+    return {
+      depositAmount: 0,
+      remainingAmount: totalAmount,
+      depositDueDate: remainingDueDate,
+      remainingDueDate,
+      needsTwoInvoices: false,
+    };
+  }
+
+  // Default invoice type logic (existing behavior)
   if (!eventDate) {
     // No event date - due today
     return {
@@ -120,7 +153,8 @@ export async function POST(request: NextRequest) {
     // Calculate invoice details
     const invoiceDetails = calculateInvoiceDetails(
       agreement.client.eventDate,
-      totalAmount
+      totalAmount,
+      validatedData.invoiceType
     );
 
     const clientName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || agreement.client.email;
