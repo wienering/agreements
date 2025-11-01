@@ -23,6 +23,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             eventStartTime: true,
             eventDuration: true,
             eventType: true,
+            notes: true,
           },
         },
         backdropLink: {
@@ -89,16 +90,32 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return <EventExpiredError />;
     }
 
-    // Format event date if available
+    // Format event date for display (e.g., "November 2, 2025")
     const formattedEventDate = client.eventDate
-      ? new Date(client.eventDate).toLocaleDateString('en-CA', {
+      ? new Date(client.eventDate).toLocaleDateString('en-US', {
           timeZone: 'America/Toronto',
-          weekday: 'long',
           year: 'numeric',
           month: 'long',
           day: 'numeric',
         })
       : null;
+
+    // Format time with duration (e.g., "8:00 pm - 6 hours")
+    const formattedTimeWithDuration = (() => {
+      if (!client.eventStartTime && !client.eventDuration) return null;
+      const time = client.eventStartTime || '';
+      const duration = client.eventDuration || '';
+      if (!time && !duration) return null;
+      if (time && duration) return `${time} - ${duration}`;
+      return time || duration;
+    })();
+
+    // Generate Google Maps URL for address
+    const getGoogleMapsUrl = (address: string | null) => {
+      if (!address) return null;
+      const encoded = encodeURIComponent(address);
+      return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+    };
 
     return (
       <>
@@ -106,6 +123,20 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
           @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+          }
+          @media (max-width: 1024px) {
+            main {
+              grid-template-columns: 1fr !important;
+            }
+            main > div:last-child {
+              position: static !important;
+            }
+          }
+          .address-link {
+            transition: color 0.2s;
+          }
+          .address-link:hover {
+            color: #93c5fd !important;
           }
         `}} />
         <div
@@ -181,11 +212,17 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
           {/* Main Content */}
           <main
             style={{
-              maxWidth: '1200px',
+              maxWidth: '1400px',
               margin: '0 auto',
               padding: '48px 32px',
+              display: 'grid',
+              gridTemplateColumns: '1fr 380px',
+              gap: '32px',
+              alignItems: 'start',
             }}
           >
+            {/* Left Column - Detailed Cards */}
+            <div>
             {/* Client Information Card */}
             {client.firstName && (
               <div
@@ -472,16 +509,262 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                 </div>
               </div>
             )}
+            </div>
 
-            {/* Footer */}
-            <footer
+            {/* Right Column - Event Summary */}
+            <div
               style={{
-                marginTop: '48px',
-                paddingTop: '32px',
-                borderTop: '1px solid #334155',
-                textAlign: 'center',
+                position: 'sticky',
+                top: '24px',
               }}
             >
+              <div
+                style={{
+                  backgroundColor: '#1e293b',
+                  padding: '32px',
+                  borderRadius: '12px',
+                  border: '1px solid #334155',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h2
+                  style={{
+                    margin: '0 0 24px 0',
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: '#ffffff',
+                    paddingBottom: '16px',
+                    borderBottom: '1px solid #334155',
+                  }}
+                >
+                  Event Summary
+                </h2>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                  }}
+                >
+                  {/* Date */}
+                  {formattedEventDate && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '18px',
+                          color: '#f1f5f9',
+                          fontWeight: '600',
+                          lineHeight: '1.6',
+                        }}
+                      >
+                        {formattedEventDate}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Start Time with Duration */}
+                  {formattedTimeWithDuration && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Start Time:
+                      </p>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '16px',
+                          color: '#f1f5f9',
+                          fontWeight: '500',
+                        }}
+                      >
+                        {formattedTimeWithDuration}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Client Name */}
+                  {client.firstName && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Client Name:
+                      </p>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '16px',
+                          color: '#f1f5f9',
+                          fontWeight: '500',
+                        }}
+                      >
+                        {client.firstName}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Contact Phone */}
+                  {client.phone && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Contact Phone:
+                      </p>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '16px',
+                          color: '#f1f5f9',
+                          fontWeight: '500',
+                        }}
+                      >
+                        {client.phone}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Event Address with Google Maps Link */}
+                  {client.eventLocation && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Event Address:
+                      </p>
+                      <a
+                        href={getGoogleMapsUrl(client.eventLocation) || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="address-link"
+                        style={{
+                          margin: '0',
+                          fontSize: '16px',
+                          color: '#60a5fa',
+                          fontWeight: '500',
+                          textDecoration: 'none',
+                          lineHeight: '1.6',
+                          display: 'block',
+                        }}
+                      >
+                        {client.eventLocation}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Backdrop */}
+                  {backdropLink?.name && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Backdrop:
+                      </p>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '16px',
+                          color: '#f1f5f9',
+                          fontWeight: '500',
+                        }}
+                      >
+                        {backdropLink.name}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Additional Info (Notes) */}
+                  {client.notes && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Additional Info:
+                      </p>
+                      <div
+                        style={{
+                          marginTop: '8px',
+                        }}
+                      >
+                        {client.notes.split('\n').map((line: string, idx: number) => (
+                          <p
+                            key={idx}
+                            style={{
+                              margin: idx > 0 ? '8px 0 0 0' : '0',
+                              fontSize: '16px',
+                              color: '#f1f5f9',
+                              fontWeight: '500',
+                              lineHeight: '1.6',
+                              whiteSpace: 'pre-wrap',
+                            }}
+                          >
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </main>
+
+          {/* Footer */}
+          <footer
+            style={{
+              maxWidth: '1400px',
+              margin: '0 auto',
+              padding: '48px 32px 0 32px',
+              marginTop: '48px',
+              paddingTop: '32px',
+              borderTop: '1px solid #334155',
+              textAlign: 'center',
+            }}
+          >
               <div
                 style={{
                   display: 'inline-flex',
