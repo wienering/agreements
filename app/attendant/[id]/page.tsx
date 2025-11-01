@@ -53,7 +53,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
     return (
       <>
-        <style jsx>{`
+        <style dangerouslySetInnerHTML={{__html: `
           @keyframes fadeIn {
             from {
               opacity: 0;
@@ -62,7 +62,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               opacity: 1;
             }
           }
-        `}</style>
+        `}} />
         <div
           style={{
             minHeight: '100vh',
