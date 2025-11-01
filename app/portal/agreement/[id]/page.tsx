@@ -27,6 +27,7 @@ interface Agreement {
     name: string;
     url: string;
   } | null;
+  selectedBackdropName: string | null;
   notes: Array<{
     id: string;
     content: string;
@@ -582,7 +583,16 @@ export default function AgreementDetail() {
             </div>
           </a>
 
-          {agreement.backdropLink ? (
+          {agreement.selectedBackdropName ? (
+            <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-emerald-500 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-900/20">
+              <div className="text-2xl">✅</div>
+              <div>
+                <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">Selected Backdrop</h3>
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mt-1">{agreement.selectedBackdropName}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Your backdrop selection has been confirmed</p>
+              </div>
+            </div>
+          ) : agreement.backdropLink ? (
             <a
               href={agreement.backdropLink.url}
               target="_blank"

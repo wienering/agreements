@@ -85,6 +85,7 @@ model Agreement {
   nextAction         String?
   backdropLinkId     String?
   backdropLink       BackdropLink?         @relation(fields: [backdropLinkId], references: [id], onDelete: SetNull)
+  selectedBackdropName String?
   
   client             Client                @relation(fields: [clientId], references: [id])
   template           Template              @relation(fields: [templateId], references: [id])

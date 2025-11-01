@@ -19,6 +19,7 @@ interface Agreement {
   cancellationReason?: string;
   lastEmailedAt?: string;
   emailSendCount: number;
+  selectedBackdropName?: string;
   client: {
     id: string;
     firstName: string;
@@ -1175,6 +1176,11 @@ export default function AgreementsPage() {
                     <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                       {agreement.client.email}
                     </p>
+                    {agreement.selectedBackdropName && (
+                      <p style={{ margin: '4px 0 0 0', color: '#059669', fontSize: '14px', fontWeight: '500' }}>
+                        🖼️ Selected Backdrop: {agreement.selectedBackdropName}
+                      </p>
+                    )}
                   </div>
                   <div style={{ 
                     display: 'flex', 

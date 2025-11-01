@@ -14,6 +14,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       where: { id },
       select: {
         id: true,
+        selectedBackdropName: true,
         client: {
           select: {
             firstName: true,
@@ -39,7 +40,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return <NotFoundError />;
     }
 
-    const { client, backdropLink } = agreement;
+    const { client, backdropLink, selectedBackdropName } = agreement;
 
     // Check if event has passed and is more than 24 hours ago
     const isEventExpired = (() => {
@@ -706,6 +707,34 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         }}
                       >
                         {backdropLink.name}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Selected Backdrop */}
+                  {selectedBackdropName && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14px',
+                          color: '#10b981',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Selected Backdrop:
+                      </p>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '16px',
+                          color: '#10b981',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {selectedBackdropName}
                       </p>
                     </div>
                   )}

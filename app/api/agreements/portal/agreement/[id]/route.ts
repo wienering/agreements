@@ -68,6 +68,7 @@ export async function GET(
           name: agreement.backdropLink.name,
           url: agreement.backdropLink.url
         } : null,
+        selectedBackdropName: agreement.selectedBackdropName,
         notes: agreement.notes.map(note => ({
           id: note.id,
           content: note.content,
