@@ -370,9 +370,12 @@ class Bookly_Agreements_Integration {
                 
                 if ($appointment) {
                     $booking['start_date'] = $appointment['start_date'] ?? '';
-                    $booking['start_time'] = $appointment['start_date'] ? date('g:i A', strtotime($appointment['start_date'])) : '';
+                    // Format time without leading zero (8:00 PM instead of 08:00 PM)
+                    $start_time_formatted = $appointment['start_date'] ? date('g:i A', strtotime($appointment['start_date'])) : '';
+                    $booking['start_time'] = preg_replace('/^0(\d):/', '$1:', $start_time_formatted);
                     $booking['end_date'] = $appointment['end_date'] ?? '';
-                    $booking['end_time'] = $appointment['end_date'] ? date('g:i A', strtotime($appointment['end_date'])) : '';
+                    $end_time_formatted = $appointment['end_date'] ? date('g:i A', strtotime($appointment['end_date'])) : '';
+                    $booking['end_time'] = preg_replace('/^0(\d):/', '$1:', $end_time_formatted);
                     $booking['location'] = $appointment['location_id'] ?? '';
                     
                     // Get service if we have service_id
