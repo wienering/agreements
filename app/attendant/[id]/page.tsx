@@ -40,6 +40,55 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
     const { client, backdropLink } = agreement;
 
+    // Check if event has passed and is more than 24 hours ago
+    const isEventExpired = (() => {
+      if (!client.eventDate) return false;
+      
+      try {
+        // Parse event date
+        const eventDate = new Date(client.eventDate);
+        if (isNaN(eventDate.getTime())) return false;
+        
+        // If eventStartTime is provided, try to parse it and add to event date
+        let eventDateTime = new Date(eventDate);
+        if (client.eventStartTime) {
+          // Parse time string (could be formats like "2:00 PM", "14:00", "2 PM", etc.)
+          const timeStr = client.eventStartTime.trim();
+          const timeMatch = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+          
+          if (timeMatch) {
+            let hours = parseInt(timeMatch[1], 10);
+            const minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+            const period = timeMatch[3]?.toUpperCase();
+            
+            if (period === 'PM' && hours !== 12) {
+              hours += 12;
+            } else if (period === 'AM' && hours === 12) {
+              hours = 0;
+            }
+            
+            eventDateTime.setHours(hours, minutes, 0, 0);
+          }
+        }
+        
+        // Calculate 24 hours after event date/time
+        const expirationTime = new Date(eventDateTime);
+        expirationTime.setHours(expirationTime.getHours() + 24);
+        
+        // Check if current time is past expiration
+        return new Date() > expirationTime;
+      } catch (error) {
+        // If there's an error parsing dates, don't expire (fail open)
+        console.error('Error checking event expiration:', error);
+        return false;
+      }
+    })();
+
+    // If event has expired (more than 24 hours after), show expired message
+    if (isEventExpired) {
+      return <EventExpiredError />;
+    }
+
     // Format event date if available
     const formattedEventDate = client.eventDate
       ? new Date(client.eventDate).toLocaleDateString('en-CA', {
@@ -486,6 +535,133 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     console.error('Error fetching agreement:', error);
     return <NotFoundError />;
   }
+}
+
+// Custom error component for when event has expired (24 hours after event)
+function EventExpiredError() {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#0f172a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+        padding: '32px',
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: '#1e293b',
+          padding: '48px',
+          borderRadius: '12px',
+          border: '1px solid #334155',
+          textAlign: 'center',
+          maxWidth: '520px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <div
+          style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#f59e0b',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px auto',
+            fontSize: '28px',
+          }}
+        >
+          ⏰
+        </div>
+        <h1
+          style={{
+            color: '#ffffff',
+            fontSize: '24px',
+            margin: '0 0 16px 0',
+            fontWeight: '700',
+          }}
+        >
+          Event Information Expired
+        </h1>
+        <p
+          style={{
+            color: '#94a3b8',
+            fontSize: '16px',
+            margin: '0 0 24px 0',
+            lineHeight: '1.6',
+          }}
+        >
+          This event information is no longer available. Event details are only accessible up to 24 hours after the event date and time.
+        </p>
+        <div
+          style={{
+            padding: '16px',
+            backgroundColor: '#0f172a',
+            borderRadius: '8px',
+            border: '1px solid #334155',
+            marginBottom: '24px',
+          }}
+        >
+          <p
+            style={{
+              margin: '0',
+              fontSize: '14px',
+              color: '#94a3b8',
+              lineHeight: '1.6',
+            }}
+          >
+            If you need access to this information, please contact{' '}
+            <strong style={{ color: '#60a5fa', fontWeight: '600' }}>info@photoboothguys.ca</strong>
+          </p>
+        </div>
+        <div
+          style={{
+            paddingTop: '24px',
+            borderTop: '1px solid #334155',
+          }}
+        >
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: '#3b82f6',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: '600',
+              }}
+            >
+              📸
+            </div>
+            <h3
+              style={{
+                margin: '0',
+                fontSize: '16px',
+                fontWeight: '700',
+                color: '#ffffff',
+              }}
+            >
+              Photobooth Guys
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Custom error component for when agreement is not found
