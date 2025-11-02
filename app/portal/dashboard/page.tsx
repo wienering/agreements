@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
@@ -87,7 +87,7 @@ export default function PortalDashboard() {
   const [selectedAgreementId, setSelectedAgreementId] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = async () => {
     const token = localStorage.getItem('portal_session_token');
     if (!token) {
       router.push('/portal/login');
@@ -129,11 +129,17 @@ export default function PortalDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [router, statusFilter, searchQuery]);
+  };
 
   useEffect(() => {
     fetchDashboardData();
-  }, [fetchDashboardData]);
+  }, [router]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchDashboardData();
+    }
+  }, [statusFilter]);
 
   // Calculate metrics
   const metrics = useMemo(() => {
@@ -457,7 +463,7 @@ export default function PortalDashboard() {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }: { name: string; percent: number }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
