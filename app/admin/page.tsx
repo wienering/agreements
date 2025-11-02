@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -87,14 +87,11 @@ export default function AdminHome() {
   const { isDark } = useDarkMode();
   const router = useRouter();
 
-  useEffect(() => {
-    fetchStats();
-    fetchWarnings();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch('/api/analytics?days=7');
+      setLoading(true);
+      const periodParam = timePeriod === 'week' ? 'week' : timePeriod === 'month' ? 'month' : 'year';
+      const response = await fetch(`/api/analytics?days=7&period=${periodParam}`);
       if (response.ok) {
         const data = await response.json();
         setStats(data.overview);
@@ -106,7 +103,12 @@ export default function AdminHome() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timePeriod]);
+
+  useEffect(() => {
+    fetchStats();
+    fetchWarnings();
+  }, [fetchStats]);
 
   const fetchWarnings = async () => {
     try {
@@ -143,13 +145,25 @@ export default function AdminHome() {
     return formatDate(dateString);
   };
 
-  // Calculate total agreements for display
-  const totalAgreementsDisplay = stats?.monthlyStats?.reduce((sum, item) => sum + item.count, 0) || stats?.totalAgreements || 0;
-  const lastMonthCount = stats?.monthlyStats?.[stats.monthlyStats.length - 2]?.count || 0;
-  const currentMonthCount = stats?.monthlyStats?.[stats.monthlyStats.length - 1]?.count || 0;
-  const monthGrowth = lastMonthCount > 0 
-    ? Math.round(((currentMonthCount - lastMonthCount) / lastMonthCount) * 100)
-    : currentMonthCount > 0 ? 100 : 0;
+  // Calculate total agreements and growth for display based on period
+  const chartData = stats?.monthlyStats || [];
+  const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
+  
+  let growthText = '';
+  let growthValue = 0;
+  if (chartData.length >= 2) {
+    const currentPeriod = chartData[chartData.length - 1]?.count || 0;
+    const previousPeriod = chartData[chartData.length - 2]?.count || 0;
+    
+    if (previousPeriod > 0) {
+      growthValue = Math.round(((currentPeriod - previousPeriod) / previousPeriod) * 100);
+    } else if (currentPeriod > 0) {
+      growthValue = 100;
+    }
+    
+    const periodLabel = timePeriod === 'week' ? 'last week' : timePeriod === 'year' ? 'last year' : 'last month';
+    growthText = `${growthValue >= 0 ? '+' : ''}${growthValue}% vs ${periodLabel}`;
+  }
 
   return (
     <div style={{ 
@@ -331,7 +345,7 @@ export default function AdminHome() {
                   {totalAgreementsDisplay}
                 </div>
                 <div style={{ fontSize: '14px', color: mutedText }}>
-                  {monthGrowth >= 0 ? '+' : ''}{monthGrowth}% vs last month
+                  {growthText || 'No comparison available'}
                 </div>
               </div>
               
@@ -361,9 +375,9 @@ export default function AdminHome() {
             </div>
 
             {/* Chart */}
-            {stats?.monthlyStats && stats.monthlyStats.length > 0 ? (
+            {chartData && chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.monthlyStats}>
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
                   <XAxis 
                     dataKey="month" 

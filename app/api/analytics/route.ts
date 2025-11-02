@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const days = searchParams.get('days');
+    const period = searchParams.get('period') || 'month'; // week, month, or year
     
     // Get basic counts
     const [
@@ -48,39 +49,112 @@ export async function GET(request: NextRequest) {
       take: 10
     });
 
-    // Get agreements by month for the last 6 months
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // Get chart data based on period
+    let chartData: Array<{ month: string; count: number }> = [];
+    let startDate: Date;
     
-    const monthlyData = await prisma.agreement.groupBy({
-      by: ['createdAt'],
-      where: {
-        createdAt: {
-          gte: sixMonthsAgo
+    if (period === 'week') {
+      // Last 7 days
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      
+      const weeklyData = await prisma.agreement.groupBy({
+        by: ['createdAt'],
+        where: {
+          createdAt: {
+            gte: startDate
+          }
+        },
+        _count: {
+          id: true
         }
-      },
-      _count: {
-        id: true
-      }
-    });
-
-    // Process monthly data
-    const monthlyStats = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (5 - i));
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      const monthData = monthlyData.filter(item => {
-        const itemDate = new Date(item.createdAt);
-        const itemMonthKey = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
-        return itemMonthKey === monthKey;
       });
+
+      chartData = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        date.setHours(0, 0, 0, 0);
+        
+        const dayData = weeklyData.filter(item => {
+          const itemDate = new Date(item.createdAt);
+          itemDate.setHours(0, 0, 0, 0);
+          return itemDate.getTime() === date.getTime();
+        });
+        
+        return {
+          month: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          count: dayData.reduce((sum, item) => sum + item._count.id, 0)
+        };
+      });
+    } else if (period === 'year') {
+      // Last 12 months
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 12);
       
-      return {
-        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        count: monthData.reduce((sum, item) => sum + item._count.id, 0)
-      };
-    });
+      const yearlyData = await prisma.agreement.groupBy({
+        by: ['createdAt'],
+        where: {
+          createdAt: {
+            gte: startDate
+          }
+        },
+        _count: {
+          id: true
+        }
+      });
+
+      chartData = Array.from({ length: 12 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - (11 - i));
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        const monthData = yearlyData.filter(item => {
+          const itemDate = new Date(item.createdAt);
+          const itemMonthKey = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
+          return itemMonthKey === monthKey;
+        });
+        
+        return {
+          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          count: monthData.reduce((sum, item) => sum + item._count.id, 0)
+        };
+      });
+    } else {
+      // Default: last 6 months
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 6);
+      
+      const monthlyData = await prisma.agreement.groupBy({
+        by: ['createdAt'],
+        where: {
+          createdAt: {
+            gte: startDate
+          }
+        },
+        _count: {
+          id: true
+        }
+      });
+
+      chartData = Array.from({ length: 6 }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - (5 - i));
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        const monthData = monthlyData.filter(item => {
+          const itemDate = new Date(item.createdAt);
+          const itemMonthKey = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
+          return itemMonthKey === monthKey;
+        });
+        
+        return {
+          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          count: monthData.reduce((sum, item) => sum + item._count.id, 0)
+        };
+      });
+    }
+
+    const monthlyStats = chartData;
 
     // Get status distribution
     const statusDistribution = [
