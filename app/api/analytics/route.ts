@@ -123,7 +123,83 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // If days parameter is provided, return simplified overview for admin page
+    // Calculate trends (compare current period vs previous period)
+    const daysNum = days ? parseInt(days) : 7;
+    const currentPeriodStart = new Date();
+    currentPeriodStart.setDate(currentPeriodStart.getDate() - daysNum);
+    
+    const previousPeriodStart = new Date(currentPeriodStart);
+    previousPeriodStart.setDate(previousPeriodStart.getDate() - daysNum);
+    
+    // Get agreements for current period
+    const currentPeriodAgreements = await prisma.agreement.count({
+      where: {
+        createdAt: {
+          gte: currentPeriodStart
+        }
+      }
+    });
+    
+    // Get agreements for previous period
+    const previousPeriodAgreements = await prisma.agreement.count({
+      where: {
+        createdAt: {
+          gte: previousPeriodStart,
+          lt: currentPeriodStart
+        }
+      }
+    });
+    
+    // Get signed agreements for both periods
+    const currentPeriodSigned = await prisma.agreement.count({
+      where: {
+        signedAt: {
+          gte: currentPeriodStart
+        }
+      }
+    });
+    
+    const previousPeriodSigned = await prisma.agreement.count({
+      where: {
+        signedAt: {
+          gte: previousPeriodStart,
+          lt: currentPeriodStart
+        }
+      }
+    });
+    
+    // Calculate trend percentages
+    const agreementsTrend = previousPeriodAgreements > 0 
+      ? Math.round(((currentPeriodAgreements - previousPeriodAgreements) / previousPeriodAgreements) * 100)
+      : currentPeriodAgreements > 0 ? 100 : 0;
+    
+    const signedTrend = previousPeriodSigned > 0
+      ? Math.round(((currentPeriodSigned - previousPeriodSigned) / previousPeriodSigned) * 100)
+      : currentPeriodSigned > 0 ? 100 : 0;
+    
+    // Get recent clients count for trend
+    const currentPeriodClients = await prisma.client.count({
+      where: {
+        createdAt: {
+          gte: currentPeriodStart
+        }
+      }
+    });
+    
+    const previousPeriodClients = await prisma.client.count({
+      where: {
+        createdAt: {
+          gte: previousPeriodStart,
+          lt: currentPeriodStart
+        }
+      }
+    });
+    
+    const clientsTrend = previousPeriodClients > 0
+      ? Math.round(((currentPeriodClients - previousPeriodClients) / previousPeriodClients) * 100)
+      : currentPeriodClients > 0 ? 100 : 0;
+
+    // If days parameter is provided, return simplified overview for admin page with trends
     if (days) {
       return NextResponse.json({
         overview: {
@@ -133,8 +209,15 @@ export async function GET(request: NextRequest) {
           signedAgreements,
           draftAgreements,
           sentAgreements: liveAgreements, // Live agreements are "sent"
-          conversionRate
-        }
+          conversionRate,
+          trends: {
+            agreements: agreementsTrend,
+            signed: signedTrend,
+            clients: clientsTrend
+          },
+          monthlyStats // Include for chart
+        },
+        recentActivity: recentAgreements.slice(0, 5) // Include recent activity
       });
     }
 
