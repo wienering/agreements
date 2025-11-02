@@ -196,7 +196,7 @@ export async function GET(request: NextRequest) {
           createdAt: agreement.createdAt,
           signedAt: agreement.signedAt,
           expiresAt: agreement.expiresAt,
-          isExpired: agreement.expiresAt ? new Date() > agreement.expiresAt : false,
+          isExpired: agreement.status !== 'SIGNED' && (agreement.expiresAt ? new Date() > agreement.expiresAt : false),
           canSign: agreement.status === 'DRAFT' || agreement.status === 'SENT',
           isSigned: agreement.status === 'SIGNED',
           daysUntilExpiry: agreement.expiresAt ? Math.ceil((agreement.expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null

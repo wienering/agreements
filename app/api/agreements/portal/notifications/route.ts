@@ -23,9 +23,11 @@ export async function GET(request: NextRequest) {
             agreements: {
               where: {
                 archived: false,
-                expiresAt: {
-                  gte: new Date() // Only non-expired agreements
-                }
+                OR: [
+                  { status: 'SIGNED' }, // Signed agreements bypass expiration
+                  { expiresAt: null },
+                  { expiresAt: { gte: new Date() } }
+                ]
               },
               include: {
                 template: true

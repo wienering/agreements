@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       where: {
         uniqueToken: token,
         OR: [
+          { status: 'SIGNED' }, // Signed agreements bypass expiration
           { expiresAt: null },
           { expiresAt: { gte: new Date() } }
         ]
