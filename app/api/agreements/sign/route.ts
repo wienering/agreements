@@ -465,7 +465,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: agreement.client.email,
-    subject: `Thank You for Choosing Photobooth Guys - ${agreement.template.title}`,
+    subject: `Agreement Signed - Thank You for Choosing Photobooth Guys`,
     html: emailHtml,
   };
 
