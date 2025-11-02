@@ -1411,6 +1411,40 @@ export default function ClientAgreementPage() {
                   </span>
                 )}
               </button>
+              
+              <a
+                href="/portal/login"
+                style={{
+                  backgroundColor: '#8b5cf6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px 32px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  boxShadow: '0 4px 6px rgba(139, 92, 246, 0.3)',
+                  transition: 'all 0.2s ease',
+                  minWidth: '180px',
+                  justifyContent: 'center',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#7c3aed';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(139, 92, 246, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#8b5cf6';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(139, 92, 246, 0.3)';
+                }}
+              >
+                🚪 Client Portal
+              </a>
             </>
           ) : (
             <button
