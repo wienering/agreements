@@ -199,6 +199,45 @@ export async function GET(request: NextRequest) {
       ? Math.round(((currentPeriodClients - previousPeriodClients) / previousPeriodClients) * 100)
       : currentPeriodClients > 0 ? 100 : 0;
 
+    // Get upcoming events (clients with eventDate in the future)
+    const now = new Date();
+    const upcomingClients = await prisma.client.findMany({
+      where: {
+        eventDate: {
+          gte: now
+        }
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        eventDate: true,
+        eventStartTime: true,
+        eventType: true,
+        eventLocation: true
+      },
+      orderBy: {
+        eventDate: 'asc'
+      },
+      take: 5
+    });
+
+    const upcomingEvents = upcomingClients.map(client => {
+      const eventDate = new Date(client.eventDate!);
+      const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      return {
+        id: client.id,
+        clientName: `${client.firstName} ${client.lastName}`,
+        eventDate: client.eventDate?.toISOString(),
+        eventStartTime: client.eventStartTime,
+        eventType: client.eventType,
+        eventLocation: client.eventLocation,
+        daysUntil
+      };
+    });
+
     // If days parameter is provided, return simplified overview for admin page with trends
     if (days) {
       return NextResponse.json({
@@ -217,7 +256,8 @@ export async function GET(request: NextRequest) {
           },
           monthlyStats // Include for chart
         },
-        recentActivity: recentAgreements.slice(0, 5) // Include recent activity
+        recentActivity: recentAgreements.slice(0, 5), // Include recent activity
+        upcomingEvents // Include upcoming events
       });
     }
 

@@ -67,10 +67,21 @@ interface RecentActivity {
   };
 }
 
+interface UpcomingEvent {
+  id: string;
+  clientName: string;
+  eventDate: string;
+  eventStartTime: string | null;
+  eventType: string | null;
+  eventLocation: string | null;
+  daysUntil: number;
+}
+
 export default function AdminHome() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [warnings, setWarnings] = useState<WarningsData | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'year'>('month');
   const { isDark } = useDarkMode();
@@ -88,6 +99,7 @@ export default function AdminHome() {
         const data = await response.json();
         setStats(data.overview);
         setRecentActivity(data.recentActivity || []);
+        setUpcomingEvents(data.upcomingEvents || []);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -488,7 +500,7 @@ export default function AdminHome() {
               </div>
             )}
 
-            {/* Recent Activity */}
+            {/* Upcoming Events */}
             <div style={{
               backgroundColor: cardBg,
               borderRadius: '12px',
@@ -508,19 +520,104 @@ export default function AdminHome() {
                   fontWeight: '700', 
                   color: textColor 
                 }}>
+                  Upcoming Events
+                </h3>
+                <svg style={{ width: '18px', height: '18px', color: mutedText }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {upcomingEvents.length > 0 ? (
+                  upcomingEvents.map((event) => {
+                    const eventDate = new Date(event.eventDate);
+                    const dateStr = eventDate.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric'
+                    });
+                    return (
+                      <div 
+                        key={event.id}
+                        onClick={() => router.push(`/admin/clients`)}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: `1px solid ${borderColor}`,
+                          backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = isDark ? '#0f172a' : '#f8fafc';
+                        }}
+                      >
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: textColor, marginBottom: '4px' }}>
+                          {dateStr}{event.eventStartTime ? `, ${event.eventStartTime}` : ''}
+                        </div>
+                        <div style={{ fontSize: '13px', color: textColor, marginBottom: '2px' }}>
+                          {event.clientName}
+                        </div>
+                        {event.eventType && (
+                          <div style={{ fontSize: '12px', color: mutedText, marginBottom: '2px' }}>
+                            {event.eventType}
+                          </div>
+                        )}
+                        {event.eventLocation && (
+                          <div style={{ fontSize: '11px', color: mutedText, marginBottom: '4px' }}>
+                            📍 {event.eventLocation}
+                          </div>
+                        )}
+                        <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600' }}>
+                          {event.daysUntil === 0 ? 'Today' : `${event.daysUntil} day${event.daysUntil === 1 ? '' : 's'} away`}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div style={{ color: mutedText, fontSize: '14px', textAlign: 'center', padding: '20px' }}>
+                    No upcoming events
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Activity - Smaller */}
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              padding: '16px',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                marginBottom: '12px'
+              }}>
+                <h3 style={{ 
+                  margin: '0', 
+                  fontSize: '16px', 
+                  fontWeight: '700', 
+                  color: textColor 
+                }}>
                   Recent Activity
                 </h3>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {recentActivity.length > 0 ? (
-                  recentActivity.slice(0, 5).map((activity) => (
+                  recentActivity.slice(0, 3).map((activity) => (
                     <div 
                       key={activity.id}
                       onClick={() => router.push('/admin/agreements')}
                       style={{
-                        padding: '12px',
-                        borderRadius: '8px',
+                        padding: '8px',
+                        borderRadius: '6px',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                       }}
@@ -531,11 +628,8 @@ export default function AdminHome() {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: textColor, marginBottom: '4px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: textColor, marginBottom: '2px' }}>
                         {activity.client.firstName} {activity.client.lastName}
-                      </div>
-                      <div style={{ fontSize: '12px', color: mutedText, marginBottom: '4px' }}>
-                        {activity.template.title}
                       </div>
                       <div style={{ fontSize: '11px', color: mutedText }}>
                         {formatRelativeTime(activity.signedAt || activity.createdAt)}
@@ -544,7 +638,7 @@ export default function AdminHome() {
                     </div>
                   ))
                 ) : (
-                  <div style={{ color: mutedText, fontSize: '14px', textAlign: 'center', padding: '20px' }}>
+                  <div style={{ color: mutedText, fontSize: '12px', textAlign: 'center', padding: '12px' }}>
                     No recent activity
                   </div>
                 )}
