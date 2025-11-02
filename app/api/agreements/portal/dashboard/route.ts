@@ -265,8 +265,6 @@ export async function GET(request: NextRequest) {
         eventDate: session.client.eventDate,
         eventType: session.client.eventType,
         eventLocation: session.client.eventLocation,
-        eventStartTime: session.client.eventStartTime,
-        eventDuration: session.client.eventDuration,
         eventPackage: session.client.eventPackage,
         packagePrice: session.client.packagePrice ? Number(session.client.packagePrice) : null,
       }
