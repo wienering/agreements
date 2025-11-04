@@ -5,22 +5,41 @@ import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 
-interface Client {
+interface Event {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
+  clientId: string;
   eventDate?: string;
-  notes?: string;
   eventType?: string;
   eventLocation?: string;
   eventStartTime?: string;
   eventDuration?: string;
   eventPackage?: string;
   packagePrice?: number;
+  notes?: string;
+  archived: boolean;
+  archivedAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Client {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  events?: Event[];
+  // Deprecated fields for backward compatibility
+  eventDate?: string;
+  eventType?: string;
+  eventLocation?: string;
+  eventStartTime?: string;
+  eventDuration?: string;
+  eventPackage?: string;
+  packagePrice?: number;
 }
 
 export default function ClientsPage() {
@@ -74,16 +93,34 @@ export default function ClientsPage() {
     if (!searchTerm.trim()) {
       setFilteredClients(clients);
     } else {
-      const filtered = clients.filter(client => 
-        client.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.eventType && client.eventType.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.eventLocation && client.eventLocation.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.eventPackage && client.eventPackage.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.notes && client.notes.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = clients.filter(client => {
+        // Search in client fields
+        if (
+          client.firstName.toLowerCase().includes(searchLower) ||
+          client.lastName.toLowerCase().includes(searchLower) ||
+          client.email.toLowerCase().includes(searchLower) ||
+          (client.phone && client.phone.toLowerCase().includes(searchLower)) ||
+          (client.notes && client.notes.toLowerCase().includes(searchLower))
+        ) {
+          return true;
+        }
+        // Search in events
+        if (client.events && client.events.length > 0) {
+          return client.events.some(event =>
+            (event.eventType && event.eventType.toLowerCase().includes(searchLower)) ||
+            (event.eventLocation && event.eventLocation.toLowerCase().includes(searchLower)) ||
+            (event.eventPackage && event.eventPackage.toLowerCase().includes(searchLower)) ||
+            (event.notes && event.notes.toLowerCase().includes(searchLower))
+          );
+        }
+        // Fallback to deprecated client event fields
+        return (
+          (client.eventType && client.eventType.toLowerCase().includes(searchLower)) ||
+          (client.eventLocation && client.eventLocation.toLowerCase().includes(searchLower)) ||
+          (client.eventPackage && client.eventPackage.toLowerCase().includes(searchLower))
+        );
+      });
       setFilteredClients(filtered);
     }
   }, [clients, searchTerm]);
@@ -242,6 +279,36 @@ export default function ClientsPage() {
       email: client.email
     }));
     router.push(`/admin/agreements?create=true&client=${clientData}`);
+  };
+
+  const handleArchiveEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to archive this event? It will be hidden from the client page but can be unarchived later.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch('/api/events/archive', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ eventId }),
+      });
+
+      if (response.ok) {
+        showToast('Event archived successfully', 'success');
+        fetchClients(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to archive event', 'error');
+      }
+    } catch (error) {
+      console.error('Error archiving event:', error);
+      showToast('Error archiving event', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
@@ -804,40 +871,108 @@ export default function ClientsPage() {
                         {client.phone}
                       </p>
                     )}
-                      {client.eventDate && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Event: {new Date(client.eventDate).toLocaleDateString()}
-                        </p>
-                      )}
-                      {client.eventType && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Type: {client.eventType}
-                        </p>
-                      )}
-                      {client.eventLocation && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Location: {client.eventLocation}
-                        </p>
-                      )}
-                      {client.eventStartTime && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Time: {client.eventStartTime}
-                        </p>
-                      )}
-                      {client.eventDuration && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Duration: {client.eventDuration}
-                        </p>
-                      )}
-                      {client.eventPackage && (
-                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                          Package: {client.eventPackage}
-                        </p>
-                      )}
                       {client.notes && (
                       <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                         {client.notes}
                       </p>
+                    )}
+                    {/* Display all non-archived events */}
+                    {client.events && client.events.length > 0 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: textColor, fontWeight: '600' }}>
+                          Events ({client.events.length}):
+                        </h4>
+                        {client.events.map((event) => (
+                          <div key={event.id} style={{
+                            marginBottom: '12px',
+                            padding: '12px',
+                            backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '6px'
+                          }}>
+                            {event.eventDate && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px', fontWeight: '500' }}>
+                                📅 {new Date(event.eventDate).toLocaleDateString()}
+                              </p>
+                            )}
+                            {event.eventType && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Type: {event.eventType}
+                              </p>
+                            )}
+                            {event.eventLocation && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Location: {event.eventLocation}
+                              </p>
+                            )}
+                            {event.eventStartTime && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Time: {event.eventStartTime}
+                              </p>
+                            )}
+                            {event.eventDuration && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Duration: {event.eventDuration}
+                              </p>
+                            )}
+                            {event.eventPackage && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Package: {event.eventPackage}
+                              </p>
+                            )}
+                            {event.packagePrice && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Price: ${parseFloat(event.packagePrice.toString()).toFixed(2)}
+                              </p>
+                            )}
+                            {event.notes && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Notes: {event.notes}
+                              </p>
+                            )}
+                            <button
+                              onClick={() => handleArchiveEvent(event.id)}
+                              style={{
+                                backgroundColor: '#f59e0b',
+                                color: 'white',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                marginTop: '8px'
+                              }}
+                              title="Archive this event"
+                            >
+                              Archive Event
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Fallback: show deprecated client event fields if no events exist */}
+                    {(!client.events || client.events.length === 0) && client.eventDate && (
+                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: isDark ? '#1e293b' : '#f8fafc', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
+                        <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
+                          (Legacy event data - will be migrated)
+                        </p>
+                        {client.eventDate && (
+                          <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                            Event: {new Date(client.eventDate).toLocaleDateString()}
+                          </p>
+                        )}
+                        {client.eventType && (
+                          <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                            Type: {client.eventType}
+                          </p>
+                        )}
+                        {client.eventLocation && (
+                          <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                            Location: {client.eventLocation}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                   <div style={{ 

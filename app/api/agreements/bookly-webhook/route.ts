@@ -330,20 +330,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert client (create or update by email)
+    // Don't update event fields on client - those go to Event model
     const client = await prisma.client.upsert({
       where: { email: clientData.email },
       update: {
-        // Update booking-related fields, preserve existing non-null fields if new ones are null
+        // Update client info only, preserve existing non-null fields if new ones are null
         firstName: clientData.firstName || undefined,
         lastName: clientData.lastName || undefined,
         phone: clientData.phone || undefined,
-        eventDate: clientData.eventDate || undefined,
-        eventStartTime: clientData.eventStartTime || undefined,
-        eventType: clientData.eventType || undefined,
-        eventPackage: clientData.eventPackage || undefined,
-        eventLocation: clientData.eventLocation || undefined,
-        eventDuration: clientData.eventDuration || undefined,
-        packagePrice: clientData.packagePrice !== null ? clientData.packagePrice : undefined,
         notes: clientData.notes || undefined,
       },
       create: {
@@ -351,18 +345,33 @@ export async function POST(request: NextRequest) {
         firstName: clientData.firstName,
         lastName: clientData.lastName,
         phone: clientData.phone,
-        eventDate: clientData.eventDate,
-        eventStartTime: clientData.eventStartTime,
-        eventType: clientData.eventType,
-        eventPackage: clientData.eventPackage,
-        eventLocation: clientData.eventLocation,
-        eventDuration: clientData.eventDuration,
-        packagePrice: clientData.packagePrice,
         notes: clientData.notes,
       },
     });
 
     console.log(`✅ Client ${client.id} ${client.createdAt === client.updatedAt ? 'created' : 'updated'}:`, client.email);
+
+    // Create Event record for this booking
+    // Only create if there's event data provided
+    if (clientData.eventDate || clientData.eventType || clientData.eventLocation || 
+        clientData.eventStartTime || clientData.eventDuration || 
+        clientData.eventPackage || clientData.packagePrice !== null) {
+      const event = await prisma.event.create({
+        data: {
+          clientId: client.id,
+          eventDate: clientData.eventDate || null,
+          eventType: clientData.eventType || null,
+          eventLocation: clientData.eventLocation || null,
+          eventStartTime: clientData.eventStartTime || null,
+          eventDuration: clientData.eventDuration || null,
+          eventPackage: clientData.eventPackage || null,
+          packagePrice: clientData.packagePrice !== null ? clientData.packagePrice : null,
+          notes: clientData.notes || null,
+          archived: false,
+        },
+      });
+      console.log(`✅ Event ${event.id} created for client ${client.email}`);
+    }
 
     // Optional: Create agreement automatically
     const templateId = validatedData.templateId || process.env.BOOKLY_DEFAULT_TEMPLATE_ID;

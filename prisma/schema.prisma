@@ -22,22 +22,23 @@ model Client {
   lastName       String
   email          String          @unique
   phone          String?
-  eventDate      DateTime?
+  eventDate      DateTime?       // Deprecated - use Event model instead
   notes          String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  eventType      String?
-  eventLocation  String?
-  eventStartTime String?
-  eventDuration  String?
-  eventPackage   String?
-  packagePrice   Decimal?        @db.Decimal(10, 2)
+  eventType      String?         // Deprecated - use Event model instead
+  eventLocation  String?         // Deprecated - use Event model instead
+  eventStartTime String?          // Deprecated - use Event model instead
+  eventDuration  String?          // Deprecated - use Event model instead
+  eventPackage   String?         // Deprecated - use Event model instead
+  packagePrice   Decimal?        @db.Decimal(10, 2) // Deprecated - use Event model instead
   address        String?
   addressAddedAt DateTime?
   phoneAddedAt   DateTime?
   agreements     Agreement[]
   sessions       ClientSession[]
   clientNotes    ClientNote[]    @relation("ClientNotes")
+  events         Event[]
 }
 
 model Template {
@@ -58,6 +59,7 @@ model Agreement {
   id                 String                @id @default(cuid())
   clientId           String
   templateId         String
+  eventId            String?                // Optional link to specific event
   status             AgreementStatus       @default(DRAFT)
   uniqueToken        String                @unique
   expiresAt          DateTime?
@@ -89,6 +91,7 @@ model Agreement {
   
   client             Client                @relation(fields: [clientId], references: [id])
   template           Template              @relation(fields: [templateId], references: [id])
+  event              Event?                @relation(fields: [eventId], references: [id], onDelete: SetNull)
   fields             AgreementFieldValue[]
   signature          Signature?
   auditLogs          AuditLog[]
@@ -178,6 +181,29 @@ model BackdropLink {
   agreements   Agreement[]
 
   @@index([displayOrder])
+}
+
+model Event {
+  id             String      @id @default(cuid())
+  clientId       String
+  eventDate      DateTime?
+  eventType      String?
+  eventLocation  String?
+  eventStartTime String?
+  eventDuration  String?
+  eventPackage   String?
+  packagePrice   Decimal?   @db.Decimal(10, 2)
+  notes          String?
+  archived       Boolean    @default(false)
+  archivedAt     DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  
+  client         Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  agreements     Agreement[]
+
+  @@index([clientId])
+  @@index([archived])
 }
 
 enum AgreementStatus {
