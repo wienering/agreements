@@ -50,12 +50,23 @@ export default function ClientsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [newClient, setNewClient] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
+    eventDate: '',
+    eventType: '',
+    eventLocation: '',
+    eventStartTime: '',
+    eventDuration: '',
+    eventPackage: '',
+    packagePrice: '',
+    notes: ''
+  });
+  const [newEvent, setNewEvent] = useState({
     eventDate: '',
     eventType: '',
     eventLocation: '',
@@ -236,7 +247,9 @@ export default function ClientsPage() {
   const handleCancelEdit = () => {
     setShowAddForm(false);
     setEditingClient(null);
+    setEditingEvent(null);
     setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
   };
 
   const handleDeleteClient = async (clientId: string) => {
@@ -298,6 +311,67 @@ export default function ClientsPage() {
     }
     
     router.push(url);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setNewEvent({
+      eventDate: event.eventDate ? new Date(event.eventDate).toISOString().slice(0, 16) : '',
+      eventType: event.eventType || '',
+      eventLocation: event.eventLocation || '',
+      eventStartTime: event.eventStartTime || '',
+      eventDuration: event.eventDuration || '',
+      eventPackage: event.eventPackage || '',
+      packagePrice: event.packagePrice ? event.packagePrice.toString() : '',
+      notes: event.notes || ''
+    });
+    setShowAddForm(true);
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch('/api/events/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...newEvent, id: editingEvent.id }),
+      });
+
+      if (response.ok) {
+        const updatedEvent = await response.json();
+        showToast('Event updated successfully!');
+        setShowAddForm(false);
+        setEditingEvent(null);
+        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+        fetchClients(); // Refresh the list
+      } else {
+        try {
+          const error = await response.json();
+          const errorMessage = error.error || error.message || 'Unknown error occurred';
+          showToast(`Error: ${errorMessage}`, 'error');
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          showToast(`Error: Failed to update event (${response.status})`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+      showToast('Failed to update event', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEditEvent = () => {
+    setShowAddForm(false);
+    setEditingEvent(null);
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
   };
 
   const handleArchiveEvent = async (eventId: string) => {
@@ -485,337 +559,534 @@ export default function ClientsPage() {
             marginBottom: '24px'
           }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
-              {editingClient ? 'Edit Client' : 'Add New Client'}
+              {editingEvent ? 'Edit Event' : editingClient ? 'Edit Client' : 'Add New Client'}
             </h2>
-            <form onSubmit={editingClient ? handleUpdateClient : handleAddClient}>
+            <form onSubmit={editingEvent ? handleUpdateEvent : editingClient ? handleUpdateClient : handleAddClient}>
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
                 gap: '16px',
                 marginBottom: '16px'
               }}>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.firstName}
-                    onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="Enter first name"
-                  />
-                </div>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.lastName}
-                    onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="Enter last name"
-                  />
-                </div>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    value={newClient.email}
-                    onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="Enter email address"
-                  />
-                </div>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={newClient.phone}
-                    onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="Enter phone number"
-                  />
-                </div>
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Event Date
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={newClient.eventDate}
-                    onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                  />
-                </div>
-
-                {/* Event Type */}
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Event Type
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.eventType}
-                    onChange={(e) => setNewClient({ ...newClient, eventType: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="e.g., Wedding, Corporate Event"
-                  />
-                </div>
-
-                {/* Event Location */}
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Event Location
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.eventLocation}
-                    onChange={(e) => setNewClient({ ...newClient, eventLocation: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="e.g., Grand Ballroom, Downtown Hotel"
-                  />
-                </div>
-
-                {/* Event Start Time */}
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Event Start Time
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.eventStartTime}
-                    onChange={(e) => setNewClient({ ...newClient, eventStartTime: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="e.g., 2:00 PM, 14:00"
-                  />
-                </div>
-
-                {/* Event Duration */}
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Event Duration
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.eventDuration}
-                    onChange={(e) => setNewClient({ ...newClient, eventDuration: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="e.g., 4 hours, 8 hours"
-                  />
-                </div>
-
-                {/* Event Package */}
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Package
-                  </label>
-                  <input
-                    type="text"
-                    value={newClient.eventPackage}
-                    onChange={(e) => setNewClient({ ...newClient, eventPackage: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="e.g., Premium Package, Basic Package"
-                  />
-                </div>
-
-                {/* Package Price */}
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Package Price
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newClient.packagePrice}
-                    onChange={(e) => setNewClient({ ...newClient, packagePrice: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px'
-                    }}
-                    placeholder="e.g., 1500.00"
-                  />
-                </div>
-
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
-                    fontWeight: '500', 
-                    color: textColor 
-                  }}>
-                    Notes
-                  </label>
-                  <textarea
-                    value={newClient.notes}
-                    onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
-                    rows={3}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
-                      borderRadius: '4px',
-                      backgroundColor: cardBg,
-                      color: textColor,
-                      fontSize: '14px',
-                      resize: 'vertical'
-                    }}
-                    placeholder="Enter any additional notes"
-                  />
-                </div>
+                {editingEvent ? (
+                  // Event editing fields
+                  <>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Date
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={newEvent.eventDate}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventDate: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Type
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.eventType}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventType: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Wedding, Corporate Event"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Location
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.eventLocation}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventLocation: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Grand Ballroom, Downtown Hotel"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Start Time
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.eventStartTime}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventStartTime: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., 2:00 PM, 14:00"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Duration
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.eventDuration}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventDuration: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., 4 hours, 8 hours"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Package
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.eventPackage}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventPackage: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Premium Package, Basic Package"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Package Price
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newEvent.packagePrice}
+                        onChange={(e) => setNewEvent({ ...newEvent, packagePrice: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., 1500.00"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Notes
+                      </label>
+                      <textarea
+                        value={newEvent.notes}
+                        onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px',
+                          resize: 'vertical'
+                        }}
+                        placeholder="Enter any additional notes"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  // Client editing/adding fields
+                  <>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.firstName}
+                        onChange={(e) => setNewClient({ ...newClient, firstName: e.target.value })}
+                        required={!editingClient}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="Enter first name"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.lastName}
+                        onChange={(e) => setNewClient({ ...newClient, lastName: e.target.value })}
+                        required={!editingClient}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="Enter last name"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={newClient.email}
+                        onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                        required={!editingClient}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={newClient.phone}
+                        onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Date
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={newClient.eventDate}
+                        onChange={(e) => setNewClient({ ...newClient, eventDate: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Type
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.eventType}
+                        onChange={(e) => setNewClient({ ...newClient, eventType: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Wedding, Corporate Event"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Location
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.eventLocation}
+                        onChange={(e) => setNewClient({ ...newClient, eventLocation: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Grand Ballroom, Downtown Hotel"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Start Time
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.eventStartTime}
+                        onChange={(e) => setNewClient({ ...newClient, eventStartTime: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., 2:00 PM, 14:00"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Duration
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.eventDuration}
+                        onChange={(e) => setNewClient({ ...newClient, eventDuration: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., 4 hours, 8 hours"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Package
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.eventPackage}
+                        onChange={(e) => setNewClient({ ...newClient, eventPackage: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Premium Package, Basic Package"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Package Price
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newClient.packagePrice}
+                        onChange={(e) => setNewClient({ ...newClient, packagePrice: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., 1500.00"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Notes
+                      </label>
+                      <textarea
+                        value={newClient.notes}
+                        onChange={(e) => setNewClient({ ...newClient, notes: e.target.value })}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px',
+                          resize: 'vertical'
+                        }}
+                        placeholder="Enter any additional notes"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
-                  onClick={handleCancelEdit}
+                  onClick={editingEvent ? handleCancelEditEvent : handleCancelEdit}
                   style={{
                     backgroundColor: 'transparent',
                     color: mutedText,
@@ -841,7 +1112,9 @@ export default function ClientsPage() {
                     fontSize: '14px'
                   }}
                 >
-                  {loading ? (editingClient ? 'Updating...' : 'Adding...') : (editingClient ? 'Update Client' : 'Add Client')}
+                  {loading 
+                    ? (editingEvent ? 'Updating Event...' : editingClient ? 'Updating...' : 'Adding...') 
+                    : (editingEvent ? 'Update Event' : editingClient ? 'Update Client' : 'Add Client')}
                 </button>
               </div>
             </form>
@@ -972,6 +1245,29 @@ export default function ClientsPage() {
                                 title="Create agreement for this event"
                               >
                                 Create Agreement
+                              </button>
+                              <button
+                                onClick={() => handleEditEvent(event)}
+                                style={{
+                                  backgroundColor: '#059669',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px',
+                                  fontWeight: '500',
+                                  transition: 'background-color 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#047857';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#059669';
+                                }}
+                                title="Edit event details"
+                              >
+                                Edit Event
                               </button>
                               <button
                                 onClick={() => handleArchiveEvent(event.id)}

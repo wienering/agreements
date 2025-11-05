@@ -12,12 +12,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = sendAgreementSchema.parse(body);
 
-    // Find the agreement with client and template data
+    // Find the agreement with client, template, and event data
     const agreement = await prisma.agreement.findUnique({
       where: { id: validatedData.agreementId },
       include: {
         client: true,
-        template: true
+        template: true,
+        event: true
       }
     });
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process smart fields in the HTML content
-    const processHtmlContent = (html: string, client: any, agreementId: string) => {
+    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
       let processedHtml = html;
       
       // Replace client fields
@@ -47,15 +48,23 @@ export async function POST(request: NextRequest) {
       processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
       processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
       processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
       
-      // Replace event fields
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+      // Use event data if available, otherwise fall back to client event fields (backward compatibility)
+      const eventDate = event?.eventDate || client.eventDate;
+      const eventType = event?.eventType || client.eventType || '';
+      const eventLocation = event?.eventLocation || client.eventLocation || '';
+      const eventStartTime = event?.eventStartTime || client.eventStartTime || '';
+      const eventDuration = event?.eventDuration || client.eventDuration || '';
+      const eventPackage = event?.eventPackage || client.eventPackage || '';
+      
+      // Replace event fields - use event data if available, otherwise client fields
+      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
+      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
       
       // Replace agreement fields
       processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
@@ -64,7 +73,7 @@ export async function POST(request: NextRequest) {
       return processedHtml;
     };
 
-    const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
     
     // Get the base URL from the request headers or environment
     const protocol = request.headers.get('x-forwarded-proto') || 'http';

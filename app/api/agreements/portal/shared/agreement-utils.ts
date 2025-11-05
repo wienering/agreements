@@ -137,7 +137,7 @@ export async function getClientAgreements(
 /**
  * Process HTML content by replacing template variables
  */
-export function processHtmlContent(html: string, client: any, agreementId: string): string {
+export function processHtmlContent(html: string, client: any, agreementId: string, event: any = null): string {
   let processedHtml = html;
 
   // Replace client fields
@@ -146,21 +146,30 @@ export function processHtmlContent(html: string, client: any, agreementId: strin
   processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
   processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
   processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, client.address || '');
-  processedHtml = processedHtml.replace(
-    /\{\{client\.eventDate\}\}/g,
-    client.eventDate ? new Date(client.eventDate).toLocaleDateString() : ''
-  );
   processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
 
-  // Replace event fields
-  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+  // Use event data if available, otherwise fall back to client event fields (backward compatibility)
+  const eventDate = event?.eventDate || client.eventDate;
+  const eventType = event?.eventType || client.eventType || '';
+  const eventLocation = event?.eventLocation || client.eventLocation || '';
+  const eventStartTime = event?.eventStartTime || client.eventStartTime || '';
+  const eventDuration = event?.eventDuration || client.eventDuration || '';
+  const eventPackage = event?.eventPackage || client.eventPackage || '';
+  const packagePrice = event?.packagePrice || client.packagePrice;
+
+  // Replace event fields - use event data if available, otherwise client fields
+  processedHtml = processedHtml.replace(
+    /\{\{client\.eventDate\}\}/g,
+    eventDate ? new Date(eventDate).toLocaleDateString() : ''
+  );
+  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
   processedHtml = processedHtml.replace(
     /\{\{event\.price\}\}/g,
-    client.packagePrice ? `$${Number(client.packagePrice).toFixed(2)}` : ''
+    packagePrice ? `$${Number(packagePrice).toFixed(2)}` : ''
   );
 
   // Replace agreement fields

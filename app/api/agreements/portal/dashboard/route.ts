@@ -118,7 +118,8 @@ export async function GET(request: NextRequest) {
       include: {
         template: true,
         signature: true,
-        backdropLink: true
+        backdropLink: true,
+        event: true
       },
       orderBy,
       skip: offset,
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Process HTML content for each agreement
-    const processHtmlContent = (html: string, client: any, agreementId: string) => {
+    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
       let processedHtml = html;
       
       // Replace client fields
@@ -135,16 +136,25 @@ export async function GET(request: NextRequest) {
       processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
       processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
       processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, client.address || '');
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
       
-      // Replace event fields
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${Number(client.packagePrice).toFixed(2)}` : '');
+      // Use event data if available, otherwise fall back to client event fields (backward compatibility)
+      const eventDate = event?.eventDate || client.eventDate;
+      const eventType = event?.eventType || client.eventType || '';
+      const eventLocation = event?.eventLocation || client.eventLocation || '';
+      const eventStartTime = event?.eventStartTime || client.eventStartTime || '';
+      const eventDuration = event?.eventDuration || client.eventDuration || '';
+      const eventPackage = event?.eventPackage || client.eventPackage || '';
+      const packagePrice = event?.packagePrice || client.packagePrice;
+      
+      // Replace event fields - use event data if available, otherwise client fields
+      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
+      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
+      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
       
       // Replace agreement fields
       processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
@@ -162,7 +172,7 @@ export async function GET(request: NextRequest) {
       if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {
-        processedHtml = processHtmlContent(agreement.template.htmlContent, session.client, agreement.id);
+        processedHtml = processHtmlContent(agreement.template.htmlContent, session.client, agreement.id, agreement.event);
       }
 
       const client = {
