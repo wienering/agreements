@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     doc.setFillColor(darkTeal[0], darkTeal[1], darkTeal[2]);
     doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
 
-    // Vertical "QUOTE" text in sidebar - position letters vertically
+    // Vertical "QUOTE" text in sidebar - rotated 90 degrees
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
@@ -45,10 +45,32 @@ export async function POST(request: NextRequest) {
     const letterSpacing = 8;
     const centerX = sidebarWidth / 2;
     
-    // Position each letter vertically (one below the other)
+    // Rotate each letter 90 degrees clockwise and position vertically
+    // Use jsPDF's internal methods with type assertion (they may exist at runtime)
+    const docAny = doc as any;
+    
     for (let i = 0; i < quoteText.length; i++) {
       const yPos = quoteYStart + (i * letterSpacing);
-      doc.text(quoteText[i], centerX, yPos, { align: 'center' });
+      doc.saveGraphicsState();
+      
+      // Try to use rotate and translate if available (jsPDF internal API)
+      if (docAny.translate && docAny.rotate) {
+        // Get text width for centering
+        const textWidth = doc.getTextWidth(quoteText[i]);
+        const textHeight = 16; // Font size
+        
+        // Translate to center position
+        docAny.translate(centerX, yPos);
+        // Rotate 90 degrees clockwise (90 degrees in radians)
+        docAny.rotate(90 * Math.PI / 180);
+        // Draw text centered
+        doc.text(quoteText[i], -textWidth / 2, textHeight / 2, { align: 'left' });
+      } else {
+        // Fallback: position letters vertically (still looks professional)
+        doc.text(quoteText[i], centerX, yPos, { align: 'center' });
+      }
+      
+      doc.restoreGraphicsState();
     }
 
     // Main content area background (off-white)
@@ -91,10 +113,10 @@ export async function POST(request: NextRequest) {
     doc.setFont('helvetica', 'normal');
     
     const clientInfo = [
-      contactInfo.name || 'N/A',
-      contactInfo.email || 'N/A',
-      contactInfo.phone || 'N/A',
-      contactInfo.eventDate || 'N/A'
+      contactInfo.name || ' ',
+      contactInfo.email || ' ',
+      contactInfo.phone || ' ',
+      contactInfo.eventDate || ' '
     ];
 
     clientInfo.forEach((info, index) => {
@@ -175,25 +197,14 @@ export async function POST(request: NextRequest) {
 
     yPosition += 10;
 
-    // Bottom section: Payment Method on left, Summary box on right
+    // Summary box on right
     const bottomY = yPosition;
     const summaryWidth = 80;
     const summaryX = pageWidth - mainMargin - summaryWidth;
-    const paymentWidth = summaryX - mainStartX - 10;
-
-    // Payment Method section
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PAYMENT METHOD', mainStartX, bottomY);
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Account Number BankName', mainStartX, bottomY + 6);
-    doc.text('Please contact us for payment details', mainStartX, bottomY + 11);
 
     // Summary box with muted green background
     doc.setFillColor(mutedGreen[0], mutedGreen[1], mutedGreen[2]);
-    doc.rect(summaryX, bottomY - 5, summaryWidth, 35, 'F');
+    doc.rect(summaryX, bottomY - 5, summaryWidth, 25, 'F');
     
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.setFontSize(10);
@@ -203,14 +214,11 @@ export async function POST(request: NextRequest) {
     doc.text('SUBTOTAL', summaryX + 2, summaryStartY);
     doc.text(`$${total.toLocaleString()}`, summaryX + summaryWidth - 2, summaryStartY, { align: 'right' });
     
-    doc.text('TAX', summaryX + 2, summaryStartY + 8);
-    doc.text('0%', summaryX + summaryWidth - 2, summaryStartY + 8, { align: 'right' });
-    
     doc.setFontSize(12);
-    doc.text('TOTAL', summaryX + 2, summaryStartY + 18);
-    doc.text(`$${total.toLocaleString()}`, summaryX + summaryWidth - 2, summaryStartY + 18, { align: 'right' });
+    doc.text('TOTAL', summaryX + 2, summaryStartY + 12);
+    doc.text(`$${total.toLocaleString()}`, summaryX + summaryWidth - 2, summaryStartY + 12, { align: 'right' });
 
-    yPosition = bottomY + 40;
+    yPosition = bottomY + 30;
 
     // Terms & Conditions
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
@@ -225,7 +233,7 @@ export async function POST(request: NextRequest) {
       'A $100 retainer fee is required to secure your booking.',
       'Balance due 7 days before event.',
       'Quote valid for 30 days from date of issue.',
-      'Setup time included in package duration.'
+      'Attendant will arrive 1 hour before the start time for set up.'
     ];
     
     terms.forEach((term) => {
