@@ -260,20 +260,17 @@ export async function POST(request: NextRequest) {
     // Bottom section - left side
     const bottomY = yPosition;
     
-    // "Thank you" memo in dark gray banner
-    const memoWidth = 90;
+    // "Thank you" memo in dark gray banner (wider, rounded corners, Title Case)
+    const memoWidth = 140; // Wider to fit on one line
     const memoHeight = 12;
-    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.rect(margin, bottomY, memoWidth, memoHeight, 'F');
+    drawRoundedRectLeft(margin, bottomY, memoWidth, memoHeight, borderRadius);
     
     doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    const thankYouText = doc.splitTextToSize('Thank you for considering Photobooth Guys for your event.', memoWidth - 10);
-    const thankYouY = bottomY + (memoHeight - (thankYouText.length * 3)) / 2 + 3;
-    thankYouText.forEach((line: string, index: number) => {
-      doc.text(line, margin + 5, thankYouY + (index * 3));
-    });
+    // Title Case the text
+    const thankYouText = 'Thank You For Considering Photobooth Guys For Your Event.';
+    doc.text(thankYouText, margin + memoWidth / 2, bottomY + memoHeight / 2 + 3, { align: 'center' });
 
     // Terms & Conditions below memo
     yPosition = bottomY + memoHeight + 10;
@@ -296,17 +293,6 @@ export async function POST(request: NextRequest) {
       doc.text(term, margin, yPosition, { maxWidth: memoWidth });
       yPosition += 5;
     });
-
-    // Bottom right - Dennis Larkin
-    const rightY = bottomY + 15;
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dennis Larkin', contactInfoX, rightY, { align: 'right' });
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Photobooth Guys', contactInfoX, rightY + 6, { align: 'right' });
 
     // Generate PDF buffer
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
