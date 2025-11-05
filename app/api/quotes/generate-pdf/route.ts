@@ -29,11 +29,31 @@ export async function POST(request: NextRequest) {
     const lightGray = [156, 163, 175]; // #9CA3AF
     const white = [255, 255, 255];
 
-    // Dark gray header bar at top
-    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // Helper function to draw rounded rectangle (rounded left corners only)
+    const drawRoundedRectLeft = (x: number, y: number, w: number, h: number, r: number) => {
+      doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+      // Draw main rectangle
+      doc.rect(x + r, y, w - r, h, 'F');
+      // Draw left rounded corners using circles
+      doc.circle(x + r, y + r, r, 'F'); // Top left
+      doc.circle(x + r, y + h - r, r, 'F'); // Bottom left
+    };
 
-    // Company branding on left (in header)
+    // Helper function to draw rounded rectangle with blue fill (rounded left corners only)
+    const drawRoundedRectBlue = (x: number, y: number, w: number, h: number, r: number) => {
+      doc.setFillColor(blue[0], blue[1], blue[2]);
+      // Draw main rectangle
+      doc.rect(x + r, y, w - r, h, 'F');
+      // Draw left rounded corners using circles
+      doc.circle(x + r, y + r, r, 'F'); // Top left
+      doc.circle(x + r, y + h - r, r, 'F'); // Bottom left
+    };
+
+    // Dark gray header bar at top (taller to fit contact info)
+    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.rect(0, 0, pageWidth, 50, 'F');
+
+    // Company branding on left (in header) with contact info
     doc.setTextColor(blue[0], blue[1], blue[2]);
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
@@ -43,32 +63,32 @@ export async function POST(request: NextRequest) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text('Professional Photo Booth Rental Toronto', margin, 28);
-
-    // Contact info on top right (in header)
+    
+    // Contact info below company name
     doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    const contactInfoX = pageWidth - margin;
-    doc.text('647-378-5332', contactInfoX, 15, { align: 'right' });
-    doc.text('info@photoboothguys.ca', contactInfoX, 20, { align: 'right' });
-    doc.text('www.photoboothguys.ca', contactInfoX, 25, { align: 'right' });
+    doc.text('647-378-5332', margin, 35);
+    doc.text('info@photoboothguys.ca', margin, 39);
+    doc.text('www.photoboothguys.ca', margin, 43);
 
-    // Blue "QUOTE" banner on right
+    const contactInfoX = pageWidth - margin;
+
+    // Blue "Quote" banner on right (with rounded left corners)
     const bannerWidth = 35;
     const bannerHeight = 15;
     const bannerX = pageWidth - margin - bannerWidth;
     const bannerY = 12;
+    const borderRadius = 3;
     
-    // Draw rectangle for banner
-    doc.setFillColor(blue[0], blue[1], blue[2]);
-    doc.rect(bannerX, bannerY, bannerWidth, bannerHeight, 'F');
+    // Draw rounded rectangle for banner (rounded left corners)
+    drawRoundedRectBlue(bannerX, bannerY, bannerWidth, bannerHeight, borderRadius);
     
     doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('QUOTE', bannerX + bannerWidth / 2, bannerY + bannerHeight / 2 + 3, { align: 'center' });
+    doc.text('Quote', bannerX + bannerWidth / 2, bannerY + bannerHeight / 2 + 3, { align: 'center' });
 
-    yPosition = 50;
+    yPosition = 60;
 
     // Quote date in top right (where invoice details would be)
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
@@ -82,18 +102,20 @@ export async function POST(request: NextRequest) {
 
     yPosition += 20;
 
-    // "QUOTE TO:" section
+    // "Quote To:" section
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.text('QUOTE TO:', margin, yPosition);
+    doc.text('Quote To:', margin, yPosition);
 
     yPosition += 8;
 
-    // Client name (bold, larger)
+    // Client name (bold, larger) - Title Case
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text((contactInfo.name || '').toUpperCase(), margin, yPosition);
+    const clientName = contactInfo.name || '';
+    const titleCaseName = clientName.toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase());
+    doc.text(titleCaseName, margin, yPosition);
 
     yPosition += 8;
 
@@ -102,15 +124,15 @@ export async function POST(request: NextRequest) {
     doc.setFont('helvetica', 'normal');
     
     if (contactInfo.phone) {
-      doc.text(`PHONE : ${contactInfo.phone}`, margin, yPosition);
+      doc.text(`Phone : ${contactInfo.phone}`, margin, yPosition);
       yPosition += 5;
     }
     if (contactInfo.email) {
-      doc.text(`EMAIL : ${contactInfo.email}`, margin, yPosition);
+      doc.text(`Email : ${contactInfo.email}`, margin, yPosition);
       yPosition += 5;
     }
     if (contactInfo.eventDate) {
-      doc.text(`EVENT DATE : ${contactInfo.eventDate}`, margin, yPosition);
+      doc.text(`Event Date : ${contactInfo.eventDate}`, margin, yPosition);
       yPosition += 5;
     }
 
@@ -123,26 +145,25 @@ export async function POST(request: NextRequest) {
     const qtyColWidth = 25;
     const totalColWidth = 35;
 
-    // Item Description header (dark gray)
-    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.rect(margin, yPosition, descColWidth, tableHeaderHeight, 'F');
+    // Item Description header (dark gray with rounded left corners)
+    drawRoundedRectLeft(margin, yPosition, descColWidth, tableHeaderHeight, borderRadius);
     doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('ITEM DESCRIPTION', margin + 5, yPosition + 7);
+    doc.text('Item Description', margin + 5, yPosition + 7);
 
     // Unit Price header (blue)
     doc.setFillColor(blue[0], blue[1], blue[2]);
     doc.rect(margin + descColWidth, yPosition, priceColWidth, tableHeaderHeight, 'F');
-    doc.text('UNIT PRICE', margin + descColWidth + priceColWidth / 2, yPosition + 7, { align: 'center' });
+    doc.text('Unit Price', margin + descColWidth + priceColWidth / 2, yPosition + 7, { align: 'center' });
 
     // Quantity header (blue)
     doc.rect(margin + descColWidth + priceColWidth, yPosition, qtyColWidth, tableHeaderHeight, 'F');
-    doc.text('QUANTITY', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 7, { align: 'center' });
+    doc.text('Quantity', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 7, { align: 'center' });
 
     // Total header (blue)
     doc.rect(margin + descColWidth + priceColWidth + qtyColWidth, yPosition, totalColWidth, tableHeaderHeight, 'F');
-    doc.text('TOTAL', margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 7, { align: 'center' });
+    doc.text('Total', margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 7, { align: 'center' });
 
     yPosition += tableHeaderHeight + 2;
 
@@ -198,16 +219,15 @@ export async function POST(request: NextRequest) {
 
     yPosition += 10;
 
-    // TOTAL in blue banner
+    // Total in blue banner (with rounded left corners)
     const totalBannerHeight = 15;
     const totalBannerWidth = descColWidth + priceColWidth + qtyColWidth + totalColWidth;
-    doc.setFillColor(blue[0], blue[1], blue[2]);
-    doc.rect(margin, yPosition, totalBannerWidth, totalBannerHeight, 'F');
+    drawRoundedRectBlue(margin, yPosition, totalBannerWidth, totalBannerHeight, borderRadius);
     
     doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL', margin + 10, yPosition + totalBannerHeight / 2 + 4);
+    doc.text('Total', margin + 10, yPosition + totalBannerHeight / 2 + 4);
     doc.text(`$${total.toFixed(2)}`, margin + totalBannerWidth - 10, yPosition + totalBannerHeight / 2 + 4, { align: 'right' });
 
     yPosition += totalBannerHeight + 20;
