@@ -128,30 +128,30 @@ export function RichTextPreview({
   eventData?: any;
   isDark?: boolean;
 }) {
-  // Replace smart fields with actual data or sample data for better readability
+  // Replace smart fields with actual data, showing nothing for blank fields
   const processPreviewHtml = (html: string) => {
     if (!html) return '';
     
     let processedHtml = html;
     
-    // Use actual client data if available, otherwise use sample data
-    const firstName = clientData?.firstName || 'John';
-    const lastName = clientData?.lastName || 'Smith';
-    const email = clientData?.email || 'john@example.com';
-    const phone = clientData?.phone || '(555) 123-4567';
-    const notes = clientData?.notes || 'Special requests';
+    // Use actual client data if available, otherwise show empty string
+    const firstName = clientData?.firstName || '';
+    const lastName = clientData?.lastName || '';
+    const email = clientData?.email || '';
+    const phone = clientData?.phone || '';
+    const notes = clientData?.notes || '';
     
-    // Prioritize event data from Event model, fall back to deprecated client fields, then sample data
+    // Prioritize event data from Event model, fall back to deprecated client fields, show empty if blank
     const eventDate = eventData?.eventDate 
       ? new Date(eventData.eventDate).toLocaleDateString() 
-      : (clientData?.eventDate ? new Date(clientData.eventDate).toLocaleDateString() : '12/25/2024');
-    const eventType = eventData?.eventType || clientData?.eventType || 'Wedding';
-    const eventLocation = eventData?.eventLocation || clientData?.eventLocation || 'Grand Ballroom';
-    const eventStartTime = eventData?.eventStartTime || clientData?.eventStartTime || '2:00 PM';
-    const eventDuration = eventData?.eventDuration || clientData?.eventDuration || '4 hours';
-    const eventPackage = eventData?.eventPackage || clientData?.eventPackage || 'Premium Package';
+      : (clientData?.eventDate ? new Date(clientData.eventDate).toLocaleDateString() : '');
+    const eventType = eventData?.eventType || clientData?.eventType || '';
+    const eventLocation = eventData?.eventLocation || clientData?.eventLocation || '';
+    const eventStartTime = eventData?.eventStartTime || clientData?.eventStartTime || '';
+    const eventDuration = eventData?.eventDuration || clientData?.eventDuration || '';
+    const eventPackage = eventData?.eventPackage || clientData?.eventPackage || '';
     const packagePrice = eventData?.packagePrice || clientData?.packagePrice;
-    const eventPrice = packagePrice ? `$${typeof packagePrice === 'number' ? packagePrice.toFixed(2) : packagePrice}` : '$150.00';
+    const eventPrice = packagePrice ? `$${typeof packagePrice === 'number' ? packagePrice.toFixed(2) : packagePrice}` : '';
     
     // Replace client fields with clean, readable styling
     processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${firstName}</strong>`);
@@ -171,7 +171,7 @@ export function RichTextPreview({
     
     // Replace agreement fields with clean, readable styling
     const agreementDate = new Date().toLocaleDateString();
-    const agreementIdValue = agreementId || 'AG-12345';
+    const agreementIdValue = agreementId || '';
     processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${agreementDate}</strong>`);
     processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${agreementIdValue}</strong>`);
     
