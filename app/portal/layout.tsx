@@ -14,6 +14,17 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
   const [clientFirstName, setClientFirstName] = useState<string | null>(null);
   const router = useRouter();
 
+  // Update document title when clientFirstName changes
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (clientFirstName) {
+        document.title = `Client Portal - ${clientFirstName}`;
+      } else {
+        document.title = 'Client Portal';
+      }
+    }
+  }, [clientFirstName]);
+
   // Check if user is logged in and get session info
   useEffect(() => {
     let mounted = true;
@@ -41,21 +52,11 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
             const data = await response.json();
             setIsLoggedIn(true);
             setClientFirstName(data.client?.firstName || null);
-            
-            // Update document title
-            if (typeof document !== 'undefined' && data.client?.firstName) {
-              document.title = `Client Portal - ${data.client.firstName}`;
-            } else if (typeof document !== 'undefined') {
-              document.title = 'Client Portal';
-            }
           } else {
             // Session expired or invalid
             localStorage.removeItem('portal_session_token');
             setIsLoggedIn(false);
             setClientFirstName(null);
-            if (typeof document !== 'undefined') {
-              document.title = 'Client Portal';
-            }
             // Only redirect if not already on login page
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/portal/login')) {
               router.push('/portal/login');
@@ -75,9 +76,6 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
             localStorage.removeItem('portal_session_token');
             setIsLoggedIn(false);
             setClientFirstName(null);
-            if (typeof document !== 'undefined') {
-              document.title = 'Client Portal';
-            }
           }
           setIsChecking(false);
         }
