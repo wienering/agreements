@@ -30,23 +30,30 @@ export async function POST(request: NextRequest) {
     const white = [255, 255, 255];
 
     // Helper function to draw rounded rectangle (rounded left corners only)
+    // Creates smooth rounded corners on the left side using overlapping shapes
     const drawRoundedRectLeft = (x: number, y: number, w: number, h: number, r: number) => {
       doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
-      // Draw main rectangle
+      // Draw main rectangle (starting from rounded corner position)
       doc.rect(x + r, y, w - r, h, 'F');
-      // Draw left rounded corners using circles
-      doc.circle(x + r, y + r, r, 'F'); // Top left
-      doc.circle(x + r, y + h - r, r, 'F'); // Bottom left
+      // Draw left side rectangle (vertical bar)
+      doc.rect(x, y + r, r, h - (2 * r), 'F');
+      // Draw top-left rounded corner (quarter circle)
+      doc.circle(x + r, y + r, r, 'F');
+      // Draw bottom-left rounded corner (quarter circle)
+      doc.circle(x + r, y + h - r, r, 'F');
     };
 
     // Helper function to draw rounded rectangle with blue fill (rounded left corners only)
     const drawRoundedRectBlue = (x: number, y: number, w: number, h: number, r: number) => {
       doc.setFillColor(blue[0], blue[1], blue[2]);
-      // Draw main rectangle
+      // Draw main rectangle (starting from rounded corner position)
       doc.rect(x + r, y, w - r, h, 'F');
-      // Draw left rounded corners using circles
-      doc.circle(x + r, y + r, r, 'F'); // Top left
-      doc.circle(x + r, y + h - r, r, 'F'); // Bottom left
+      // Draw left side rectangle (vertical bar)
+      doc.rect(x, y + r, r, h - (2 * r), 'F');
+      // Draw top-left rounded corner (quarter circle)
+      doc.circle(x + r, y + r, r, 'F');
+      // Draw bottom-left rounded corner (quarter circle)
+      doc.circle(x + r, y + h - r, r, 'F');
     };
 
     // Dark gray header bar at top (taller to fit contact info)
