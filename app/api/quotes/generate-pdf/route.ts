@@ -19,212 +19,223 @@ export async function POST(request: NextRequest) {
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
-    const sidebarWidth = 20; // Width of left sidebar
-    const mainMargin = 15;
-    const mainStartX = sidebarWidth + mainMargin;
-    const mainWidth = pageWidth - sidebarWidth - mainMargin * 2;
-    let yPosition = 25;
+    const margin = 15;
+    const maxWidth = pageWidth - (margin * 2);
+    let yPosition = 15;
 
     // Color scheme
-    const darkTeal = [45, 64, 75]; // #2D404B
-    const mutedGreen = [134, 176, 167]; // #86B0A7
-    const offWhite = [248, 248, 248]; // #F8F8F8
     const darkGray = [51, 51, 51]; // #333333
-    const lightGray = [200, 200, 200]; // #C8C8C8
+    const blue = [59, 130, 246]; // #3B82F6 - vibrant blue
+    const lightGray = [156, 163, 175]; // #9CA3AF
+    const white = [255, 255, 255];
 
-    // Left sidebar with dark teal background
-    doc.setFillColor(darkTeal[0], darkTeal[1], darkTeal[2]);
-    doc.rect(0, 0, sidebarWidth, pageHeight, 'F');
+    // Dark gray header bar at top
+    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.rect(0, 0, pageWidth, 40, 'F');
 
-    // Vertical "QUOTE" text in sidebar - rotated 90 degrees
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
+    // Company branding on left (in header)
+    doc.setTextColor(blue[0], blue[1], blue[2]);
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    const quoteText = 'QUOTE';
-    const quoteYStart = 80;
-    const letterSpacing = 8;
-    const centerX = sidebarWidth / 2;
-    
-    // Rotate each letter 90 degrees clockwise and position vertically
-    // Use jsPDF's internal methods with type assertion (they may exist at runtime)
-    const docAny = doc as any;
-    
-    for (let i = 0; i < quoteText.length; i++) {
-      const yPos = quoteYStart + (i * letterSpacing);
-      doc.saveGraphicsState();
-      
-      // Try to use rotate and translate if available (jsPDF internal API)
-      if (docAny.translate && docAny.rotate) {
-        // Get text width for centering
-        const textWidth = doc.getTextWidth(quoteText[i]);
-        const textHeight = 16; // Font size
-        
-        // Translate to center position
-        docAny.translate(centerX, yPos);
-        // Rotate 90 degrees clockwise (90 degrees in radians)
-        docAny.rotate(90 * Math.PI / 180);
-        // Draw text centered
-        doc.text(quoteText[i], -textWidth / 2, textHeight / 2, { align: 'left' });
-      } else {
-        // Fallback: position letters vertically (still looks professional)
-        doc.text(quoteText[i], centerX, yPos, { align: 'center' });
-      }
-      
-      doc.restoreGraphicsState();
-    }
+    doc.text('Photobooth Guys', margin, 20);
 
-    // Main content area background (off-white)
-    doc.setFillColor(offWhite[0], offWhite[1], offWhite[2]);
-    doc.rect(sidebarWidth, 0, pageWidth - sidebarWidth, pageHeight, 'F');
-
-    // Top header section with company info
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Photobooth Guys', mainStartX, yPosition);
-    
+    doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Professional Photo Booth Rental Toronto', mainStartX, yPosition + 6);
-    
-    // Contact info on the right
+    doc.text('Professional Photo Booth Rental Toronto', margin, 28);
+
+    // Contact info on top right (in header)
+    doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(9);
-    const contactInfoX = pageWidth - mainMargin;
-    doc.text('info@photoboothguys.ca', contactInfoX, yPosition, { align: 'right' });
-    doc.text('www.photoboothguys.ca', contactInfoX, yPosition + 4, { align: 'right' });
-    doc.text('647-378-5332', contactInfoX, yPosition + 8, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    const contactInfoX = pageWidth - margin;
+    doc.text('647-378-5332', contactInfoX, 15, { align: 'right' });
+    doc.text('info@photoboothguys.ca', contactInfoX, 20, { align: 'right' });
+    doc.text('www.photoboothguys.ca', contactInfoX, 25, { align: 'right' });
+
+    // Blue "QUOTE" banner on right
+    const bannerWidth = 35;
+    const bannerHeight = 15;
+    const bannerX = pageWidth - margin - bannerWidth;
+    const bannerY = 12;
+    
+    // Draw rectangle for banner
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.rect(bannerX, bannerY, bannerWidth, bannerHeight, 'F');
+    
+    doc.setTextColor(white[0], white[1], white[2]);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('QUOTE', bannerX + bannerWidth / 2, bannerY + bannerHeight / 2 + 3, { align: 'center' });
+
+    yPosition = 50;
+
+    // Quote date in top right (where invoice details would be)
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Quote Date:', contactInfoX, yPosition, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    const quoteDate = new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    doc.text(quoteDate, contactInfoX, yPosition + 5, { align: 'right' });
 
     yPosition += 20;
 
-    // BILL TO section (Client Information) with muted green background
-    doc.setFillColor(mutedGreen[0], mutedGreen[1], mutedGreen[2]);
-    doc.rect(mainStartX, yPosition, mainWidth, 8, 'F');
-    
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('BILL TO', mainStartX + 2, yPosition + 6);
-
-    yPosition += 12;
-
-    // Client info fields
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    // "QUOTE TO:" section
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    
-    const clientInfo = [
-      contactInfo.name || ' ',
-      contactInfo.email || ' ',
-      contactInfo.phone || ' ',
-      contactInfo.eventDate || ' '
-    ];
-
-    clientInfo.forEach((info, index) => {
-      doc.text(info, mainStartX + 2, yPosition + (index * 5));
-    });
-
-    yPosition += 25;
-
-    // Table header with muted green background
-    doc.setFillColor(mutedGreen[0], mutedGreen[1], mutedGreen[2]);
-    doc.rect(mainStartX, yPosition, mainWidth, 8, 'F');
-    
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.text('QUOTE TO:', margin, yPosition);
+
+    yPosition += 8;
+
+    // Client name (bold, larger)
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text((contactInfo.name || '').toUpperCase(), margin, yPosition);
+
+    yPosition += 8;
+
+    // Client contact details
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    
+    if (contactInfo.phone) {
+      doc.text(`PHONE : ${contactInfo.phone}`, margin, yPosition);
+      yPosition += 5;
+    }
+    if (contactInfo.email) {
+      doc.text(`EMAIL : ${contactInfo.email}`, margin, yPosition);
+      yPosition += 5;
+    }
+    if (contactInfo.eventDate) {
+      doc.text(`EVENT DATE : ${contactInfo.eventDate}`, margin, yPosition);
+      yPosition += 5;
+    }
+
+    yPosition += 15;
+
+    // Table header with rounded left corners
+    const tableHeaderHeight = 10;
+    const descColWidth = 100;
+    const priceColWidth = 35;
+    const qtyColWidth = 25;
+    const totalColWidth = 35;
+
+    // Item Description header (dark gray)
+    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.rect(margin, yPosition, descColWidth, tableHeaderHeight, 'F');
+    doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    
-    // Table headers - column positions
-    const descX = mainStartX + 2;
-    const priceX = mainStartX + mainWidth - 70; // Price column starts here
-    const qtyX = mainStartX + mainWidth - 45; // QTY column starts here
-    const totalX = mainStartX + mainWidth - 2; // Total column ends here
-    
-    doc.text('DESCRIPTION', descX, yPosition + 6);
-    doc.text('PRICE', priceX + 15, yPosition + 6, { align: 'right' });
-    doc.text('QTY', qtyX + 10, yPosition + 6, { align: 'right' });
-    doc.text('TOTAL', totalX, yPosition + 6, { align: 'right' });
+    doc.text('ITEM DESCRIPTION', margin + 5, yPosition + 7);
 
-    yPosition += 10;
+    // Unit Price header (blue)
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.rect(margin + descColWidth, yPosition, priceColWidth, tableHeaderHeight, 'F');
+    doc.text('UNIT PRICE', margin + descColWidth + priceColWidth / 2, yPosition + 7, { align: 'center' });
+
+    // Quantity header (blue)
+    doc.rect(margin + descColWidth + priceColWidth, yPosition, qtyColWidth, tableHeaderHeight, 'F');
+    doc.text('QUANTITY', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 7, { align: 'center' });
+
+    // Total header (blue)
+    doc.rect(margin + descColWidth + priceColWidth + qtyColWidth, yPosition, totalColWidth, tableHeaderHeight, 'F');
+    doc.text('TOTAL', margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 7, { align: 'center' });
+
+    yPosition += tableHeaderHeight + 2;
 
     // Table rows
-    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
     
-    // Row separator line
-    doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.setLineWidth(0.1);
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
 
     // Base package row
-    doc.text(`${packageInfo.hours} Hour Photo Booth Package`, descX, yPosition + 4);
-    doc.text(`$${packageInfo.price.toLocaleString()}`, priceX + 15, yPosition + 4, { align: 'right' });
-    doc.text('1', qtyX + 10, yPosition + 4, { align: 'right' });
-    doc.text(`$${packageInfo.price.toLocaleString()}`, totalX, yPosition + 4, { align: 'right' });
-    doc.line(mainStartX, yPosition + 6, pageWidth - mainMargin, yPosition + 6);
-    yPosition += 8;
+    const rowHeight = 8;
+    doc.text(`${packageInfo.hours} Hour Photo Booth Package`, margin + 5, yPosition + 5);
+    doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+    doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
+    doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+    doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
+    yPosition += rowHeight + 2;
 
     // Add-ons rows
     if (addons?.unlimitedPrints) {
       const isShortPackage = packageInfo.hours <= 3;
       const ratePerHour = isShortPackage ? 60 : 50;
       const unlimitedPrintsPrice = ratePerHour * packageInfo.hours;
-      doc.text('Unlimited Prints', descX, yPosition + 4);
-      doc.text(`$${unlimitedPrintsPrice.toLocaleString()}`, priceX + 15, yPosition + 4, { align: 'right' });
-      doc.text('1', qtyX + 10, yPosition + 4, { align: 'right' });
-      doc.text(`$${unlimitedPrintsPrice.toLocaleString()}`, totalX, yPosition + 4, { align: 'right' });
-      doc.line(mainStartX, yPosition + 6, pageWidth - mainMargin, yPosition + 6);
-      yPosition += 8;
+      doc.text('Unlimited Prints', margin + 5, yPosition + 5);
+      doc.text(`$${unlimitedPrintsPrice.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.text(`$${unlimitedPrintsPrice.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
+      yPosition += rowHeight + 2;
     }
 
     if (addons?.glamBooth) {
-      doc.text('Glam Booth', descX, yPosition + 4);
-      doc.text('$75', priceX + 15, yPosition + 4, { align: 'right' });
-      doc.text('1', qtyX + 10, yPosition + 4, { align: 'right' });
-      doc.text('$75', totalX, yPosition + 4, { align: 'right' });
-      doc.line(mainStartX, yPosition + 6, pageWidth - mainMargin, yPosition + 6);
-      yPosition += 8;
+      doc.text('Glam Booth', margin + 5, yPosition + 5);
+      doc.text('$75.00', margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.text('$75.00', margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
+      yPosition += rowHeight + 2;
     }
 
     if (addons?.waitingTime && addons.waitingHours > 0) {
       const waitingTimePrice = 50 * addons.waitingHours;
       const hoursText = addons.waitingHours === 1 ? 'hour' : 'hours';
-      doc.text(`Waiting Time (${addons.waitingHours} ${hoursText})`, descX, yPosition + 4);
-      doc.text(`$${waitingTimePrice.toLocaleString()}`, priceX + 15, yPosition + 4, { align: 'right' });
-      doc.text('1', qtyX + 10, yPosition + 4, { align: 'right' });
-      doc.text(`$${waitingTimePrice.toLocaleString()}`, totalX, yPosition + 4, { align: 'right' });
-      doc.line(mainStartX, yPosition + 6, pageWidth - mainMargin, yPosition + 6);
-      yPosition += 8;
+      doc.text(`Waiting Time (${addons.waitingHours} ${hoursText})`, margin + 5, yPosition + 5);
+      doc.text(`$${waitingTimePrice.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.text(`$${waitingTimePrice.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
+      yPosition += rowHeight + 2;
     }
 
     yPosition += 10;
 
-    // Summary box on right
-    const bottomY = yPosition;
-    const summaryWidth = 80;
-    const summaryX = pageWidth - mainMargin - summaryWidth;
-
-    // Summary box with muted green background
-    doc.setFillColor(mutedGreen[0], mutedGreen[1], mutedGreen[2]);
-    doc.rect(summaryX, bottomY - 5, summaryWidth, 25, 'F');
+    // TOTAL in blue banner
+    const totalBannerHeight = 15;
+    const totalBannerWidth = descColWidth + priceColWidth + qtyColWidth + totalColWidth;
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.rect(margin, yPosition, totalBannerWidth, totalBannerHeight, 'F');
     
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    
-    const summaryStartY = bottomY + 2;
-    doc.text('SUBTOTAL', summaryX + 2, summaryStartY);
-    doc.text(`$${total.toLocaleString()}`, summaryX + summaryWidth - 2, summaryStartY, { align: 'right' });
-    
+    doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(12);
-    doc.text('TOTAL', summaryX + 2, summaryStartY + 12);
-    doc.text(`$${total.toLocaleString()}`, summaryX + summaryWidth - 2, summaryStartY + 12, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL', margin + 10, yPosition + totalBannerHeight / 2 + 4);
+    doc.text(`$${total.toFixed(2)}`, margin + totalBannerWidth - 10, yPosition + totalBannerHeight / 2 + 4, { align: 'right' });
 
-    yPosition = bottomY + 30;
+    yPosition += totalBannerHeight + 20;
 
-    // Terms & Conditions
+    // Bottom section - left side
+    const bottomY = yPosition;
+    
+    // "Thank you" memo in dark gray banner
+    const memoWidth = 90;
+    const memoHeight = 12;
+    doc.setFillColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.rect(margin, bottomY, memoWidth, memoHeight, 'F');
+    
+    doc.setTextColor(white[0], white[1], white[2]);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    const thankYouText = doc.splitTextToSize('Thank you for considering Photobooth Guys for your event.', memoWidth - 10);
+    const thankYouY = bottomY + (memoHeight - (thankYouText.length * 3)) / 2 + 3;
+    thankYouText.forEach((line: string, index: number) => {
+      doc.text(line, margin + 5, thankYouY + (index * 3));
+    });
+
+    // Terms & Conditions below memo
+    yPosition = bottomY + memoHeight + 10;
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('TERMS & CONDITIONS', mainStartX, yPosition);
+    doc.text('Terms & Conditions:', margin, yPosition);
     
     yPosition += 6;
     doc.setFontSize(9);
@@ -237,20 +248,20 @@ export async function POST(request: NextRequest) {
     ];
     
     terms.forEach((term) => {
-      doc.text(term, mainStartX, yPosition);
+      doc.text(term, margin, yPosition, { maxWidth: memoWidth });
       yPosition += 5;
     });
 
-    // Footer with quote date
-    yPosition += 10;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text(
-      `Quote Date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
-      pageWidth / 2,
-      yPosition,
-      { align: 'center' }
-    );
+    // Bottom right - Dennis Larkin
+    const rightY = bottomY + 15;
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Dennis Larkin', contactInfoX, rightY, { align: 'right' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Photobooth Guys', contactInfoX, rightY + 6, { align: 'right' });
 
     // Generate PDF buffer
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
