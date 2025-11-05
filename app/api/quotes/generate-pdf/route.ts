@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     doc.rect(margin, yPosition - 2, 130, 8, 'F');
     doc.rect(margin + 130, yPosition - 2, 50, 8, 'F');
     doc.text('Item', margin + 2, yPosition + 4);
-    doc.text('Price', margin + 132, yPosition + 4, { align: 'right' });
+    doc.text('Price', margin + 180, yPosition + 4, { align: 'right' });
 
     yPosition += 8;
 
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     doc.rect(margin, yPosition - 2, 130, 8, 'S');
     doc.rect(margin + 130, yPosition - 2, 50, 8, 'S');
     doc.text(`${packageInfo.hours} Hour Photo Booth Package`, margin + 2, yPosition + 4);
-    doc.text(`$${packageInfo.price.toLocaleString()}`, margin + 132, yPosition + 4, { align: 'right' });
+    doc.text(`$${packageInfo.price.toLocaleString()}`, margin + 180, yPosition + 4, { align: 'right' });
     yPosition += 8;
 
     // Add-ons
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       doc.rect(margin, yPosition - 2, 130, 8, 'S');
       doc.rect(margin + 130, yPosition - 2, 50, 8, 'S');
       doc.text('Unlimited Prints', margin + 2, yPosition + 4);
-      doc.text(`$${unlimitedPrintsPrice.toLocaleString()}`, margin + 132, yPosition + 4, { align: 'right' });
+      doc.text(`$${unlimitedPrintsPrice.toLocaleString()}`, margin + 180, yPosition + 4, { align: 'right' });
       yPosition += 8;
     }
 
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       doc.rect(margin, yPosition - 2, 130, 8, 'S');
       doc.rect(margin + 130, yPosition - 2, 50, 8, 'S');
       doc.text('Glam Booth', margin + 2, yPosition + 4);
-      doc.text('$75', margin + 132, yPosition + 4, { align: 'right' });
+      doc.text('$75', margin + 180, yPosition + 4, { align: 'right' });
       yPosition += 8;
     }
 
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       doc.rect(margin, yPosition - 2, 130, 8, 'S');
       doc.rect(margin + 130, yPosition - 2, 50, 8, 'S');
       doc.text(`Waiting Time (${addons.waitingHours} ${hoursText})`, margin + 2, yPosition + 4);
-      doc.text(`$${waitingTimePrice.toLocaleString()}`, margin + 132, yPosition + 4, { align: 'right' });
+      doc.text(`$${waitingTimePrice.toLocaleString()}`, margin + 180, yPosition + 4, { align: 'right' });
       yPosition += 8;
     }
 
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     doc.rect(margin, yPosition - 2, 130, 10, 'F');
     doc.rect(margin + 130, yPosition - 2, 50, 10, 'F');
     doc.text('TOTAL', margin + 2, yPosition + 5);
-    doc.text(`$${total.toLocaleString()}`, margin + 132, yPosition + 5, { align: 'right' });
+    doc.text(`$${total.toLocaleString()}`, margin + 180, yPosition + 5, { align: 'right' });
 
     yPosition += 15;
     doc.setTextColor(51, 51, 51);

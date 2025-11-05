@@ -96,20 +96,12 @@ export default function QuotesPage() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!contactInfo.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    if (!contactInfo.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!isValidEmail(contactInfo.email)) {
+    // Only validate email format if provided, but don't require it
+    if (contactInfo.email.trim() && !isValidEmail(contactInfo.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    if (!contactInfo.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    }
-    if (!contactInfo.eventDate) {
-      newErrors.eventDate = 'Event date is required';
-    } else if (new Date(contactInfo.eventDate) < new Date()) {
+    // Only validate event date if provided
+    if (contactInfo.eventDate && new Date(contactInfo.eventDate) < new Date()) {
       newErrors.eventDate = 'Event date must be in the future';
     }
 
@@ -118,7 +110,7 @@ export default function QuotesPage() {
     if (Object.keys(newErrors).length === 0) {
       setContactInfo({
         ...contactInfo,
-        eventDate: formatEventDate(contactInfo.eventDate)
+        eventDate: contactInfo.eventDate ? formatEventDate(contactInfo.eventDate) : contactInfo.eventDate
       });
       setCurrentStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -321,7 +313,7 @@ export default function QuotesPage() {
                     fontWeight: '600',
                     color: textColor
                   }}>
-                    Full Name *
+                    Full Name
                   </label>
                   <input
                     type="text"
@@ -355,7 +347,7 @@ export default function QuotesPage() {
                     fontWeight: '600',
                     color: textColor
                   }}>
-                    Email Address *
+                    Email Address
                   </label>
                   <input
                     type="email"
@@ -389,7 +381,7 @@ export default function QuotesPage() {
                     fontWeight: '600',
                     color: textColor
                   }}>
-                    Phone Number *
+                    Phone Number
                   </label>
                   <input
                     type="tel"
@@ -426,7 +418,7 @@ export default function QuotesPage() {
                     fontWeight: '600',
                     color: textColor
                   }}>
-                    Event Date *
+                    Event Date
                   </label>
                   <input
                     type="date"
