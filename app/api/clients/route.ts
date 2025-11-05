@@ -9,7 +9,10 @@ export async function GET() {
           where: {
             archived: false
           },
-          orderBy: { createdAt: 'desc' }
+          orderBy: [
+            { eventDate: 'asc' },
+            { createdAt: 'asc' }
+          ]
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -100,7 +103,10 @@ export async function POST(request: NextRequest) {
           where: {
             archived: false
           },
-          orderBy: { createdAt: 'desc' }
+          orderBy: [
+            { eventDate: 'asc' },
+            { createdAt: 'asc' }
+          ]
         }
       }
     });
