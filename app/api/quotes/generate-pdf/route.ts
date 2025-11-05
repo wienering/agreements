@@ -184,10 +184,24 @@ export async function POST(request: NextRequest) {
 
     // Base package row
     const rowHeight = 8;
+    
+    // Draw Quantity column background (blue)
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.rect(margin + descColWidth + priceColWidth, yPosition, qtyColWidth, rowHeight, 'F');
+    
+    // Draw Total column background (blue)
+    doc.rect(margin + descColWidth + priceColWidth + qtyColWidth, yPosition, totalColWidth, rowHeight, 'F');
+    
+    // Draw text
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
     doc.text(`${packageInfo.hours} Hour Photo Booth Package`, margin + 5, yPosition + 5);
     doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+    
+    // Quantity and Total text in white (on blue background)
+    doc.setTextColor(white[0], white[1], white[2]);
     doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
     doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+    
     doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
     yPosition += rowHeight + 2;
 
@@ -196,19 +210,46 @@ export async function POST(request: NextRequest) {
       const isShortPackage = packageInfo.hours <= 3;
       const ratePerHour = isShortPackage ? 60 : 50;
       const unlimitedPrintsPrice = ratePerHour * packageInfo.hours;
+      
+      // Draw Quantity column background (blue)
+      doc.setFillColor(blue[0], blue[1], blue[2]);
+      doc.rect(margin + descColWidth + priceColWidth, yPosition, qtyColWidth, rowHeight, 'F');
+      
+      // Draw Total column background (blue)
+      doc.rect(margin + descColWidth + priceColWidth + qtyColWidth, yPosition, totalColWidth, rowHeight, 'F');
+      
+      // Draw text
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
       doc.text('Unlimited Prints', margin + 5, yPosition + 5);
       doc.text(`$${unlimitedPrintsPrice.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+      
+      // Quantity and Total text in white (on blue background)
+      doc.setTextColor(white[0], white[1], white[2]);
       doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
       doc.text(`$${unlimitedPrintsPrice.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      
       doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
       yPosition += rowHeight + 2;
     }
 
     if (addons?.glamBooth) {
+      // Draw Quantity column background (blue)
+      doc.setFillColor(blue[0], blue[1], blue[2]);
+      doc.rect(margin + descColWidth + priceColWidth, yPosition, qtyColWidth, rowHeight, 'F');
+      
+      // Draw Total column background (blue)
+      doc.rect(margin + descColWidth + priceColWidth + qtyColWidth, yPosition, totalColWidth, rowHeight, 'F');
+      
+      // Draw text
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
       doc.text('Glam Booth', margin + 5, yPosition + 5);
       doc.text('$75.00', margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+      
+      // Quantity and Total text in white (on blue background)
+      doc.setTextColor(white[0], white[1], white[2]);
       doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
       doc.text('$75.00', margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      
       doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
       yPosition += rowHeight + 2;
     }
@@ -216,10 +257,24 @@ export async function POST(request: NextRequest) {
     if (addons?.waitingTime && addons.waitingHours > 0) {
       const waitingTimePrice = 50 * addons.waitingHours;
       const hoursText = addons.waitingHours === 1 ? 'hour' : 'hours';
+      
+      // Draw Quantity column background (blue)
+      doc.setFillColor(blue[0], blue[1], blue[2]);
+      doc.rect(margin + descColWidth + priceColWidth, yPosition, qtyColWidth, rowHeight, 'F');
+      
+      // Draw Total column background (blue)
+      doc.rect(margin + descColWidth + priceColWidth + qtyColWidth, yPosition, totalColWidth, rowHeight, 'F');
+      
+      // Draw text
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
       doc.text(`Waiting Time (${addons.waitingHours} ${hoursText})`, margin + 5, yPosition + 5);
       doc.text(`$${waitingTimePrice.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
+      
+      // Quantity and Total text in white (on blue background)
+      doc.setTextColor(white[0], white[1], white[2]);
       doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
       doc.text(`$${waitingTimePrice.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      
       doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
       yPosition += rowHeight + 2;
     }
