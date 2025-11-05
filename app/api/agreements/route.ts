@@ -11,6 +11,7 @@ export async function GET() {
       include: {
         client: true,
         template: true,
+        event: true,
       },
       orderBy: { createdAt: 'desc' }
     });

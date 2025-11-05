@@ -118,12 +118,14 @@ export function RichTextPreview({
   style, 
   clientData, 
   agreementId,
+  eventData,
   isDark = false 
 }: { 
   html: string; 
   style?: React.CSSProperties;
   clientData?: any;
   agreementId?: string;
+  eventData?: any;
   isDark?: boolean;
 }) {
   // Replace smart fields with actual data or sample data for better readability
@@ -137,14 +139,19 @@ export function RichTextPreview({
     const lastName = clientData?.lastName || 'Smith';
     const email = clientData?.email || 'john@example.com';
     const phone = clientData?.phone || '(555) 123-4567';
-    const eventDate = clientData?.eventDate ? new Date(clientData.eventDate).toLocaleDateString() : '12/25/2024';
     const notes = clientData?.notes || 'Special requests';
-    const eventType = clientData?.eventType || 'Wedding';
-    const eventLocation = clientData?.eventLocation || 'Grand Ballroom';
-    const eventStartTime = clientData?.eventStartTime || '2:00 PM';
-    const eventDuration = clientData?.eventDuration || '4 hours';
-    const eventPackage = clientData?.eventPackage || 'Premium Package';
-    const eventPrice = clientData?.packagePrice ? `$${clientData.packagePrice}` : '$150.00';
+    
+    // Prioritize event data from Event model, fall back to deprecated client fields, then sample data
+    const eventDate = eventData?.eventDate 
+      ? new Date(eventData.eventDate).toLocaleDateString() 
+      : (clientData?.eventDate ? new Date(clientData.eventDate).toLocaleDateString() : '12/25/2024');
+    const eventType = eventData?.eventType || clientData?.eventType || 'Wedding';
+    const eventLocation = eventData?.eventLocation || clientData?.eventLocation || 'Grand Ballroom';
+    const eventStartTime = eventData?.eventStartTime || clientData?.eventStartTime || '2:00 PM';
+    const eventDuration = eventData?.eventDuration || clientData?.eventDuration || '4 hours';
+    const eventPackage = eventData?.eventPackage || clientData?.eventPackage || 'Premium Package';
+    const packagePrice = eventData?.packagePrice || clientData?.packagePrice;
+    const eventPrice = packagePrice ? `$${typeof packagePrice === 'number' ? packagePrice.toFixed(2) : packagePrice}` : '$150.00';
     
     // Replace client fields with clean, readable styling
     processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${firstName}</strong>`);

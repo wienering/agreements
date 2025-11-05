@@ -31,6 +31,16 @@ interface Agreement {
     title: string;
     htmlContent: string;
   };
+  event?: {
+    id: string;
+    eventDate?: string;
+    eventType?: string;
+    eventLocation?: string;
+    eventStartTime?: string;
+    eventDuration?: string;
+    eventPackage?: string;
+    packagePrice?: number | string;
+  } | null;
 }
 
 interface WarningData {
@@ -1775,6 +1785,7 @@ export default function AgreementsPage() {
                   html={editingContent || '<p>Enter content above to see preview...</p>'}
                   clientData={selectedAgreement?.client}
                   agreementId={selectedAgreement?.id}
+                  eventData={selectedAgreement?.event}
                   isDark={isDark}
                   style={{
                     backgroundColor: isDark ? '#0f172a' : '#fafafa',
