@@ -308,7 +308,7 @@ export default function QuotesPage() {
               Contact Information
             </h2>
             <p style={{ margin: '0 0 24px 0', color: mutedText }}>
-              Enter the client's contact information and event details.
+              Enter the client&apos;s contact information and event details.
             </p>
 
             <form onSubmit={handleContactSubmit}>
