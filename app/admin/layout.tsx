@@ -36,6 +36,7 @@ export default function AdminLayout({
     { id: 'overview', label: 'Overview', icon: '📊', href: '/admin', tooltip: 'Dashboard overview and statistics' },
     { id: 'clients', label: 'Clients', icon: '👥', href: '/admin/clients', tooltip: 'Manage client information' },
     { id: 'templates', label: 'Templates', icon: '📄', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
+    { id: 'quotes', label: 'Quotes', icon: '💰', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
     { id: 'agreements', label: 'Agreements', icon: '📝', href: '/admin/agreements', tooltip: 'Manage client agreements' },
     { id: 'backdrop-links', label: 'Backdrop Links', icon: '🖼️', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
   ];
