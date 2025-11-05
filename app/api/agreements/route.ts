@@ -24,11 +24,27 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { clientId, templateId, expiresAt } = body;
+    const { clientId, templateId, eventId, expiresAt } = body;
 
     // Validate required fields
     if (!clientId || !templateId) {
       return NextResponse.json({ error: 'Client ID and Template ID are required' }, { status: 400 });
+    }
+
+    // If eventId is provided, verify it exists and belongs to the client
+    if (eventId) {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { clientId: true }
+      });
+
+      if (!event) {
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
+
+      if (event.clientId !== clientId) {
+        return NextResponse.json({ error: 'Event does not belong to the specified client' }, { status: 400 });
+      }
     }
 
     // Generate unique token
@@ -38,6 +54,7 @@ export async function POST(request: NextRequest) {
       data: {
         clientId,
         templateId,
+        eventId: eventId || null,
         uniqueToken,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         status: 'DRAFT',
@@ -45,6 +62,7 @@ export async function POST(request: NextRequest) {
       include: {
         client: true,
         template: true,
+        event: true,
       },
     });
 

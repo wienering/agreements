@@ -104,6 +104,7 @@ export default function AgreementsPage() {
   const [newAgreement, setNewAgreement] = useState({
     clientId: '',
     templateId: '',
+    eventId: '',
     expiresAt: getDefaultExpirationDate()
   });
   const { isDark } = useDarkMode();
@@ -133,21 +134,33 @@ export default function AgreementsPage() {
     fetchBackdropLinks();
   }, []);
 
-  // Handle URL parameters for pre-selecting client or template
+  // Handle URL parameters for pre-selecting client, event, or template
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const createParam = urlParams.get('create');
     const clientParam = urlParams.get('client');
+    const eventParam = urlParams.get('event');
     const templateIdParam = urlParams.get('templateId');
     
     if (createParam === 'true' && clientParam) {
       try {
         const clientData = JSON.parse(decodeURIComponent(clientParam));
+        let eventData = null;
         
-        // Set the client ID in the new agreement form
+        // Parse event data if provided
+        if (eventParam) {
+          try {
+            eventData = JSON.parse(decodeURIComponent(eventParam));
+          } catch (e) {
+            console.error('Error parsing event data from URL:', e);
+          }
+        }
+        
+        // Set the client ID and event ID in the new agreement form
         setNewAgreement(prev => ({
           ...prev,
-          clientId: clientData.id
+          clientId: clientData.id,
+          eventId: eventData?.id || ''
         }));
         
         // Wait a bit for data to load before showing form
@@ -265,7 +278,7 @@ export default function AgreementsPage() {
         const createdAgreement = await response.json();
         setAgreements([createdAgreement, ...agreements]);
         setShowCreateForm(false);
-        setNewAgreement({ clientId: '', templateId: '', expiresAt: '' });
+        setNewAgreement({ clientId: '', templateId: '', eventId: '', expiresAt: getDefaultExpirationDate() });
         showToast('Agreement created successfully!');
       } else {
         try {

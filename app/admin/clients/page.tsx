@@ -269,16 +269,35 @@ export default function ClientsPage() {
     }
   };
 
-  const handleCreateAgreement = (client: Client) => {
-    // Navigate to agreements page with client pre-selected
-    // We'll use URL parameters to pass the client data
+  const handleCreateAgreement = (client: Client, event?: Event) => {
+    // Navigate to agreements page with client and event pre-selected
+    // We'll use URL parameters to pass the client and event data
     const clientData = encodeURIComponent(JSON.stringify({
       id: client.id,
       firstName: client.firstName,
       lastName: client.lastName,
       email: client.email
     }));
-    router.push(`/admin/agreements?create=true&client=${clientData}`);
+    
+    let url = `/admin/agreements?create=true&client=${clientData}`;
+    
+    // If event is provided, include event data in URL
+    if (event) {
+      const eventData = encodeURIComponent(JSON.stringify({
+        id: event.id,
+        eventDate: event.eventDate,
+        eventType: event.eventType,
+        eventLocation: event.eventLocation,
+        eventStartTime: event.eventStartTime,
+        eventDuration: event.eventDuration,
+        eventPackage: event.eventPackage,
+        packagePrice: event.packagePrice,
+        notes: event.notes
+      }));
+      url += `&event=${eventData}`;
+    }
+    
+    router.push(url);
   };
 
   const handleArchiveEvent = async (eventId: string) => {
@@ -930,23 +949,54 @@ export default function ClientsPage() {
                                 Notes: {event.notes}
                               </p>
                             )}
-                            <button
-                              onClick={() => handleArchiveEvent(event.id)}
-                              style={{
-                                backgroundColor: '#f59e0b',
-                                color: 'white',
-                                border: 'none',
-                                padding: '6px 12px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '500',
-                                marginTop: '8px'
-                              }}
-                              title="Archive this event"
-                            >
-                              Archive Event
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+                              <button
+                                onClick={() => handleCreateAgreement(client, event)}
+                                style={{
+                                  backgroundColor: '#3b82f6',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px',
+                                  fontWeight: '500',
+                                  transition: 'background-color 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#2563eb';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                                }}
+                                title="Create agreement for this event"
+                              >
+                                Create Agreement
+                              </button>
+                              <button
+                                onClick={() => handleArchiveEvent(event.id)}
+                                style={{
+                                  backgroundColor: '#f59e0b',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px',
+                                  fontWeight: '500',
+                                  transition: 'background-color 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#d97706';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = '#f59e0b';
+                                }}
+                                title="Archive this event"
+                              >
+                                Archive Event
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1020,29 +1070,32 @@ export default function ClientsPage() {
                   >
                     Edit
                   </button>
-                  <button
-                    onClick={() => handleCreateAgreement(client)}
-                    style={{
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
-                    }}
-                    title="Create new agreement for this client"
-                  >
-                    Create Agreement
-                  </button>
+                  {/* Create Agreement button moved to individual events - only show if client has no events */}
+                  {(!client.events || client.events.length === 0) && (
+                    <button
+                      onClick={() => handleCreateAgreement(client)}
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#2563eb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                      }}
+                      title="Create new agreement for this client"
+                    >
+                      Create Agreement
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDeleteClient(client.id)}
                     disabled={loading}
