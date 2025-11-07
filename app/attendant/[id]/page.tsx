@@ -8,17 +8,29 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
   const { id } = await params;
 
   try {
-    // Fetch agreement with client and backdropLink relations
+    // Fetch agreement with client, event, and backdropLink relations
     // Only select fields we need - don't fetch sensitive data
     const agreement = await prisma.agreement.findUnique({
       where: { id },
       select: {
         id: true,
         selectedBackdropName: true,
+        eventId: true,
         client: {
           select: {
             firstName: true,
             phone: true,
+            eventDate: true,
+            eventLocation: true,
+            eventStartTime: true,
+            eventDuration: true,
+            eventType: true,
+            notes: true,
+            address: true,
+          },
+        },
+        event: {
+          select: {
             eventDate: true,
             eventLocation: true,
             eventStartTime: true,
@@ -40,22 +52,30 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return <NotFoundError />;
     }
 
-    const { client, backdropLink, selectedBackdropName } = agreement;
+    const { client, event, backdropLink, selectedBackdropName } = agreement;
+    
+    // Use event data when available, otherwise fall back to client data
+    const eventDate = event ? event.eventDate : client.eventDate;
+    const eventLocation = event ? event.eventLocation : client.eventLocation;
+    const eventStartTime = event ? event.eventStartTime : client.eventStartTime;
+    const eventDuration = event ? event.eventDuration : client.eventDuration;
+    const eventType = event ? event.eventType : client.eventType;
+    const notes = event ? event.notes : client.notes;
 
     // Check if event has passed and is more than 24 hours ago
     const isEventExpired = (() => {
-      if (!client.eventDate) return false;
+      if (!eventDate) return false;
       
       try {
         // Parse event date
-        const eventDate = new Date(client.eventDate);
-        if (isNaN(eventDate.getTime())) return false;
+        const parsedEventDate = new Date(eventDate);
+        if (isNaN(parsedEventDate.getTime())) return false;
         
         // If eventStartTime is provided, try to parse it and add to event date
-        let eventDateTime = new Date(eventDate);
-        if (client.eventStartTime) {
+        let eventDateTime = new Date(parsedEventDate);
+        if (eventStartTime) {
           // Parse time string (could be formats like "2:00 PM", "14:00", "2 PM", etc.)
-          const timeStr = client.eventStartTime.trim();
+          const timeStr = eventStartTime.trim();
           const timeMatch = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
           
           if (timeMatch) {
@@ -92,8 +112,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     }
 
     // Format event date for display (e.g., "November 2, 2025")
-    const formattedEventDate = client.eventDate
-      ? new Date(client.eventDate).toLocaleDateString('en-US', {
+    const formattedEventDate = eventDate
+      ? new Date(eventDate).toLocaleDateString('en-US', {
           timeZone: 'America/Toronto',
           year: 'numeric',
           month: 'long',
@@ -103,9 +123,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
     // Format time with duration (e.g., "8:00 pm - 6 hours")
     const formattedTimeWithDuration = (() => {
-      if (!client.eventStartTime && !client.eventDuration) return null;
-      const time = client.eventStartTime || '';
-      const duration = client.eventDuration || '';
+      if (!eventStartTime && !eventDuration) return null;
+      const time = eventStartTime || '';
+      const duration = eventDuration || '';
       if (!time && !duration) return null;
       if (time && duration) return `${time} - ${duration}`;
       return time || duration;
@@ -311,10 +331,10 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
             {/* Event Information Card */}
             {(formattedEventDate ||
-              client.eventLocation ||
-              client.eventStartTime ||
-              client.eventDuration ||
-              client.eventType ||
+              eventLocation ||
+              eventStartTime ||
+              eventDuration ||
+              eventType ||
               backdropLink?.name) && (
               <div
                 style={{
@@ -372,7 +392,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     </div>
                   )}
 
-                  {client.eventStartTime && (
+                  {eventStartTime && (
                     <div>
                       <p
                         style={{
@@ -394,12 +414,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '600',
                         }}
                       >
-                        {client.eventStartTime}
+                        {eventStartTime}
                       </p>
                     </div>
                   )}
 
-                  {client.eventDuration && (
+                  {eventDuration && (
                     <div>
                       <p
                         style={{
@@ -421,12 +441,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '600',
                         }}
                       >
-                        {client.eventDuration}
+                        {eventDuration}
                       </p>
                     </div>
                   )}
 
-                  {client.eventLocation && (
+                  {eventLocation && (
                     <div>
                       <p
                         style={{
@@ -449,12 +469,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           lineHeight: '1.5',
                         }}
                       >
-                        {client.eventLocation}
+                        {eventLocation}
                       </p>
                     </div>
                   )}
 
-                  {client.eventType && (
+                  {eventType && (
                     <div>
                       <p
                         style={{
@@ -476,7 +496,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '600',
                         }}
                       >
-                        {client.eventType}
+                        {eventType}
                       </p>
                     </div>
                   )}
@@ -649,7 +669,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   )}
 
                   {/* Event Address with Google Maps Link */}
-                  {client.eventLocation && (
+                  {eventLocation && (
                     <div>
                       <p
                         style={{
@@ -664,7 +684,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         Event Address:
                       </p>
                       <a
-                        href={getGoogleMapsUrl(client.eventLocation) || '#'}
+                        href={getGoogleMapsUrl(eventLocation) || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="address-link"
@@ -678,7 +698,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           display: 'block',
                         }}
                       >
-                        {client.eventLocation}
+                        {eventLocation}
                       </a>
                     </div>
                   )}
@@ -740,7 +760,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   )}
 
                   {/* Additional Info (Notes) */}
-                  {client.notes && (
+                  {notes && (
                     <div>
                       <p
                         style={{
@@ -759,7 +779,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           marginTop: '8px',
                         }}
                       >
-                        {client.notes.split('\n').map((line: string, idx: number) => (
+                        {(notes || '').split('\n').map((line: string, idx: number) => (
                           <p
                             key={idx}
                             style={{
