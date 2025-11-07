@@ -40,21 +40,26 @@ export async function GET(request: NextRequest) {
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
       let processedHtml = html;
       
+      // Extract address and notes from event if available, otherwise use client data
+      const address = event ? (event.eventLocation ?? '') : (client.address || '');
+      const notes = event ? (event.notes ?? '') : (client.notes || '');
+      
       // Replace client fields
       processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
       processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
       processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
       processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
+      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
+      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
       
-      // Use event data if available, otherwise fall back to client event fields (backward compatibility)
-      const eventDate = event?.eventDate || client.eventDate;
-      const eventType = event?.eventType || client.eventType || '';
-      const eventLocation = event?.eventLocation || client.eventLocation || '';
-      const eventStartTime = event?.eventStartTime || client.eventStartTime || '';
-      const eventDuration = event?.eventDuration || client.eventDuration || '';
-      const eventPackage = event?.eventPackage || client.eventPackage || '';
-      const packagePrice = event?.packagePrice || client.packagePrice;
+      // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
+      const eventDate = event ? event.eventDate : client.eventDate;
+      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
+      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
+      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
+      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
+      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
+      const packagePrice = event ? event.packagePrice : client.packagePrice;
       
       // Replace event fields - use event data if available, otherwise client fields
       processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
