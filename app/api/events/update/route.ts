@@ -12,6 +12,8 @@ const eventUpdateSchema = z.object({
   eventPackage: z.string().optional().nullable(),
   packagePrice: z.union([z.string(), z.number()]).optional().nullable(),
   notes: z.string().optional().nullable(),
+  eventName: z.string().optional().nullable(),
+  eventPhone: z.string().optional().nullable(),
 });
 
 export async function PUT(request: NextRequest) {
@@ -52,6 +54,8 @@ export async function PUT(request: NextRequest) {
         eventPackage: validatedData.eventPackage,
         packagePrice: validatedData.packagePrice ? parseFloat(validatedData.packagePrice.toString()) : null,
         notes: validatedData.notes,
+        eventName: validatedData.eventName,
+        eventPhone: validatedData.eventPhone,
       },
     });
 

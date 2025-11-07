@@ -16,6 +16,7 @@ const clientUpdateSchema = z.object({
   eventPackage: z.string().optional().nullable(),
   packagePrice: z.union([z.string(), z.number()]).optional().nullable(),
   notes: z.string().optional().nullable(),
+  isWhitelistClient: z.boolean().optional(),
 });
 
 export async function PUT(request: NextRequest) {
@@ -58,6 +59,7 @@ export async function PUT(request: NextRequest) {
         eventPackage: validatedData.eventPackage,
         packagePrice: validatedData.packagePrice ? parseFloat(validatedData.packagePrice.toString()) : null,
         notes: validatedData.notes,
+        isWhitelistClient: validatedData.isWhitelistClient !== undefined ? validatedData.isWhitelistClient : undefined,
       },
     });
 

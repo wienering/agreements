@@ -27,6 +27,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             eventType: true,
             notes: true,
             address: true,
+            isWhitelistClient: true,
           },
         },
         event: {
@@ -37,6 +38,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             eventDuration: true,
             eventType: true,
             notes: true,
+            eventName: true,
+            eventPhone: true,
           },
         },
         backdropLink: {
@@ -61,6 +64,11 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     const eventDuration = event ? event.eventDuration : client.eventDuration;
     const eventType = event ? event.eventType : client.eventType;
     const notes = event ? event.notes : client.notes;
+    
+    // For whitelist clients, get event-specific contact info
+    const isWhitelistClient = client.isWhitelistClient || false;
+    const eventContactName = event?.eventName || client.firstName;
+    const eventContactPhone = event?.eventPhone || client.phone;
 
     // Check if event has passed and is more than 24 hours ago
     const isEventExpired = (() => {
@@ -322,6 +330,91 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                         }}
                       >
                         {client.phone}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Event Contact Information Card - Only for whitelist clients */}
+            {isWhitelistClient && (
+              <div
+                style={{
+                  backgroundColor: '#1e293b',
+                  padding: '32px',
+                  borderRadius: '12px',
+                  border: '1px solid #334155',
+                  marginBottom: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h2
+                  style={{
+                    margin: '0 0 24px 0',
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: '#ffffff',
+                    paddingBottom: '16px',
+                    borderBottom: '1px solid #334155',
+                  }}
+                >
+                  Event Contact Information
+                </h2>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                    gap: '24px',
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        margin: '0 0 8px 0',
+                        fontSize: '12px',
+                        color: '#94a3b8',
+                        fontWeight: '600',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      Event Contact Name
+                    </p>
+                    <p
+                      style={{
+                        margin: '0',
+                        fontSize: '18px',
+                        color: '#f1f5f9',
+                        fontWeight: '600',
+                      }}
+                    >
+                      {eventContactName}
+                    </p>
+                  </div>
+                  {eventContactPhone && (
+                    <div>
+                      <p
+                        style={{
+                          margin: '0 0 8px 0',
+                          fontSize: '12px',
+                          color: '#94a3b8',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        Event Contact Number
+                      </p>
+                      <p
+                        style={{
+                          margin: '0',
+                          fontSize: '18px',
+                          color: '#f1f5f9',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {eventContactPhone}
                       </p>
                     </div>
                   )}
@@ -612,8 +705,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     </div>
                   )}
 
-                  {/* Client Name */}
-                  {client.firstName && (
+                  {/* Client Name / Event Contact Name */}
+                  {(isWhitelistClient ? eventContactName : client.firstName) && (
                     <div>
                       <p
                         style={{
@@ -625,7 +718,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Client Name:
+                        {isWhitelistClient ? 'Event Contact Name:' : 'Client Name:'}
                       </p>
                       <p
                         style={{
@@ -635,13 +728,13 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '500',
                         }}
                       >
-                        {client.firstName}
+                        {isWhitelistClient ? eventContactName : client.firstName}
                       </p>
                     </div>
                   )}
 
-                  {/* Contact Phone */}
-                  {client.phone && (
+                  {/* Contact Phone / Event Contact Phone */}
+                  {(isWhitelistClient ? eventContactPhone : client.phone) && (
                     <div>
                       <p
                         style={{
@@ -653,7 +746,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Contact Phone:
+                        {isWhitelistClient ? 'Event Contact Phone:' : 'Contact Phone:'}
                       </p>
                       <p
                         style={{
@@ -663,7 +756,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '500',
                         }}
                       >
-                        {client.phone}
+                        {isWhitelistClient ? eventContactPhone : client.phone}
                       </p>
                     </div>
                   )}

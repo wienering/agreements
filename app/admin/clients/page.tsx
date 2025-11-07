@@ -16,6 +16,8 @@ interface Event {
   eventPackage?: string;
   packagePrice?: number;
   notes?: string;
+  eventName?: string;
+  eventPhone?: string;
   archived: boolean;
   archivedAt?: string;
   createdAt: string;
@@ -29,6 +31,7 @@ interface Client {
   email: string;
   phone?: string;
   notes?: string;
+  isWhitelistClient?: boolean;
   createdAt: string;
   updatedAt: string;
   events?: Event[];
@@ -64,7 +67,8 @@ export default function ClientsPage() {
     eventDuration: '',
     eventPackage: '',
     packagePrice: '',
-    notes: ''
+    notes: '',
+    isWhitelistClient: false
   });
   const [newEvent, setNewEvent] = useState({
     eventDate: '',
@@ -74,7 +78,9 @@ export default function ClientsPage() {
     eventDuration: '',
     eventPackage: '',
     packagePrice: '',
-    notes: ''
+    notes: '',
+    eventName: '',
+    eventPhone: ''
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
@@ -165,7 +171,7 @@ export default function ClientsPage() {
         const createdClient = await response.json();
         setClients([createdClient, ...clients]);
         setShowAddForm(false);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
         showToast('Client added successfully!');
       } else {
         try {
@@ -205,7 +211,7 @@ export default function ClientsPage() {
         setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
         setShowAddForm(false);
         setEditingClient(null);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
         showToast('Client updated successfully!');
       } else {
         try {
@@ -239,7 +245,8 @@ export default function ClientsPage() {
       eventDuration: client.eventDuration || '',
       eventPackage: client.eventPackage || '',
       packagePrice: client.packagePrice ? client.packagePrice.toString() : '',
-      notes: client.notes || ''
+      notes: client.notes || '',
+      isWhitelistClient: client.isWhitelistClient || false
     });
     setShowAddForm(true);
   };
@@ -248,8 +255,8 @@ export default function ClientsPage() {
     setShowAddForm(false);
     setEditingClient(null);
     setEditingEvent(null);
-    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
-    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
   };
 
   const handleDeleteClient = async (clientId: string) => {
@@ -323,7 +330,9 @@ export default function ClientsPage() {
       eventDuration: event.eventDuration || '',
       eventPackage: event.eventPackage || '',
       packagePrice: event.packagePrice ? event.packagePrice.toString() : '',
-      notes: event.notes || ''
+      notes: event.notes || '',
+      eventName: event.eventName || '',
+      eventPhone: event.eventPhone || ''
     });
     setShowAddForm(true);
   };
@@ -348,7 +357,7 @@ export default function ClientsPage() {
         showToast('Event updated successfully!');
         setShowAddForm(false);
         setEditingEvent(null);
-        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
         fetchClients(); // Refresh the list
       } else {
         try {
@@ -371,7 +380,7 @@ export default function ClientsPage() {
   const handleCancelEditEvent = () => {
     setShowAddForm(false);
     setEditingEvent(null);
-    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '' });
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
   };
 
   const handleArchiveEvent = async (eventId: string) => {
@@ -753,6 +762,70 @@ export default function ClientsPage() {
                         fontWeight: '500', 
                         color: textColor 
                       }}>
+                        Event Name (for whitelist clients)
+                      </label>
+                      <input
+                        type="text"
+                        value={newEvent.eventName}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventName: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., Jenny & Billy's Wedding"
+                      />
+                      <p style={{ 
+                        margin: '4px 0 0 0', 
+                        fontSize: '12px', 
+                        color: mutedText 
+                      }}>
+                        Event-specific contact name (shown to attendants instead of company name)
+                      </p>
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Event Contact Phone (for whitelist clients)
+                      </label>
+                      <input
+                        type="tel"
+                        value={newEvent.eventPhone}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventPhone: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="e.g., (555) 123-4567"
+                      />
+                      <p style={{ 
+                        margin: '4px 0 0 0', 
+                        fontSize: '12px', 
+                        color: mutedText 
+                      }}>
+                        Event-specific contact phone (shown to attendants instead of company phone)
+                      </p>
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
                         Notes
                       </label>
                       <textarea
@@ -1080,6 +1153,35 @@ export default function ClientsPage() {
                         placeholder="Enter any additional notes"
                       />
                     </div>
+                    <div>
+                      <label style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        cursor: 'pointer',
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={newClient.isWhitelistClient}
+                          onChange={(e) => setNewClient({ ...newClient, isWhitelistClient: e.target.checked })}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                        <span>Whitelist Client (Company with multiple events)</span>
+                      </label>
+                      <p style={{ 
+                        margin: '4px 0 0 0', 
+                        fontSize: '12px', 
+                        color: mutedText 
+                      }}>
+                        Enable this for companies that provide multiple events (e.g., DJ companies providing photo booths)
+                      </p>
+                    </div>
                   </>
                 )}
               </div>
@@ -1152,9 +1254,25 @@ export default function ClientsPage() {
                   gap: isMobile ? '12px' : '0'
                 }}>
                   <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
-                      {client.firstName} {client.lastName}
-                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h3 style={{ margin: '0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
+                        {client.firstName} {client.lastName}
+                      </h3>
+                      {client.isWhitelistClient && (
+                        <span style={{
+                          backgroundColor: '#3b82f6',
+                          color: 'white',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Whitelist
+                        </span>
+                      )}
+                    </div>
                     <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                       {client.email}
                     </p>
@@ -1182,6 +1300,11 @@ export default function ClientsPage() {
                             border: `1px solid ${borderColor}`,
                             borderRadius: '6px'
                           }}>
+                            {event.eventName && (
+                              <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '15px', fontWeight: '600' }}>
+                                {event.eventName}
+                              </p>
+                            )}
                             {event.eventDate && (
                               <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px', fontWeight: '500' }}>
                                 📅 {new Date(event.eventDate).toLocaleDateString()}
@@ -1190,6 +1313,11 @@ export default function ClientsPage() {
                             {event.eventType && (
                               <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                                 Type: {event.eventType}
+                              </p>
+                            )}
+                            {event.eventPhone && (
+                              <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
+                                Event Phone: {event.eventPhone}
                               </p>
                             )}
                             {event.eventLocation && (
