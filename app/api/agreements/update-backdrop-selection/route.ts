@@ -3,16 +3,74 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const updateBackdropSelectionSchema = z.object({
-  clientEmail: z.string().email('Invalid email address'),
-  clientName: z.string().min(1, 'Client name is required'),
-  eventDate: z.string().min(1, 'Event date is required'),
+  agreementId: z.string().optional(), // If provided, use this directly
+  clientEmail: z.string().email('Invalid email address').optional(),
+  clientName: z.string().optional(),
+  eventDate: z.string().optional(),
   backdropName: z.string().min(1, 'Backdrop name is required'),
-});
+}).refine(
+  (data) => data.agreementId || (data.clientEmail && data.clientName && data.eventDate),
+  {
+    message: "Either agreementId must be provided, or clientEmail, clientName, and eventDate must all be provided",
+    path: ["agreementId"]
+  }
+);
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = updateBackdropSelectionSchema.parse(body);
+
+    let updatedCount = 0;
+    const updatedAgreementIds: string[] = [];
+
+    // If agreementId is provided, use it directly (preferred method)
+    if (validatedData.agreementId) {
+      // Verify the agreement exists and is not archived
+      const agreement = await prisma.agreement.findFirst({
+        where: {
+          id: validatedData.agreementId,
+          archived: false,
+        },
+      });
+
+      if (!agreement) {
+        return NextResponse.json({
+          success: false,
+          message: 'Agreement not found or is archived',
+          updatedCount: 0,
+        }, { status: 404 });
+      }
+
+      // Update the specific agreement
+      await prisma.agreement.update({
+        where: {
+          id: validatedData.agreementId,
+        },
+        data: {
+          selectedBackdropName: validatedData.backdropName,
+        },
+      });
+
+      updatedCount = 1;
+      updatedAgreementIds.push(validatedData.agreementId);
+
+      return NextResponse.json({
+        success: true,
+        message: `Updated agreement with backdrop selection`,
+        updatedCount,
+        updatedAgreementIds,
+      });
+    }
+
+    // Fallback to old matching method if agreementId not provided
+    if (!validatedData.clientEmail || !validatedData.clientName || !validatedData.eventDate) {
+      return NextResponse.json({
+        success: false,
+        message: 'Either agreementId must be provided, or clientEmail, clientName, and eventDate must all be provided',
+        updatedCount: 0,
+      }, { status: 400 });
+    }
 
     // Parse event date from the submission
     const submissionEventDate = new Date(validatedData.eventDate);
@@ -46,9 +104,6 @@ export async function POST(request: NextRequest) {
         updatedCount: 0,
       });
     }
-
-    let updatedCount = 0;
-    const updatedAgreementIds: string[] = [];
 
     // Step 2: For each matching client, find and update agreements
     for (const client of clients) {
