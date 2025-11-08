@@ -145,13 +145,18 @@ export async function GET(request: NextRequest) {
     // Add warnings in priority order (expiration > critical > warning)
     // This ensures if an agreement matches multiple criteria, it gets the highest priority warning type
     // Process in reverse priority order so higher priority warnings are added first
+    const priority: Record<'expiration' | 'critical' | 'warning', number> = { 
+      expiration: 3, 
+      critical: 2, 
+      warning: 1 
+    };
+    
     [...processedExpirationWarnings, ...processedRedWarnings, ...processedYellowWarnings].forEach(warning => {
       const existing = warningsMap.get(warning.id);
       if (!existing) {
         warningsMap.set(warning.id, warning);
       } else {
         // If already exists, keep the one with higher priority
-        const priority = { expiration: 3, critical: 2, warning: 1 };
         if (priority[warning.warningType] > priority[existing.warningType]) {
           warningsMap.set(warning.id, warning);
         }
