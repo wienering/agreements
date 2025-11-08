@@ -158,11 +158,18 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             to { opacity: 1; }
           }
           @media (max-width: 1024px) {
-            main {
+            .attendant-main {
               grid-template-columns: 1fr !important;
+              display: flex !important;
+              flex-direction: column;
             }
-            main > div:last-child {
+            .attendant-right-column {
               position: static !important;
+              order: -1;
+              margin-bottom: 24px;
+            }
+            .attendant-left-column {
+              order: 1;
             }
           }
           .address-link {
@@ -253,11 +260,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               gap: '32px',
               alignItems: 'start',
             }}
+            className="attendant-main"
           >
             {/* Left Column - Detailed Cards */}
-            <div>
-            {/* Client Information Card */}
-            {client.firstName && (
+            <div className="attendant-left-column">
+            {/* Client Information Card - Hidden for whitelist events */}
+            {client.firstName && !isWhitelistClient && (
               <div
                 style={{
                   backgroundColor: '#1e293b',
@@ -631,6 +639,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
             {/* Right Column - Event Summary */}
             <div
+              className="attendant-right-column"
               style={{
                 position: 'sticky',
                 top: '24px',
