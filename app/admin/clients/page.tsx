@@ -54,6 +54,7 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [addingEventToClient, setAddingEventToClient] = useState<Client | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [newClient, setNewClient] = useState({
     firstName: '',
@@ -377,9 +378,57 @@ export default function ClientsPage() {
     }
   };
 
+  const handleAddNewEvent = (client: Client) => {
+    setAddingEventToClient(client);
+    setEditingEvent(null);
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
+    setShowAddForm(true);
+  };
+
+  const handleAddEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addingEventToClient) return;
+    
+    setLoading(true);
+    
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...newEvent, clientId: addingEventToClient.id }),
+      });
+
+      if (response.ok) {
+        const createdEvent = await response.json();
+        showToast('Event added successfully!');
+        setShowAddForm(false);
+        setAddingEventToClient(null);
+        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
+        fetchClients(); // Refresh the list
+      } else {
+        try {
+          const error = await response.json();
+          const errorMessage = error.error || error.message || 'Unknown error occurred';
+          showToast(`Error: ${errorMessage}`, 'error');
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          showToast(`Error: Failed to add event (${response.status})`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error adding event:', error);
+      showToast('Failed to add event', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCancelEditEvent = () => {
     setShowAddForm(false);
     setEditingEvent(null);
+    setAddingEventToClient(null);
     setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
   };
 
@@ -568,17 +617,17 @@ export default function ClientsPage() {
             marginBottom: '24px'
           }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
-              {editingEvent ? 'Edit Event' : editingClient ? 'Edit Client' : 'Add New Client'}
+              {editingEvent ? 'Edit Event' : addingEventToClient ? 'Add New Event' : editingClient ? 'Edit Client' : 'Add New Client'}
             </h2>
-            <form onSubmit={editingEvent ? handleUpdateEvent : editingClient ? handleUpdateClient : handleAddClient}>
+            <form onSubmit={editingEvent ? handleUpdateEvent : addingEventToClient ? handleAddEvent : editingClient ? handleUpdateClient : handleAddClient}>
               <div style={{ 
                 display: 'grid', 
                 gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
                 gap: '16px',
                 marginBottom: '16px'
               }}>
-                {editingEvent ? (
-                  // Event editing fields
+                {(editingEvent || addingEventToClient) ? (
+                  // Event editing/adding fields
                   <>
                     <div>
                       <label style={{ 
@@ -1188,7 +1237,7 @@ export default function ClientsPage() {
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
-                  onClick={editingEvent ? handleCancelEditEvent : handleCancelEdit}
+                  onClick={editingEvent || addingEventToClient ? handleCancelEditEvent : handleCancelEdit}
                   style={{
                     backgroundColor: 'transparent',
                     color: mutedText,
@@ -1215,8 +1264,8 @@ export default function ClientsPage() {
                   }}
                 >
                   {loading 
-                    ? (editingEvent ? 'Updating Event...' : editingClient ? 'Updating...' : 'Adding...') 
-                    : (editingEvent ? 'Update Event' : editingClient ? 'Update Client' : 'Add Client')}
+                    ? (editingEvent ? 'Updating Event...' : addingEventToClient ? 'Adding Event...' : editingClient ? 'Updating...' : 'Adding...') 
+                    : (editingEvent ? 'Update Event' : addingEventToClient ? 'Add Event' : editingClient ? 'Update Client' : 'Add Client')}
                 </button>
               </div>
             </form>
@@ -1287,12 +1336,37 @@ export default function ClientsPage() {
                       </p>
                     )}
                     {/* Display all non-archived events */}
-                    {client.events && client.events.length > 0 && (
-                      <div style={{ marginTop: '12px' }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: textColor, fontWeight: '600' }}>
-                          Events ({client.events.length}):
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <h4 style={{ margin: '0', fontSize: '14px', color: textColor, fontWeight: '600' }}>
+                          Events ({client.events ? client.events.length : 0}):
                         </h4>
-                        {client.events.map((event) => (
+                        <button
+                          onClick={() => handleAddNewEvent(client)}
+                          style={{
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            padding: '4px 12px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#2563eb';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#3b82f6';
+                          }}
+                          title="Add a new event to this client"
+                        >
+                          + Add Event
+                        </button>
+                      </div>
+                      {client.events && client.events.length > 0 && (
+                        client.events.map((event) => (
                           <div key={event.id} style={{
                             marginBottom: '12px',
                             padding: '12px',
@@ -1423,8 +1497,8 @@ export default function ClientsPage() {
                             </div>
                           </div>
                         ))}
-                      </div>
-                    )}
+                      )}
+                    </div>
                     {/* Fallback: show deprecated client event fields if no events exist */}
                     {(!client.events || client.events.length === 0) && client.eventDate && (
                       <div style={{ marginTop: '12px', padding: '12px', backgroundColor: isDark ? '#1e293b' : '#f8fafc', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
