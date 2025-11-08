@@ -23,6 +23,16 @@ function parseDate(dateStr: string | undefined): Date | null {
   if (!dateStr) return null;
   
   try {
+    // Handle Bookly format: "2025-11-19 14:00:00" (YYYY-MM-DD HH:MM:SS)
+    // Convert to ISO format for reliable parsing
+    if (/^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}:\d{2}$/.test(dateStr)) {
+      const isoStr = dateStr.replace(' ', 'T');
+      const date = new Date(isoStr);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    
     // Try parsing as ISO string first
     const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {
@@ -154,7 +164,7 @@ function mapCsvRow(row: Record<string, string>): {
   // Email (required)
   const email = getValue(['email', 'e-mail', 'customer email', 'client email']) || '';
   
-  // Name fields
+  // Name fields - handle "Customer name" from Bookly
   let firstName = getValue(['first name', 'firstname', 'fname', 'given name']) || '';
   let lastName = getValue(['last name', 'lastname', 'lname', 'surname', 'family name']) || '';
   const fullName = getValue(['full name', 'name', 'customer name', 'client name']);
@@ -166,13 +176,13 @@ function mapCsvRow(row: Record<string, string>): {
   }
   
   // Phone
-  const phone = getValue(['phone', 'phone number', 'telephone', 'mobile', 'cell']) || null;
+  const phone = getValue(['phone', 'phone number', 'telephone', 'mobile', 'cell', 'customer phone']) || null;
   
-  // Address (for client)
+  // Address (for client) - separate from event location
   const address = getValue(['address', 'street address', 'street', 'full address', 'client address', 'customer address']) || null;
   
-  // Date/Time
-  const dateStr = getValue(['event date', 'booking date', 'appointment date', 'date', 'eventdate', 'bookingdate']);
+  // Date/Time - handle "Appointment date" from Bookly
+  const dateStr = getValue(['appointment date', 'event date', 'booking date', 'date', 'eventdate', 'bookingdate']);
   let timeStr = getValue(['event time', 'booking time', 'appointment time', 'time', 'start time', 'eventtime']);
   
   // If date string contains time, extract it
@@ -207,19 +217,28 @@ function mapCsvRow(row: Record<string, string>): {
   
   // Event details
   const eventType = getValue(['event type', 'service', 'service name', 'service type', 'eventtype']) || null;
-  const eventLocation = getValue(['location', 'event location', 'venue', 'eventlocation']) || null;
+  // Event location - separate from customer address, handle "Event Location & Address" from Bookly
+  const eventLocation = getValue(['location', 'event location', 'venue', 'eventlocation', 'event location & address']) || null;
   const durationRaw = getValue(['duration', 'event duration', 'length', 'eventduration']);
   const eventDuration = formatDuration(durationRaw);
   const eventPackage = getValue(['package', 'event package', 'package name', 'eventpackage']) || null;
   const eventName = getValue(['event name', 'eventname', 'name of event']) || null;
   const eventPhone = getValue(['event phone', 'eventphone', 'contact phone']) || null;
   
-  // Price
+  // Price - handle "C$550.00" format from Bookly
   const priceStr = getValue(['price', 'package price', 'cost', 'amount', 'total', 'packageprice']);
   const packagePrice = parsePrice(priceStr || undefined);
   
-  // Notes
-  const notes = getValue(['notes', 'note', 'comments', 'remarks', 'additional info']) || null;
+  // Notes - handle Bookly's long note field name
+  const notes = getValue([
+    'notes', 
+    'note', 
+    'comments', 
+    'remarks', 
+    'additional info',
+    'please provide details about the event type or other info you think we should know',
+    'internal note'
+  ]) || null;
   
   return {
     email: email.toLowerCase().trim(),
