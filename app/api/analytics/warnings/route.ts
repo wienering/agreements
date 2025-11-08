@@ -114,7 +114,25 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate days since sent for each warning
-    const processWarnings = (warnings: any[]) => {
+    type ProcessedWarning = {
+      id: string;
+      status: string;
+      lastEmailedAt: string | null;
+      expiresAt: string | null;
+      daysSinceSent: number | null;
+      hoursUntilExpiry: number | null;
+      warningType: 'expiration' | 'critical' | 'warning';
+      client: {
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+      template: {
+        title: string;
+      };
+    };
+
+    const processWarnings = (warnings: any[]): ProcessedWarning[] => {
       return warnings.map(agreement => {
         const daysSinceSent = agreement.lastEmailedAt 
           ? Math.floor((now.getTime() - new Date(agreement.lastEmailedAt).getTime()) / (24 * 60 * 60 * 1000))
@@ -128,8 +146,8 @@ export async function GET(request: NextRequest) {
           ...agreement,
           daysSinceSent,
           hoursUntilExpiry,
-          warningType: hoursUntilExpiry !== null && hoursUntilExpiry <= 24 ? 'expiration' : 
-                      daysSinceSent !== null && daysSinceSent >= 5 ? 'critical' : 'warning'
+          warningType: (hoursUntilExpiry !== null && hoursUntilExpiry <= 24 ? 'expiration' : 
+                      daysSinceSent !== null && daysSinceSent >= 5 ? 'critical' : 'warning') as 'expiration' | 'critical' | 'warning'
         };
       });
     };
@@ -140,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     // Combine all warnings and deduplicate by agreement ID
     // Use a Map to ensure each agreement only appears once (prioritizing higher severity)
-    const warningsMap = new Map<string, typeof processedExpirationWarnings[0]>();
+    const warningsMap = new Map<string, ProcessedWarning>();
     
     // Add warnings in priority order (expiration > critical > warning)
     // This ensures if an agreement matches multiple criteria, it gets the highest priority warning type
