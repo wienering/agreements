@@ -25,3 +25,17 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+/* Responsive layout for admin dashboard */
+@media (max-width: 1024px) {
+  .admin-dashboard-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .admin-dashboard-layout {
+    gap: 16px !important;
+  }
+}
