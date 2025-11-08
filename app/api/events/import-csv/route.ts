@@ -511,21 +511,29 @@ export async function POST(request: NextRequest) {
         
         // Create new event if it doesn't exist
         if (!event) {
+          const createData: any = {
+            clientId: client.id,
+            eventDate: mapped.eventDate,
+            eventType: mapped.eventType,
+            eventLocation: mapped.eventLocation,
+            eventStartTime: mapped.eventStartTime,
+            eventDuration: mapped.eventDuration,
+            eventPackage: mapped.eventPackage,
+            packagePrice: mapped.packagePrice !== null ? mapped.packagePrice : null,
+            notes: mapped.notes,
+            archived: false,
+          };
+          
+          // Add optional fields if they exist
+          if (mapped.eventName !== null && mapped.eventName !== undefined) {
+            createData.eventName = mapped.eventName;
+          }
+          if (mapped.eventPhone !== null && mapped.eventPhone !== undefined) {
+            createData.eventPhone = mapped.eventPhone;
+          }
+          
           event = await prisma.event.create({
-            data: {
-              clientId: client.id,
-              eventDate: mapped.eventDate,
-              eventType: mapped.eventType,
-              eventLocation: mapped.eventLocation,
-              eventStartTime: mapped.eventStartTime,
-              eventDuration: mapped.eventDuration,
-              eventPackage: mapped.eventPackage,
-              packagePrice: mapped.packagePrice !== null ? mapped.packagePrice : null,
-              notes: mapped.notes,
-              eventName: mapped.eventName,
-              eventPhone: mapped.eventPhone,
-              archived: false,
-            },
+            data: createData,
           });
         }
         
