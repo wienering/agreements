@@ -138,12 +138,28 @@ export async function GET(request: NextRequest) {
     const processedRedWarnings = processWarnings(redWarnings);
     const processedExpirationWarnings = processWarnings(expirationWarnings);
 
-    // Combine all warnings and sort by priority
-    const allWarnings = [
-      ...processedExpirationWarnings,
-      ...processedRedWarnings,
-      ...processedYellowWarnings
-    ].sort((a, b) => {
+    // Combine all warnings and deduplicate by agreement ID
+    // Use a Map to ensure each agreement only appears once (prioritizing higher severity)
+    const warningsMap = new Map<string, typeof processedExpirationWarnings[0]>();
+    
+    // Add warnings in priority order (expiration > critical > warning)
+    // This ensures if an agreement matches multiple criteria, it gets the highest priority warning type
+    // Process in reverse priority order so higher priority warnings are added first
+    [...processedExpirationWarnings, ...processedRedWarnings, ...processedYellowWarnings].forEach(warning => {
+      const existing = warningsMap.get(warning.id);
+      if (!existing) {
+        warningsMap.set(warning.id, warning);
+      } else {
+        // If already exists, keep the one with higher priority
+        const priority = { expiration: 3, critical: 2, warning: 1 };
+        if (priority[warning.warningType] > priority[existing.warningType]) {
+          warningsMap.set(warning.id, warning);
+        }
+      }
+    });
+
+    // Convert map to array and sort by priority
+    const allWarnings = Array.from(warningsMap.values()).sort((a, b) => {
       // Expiration warnings first, then by days since sent
       if (a.warningType === 'expiration' && b.warningType !== 'expiration') return -1;
       if (b.warningType === 'expiration' && a.warningType !== 'expiration') return 1;
