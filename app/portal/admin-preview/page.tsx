@@ -389,7 +389,10 @@ function PortalAdminPreviewContent() {
                   key={agreement.id}
                   className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <div className="p-6">
+                  <Link
+                    href={`/portal/agreement/${agreement.id}`}
+                    className="block p-6 transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
@@ -434,8 +437,23 @@ function PortalAdminPreviewContent() {
                           </div>
                         )}
                       </div>
+                      <div className="ml-4">
+                        <svg
+                          className="h-5 w-5 text-slate-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Quick Actions */}
                   <div className="border-t border-slate-200 dark:border-slate-800 px-6 py-4 bg-slate-50 dark:bg-slate-800/50">

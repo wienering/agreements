@@ -23,6 +23,10 @@ interface Agreement {
     name: string;
     url: string;
   } | null;
+  event: {
+    eventName: string | null;
+    eventDate: string | null;
+  } | null;
   summary: {
     templateTitle: string;
     status: string;
@@ -385,6 +389,18 @@ export default function PortalDashboard() {
                             {agreement.status}
                           </span>
                         </div>
+
+                        {/* Event Name and Date */}
+                        {(agreement.event?.eventName || agreement.event?.eventDate) && (
+                          <div className="flex flex-wrap gap-3 text-sm text-slate-700 dark:text-slate-300 mb-3 font-medium">
+                            {agreement.event?.eventName && (
+                              <span>🎉 {agreement.event.eventName}</span>
+                            )}
+                            {agreement.event?.eventDate && (
+                              <span>📅 {new Date(agreement.event.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Activity Timeline */}
                         <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 mb-3">
