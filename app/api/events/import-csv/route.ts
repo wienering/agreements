@@ -65,6 +65,52 @@ function parsePrice(price: string | number | undefined): number | null {
   return isNaN(parsed) ? null : parsed;
 }
 
+// Helper function to convert minutes to hours format
+function formatDuration(minutes: string | number | null | undefined): string | null {
+  if (minutes === null || minutes === undefined) return null;
+  
+  // Try to parse as number
+  let minutesNum: number;
+  if (typeof minutes === 'number') {
+    minutesNum = minutes;
+  } else {
+    // Extract numeric value from string (handle formats like "120", "120 min", "2 hours", etc.)
+    const cleaned = String(minutes).replace(/[^0-9.]/g, '');
+    if (!cleaned) return null;
+    
+    minutesNum = parseFloat(cleaned);
+    if (isNaN(minutesNum)) return null;
+    
+    // If the string contains "hour" or "hr", it might already be in hours
+    const lowerStr = String(minutes).toLowerCase();
+    if (lowerStr.includes('hour') || lowerStr.includes('hr')) {
+      // Already in hours, return as-is but format nicely
+      const hours = minutesNum;
+      if (hours === Math.floor(hours)) {
+        return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+      } else {
+        return `${hours} hours`;
+      }
+    }
+  }
+  
+  // Convert minutes to hours
+  const hours = minutesNum / 60;
+  
+  // Format: whole hours if exact, otherwise decimal
+  if (hours === Math.floor(hours)) {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  } else {
+    // Round to 1 decimal place for .5 hours
+    const rounded = Math.round(hours * 2) / 2;
+    if (rounded === Math.floor(rounded)) {
+      return `${rounded} ${rounded === 1 ? 'hour' : 'hours'}`;
+    } else {
+      return `${rounded} hours`;
+    }
+  }
+}
+
 // Normalize date to just the date part (ignore time) for duplicate detection
 function normalizeDate(date: Date | null): string | null {
   if (!date) return null;
@@ -79,6 +125,7 @@ function mapCsvRow(row: Record<string, string>): {
   firstName: string;
   lastName: string;
   phone: string | null;
+  address: string | null;
   eventDate: Date | null;
   eventStartTime: string | null;
   eventType: string | null;
@@ -121,15 +168,48 @@ function mapCsvRow(row: Record<string, string>): {
   // Phone
   const phone = getValue(['phone', 'phone number', 'telephone', 'mobile', 'cell']) || null;
   
+  // Address (for client)
+  const address = getValue(['address', 'street address', 'street', 'full address', 'client address', 'customer address']) || null;
+  
   // Date/Time
   const dateStr = getValue(['event date', 'booking date', 'appointment date', 'date', 'eventdate', 'bookingdate']);
-  const timeStr = getValue(['event time', 'booking time', 'appointment time', 'time', 'start time', 'eventtime']);
-  const eventDate = dateStr ? parseDate(dateStr) : null;
+  let timeStr = getValue(['event time', 'booking time', 'appointment time', 'time', 'start time', 'eventtime']);
+  
+  // If date string contains time, extract it
+  let eventDate: Date | null = null;
+  if (dateStr) {
+    // Check if date string includes time (e.g., "09/26/2026 09:00 PM" or "2026-09-26 21:00")
+    const dateTimeMatch = dateStr.match(/(\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2}(?:\s*(?:AM|PM))?)/i);
+    if (dateTimeMatch) {
+      // Date and time are combined
+      eventDate = parseDate(dateStr);
+      // Extract time part if not already extracted from separate time field
+      if (!timeStr && dateTimeMatch[2]) {
+        timeStr = dateTimeMatch[2].trim();
+      }
+    } else {
+      eventDate = parseDate(dateStr);
+    }
+  }
+  
+  // If we have eventDate but no timeStr, try to extract time from the Date object
+  if (eventDate && !timeStr) {
+    // Format time as "HH:MM AM/PM" or "HH:MM"
+    const hours = eventDate.getHours();
+    const minutes = eventDate.getMinutes();
+    if (hours !== 0 || minutes !== 0) {
+      // Only extract if time is not midnight
+      const hour12 = hours % 12 || 12;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      timeStr = `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    }
+  }
   
   // Event details
   const eventType = getValue(['event type', 'service', 'service name', 'service type', 'eventtype']) || null;
-  const eventLocation = getValue(['location', 'event location', 'venue', 'address', 'eventlocation']) || null;
-  const eventDuration = getValue(['duration', 'event duration', 'length', 'eventduration']) || null;
+  const eventLocation = getValue(['location', 'event location', 'venue', 'eventlocation']) || null;
+  const durationRaw = getValue(['duration', 'event duration', 'length', 'eventduration']);
+  const eventDuration = formatDuration(durationRaw);
   const eventPackage = getValue(['package', 'event package', 'package name', 'eventpackage']) || null;
   const eventName = getValue(['event name', 'eventname', 'name of event']) || null;
   const eventPhone = getValue(['event phone', 'eventphone', 'contact phone']) || null;
@@ -146,6 +226,7 @@ function mapCsvRow(row: Record<string, string>): {
     firstName: firstName.trim() || 'Customer',
     lastName: lastName.trim() || '',
     phone,
+    address,
     eventDate,
     eventStartTime: timeStr || null,
     eventType,
@@ -288,6 +369,11 @@ export async function POST(request: NextRequest) {
           continue;
         }
         
+        // Check if client exists first to see if we should update address
+        const existingClient = await prisma.client.findUnique({
+          where: { email: mapped.email },
+        });
+        
         // Upsert client
         const client = await prisma.client.upsert({
           where: { email: mapped.email },
@@ -295,12 +381,17 @@ export async function POST(request: NextRequest) {
             firstName: mapped.firstName || undefined,
             lastName: mapped.lastName || undefined,
             phone: mapped.phone || undefined,
+            // Only update address if it doesn't already exist (respect existing data)
+            address: mapped.address && !existingClient?.address ? mapped.address : undefined,
+            addressAddedAt: mapped.address && !existingClient?.address ? new Date() : undefined,
           },
           create: {
             email: mapped.email,
             firstName: mapped.firstName,
             lastName: mapped.lastName,
             phone: mapped.phone,
+            address: mapped.address || null,
+            addressAddedAt: mapped.address ? new Date() : null,
           },
         });
         
