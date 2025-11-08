@@ -387,8 +387,8 @@ export default function AgreementsPage() {
 
   // Handle backdrop selection save
   const handleSaveBackdropSelection = async () => {
-    if (!selectedAgreement || !selectedBackdropName) {
-      showToast('Please select a backdrop', 'error');
+    if (!selectedAgreement) {
+      showToast('No agreement selected', 'error');
       return;
     }
 
@@ -399,22 +399,27 @@ export default function AgreementsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agreementId: selectedAgreement.id,
-          backdropName: selectedBackdropName,
+          backdropName: selectedBackdropName || '',
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        showToast('Backdrop selection saved successfully!');
+        const message = selectedBackdropName ? 'Backdrop selection saved successfully!' : 'Backdrop selection cleared successfully!';
+        showToast(message);
         // Update the agreement in the list
         fetchAgreements();
         // Update selected agreement
         if (selectedAgreement) {
           const updatedAgreement = agreements.find(a => a.id === selectedAgreement.id);
           if (updatedAgreement) {
-            (updatedAgreement as any).selectedBackdropName = selectedBackdropName;
+            (updatedAgreement as any).selectedBackdropName = selectedBackdropName || null;
             setSelectedAgreement(updatedAgreement);
           }
+        }
+        // Clear the selection in the UI if it was cleared
+        if (!selectedBackdropName) {
+          setSelectedBackdropName('');
         }
       } else {
         const error = await response.json();
@@ -423,6 +428,52 @@ export default function AgreementsPage() {
     } catch (error) {
       console.error('Error saving backdrop selection:', error);
       showToast('Failed to save backdrop selection', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle clearing backdrop selection
+  const handleClearBackdropSelection = async () => {
+    if (!selectedAgreement) {
+      return;
+    }
+
+    if (!confirm('Are you sure you want to clear the backdrop selection?')) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/agreements/update-backdrop-selection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          backdropName: '',
+        }),
+      });
+
+      if (response.ok) {
+        showToast('Backdrop selection cleared successfully!');
+        setSelectedBackdropName('');
+        // Update the agreement in the list
+        fetchAgreements();
+        // Update selected agreement
+        if (selectedAgreement) {
+          const updatedAgreement = agreements.find(a => a.id === selectedAgreement.id);
+          if (updatedAgreement) {
+            (updatedAgreement as any).selectedBackdropName = null;
+            setSelectedAgreement(updatedAgreement);
+          }
+        }
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to clear backdrop selection', 'error');
+      }
+    } catch (error) {
+      console.error('Error clearing backdrop selection:', error);
+      showToast('Failed to clear backdrop selection', 'error');
     } finally {
       setSaving(false);
     }
@@ -2221,9 +2272,30 @@ export default function AgreementsPage() {
                         border: `1px solid ${isDark ? '#3b82f6' : '#3b82f6'}`,
                         borderRadius: '4px',
                         fontSize: '13px',
-                        color: isDark ? '#93c5fd' : '#1e40af'
+                        color: isDark ? '#93c5fd' : '#1e40af',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
                       }}>
-                        Current selection: <strong>{selectedBackdropName}</strong>
+                        <span>Current selection: <strong>{selectedBackdropName}</strong></span>
+                        <button
+                          onClick={handleClearBackdropSelection}
+                          disabled={saving}
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: isDark ? '#f87171' : '#dc2626',
+                            border: `1px solid ${isDark ? '#f87171' : '#dc2626'}`,
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            cursor: saving ? 'not-allowed' : 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            marginLeft: '8px'
+                          }}
+                          title="Clear backdrop selection"
+                        >
+                          Clear
+                        </button>
                       </div>
                     )}
                   </div>

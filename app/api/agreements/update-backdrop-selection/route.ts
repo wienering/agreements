@@ -7,7 +7,7 @@ const updateBackdropSelectionSchema = z.object({
   clientEmail: z.string().email('Invalid email address').optional(),
   clientName: z.string().optional(),
   eventDate: z.string().optional(),
-  backdropName: z.string().min(1, 'Backdrop name is required'),
+  backdropName: z.string().optional(), // Allow empty string to clear selection
 }).refine(
   (data) => data.agreementId || (data.clientEmail && data.clientName && data.eventDate),
   {
@@ -42,13 +42,13 @@ export async function POST(request: NextRequest) {
         }, { status: 404 });
       }
 
-      // Update the specific agreement
+      // Update the specific agreement (allow null/empty to clear selection)
       await prisma.agreement.update({
         where: {
           id: validatedData.agreementId,
         },
         data: {
-          selectedBackdropName: validatedData.backdropName,
+          selectedBackdropName: validatedData.backdropName || null,
         },
       });
 
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
             },
           },
           data: {
-            selectedBackdropName: validatedData.backdropName,
+            selectedBackdropName: validatedData.backdropName || null,
           },
         });
 
