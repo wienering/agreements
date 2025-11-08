@@ -93,6 +93,9 @@ export async function POST(request: NextRequest) {
           where: {
             archived: false, // Only update non-archived agreements
           },
+          include: {
+            event: true, // Include event data for matching
+          },
         },
       },
     });
@@ -113,7 +116,22 @@ export async function POST(request: NextRequest) {
 
       // Filter agreements based on matching criteria
       const matchingAgreements = client.agreements.filter((agreement) => {
-        // If client has eventDate, check if it matches submission eventDate (same day)
+        // First, try to match by event date from the Event model (for whitelist clients)
+        if (agreement.event?.eventDate) {
+          const eventDate = new Date(agreement.event.eventDate);
+          const eventDateOnly = new Date(
+            eventDate.getFullYear(),
+            eventDate.getMonth(),
+            eventDate.getDate()
+          );
+
+          // Match by event date (same day)
+          if (eventDateOnly.getTime() === submissionDateOnly.getTime()) {
+            return true;
+          }
+        }
+
+        // If client has eventDate (deprecated, but still check for backward compatibility)
         if (client.eventDate) {
           const clientEventDate = new Date(client.eventDate);
           const clientDateOnly = new Date(
