@@ -256,6 +256,7 @@ export default function ClientsPage() {
     setShowAddForm(false);
     setEditingClient(null);
     setEditingEvent(null);
+    setAddingEventToClient(null);
     setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
     setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
   };
@@ -1366,7 +1367,8 @@ export default function ClientsPage() {
                         </button>
                       </div>
                       {client.events && client.events.length > 0 && (
-                        client.events.map((event) => (
+                        <>
+                          {client.events.map((event) => (
                           <div key={event.id} style={{
                             marginBottom: '12px',
                             padding: '12px',
@@ -1496,7 +1498,8 @@ export default function ClientsPage() {
                               </button>
                             </div>
                           </div>
-                        ))}
+                          ))}
+                        </>
                       )}
                     </div>
                     {/* Fallback: show deprecated client event fields if no events exist */}
