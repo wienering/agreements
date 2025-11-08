@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Get backdrop-selection-tool URL from environment variable or use default
-const BACKDROP_TOOL_URL = process.env.BACKDROP_SELECTION_TOOL_URL || process.env.NEXT_PUBLIC_BACKDROP_SELECTION_TOOL_URL || 'http://localhost:3001';
+const BACKDROP_TOOL_URL = process.env.BACKDROP_SELECTION_TOOL_URL || process.env.NEXT_PUBLIC_BACKDROP_SELECTION_TOOL_URL || 'https://backdrops.photoboothguys.ca';
 
 export async function GET(request: NextRequest) {
   try {
