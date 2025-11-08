@@ -414,7 +414,10 @@ export async function POST(request: NextRequest) {
           },
         });
         
-        // Check for duplicate event (same client + same event date)
+        // Check for existing event (same client + same event date)
+        let event;
+        let isUpdate = false;
+        
         if (mapped.eventDate) {
           const normalizedDate = normalizeDate(mapped.eventDate);
           
@@ -430,96 +433,116 @@ export async function POST(request: NextRequest) {
           });
           
           // Check if any existing event has the same normalized date
-          const duplicateEvent = existingEvents.find(event => {
-            if (!event.eventDate) return false;
-            const existingNormalized = normalizeDate(event.eventDate);
+          const existingEvent = existingEvents.find(evt => {
+            if (!evt.eventDate) return false;
+            const existingNormalized = normalizeDate(evt.eventDate);
             return existingNormalized === normalizedDate;
           });
           
-          if (duplicateEvent) {
-            results.push({
-              row: rowNumber,
-              status: 'skipped',
-              reason: 'Duplicate event (same client and event date)',
-              clientEmail: mapped.email,
-              eventDate: mapped.eventDate.toISOString(),
-              csvData: row,
-              existingEvent: {
-                id: duplicateEvent.id,
-                eventDate: duplicateEvent.eventDate?.toISOString(),
-                eventType: duplicateEvent.eventType,
-                eventLocation: duplicateEvent.eventLocation,
-                eventStartTime: duplicateEvent.eventStartTime,
-                eventDuration: duplicateEvent.eventDuration,
-                eventPackage: duplicateEvent.eventPackage,
-                packagePrice: duplicateEvent.packagePrice?.toString(),
-                notes: duplicateEvent.notes,
-                eventName: duplicateEvent.eventName,
-                client: {
-                  id: duplicateEvent.client.id,
-                  email: duplicateEvent.client.email,
-                  firstName: duplicateEvent.client.firstName,
-                  lastName: duplicateEvent.client.lastName,
-                },
-              },
+          if (existingEvent) {
+            // Update existing event with CSV data
+            // Use CSV values if provided, otherwise keep existing values
+            const updateData: any = {};
+            
+            if (mapped.eventDate !== null && mapped.eventDate !== undefined) {
+              updateData.eventDate = mapped.eventDate;
+            }
+            if (mapped.eventType !== null && mapped.eventType !== undefined) {
+              updateData.eventType = mapped.eventType;
+            }
+            if (mapped.eventLocation !== null && mapped.eventLocation !== undefined) {
+              updateData.eventLocation = mapped.eventLocation;
+            }
+            if (mapped.eventStartTime !== null && mapped.eventStartTime !== undefined) {
+              updateData.eventStartTime = mapped.eventStartTime;
+            }
+            if (mapped.eventDuration !== null && mapped.eventDuration !== undefined) {
+              updateData.eventDuration = mapped.eventDuration;
+            }
+            if (mapped.eventPackage !== null && mapped.eventPackage !== undefined) {
+              updateData.eventPackage = mapped.eventPackage;
+            }
+            if (mapped.packagePrice !== null && mapped.packagePrice !== undefined) {
+              updateData.packagePrice = mapped.packagePrice;
+            }
+            if (mapped.notes !== null && mapped.notes !== undefined) {
+              updateData.notes = mapped.notes;
+            }
+            if (mapped.eventName !== null && mapped.eventName !== undefined) {
+              updateData.eventName = mapped.eventName;
+            }
+            if (mapped.eventPhone !== null && mapped.eventPhone !== undefined) {
+              updateData.eventPhone = mapped.eventPhone;
+            }
+            
+            event = await prisma.event.update({
+              where: { id: existingEvent.id },
+              data: updateData,
             });
             
+            isUpdate = true;
+            
+            // Track in duplicates for reporting
             duplicates.push({
               row: rowNumber,
               csvData: row,
               existingEvent: {
-                id: duplicateEvent.id,
-                eventDate: duplicateEvent.eventDate?.toISOString(),
-                eventType: duplicateEvent.eventType,
-                eventLocation: duplicateEvent.eventLocation,
-                eventStartTime: duplicateEvent.eventStartTime,
-                eventDuration: duplicateEvent.eventDuration,
-                eventPackage: duplicateEvent.eventPackage,
-                packagePrice: duplicateEvent.packagePrice?.toString(),
-                notes: duplicateEvent.notes,
-                eventName: duplicateEvent.eventName,
+                id: existingEvent.id,
+                eventDate: existingEvent.eventDate?.toISOString(),
+                eventType: existingEvent.eventType,
+                eventLocation: existingEvent.eventLocation,
+                eventStartTime: existingEvent.eventStartTime,
+                eventDuration: existingEvent.eventDuration,
+                eventPackage: existingEvent.eventPackage,
+                packagePrice: existingEvent.packagePrice?.toString(),
+                notes: existingEvent.notes,
+                eventName: existingEvent.eventName,
                 client: {
-                  id: duplicateEvent.client.id,
-                  email: duplicateEvent.client.email,
-                  firstName: duplicateEvent.client.firstName,
-                  lastName: duplicateEvent.client.lastName,
+                  id: existingEvent.client.id,
+                  email: existingEvent.client.email,
+                  firstName: existingEvent.client.firstName,
+                  lastName: existingEvent.client.lastName,
                 },
               },
-              matchReason: 'Same client email and event date',
+              matchReason: 'Same client email and event date - updated with CSV data',
             });
-            
-            skippedCount++;
-            continue;
           }
         }
         
-        // Create event
-        const event = await prisma.event.create({
-          data: {
-            clientId: client.id,
-            eventDate: mapped.eventDate,
-            eventType: mapped.eventType,
-            eventLocation: mapped.eventLocation,
-            eventStartTime: mapped.eventStartTime,
-            eventDuration: mapped.eventDuration,
-            eventPackage: mapped.eventPackage,
-            packagePrice: mapped.packagePrice !== null ? mapped.packagePrice : null,
-            notes: mapped.notes,
-            eventName: mapped.eventName,
-            eventPhone: mapped.eventPhone,
-            archived: false,
-          },
-        });
+        // Create new event if it doesn't exist
+        if (!event) {
+          event = await prisma.event.create({
+            data: {
+              clientId: client.id,
+              eventDate: mapped.eventDate,
+              eventType: mapped.eventType,
+              eventLocation: mapped.eventLocation,
+              eventStartTime: mapped.eventStartTime,
+              eventDuration: mapped.eventDuration,
+              eventPackage: mapped.eventPackage,
+              packagePrice: mapped.packagePrice !== null ? mapped.packagePrice : null,
+              notes: mapped.notes,
+              eventName: mapped.eventName,
+              eventPhone: mapped.eventPhone,
+              archived: false,
+            },
+          });
+        }
         
         results.push({
           row: rowNumber,
-          status: 'imported',
+          status: isUpdate ? 'updated' : 'imported',
           clientEmail: mapped.email,
           eventDate: mapped.eventDate?.toISOString(),
           csvData: row,
+          reason: isUpdate ? 'Updated existing event' : undefined,
         });
         
-        importedCount++;
+        if (isUpdate) {
+          skippedCount++; // Count updates as "skipped" in summary for now, or we could add an "updated" count
+        } else {
+          importedCount++;
+        }
       } catch (error: any) {
         console.error(`Error processing row ${rowNumber}:`, error);
         results.push({

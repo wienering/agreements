@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 interface ImportResult {
   row: number;
-  status: 'imported' | 'skipped' | 'error';
+  status: 'imported' | 'updated' | 'skipped' | 'error';
   clientEmail?: string;
   eventDate?: string;
   reason?: string;
@@ -295,12 +295,12 @@ export default function ImportEventsPage() {
               </div>
             </div>
 
-            {/* Duplicates Section */}
+            {/* Updated/Duplicates Section */}
             {results.duplicates && results.duplicates.length > 0 && (
               <div className={`${cardBg} rounded-lg p-6 ${borderColor} border`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">
-                Duplicate Events ({results.duplicates.length})
+                Updated Events ({results.duplicates.length})
               </h2>
               <div className="flex gap-2">
                 <button
@@ -327,8 +327,8 @@ export default function ImportEventsPage() {
             </div>
             
             <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              These events were skipped because they match existing events (same client email and event date).
-              Review the comparison below and export the report to double-check.
+              These events already existed (same client email and event date) and were updated with data from the CSV.
+              Review the comparison below to see what changed.
             </p>
 
             {showDuplicates && (
