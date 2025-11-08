@@ -174,21 +174,168 @@ export default function AdminHome() {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: '32px', 
-            fontWeight: '700', 
-            color: textColor 
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start',
+            marginBottom: '16px',
+            flexWrap: 'wrap',
+            gap: '16px'
           }}>
-            Welcome to Photobooth Guys
-          </h1>
-          <p style={{ 
-            margin: '0', 
-            color: mutedText, 
-            fontSize: '16px' 
-          }}>
-            Manage your client agreements and contracts efficiently
-          </p>
+            <div style={{ flex: '1', minWidth: '200px' }}>
+              <h1 style={{ 
+                margin: '0 0 8px 0', 
+                fontSize: '32px', 
+                fontWeight: '700', 
+                color: textColor 
+              }}>
+                Welcome to Photobooth Guys
+              </h1>
+              <p style={{ 
+                margin: '0', 
+                color: mutedText, 
+                fontSize: '16px' 
+              }}>
+                Manage your client agreements and contracts efficiently
+              </p>
+            </div>
+            
+            {/* Quick Actions - Compact */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px',
+              flexWrap: 'wrap',
+              alignItems: 'flex-start'
+            }}>
+              <div 
+                onClick={() => router.push('/admin/dashboard')}
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  backgroundColor: '#3b82f6',
+                  borderRadius: '6px'
+                }}></div>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Analytics</span>
+              </div>
+
+              <div 
+                onClick={() => router.push('/admin/clients')}
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  backgroundColor: '#10b981',
+                  borderRadius: '6px'
+                }}></div>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Clients</span>
+              </div>
+
+              <div 
+                onClick={() => router.push('/admin/templates')}
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  backgroundColor: '#f59e0b',
+                  borderRadius: '6px'
+                }}></div>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Templates</span>
+              </div>
+
+              <div 
+                onClick={() => router.push('/admin/agreements')}
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  backgroundColor: '#8b5cf6',
+                  borderRadius: '6px'
+                }}></div>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Agreements</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Top Summary Cards */}
@@ -661,164 +808,6 @@ export default function AdminHome() {
           </div>
         </div>
 
-        {/* Quick Actions Grid - Below main content */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '16px'
-        }}>
-          <div 
-            onClick={() => router.push('/admin/dashboard')}
-            style={{
-              backgroundColor: cardBg,
-              border: `1px solid ${borderColor}`,
-              borderRadius: '12px',
-              padding: '24px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                backgroundColor: '#3b82f6',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px'
-              }}></div>
-              <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Analytics Dashboard</h3>
-            </div>
-            <p style={{ margin: '0', color: mutedText, fontSize: '14px' }}>
-              View detailed analytics, charts, and insights about your agreements and clients.
-            </p>
-          </div>
-
-          <div 
-            onClick={() => router.push('/admin/clients')}
-            style={{
-              backgroundColor: cardBg,
-              border: `1px solid ${borderColor}`,
-              borderRadius: '12px',
-              padding: '24px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                backgroundColor: '#10b981',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px'
-              }}></div>
-              <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Manage Clients</h3>
-            </div>
-            <p style={{ margin: '0', color: mutedText, fontSize: '14px' }}>
-              Add, edit, and manage your client database.
-            </p>
-          </div>
-
-          <div 
-            onClick={() => router.push('/admin/templates')}
-            style={{
-              backgroundColor: cardBg,
-              border: `1px solid ${borderColor}`,
-              borderRadius: '12px',
-              padding: '24px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                backgroundColor: '#f59e0b',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px'
-              }}></div>
-              <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Templates</h3>
-            </div>
-            <p style={{ margin: '0', color: mutedText, fontSize: '14px' }}>
-              Create and manage agreement templates with smart fields.
-            </p>
-          </div>
-
-          <div 
-            onClick={() => router.push('/admin/agreements')}
-            style={{
-              backgroundColor: cardBg,
-              border: `1px solid ${borderColor}`,
-              borderRadius: '12px',
-              padding: '24px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                backgroundColor: '#8b5cf6',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '12px'
-              }}></div>
-              <h3 style={{ margin: '0', fontSize: '18px', color: textColor }}>Agreements</h3>
-            </div>
-            <p style={{ margin: '0', color: mutedText, fontSize: '14px' }}>
-              Create, manage, and track client agreements.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
