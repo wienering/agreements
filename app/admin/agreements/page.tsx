@@ -83,6 +83,12 @@ export default function AgreementsPage() {
   const [backdropLinks, setBackdropLinks] = useState<any[]>([]);
   const [selectedBackdropLinkId, setSelectedBackdropLinkId] = useState('');
   
+  // Backdrop selection state
+  const [backdropOptions, setBackdropOptions] = useState<any[]>([]);
+  const [selectedBackdropName, setSelectedBackdropName] = useState('');
+  const [loadingBackdropOptions, setLoadingBackdropOptions] = useState(false);
+  const [attendantId, setAttendantId] = useState<string | null>(null);
+  
   // Cancellation state
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellingAgreement, setCancellingAgreement] = useState<Agreement | null>(null);
@@ -271,6 +277,157 @@ export default function AgreementsPage() {
     return warning?.warningType || null;
   };
 
+  // Extract attendant ID from backdrop link URL
+  // URLs typically follow pattern: https://domain.com/select/[attendantId] or similar
+  const extractAttendantIdFromUrl = (url: string): string | null => {
+    try {
+      // Try to extract from path like /select/[attendantId]
+      const pathMatch = url.match(/\/select\/([^/?]+)/);
+      if (pathMatch && pathMatch[1]) {
+        return pathMatch[1];
+      }
+      
+      // Try to extract from query parameter
+      const urlObj = new URL(url);
+      const attendantIdParam = urlObj.searchParams.get('attendantId');
+      if (attendantIdParam) {
+        return attendantIdParam;
+      }
+      
+      // Try to extract from path segments
+      const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+      const selectIndex = pathSegments.indexOf('select');
+      if (selectIndex !== -1 && pathSegments[selectIndex + 1]) {
+        return pathSegments[selectIndex + 1];
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting attendant ID from URL:', error);
+      return null;
+    }
+  };
+
+  // Fetch backdrop options for a given attendant ID
+  const fetchBackdropOptions = async (attendantIdParam: string) => {
+    if (!attendantIdParam) {
+      setBackdropOptions([]);
+      setLoadingBackdropOptions(false);
+      return;
+    }
+
+    setLoadingBackdropOptions(true);
+    setBackdropOptions([]); // Clear previous options while loading
+    
+    try {
+      const response = await fetch(`/api/agreements/backdrop-options?attendantId=${attendantIdParam}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.backdrops) {
+          setBackdropOptions(data.backdrops || []);
+          if (data.backdrops.length === 0) {
+            // Don't show error if no backdrops - just empty state
+            console.log('No backdrop options available for this attendant');
+          }
+        } else {
+          setBackdropOptions([]);
+          showToast('Invalid response from backdrop options API', 'error');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to fetch backdrop options:', response.status, errorData);
+        setBackdropOptions([]);
+        const errorMessage = errorData.error || 'Failed to load backdrop options. The backdrop tool may be unavailable.';
+        showToast(errorMessage, 'error');
+      }
+    } catch (error: any) {
+      console.error('Error fetching backdrop options:', error);
+      setBackdropOptions([]);
+      const errorMessage = error.message?.includes('fetch') 
+        ? 'Unable to connect to backdrop tool. Please check your connection and try again.'
+        : 'Error loading backdrop options';
+      showToast(errorMessage, 'error');
+    } finally {
+      setLoadingBackdropOptions(false);
+    }
+  };
+
+  // Handle backdrop link selection change
+  const handleBackdropLinkChange = (backdropLinkId: string) => {
+    setSelectedBackdropLinkId(backdropLinkId);
+    setSelectedBackdropName(''); // Clear selection when backdrop link changes
+    
+    if (!backdropLinkId) {
+      setAttendantId(null);
+      setBackdropOptions([]);
+      return;
+    }
+
+    // Find the backdrop link and extract attendant ID
+    const backdropLink = backdropLinks.find(link => link.id === backdropLinkId);
+    if (backdropLink?.url) {
+      const extractedAttendantId = extractAttendantIdFromUrl(backdropLink.url);
+      if (extractedAttendantId) {
+        setAttendantId(extractedAttendantId);
+        fetchBackdropOptions(extractedAttendantId);
+      } else {
+        setAttendantId(null);
+        setBackdropOptions([]);
+        showToast('Could not extract attendant ID from backdrop link URL. Please check the URL format.', 'error');
+      }
+    } else {
+      setAttendantId(null);
+      setBackdropOptions([]);
+      if (backdropLinkId) {
+        showToast('Backdrop link URL not found. Please refresh and try again.', 'error');
+      }
+    }
+  };
+
+  // Handle backdrop selection save
+  const handleSaveBackdropSelection = async () => {
+    if (!selectedAgreement || !selectedBackdropName) {
+      showToast('Please select a backdrop', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/agreements/update-backdrop-selection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          backdropName: selectedBackdropName,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showToast('Backdrop selection saved successfully!');
+        // Update the agreement in the list
+        fetchAgreements();
+        // Update selected agreement
+        if (selectedAgreement) {
+          const updatedAgreement = agreements.find(a => a.id === selectedAgreement.id);
+          if (updatedAgreement) {
+            (updatedAgreement as any).selectedBackdropName = selectedBackdropName;
+            setSelectedAgreement(updatedAgreement);
+          }
+        }
+      } else {
+        const error = await response.json();
+        showToast(error.error || 'Failed to save backdrop selection', 'error');
+      }
+    } catch (error) {
+      console.error('Error saving backdrop selection:', error);
+      showToast('Failed to save backdrop selection', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleCreateAgreement = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -318,6 +475,32 @@ export default function AgreementsPage() {
     setGalleryLink((agreement as any).galleryLink || '');
     setNextAction((agreement as any).nextAction || '');
     setSelectedBackdropLinkId((agreement as any).backdropLinkId || '');
+    setSelectedBackdropName((agreement as any).selectedBackdropName || '');
+    
+    // Extract attendant ID and fetch backdrop options if backdrop link is set
+    // Use a timeout to ensure backdropLinks are loaded
+    setTimeout(() => {
+      const backdropLinkId = (agreement as any).backdropLinkId;
+      if (backdropLinkId && backdropLinks.length > 0) {
+        const backdropLink = backdropLinks.find(link => link.id === backdropLinkId);
+        if (backdropLink?.url) {
+          const extractedAttendantId = extractAttendantIdFromUrl(backdropLink.url);
+          if (extractedAttendantId) {
+            setAttendantId(extractedAttendantId);
+            fetchBackdropOptions(extractedAttendantId);
+          } else {
+            setAttendantId(null);
+            setBackdropOptions([]);
+          }
+        } else {
+          setAttendantId(null);
+          setBackdropOptions([]);
+        }
+      } else {
+        setAttendantId(null);
+        setBackdropOptions([]);
+      }
+    }, 100);
   };
 
   const handleSaveAgreement = async () => {
@@ -1275,24 +1458,40 @@ export default function AgreementsPage() {
                         Emailed {new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                       </span>
                     )}
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: mutedText,
-                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      alignSelf: isMobile ? 'flex-start' : 'auto',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => {
-                      setEditingExpiration(true);
-                      setEditingAgreementId(agreement.id);
-                      setNewExpirationDate(new Date(agreement.expiresAt).toISOString().slice(0, 16));
-                    }}
-                    title="Click to edit expiration date"
-                    >
-                      Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
-                    </span>
+                    {agreement.event?.eventDate && (
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: '#7c3aed',
+                        backgroundColor: isDark ? '#3e1f5f' : '#f3e8ff',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        alignSelf: isMobile ? 'flex-start' : 'auto',
+                        border: '1px solid #c4b5fd'
+                      }}
+                      >
+                        Event {new Date(agreement.event.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                      </span>
+                    )}
+                    {agreement.status !== 'SIGNED' && (
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: mutedText,
+                        backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        alignSelf: isMobile ? 'flex-start' : 'auto',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        setEditingExpiration(true);
+                        setEditingAgreementId(agreement.id);
+                        setNewExpirationDate(new Date(agreement.expiresAt).toISOString().slice(0, 16));
+                      }}
+                      title="Click to edit expiration date"
+                      >
+                        Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div style={{ 
@@ -1928,7 +2127,7 @@ export default function AgreementsPage() {
                   </label>
                   <select
                     value={selectedBackdropLinkId}
-                    onChange={(e) => setSelectedBackdropLinkId(e.target.value)}
+                    onChange={(e) => handleBackdropLinkChange(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '8px 12px',
@@ -1945,6 +2144,90 @@ export default function AgreementsPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* Backdrop Selection Dropdown */}
+                {selectedBackdropLinkId && attendantId && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
+                      Select Backdrop
+                    </label>
+                    {loadingBackdropOptions ? (
+                      <div style={{ 
+                        padding: '8px 12px', 
+                        color: mutedText, 
+                        fontSize: '14px',
+                        fontStyle: 'italic'
+                      }}>
+                        Loading backdrop options...
+                      </div>
+                    ) : backdropOptions.length > 0 ? (
+                      <div>
+                        <select
+                          value={selectedBackdropName}
+                          onChange={(e) => setSelectedBackdropName(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px',
+                            marginBottom: '8px'
+                          }}
+                        >
+                          <option value="">-- Select a backdrop --</option>
+                          {backdropOptions.map(backdrop => (
+                            <option key={backdrop.id} value={backdrop.name}>
+                              {backdrop.name}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedBackdropName && (
+                          <button
+                            onClick={handleSaveBackdropSelection}
+                            disabled={saving}
+                            style={{
+                              width: '100%',
+                              backgroundColor: saving ? '#9ca3af' : '#059669',
+                              color: 'white',
+                              border: 'none',
+                              padding: '8px 12px',
+                              borderRadius: '4px',
+                              cursor: saving ? 'not-allowed' : 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {saving ? 'Saving...' : 'Save Backdrop Selection'}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        padding: '8px 12px', 
+                        color: mutedText, 
+                        fontSize: '14px',
+                        fontStyle: 'italic'
+                      }}>
+                        No backdrop options available for this attendant
+                      </div>
+                    )}
+                    {selectedBackdropName && !loadingBackdropOptions && (
+                      <div style={{ 
+                        marginTop: '8px',
+                        padding: '8px 12px',
+                        backgroundColor: isDark ? '#1e3a5f' : '#dbeafe',
+                        border: `1px solid ${isDark ? '#3b82f6' : '#3b82f6'}`,
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        color: isDark ? '#93c5fd' : '#1e40af'
+                      }}>
+                        Current selection: <strong>{selectedBackdropName}</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Update Portal Fields Button */}
                 <button
