@@ -4,6 +4,10 @@ interface AttendantPageProps {
   params: Promise<{ id: string }>;
 }
 
+// Force dynamic rendering to ensure backdrop selections update immediately
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AttendantPage({ params }: AttendantPageProps) {
   const { id } = await params;
 
