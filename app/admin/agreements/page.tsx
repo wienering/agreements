@@ -1841,12 +1841,12 @@ export default function AgreementsPage() {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
-            padding: '20px'
+            padding: isMobile ? '10px' : '20px'
           }}>
             <div style={{
               backgroundColor: cardBg,
               borderRadius: '8px',
-              padding: '24px',
+              padding: isMobile ? '16px' : '24px',
               width: '100%',
               maxWidth: '800px',
               maxHeight: '90vh',
@@ -2310,10 +2310,10 @@ export default function AgreementsPage() {
                     backgroundColor: saving ? '#9ca3af' : '#3b82f6',
                     color: 'white',
                     border: 'none',
-                    padding: '10px',
+                    padding: isMobile ? '8px' : '10px',
                     borderRadius: '6px',
                     cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
+                    fontSize: isMobile ? '13px' : '14px',
                     fontWeight: '500',
                     marginTop: '8px'
                   }}
@@ -2325,7 +2325,8 @@ export default function AgreementsPage() {
               {/* Actions */}
               <div style={{ 
                 display: 'flex', 
-                gap: '12px', 
+                flexWrap: isMobile ? 'wrap' : 'nowrap',
+                gap: isMobile ? '8px' : '12px', 
                 justifyContent: 'center',
                 paddingTop: '16px',
                 borderTop: `1px solid ${borderColor}`
@@ -2337,11 +2338,13 @@ export default function AgreementsPage() {
                     backgroundColor: saving ? '#9ca3af' : '#059669',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
+                    padding: isMobile ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500'
+                    fontSize: isMobile ? '13px' : '16px',
+                    fontWeight: '500',
+                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   title="Save changes to this agreement"
                 >
@@ -2356,15 +2359,17 @@ export default function AgreementsPage() {
                     backgroundColor: '#3b82f6',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
+                    padding: isMobile ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500'
+                    fontSize: isMobile ? '13px' : '16px',
+                    fontWeight: '500',
+                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   title="Open client view in new tab"
                 >
-                  Preview Client View
+                  {isMobile ? 'Preview' : 'Preview Client View'}
                 </button>
                 <button
                   onClick={() => {
@@ -2377,15 +2382,17 @@ export default function AgreementsPage() {
                     backgroundColor: '#059669',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
+                    padding: isMobile ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500'
+                    fontSize: isMobile ? '13px' : '16px',
+                    fontWeight: '500',
+                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   title="View attendant page (event details for staff)"
                 >
-                  👥 Attendant View
+                  {isMobile ? '👥 Attendant' : '👥 Attendant View'}
                 </button>
                 <button
                   onClick={() => {
@@ -2401,16 +2408,18 @@ export default function AgreementsPage() {
                     backgroundColor: '#10b981',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
+                    padding: isMobile ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500'
+                    fontSize: isMobile ? '13px' : '16px',
+                    fontWeight: '500',
+                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   title="View client portal (admin preview)"
                   disabled={!selectedAgreement?.client?.email}
                 >
-                  🔍 View Client Portal
+                  {isMobile ? '🔍 Portal' : '🔍 View Client Portal'}
                 </button>
                 <button
                   onClick={() => handlePreviewEmail(selectedAgreement)}
@@ -2418,15 +2427,17 @@ export default function AgreementsPage() {
                     backgroundColor: '#8b5cf6',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
+                    padding: isMobile ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500'
+                    fontSize: isMobile ? '13px' : '16px',
+                    fontWeight: '500',
+                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   title="Preview the email that will be sent to the client"
                 >
-                  📧 Preview Email
+                  {isMobile ? '📧 Email' : '📧 Preview Email'}
                 </button>
                 <button
                   onClick={() => handleSendToClient(selectedAgreement)}
@@ -2435,15 +2446,17 @@ export default function AgreementsPage() {
                     backgroundColor: loading ? '#9ca3af' : '#dc2626',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
+                    padding: isMobile ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500'
+                    fontSize: isMobile ? '13px' : '16px',
+                    fontWeight: '500',
+                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: isMobile ? '0' : 'auto'
                   }}
                   title="Send this agreement to the client"
                 >
-                  {loading ? 'Sending...' : 'Send to Client'}
+                  {loading ? 'Sending...' : (isMobile ? 'Send' : 'Send to Client')}
                 </button>
               </div>
             </div>
