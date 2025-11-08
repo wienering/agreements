@@ -1,0 +1,7 @@
+Email,First Name,Last Name,Phone,Event Date,Event Time,Service,Location,Duration,Package,Price,Notes
+john.doe@example.com,John,Doe,555-0101,2024-12-25,10:00,Photography Session,123 Main St,2 hours,Premium Package,500,Special requests
+jane.smith@example.com,Jane,Smith,555-0102,2024-12-26,14:00,Photo Booth Rental,456 Oak Ave,3 hours,Standard Package,350,
+bob.johnson@example.com,Bob,Johnson,555-0103,2024-12-27,18:00,Event Photography,789 Pine Rd,4 hours,Premium Package,750,Outdoor event
+alice.williams@example.com,Alice,Williams,555-0104,2024-12-28,12:00,Photo Booth Rental,321 Elm St,2 hours,Basic Package,250,
+charlie.brown@example.com,Charlie,Brown,555-0105,2024-12-29,16:00,Photography Session,654 Maple Dr,3 hours,Standard Package,400,Indoor venue
+

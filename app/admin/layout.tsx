@@ -35,6 +35,7 @@ export default function AdminLayout({
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊', href: '/admin', tooltip: 'Dashboard overview and statistics' },
     { id: 'clients', label: 'Clients', icon: '👥', href: '/admin/clients', tooltip: 'Manage client information' },
+    { id: 'import-events', label: 'Import Events', icon: '📥', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
     { id: 'templates', label: 'Templates', icon: '📄', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
     { id: 'quotes', label: 'Quotes', icon: '💰', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
     { id: 'agreements', label: 'Agreements', icon: '📝', href: '/admin/agreements', tooltip: 'Manage client agreements' },
