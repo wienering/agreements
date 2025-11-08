@@ -55,6 +55,8 @@ interface WarningData {
 export default function AgreementsPage() {
   const hasFetchedData = useRef(false);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
+  const [filteredAgreements, setFilteredAgreements] = useState<Agreement[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [warningData, setWarningData] = useState<WarningData | null>(null);
@@ -149,6 +151,45 @@ export default function AgreementsPage() {
     fetchWarningData();
     fetchBackdropLinks();
   }, []);
+
+  // Filter agreements based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredAgreements(agreements);
+    } else {
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = agreements.filter(agreement => {
+        // Search in client fields
+        if (
+          agreement.client.firstName.toLowerCase().includes(searchLower) ||
+          agreement.client.lastName.toLowerCase().includes(searchLower) ||
+          agreement.client.email.toLowerCase().includes(searchLower)
+        ) {
+          return true;
+        }
+        // Search in template title
+        if (agreement.template.title.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+        // Search in event fields
+        if (agreement.event) {
+          if (
+            (agreement.event.eventType && agreement.event.eventType.toLowerCase().includes(searchLower)) ||
+            (agreement.event.eventLocation && agreement.event.eventLocation.toLowerCase().includes(searchLower)) ||
+            (agreement.event.eventPackage && agreement.event.eventPackage.toLowerCase().includes(searchLower))
+          ) {
+            return true;
+          }
+        }
+        // Search in status
+        if (agreement.status.toLowerCase().includes(searchLower)) {
+          return true;
+        }
+        return false;
+      });
+      setFilteredAgreements(filtered);
+    }
+  }, [agreements, searchTerm]);
 
   // Handle URL parameters for pre-selecting client, event, or template
   useEffect(() => {
@@ -1138,6 +1179,68 @@ export default function AgreementsPage() {
           </button>
         </div>
 
+        {/* Search Bar */}
+        <div style={{
+          backgroundColor: cardBg,
+          border: `1px solid ${borderColor}`,
+          borderRadius: '8px',
+          padding: '16px',
+          marginBottom: '24px'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            flexDirection: isMobile ? 'column' : 'row'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              flex: 1,
+              width: isMobile ? '100%' : 'auto'
+            }}>
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 20 20" 
+                fill="none" 
+                style={{ color: mutedText }}
+              >
+                <path 
+                  d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16ZM19 19l-4.35-4.35" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search agreements by client name, email, template, event details, or status..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '6px',
+                  backgroundColor: mainBg,
+                  color: textColor,
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = borderColor;
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Create Form */}
         {showCreateForm && (
           <div style={{
@@ -1277,7 +1380,7 @@ export default function AgreementsPage() {
         )}
 
         {/* Agreements List */}
-        {agreements.length === 0 ? (
+        {filteredAgreements.length === 0 ? (
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
@@ -1286,12 +1389,14 @@ export default function AgreementsPage() {
             textAlign: 'center'
           }}>
             <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
-              No agreements found. Create your first agreement to get started.
+              {searchTerm.trim() 
+                ? `No agreements found matching "${searchTerm}".` 
+                : 'No agreements found. Create your first agreement to get started.'}
             </p>
           </div>
         ) : (
           <div style={{ display: 'grid', gap: '16px' }}>
-            {agreements.map(agreement => {
+            {filteredAgreements.map(agreement => {
               const warningType = getAgreementWarningType(agreement);
               const getWarningBorderStyle = () => {
                 if (warningType === 'expiration') {
