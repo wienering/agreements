@@ -321,7 +321,7 @@ export async function POST(request: NextRequest) {
     // Process each row
     const results: Array<{
       row: number;
-      status: 'imported' | 'skipped' | 'error';
+      status: 'imported' | 'updated' | 'skipped' | 'error';
       clientEmail?: string;
       eventDate?: string;
       reason?: string;
@@ -496,7 +496,7 @@ export async function POST(request: NextRequest) {
                 eventPackage: existingEvent.eventPackage,
                 packagePrice: existingEvent.packagePrice?.toString(),
                 notes: existingEvent.notes,
-                eventName: existingEvent.eventName,
+                eventName: (existingEvent as any).eventName || null,
                 client: {
                   id: existingEvent.client.id,
                   email: existingEvent.client.email,
