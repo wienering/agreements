@@ -187,12 +187,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createInvoiceSchema.parse(body);
 
-    // Fetch agreement with client information
+    // Fetch agreement with client, template, and event information
     const agreement = await prisma.agreement.findUnique({
       where: { id: validatedData.agreementId },
       include: {
         client: true,
         template: true,
+        event: true,
       },
     });
 
@@ -211,9 +212,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const totalAmount = agreement.client.packagePrice 
-      ? Number(agreement.client.packagePrice) 
-      : 0;
+    // Use event packagePrice if available, otherwise fall back to client packagePrice
+    const packagePrice = agreement.event?.packagePrice ?? agreement.client.packagePrice;
+    const totalAmount = packagePrice ? Number(packagePrice) : 0;
 
     if (totalAmount <= 0) {
       return NextResponse.json(
@@ -232,9 +233,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Use event eventDate if available, otherwise fall back to client eventDate
+    const eventDate = agreement.event?.eventDate ?? agreement.client.eventDate;
+
     // Calculate invoice details
     const invoiceDetails = calculateInvoiceDetails(
-      agreement.client.eventDate,
+      eventDate ? new Date(eventDate) : null,
       totalAmount,
       validatedData.invoiceType,
       validatedData.customAmount
@@ -243,13 +247,14 @@ export async function POST(request: NextRequest) {
     const clientName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || agreement.client.email;
 
     // Build package description for invoice items
-    const eventPackage = agreement.client.eventPackage || '';
+    // Use event eventPackage if available, otherwise fall back to client eventPackage
+    const eventPackage = agreement.event?.eventPackage ?? agreement.client.eventPackage ?? '';
     const baseDescription = eventPackage 
       ? `Photo Booth Rental ${eventPackage}` 
       : 'Photo Booth Rental';
     
     // Prepare event date for supply date (period) if available
-    const eventDate = agreement.client.eventDate;
+    // Use the eventDate we already extracted above (from event or client)
     const periodDates = eventDate ? {
       start: Math.floor(new Date(eventDate).getTime() / 1000),
       end: Math.floor(new Date(eventDate).getTime() / 1000), // Same day for service date
