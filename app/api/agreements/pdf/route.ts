@@ -43,10 +43,14 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
   const doc = new jsPDF('p', 'mm', 'letter');
   
   // Set up fonts and margins
-  const pageWidth = 210; // A4 width in mm
-  const margin = 25; // Increased left margin
-  const maxWidth = pageWidth - (margin * 2);
-  let yPosition = 25; // Start below top margin
+  const pageWidth = 215.9; // Letter width in mm
+  const pageHeight = 279.4; // Letter height in mm
+  const sideMargin = 30; // Wider side margins
+  const topMargin = 25; // Top margin
+  const bottomMargin = 15; // Smaller bottom margin
+  const maxWidth = pageWidth - (sideMargin * 2);
+  const maxYPosition = pageHeight - bottomMargin; // Maximum y position before new page
+  let yPosition = topMargin; // Start below top margin
 
   // Helper function to add text with word wrapping
   const addText = (text: string, fontSize: number = 10, isBold: boolean = false, align: 'left' | 'center' | 'right' = 'left') => {
@@ -59,17 +63,17 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
     
     const lines = doc.splitTextToSize(text, maxWidth);
     lines.forEach((line: string) => {
-      if (yPosition > 280) { // Start new page if needed
+      if (yPosition > maxYPosition) { // Start new page if needed
         doc.addPage();
-        yPosition = 25; // Reset to top margin
+        yPosition = topMargin; // Reset to top margin
       }
       
       // Calculate x position based on alignment
-      let xPosition = margin;
+      let xPosition = sideMargin;
       if (align === 'center') {
         xPosition = pageWidth / 2;
       } else if (align === 'right') {
-        xPosition = pageWidth - margin;
+        xPosition = pageWidth - sideMargin;
       }
       
       doc.text(line, xPosition, yPosition, { align });
