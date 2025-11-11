@@ -162,6 +162,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               grid-template-columns: 1fr !important;
               display: flex !important;
               flex-direction: column;
+              padding: 32px 24px !important;
             }
             .attendant-right-column {
               position: static !important;
@@ -170,6 +171,36 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             }
             .attendant-left-column {
               order: 1;
+            }
+            .attendant-header {
+              padding: 20px 0 !important;
+            }
+            .attendant-header-content {
+              padding: 0 24px !important;
+            }
+            .attendant-card {
+              padding: 24px !important;
+            }
+            .attendant-card-grid {
+              grid-template-columns: 1fr !important;
+              gap: 20px !important;
+            }
+          }
+          @media (max-width: 768px) {
+            .attendant-main {
+              padding: 24px 16px !important;
+            }
+            .attendant-header {
+              padding: 16px 0 !important;
+            }
+            .attendant-header-content {
+              padding: 0 16px !important;
+            }
+            .attendant-card {
+              padding: 20px !important;
+            }
+            .attendant-footer {
+              padding: 32px 16px 0 16px !important;
             }
           }
           .address-link {
@@ -190,6 +221,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
         >
           {/* Header */}
           <header
+            className="attendant-header"
             style={{
               backgroundColor: '#1e293b',
               borderBottom: '1px solid #334155',
@@ -198,6 +230,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             }}
           >
             <div
+              className="attendant-header-content"
               style={{
                 maxWidth: '1200px',
                 margin: '0 auto',
@@ -267,6 +300,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             {/* Client Information Card - Hidden for whitelist events */}
             {client.firstName && !isWhitelistClient && (
               <div
+                className="attendant-card"
                 style={{
                   backgroundColor: '#1e293b',
                   padding: '32px',
@@ -289,6 +323,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   Client Information
                 </h2>
                 <div
+                  className="attendant-card-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -352,6 +387,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             {/* Event Contact Information Card - Only for whitelist clients */}
             {isWhitelistClient && (
               <div
+                className="attendant-card"
                 style={{
                   backgroundColor: '#1e293b',
                   padding: '32px',
@@ -374,6 +410,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   Event Contact Information
                 </h2>
                 <div
+                  className="attendant-card-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -442,6 +479,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               eventType ||
               backdropLink?.name) && (
               <div
+                className="attendant-card"
                 style={{
                   backgroundColor: '#1e293b',
                   padding: '32px',
@@ -464,6 +502,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   Event Details
                 </h2>
                 <div
+                  className="attendant-card-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -646,6 +685,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               }}
             >
               <div
+                className="attendant-card"
                 style={{
                   backgroundColor: '#1e293b',
                   padding: '32px',
@@ -910,6 +950,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
           {/* Footer */}
           <footer
+            className="attendant-footer"
             style={{
               maxWidth: '1400px',
               margin: '0 auto',
