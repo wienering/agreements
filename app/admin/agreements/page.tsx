@@ -134,15 +134,19 @@ export default function AgreementsPage() {
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
 
-  // Check if device is mobile
+  // Check if device is mobile or tablet
+  const [isTablet, setIsTablet] = useState(false);
+  
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const checkDevice = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width <= 1024); // iPad and similar tablets
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
   // Fetch data on component mount
@@ -2551,11 +2555,13 @@ export default function AgreementsPage() {
               {/* Actions */}
               <div style={{ 
                 display: 'flex', 
-                flexWrap: isMobile ? 'wrap' : 'nowrap',
-                gap: isMobile ? '8px' : '12px', 
+                flexWrap: (isMobile || isTablet) ? 'wrap' : 'nowrap',
+                gap: (isMobile || isTablet) ? '8px' : '12px', 
                 justifyContent: 'center',
                 paddingTop: '16px',
-                borderTop: `1px solid ${borderColor}`
+                borderTop: `1px solid ${borderColor}`,
+                paddingLeft: (isMobile || isTablet) ? '8px' : '0',
+                paddingRight: (isMobile || isTablet) ? '8px' : '0'
               }}>
                 <button
                   onClick={handleSaveAgreement}
@@ -2564,13 +2570,13 @@ export default function AgreementsPage() {
                     backgroundColor: saving ? '#9ca3af' : '#059669',
                     color: 'white',
                     border: 'none',
-                    padding: isMobile ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: isMobile ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
                     fontWeight: '500',
-                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: isMobile ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
                   }}
                   title="Save changes to this agreement"
                 >
@@ -2585,17 +2591,17 @@ export default function AgreementsPage() {
                     backgroundColor: '#3b82f6',
                     color: 'white',
                     border: 'none',
-                    padding: isMobile ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
                     fontWeight: '500',
-                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: isMobile ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
                   }}
                   title="Open client view in new tab"
                 >
-                  {isMobile ? 'Preview' : 'Preview Client View'}
+                  {(isMobile || isTablet) ? 'Preview' : 'Preview Client View'}
                 </button>
                 <button
                   onClick={() => {
@@ -2608,17 +2614,17 @@ export default function AgreementsPage() {
                     backgroundColor: '#059669',
                     color: 'white',
                     border: 'none',
-                    padding: isMobile ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
                     fontWeight: '500',
-                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: isMobile ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
                   }}
                   title="View attendant page (event details for staff)"
                 >
-                  {isMobile ? '👥 Attendant' : '👥 Attendant View'}
+                  {(isMobile || isTablet) ? '👥 Attendant' : '👥 Attendant View'}
                 </button>
                 <button
                   onClick={() => {
@@ -2634,18 +2640,18 @@ export default function AgreementsPage() {
                     backgroundColor: '#10b981',
                     color: 'white',
                     border: 'none',
-                    padding: isMobile ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
                     fontWeight: '500',
-                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: isMobile ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
                   }}
                   title="View client portal (admin preview)"
                   disabled={!selectedAgreement?.client?.email}
                 >
-                  {isMobile ? '🔍 Portal' : '🔍 View Client Portal'}
+                  {(isMobile || isTablet) ? '🔍 Portal' : '🔍 View Client Portal'}
                 </button>
                 <button
                   onClick={() => handlePreviewEmail(selectedAgreement)}
@@ -2653,17 +2659,17 @@ export default function AgreementsPage() {
                     backgroundColor: '#8b5cf6',
                     color: 'white',
                     border: 'none',
-                    padding: isMobile ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: isMobile ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
                     fontWeight: '500',
-                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: isMobile ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
                   }}
                   title="Preview the email that will be sent to the client"
                 >
-                  {isMobile ? '📧 Email' : '📧 Preview Email'}
+                  {(isMobile || isTablet) ? '📧 Email' : '📧 Preview Email'}
                 </button>
                 <button
                   onClick={() => handleSendToClient(selectedAgreement)}
@@ -2672,17 +2678,17 @@ export default function AgreementsPage() {
                     backgroundColor: loading ? '#9ca3af' : '#dc2626',
                     color: 'white',
                     border: 'none',
-                    padding: isMobile ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: isMobile ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
                     fontWeight: '500',
-                    flex: isMobile ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: isMobile ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
+                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
                   }}
                   title="Send this agreement to the client"
                 >
-                  {loading ? 'Sending...' : (isMobile ? 'Send' : 'Send to Client')}
+                  {loading ? 'Sending...' : ((isMobile || isTablet) ? 'Send' : 'Send to Client')}
                 </button>
               </div>
             </div>
