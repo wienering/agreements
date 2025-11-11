@@ -19,6 +19,9 @@ interface Agreement {
   cancellationReason?: string;
   lastEmailedAt?: string;
   emailSendCount: number;
+  viewCount?: number;
+  firstViewedAt?: string;
+  lastViewedAt?: string;
   selectedBackdropName?: string;
   client: {
     id: string;
@@ -57,6 +60,7 @@ export default function AgreementsPage() {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [filteredAgreements, setFilteredAgreements] = useState<Agreement[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [warningData, setWarningData] = useState<WarningData | null>(null);
@@ -153,13 +157,19 @@ export default function AgreementsPage() {
     fetchBackdropLinks();
   }, []);
 
-  // Filter agreements based on search term
+  // Filter agreements based on search term and status
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredAgreements(agreements);
-    } else {
+    let filtered = agreements;
+    
+    // Apply status filter
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(agreement => agreement.status === statusFilter);
+    }
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      const filtered = agreements.filter(agreement => {
+      filtered = filtered.filter(agreement => {
         // Search in client fields
         if (
           agreement.client.firstName.toLowerCase().includes(searchLower) ||
@@ -188,9 +198,10 @@ export default function AgreementsPage() {
         }
         return false;
       });
-      setFilteredAgreements(filtered);
     }
-  }, [agreements, searchTerm]);
+    
+    setFilteredAgreements(filtered);
+  }, [agreements, searchTerm, statusFilter]);
 
   // Handle URL parameters for pre-selecting client, event, or template
   useEffect(() => {
@@ -1258,6 +1269,84 @@ export default function AgreementsPage() {
           </div>
         </div>
 
+        {/* Status Filter Buttons */}
+        <div style={{
+          backgroundColor: cardBg,
+          border: `1px solid ${borderColor}`,
+          borderRadius: '8px',
+          padding: '12px 16px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{ 
+            fontSize: '14px', 
+            fontWeight: '500', 
+            color: textColor,
+            marginRight: '4px'
+          }}>
+            Filter by Status:
+          </span>
+          {['ALL', 'DRAFT', 'LIVE', 'SENT', 'SIGNED', 'COMPLETED', 'CANCELLED'].map((status) => {
+            const isActive = statusFilter === status;
+            const getStatusColor = (s: string) => {
+              switch (s) {
+                case 'DRAFT': return '#dc2626';
+                case 'LIVE': return '#059669';
+                case 'SENT': return '#3b82f6';
+                case 'SIGNED': return '#2563eb';
+                case 'COMPLETED': return '#7c3aed';
+                case 'CANCELLED': return '#dc2626';
+                default: return '#6b7280';
+              }
+            };
+            const getStatusBgColor = (s: string) => {
+              switch (s) {
+                case 'DRAFT': return '#fef2f2';
+                case 'LIVE': return '#f0fdf4';
+                case 'SENT': return '#eff6ff';
+                case 'SIGNED': return '#eff6ff';
+                case 'COMPLETED': return '#faf5ff';
+                case 'CANCELLED': return '#fef2f2';
+                default: return isDark ? '#1e293b' : '#f1f5f9';
+              }
+            };
+            
+            return (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: `1px solid ${isActive ? getStatusColor(status) : borderColor}`,
+                  backgroundColor: isActive ? getStatusBgColor(status) : (isDark ? '#1e293b' : '#f1f5f9'),
+                  color: isActive ? getStatusColor(status) : textColor,
+                  fontSize: '13px',
+                  fontWeight: isActive ? '600' : '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = isDark ? '#334155' : '#e2e8f0';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+                  }
+                }}
+              >
+                {status}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Create Form */}
         {showCreateForm && (
           <div style={{
@@ -1517,6 +1606,9 @@ export default function AgreementsPage() {
                       const daysSinceEmailed = agreement.lastEmailedAt ? 
                         Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) : null;
                       
+                      const viewCount = agreement.viewCount || 0;
+                      const lastViewed = agreement.lastViewedAt ? new Date(agreement.lastViewedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : null;
+                      
                       tooltip.innerHTML = `
                         <div style="font-weight: 600; margin-bottom: 8px; color: ${isDark ? '#f1f5f9' : '#1e293b'}">
                           📊 Engagement Log
@@ -1532,7 +1624,19 @@ export default function AgreementsPage() {
                             <strong>Days Since:</strong> ${daysSinceEmailed} day${daysSinceEmailed && daysSinceEmailed > 1 ? 's' : ''}
                           </div>
                         ` : ''}
-                        <div style="margin-bottom: 4px">
+                        <div style="margin-bottom: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}">
+                          <strong>Viewed by Client:</strong> ${viewCount} time${viewCount !== 1 ? 's' : ''}
+                        </div>
+                        ${lastViewed ? `
+                          <div style="margin-bottom: 4px">
+                            <strong>Last Viewed:</strong> ${lastViewed}
+                          </div>
+                        ` : viewCount === 0 ? `
+                          <div style="margin-bottom: 4px; color: #f59e0b;">
+                            ⚠️ Client has not viewed this agreement
+                          </div>
+                        ` : ''}
+                        <div style="margin-bottom: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid ${isDark ? '#334155' : '#e2e8f0'}">
                           <strong>Status:</strong> ${agreement.status}
                         </div>
                         ${agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3 ? `

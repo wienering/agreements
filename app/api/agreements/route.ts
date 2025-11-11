@@ -13,9 +13,31 @@ export async function GET() {
         template: true,
         event: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' } // Will be sorted by event date on frontend
     });
-    return NextResponse.json(agreements);
+    
+    // Sort by event date (closest upcoming first), then by creation date
+    const sortedAgreements = agreements.sort((a, b) => {
+      const aDate = a.event?.eventDate ? new Date(a.event.eventDate).getTime() : Infinity;
+      const bDate = b.event?.eventDate ? new Date(b.event.eventDate).getTime() : Infinity;
+      
+      // If both have event dates, sort by date (ascending - closest first)
+      if (aDate !== Infinity && bDate !== Infinity) {
+        if (aDate !== bDate) {
+          return aDate - bDate;
+        }
+      } else if (aDate !== Infinity) {
+        // a has date, b doesn't - a comes first
+        return -1;
+      } else if (bDate !== Infinity) {
+        // b has date, a doesn't - b comes first
+        return 1;
+      }
+      // Both are Infinity (no dates) - sort by creation date (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    
+    return NextResponse.json(sortedAgreements);
   } catch (error) {
     console.error('Error fetching agreements:', error);
     return NextResponse.json({ error: 'Failed to fetch agreements' }, { status: 500 });
