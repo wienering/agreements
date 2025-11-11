@@ -27,6 +27,16 @@ interface AgreementData {
   signedAt: string | null;
   signedFromIP: string | null;
   mergedHtml: string | null;
+  event?: {
+    id: string;
+    eventDate?: string;
+    eventType?: string;
+    eventLocation?: string;
+    eventStartTime?: string;
+    eventDuration?: string;
+    eventPackage?: string;
+    packagePrice?: number | string;
+  } | null;
   fields: Array<{
     key: string;
     value: string;
@@ -95,7 +105,8 @@ export default function ClientAgreementPage() {
   };
 
   // Function to process smart fields in HTML content
-  const processSmartFields = (html: string, client: any, agreementId: string) => {
+  // Note: The API already processes the HTML, but we keep this for any client-side processing needs
+  const processSmartFields = (html: string, client: any, agreementId: string, event: any = null) => {
     if (!html || !client) return html;
     
     let processedHtml = html;
@@ -105,16 +116,26 @@ export default function ClientAgreementPage() {
     processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
     processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
     processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
+    
+    // Use event data from event relation if available, otherwise fall back to client fields
+    const eventDate = event?.eventDate || client.eventDate;
+    const eventType = event?.eventType || client.eventType || '';
+    const eventLocation = event?.eventLocation || client.eventLocation || '';
+    const eventStartTime = event?.eventStartTime || client.eventStartTime || '';
+    const eventDuration = event?.eventDuration || client.eventDuration || '';
+    const eventPackage = event?.eventPackage || client.eventPackage || '';
+    const packagePrice = event?.packagePrice || client.packagePrice;
+    
+    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
     processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
     
-    // Replace event fields
-    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
-    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${client.packagePrice}` : '');
+    // Replace event fields - use event relation data if available
+    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
+    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
     
     // Replace agreement fields
     processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
@@ -152,7 +173,8 @@ export default function ClientAgreementPage() {
         setIsEmailVerified(true);
         setShowEmailVerification(false);
         
-        // Process smart fields for the verified agreement
+        // The API already processes the HTML with event data, so we can use it directly
+        // Only reprocess if there are still placeholders (shouldn't happen, but just in case)
         const processedAgreement = {
           ...data.agreement,
           template: {
@@ -160,7 +182,8 @@ export default function ClientAgreementPage() {
             htmlContent: processSmartFields(
               data.agreement.template.htmlContent, 
               data.agreement.client, 
-              data.agreement.id
+              data.agreement.id,
+              data.agreement.event
             )
           }
         };
@@ -323,7 +346,7 @@ export default function ClientAgreementPage() {
         setClientName('');
         setClientEmail('');
         
-        // Process smart fields after signing
+        // Process smart fields after signing (use event data if available)
         const processedAgreement = {
           ...data.agreement,
           template: {
@@ -331,7 +354,8 @@ export default function ClientAgreementPage() {
             htmlContent: processSmartFields(
               data.agreement.template.htmlContent, 
               data.agreement.client, 
-              data.agreement.id
+              data.agreement.id,
+              data.agreement.event
             )
           }
         };
