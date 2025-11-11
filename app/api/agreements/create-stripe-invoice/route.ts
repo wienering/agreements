@@ -5,7 +5,8 @@ import Stripe from 'stripe';
 
 const createInvoiceSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
-  invoiceType: z.enum(['default', 'total-only']).optional().default('default'),
+  invoiceType: z.enum(['default', 'total-only', 'total-minus-deposit', 'custom-amount']).optional().default('default'),
+  customAmount: z.number().positive().optional(),
 });
 
 /**
@@ -13,6 +14,10 @@ const createInvoiceSchema = z.object({
  * Rules:
  * - If invoiceType is 'total-only':
  *   - Single invoice for full amount, due 7 days before event date (or today if no event date)
+ * - If invoiceType is 'total-minus-deposit':
+ *   - Single invoice for total amount minus $100, due 7 days before event date (or today if no event date)
+ * - If invoiceType is 'custom-amount':
+ *   - Single invoice for custom amount, due 7 days before event date (or today if no event date)
  * - If invoiceType is 'default':
  *   - If event date is > 7 days in the future:
  *     - Deposit: $100 due today
@@ -20,7 +25,12 @@ const createInvoiceSchema = z.object({
  *   - If event date is ≤ 7 days in the future:
  *     - Entire amount: due today
  */
-function calculateInvoiceDetails(eventDate: Date | null, totalAmount: number, invoiceType: 'default' | 'total-only' = 'default') {
+function calculateInvoiceDetails(
+  eventDate: Date | null, 
+  totalAmount: number, 
+  invoiceType: 'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount' = 'default',
+  customAmount?: number
+) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -46,6 +56,68 @@ function calculateInvoiceDetails(eventDate: Date | null, totalAmount: number, in
     return {
       depositAmount: 0,
       remainingAmount: totalAmount,
+      depositDueDate: remainingDueDate,
+      remainingDueDate,
+      needsTwoInvoices: false,
+    };
+  }
+
+  // Handle "Total Amount Minus $100 Deposit" invoice type
+  if (invoiceType === 'total-minus-deposit') {
+    const invoiceAmount = Math.max(0, totalAmount - 100); // Deduct $100, but don't go below 0
+    
+    if (!eventDate) {
+      // No event date - due today
+      return {
+        depositAmount: 0,
+        remainingAmount: invoiceAmount,
+        depositDueDate: today,
+        remainingDueDate: today,
+        needsTwoInvoices: false,
+      };
+    }
+
+    // Calculate 7 days before event date
+    const event = new Date(eventDate);
+    event.setHours(0, 0, 0, 0);
+    const remainingDueDate = new Date(event);
+    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
+
+    return {
+      depositAmount: 0,
+      remainingAmount: invoiceAmount,
+      depositDueDate: remainingDueDate,
+      remainingDueDate,
+      needsTwoInvoices: false,
+    };
+  }
+
+  // Handle "Custom Amount" invoice type
+  if (invoiceType === 'custom-amount') {
+    if (customAmount === undefined || customAmount <= 0) {
+      throw new Error('Custom amount is required and must be greater than 0');
+    }
+    
+    if (!eventDate) {
+      // No event date - due today
+      return {
+        depositAmount: 0,
+        remainingAmount: customAmount,
+        depositDueDate: today,
+        remainingDueDate: today,
+        needsTwoInvoices: false,
+      };
+    }
+
+    // Calculate 7 days before event date
+    const event = new Date(eventDate);
+    event.setHours(0, 0, 0, 0);
+    const remainingDueDate = new Date(event);
+    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
+
+    return {
+      depositAmount: 0,
+      remainingAmount: customAmount,
       depositDueDate: remainingDueDate,
       remainingDueDate,
       needsTwoInvoices: false,
@@ -150,11 +222,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate custom amount if invoice type is custom-amount
+    if (validatedData.invoiceType === 'custom-amount') {
+      if (!validatedData.customAmount || validatedData.customAmount <= 0) {
+        return NextResponse.json(
+          { error: 'Custom amount is required and must be greater than 0' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Calculate invoice details
     const invoiceDetails = calculateInvoiceDetails(
       agreement.client.eventDate,
       totalAmount,
-      validatedData.invoiceType
+      validatedData.invoiceType,
+      validatedData.customAmount
     );
 
     const clientName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || agreement.client.email;

@@ -110,7 +110,8 @@ export default function AgreementsPage() {
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [invoiceResult, setInvoiceResult] = useState<any>(null);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
-  const [invoiceType, setInvoiceType] = useState<'default' | 'total-only'>('default');
+  const [invoiceType, setInvoiceType] = useState<'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount'>('default');
+  const [customInvoiceAmount, setCustomInvoiceAmount] = useState<string>('');
   
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
@@ -1011,6 +1012,7 @@ export default function AgreementsPage() {
     setInvoiceResult(null);
     setInvoiceError(null);
     setInvoiceType('default');
+    setCustomInvoiceAmount('');
   };
 
   const handleConfirmCreateInvoice = async () => {
@@ -1021,15 +1023,29 @@ export default function AgreementsPage() {
       setInvoiceError(null);
       setInvoiceResult(null);
 
+      const requestBody: any = {
+        agreementId: invoiceAgreement.id,
+        invoiceType: invoiceType,
+      };
+
+      // Add custom amount if invoice type is custom-amount
+      if (invoiceType === 'custom-amount' && customInvoiceAmount) {
+        const amount = parseFloat(customInvoiceAmount);
+        if (isNaN(amount) || amount <= 0) {
+          setInvoiceError('Please enter a valid custom amount greater than 0');
+          showToast('Please enter a valid custom amount', 'error');
+          setCreatingInvoice(false);
+          return;
+        }
+        requestBody.customAmount = amount;
+      }
+
       const response = await fetch('/api/agreements/create-stripe-invoice', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          agreementId: invoiceAgreement.id,
-          invoiceType: invoiceType,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -1059,6 +1075,7 @@ export default function AgreementsPage() {
     setInvoiceError(null);
     setCreatingInvoice(false);
     setInvoiceType('default');
+    setCustomInvoiceAmount('');
   };
 
   const handleArchiveAgreement = async (agreementId: string) => {
@@ -3482,7 +3499,12 @@ export default function AgreementsPage() {
                     </label>
                     <select
                       value={invoiceType}
-                      onChange={(e) => setInvoiceType(e.target.value as 'default' | 'total-only')}
+                      onChange={(e) => {
+                        setInvoiceType(e.target.value as 'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount');
+                        if (e.target.value !== 'custom-amount') {
+                          setCustomInvoiceAmount('');
+                        }
+                      }}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -3497,8 +3519,55 @@ export default function AgreementsPage() {
                     >
                       <option value="default">Default (Deposit + Remaining)</option>
                       <option value="total-only">Total Amount Only</option>
+                      <option value="total-minus-deposit">Total Amount Minus $100 Deposit</option>
+                      <option value="custom-amount">Custom Amount</option>
                     </select>
                   </div>
+
+                  {invoiceType === 'custom-amount' && (
+                    <div style={{
+                      marginBottom: '24px'
+                    }}>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: isDark ? '#94a3b8' : '#64748b',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        marginBottom: '8px'
+                      }}>
+                        Custom Invoice Amount ($)
+                      </label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={customInvoiceAmount}
+                        onChange={(e) => setCustomInvoiceAmount(e.target.value)}
+                        placeholder="Enter amount (e.g., 650.00)"
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          fontSize: '14px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '6px',
+                          outline: 'none'
+                        }}
+                      />
+                      {invoiceAgreement && (invoiceAgreement.event?.packagePrice || (invoiceAgreement.client as any).packagePrice) && (
+                        <p style={{
+                          margin: '8px 0 0 0',
+                          fontSize: '12px',
+                          color: mutedText
+                        }}>
+                          Total package price: ${Number(invoiceAgreement.event?.packagePrice || (invoiceAgreement.client as any).packagePrice || 0).toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div style={{
                     backgroundColor: '#fffbeb',
@@ -3523,10 +3592,20 @@ export default function AgreementsPage() {
                           <br />
                           • If event date is 7 days or less: Full amount due today
                         </>
-                      ) : (
+                      ) : invoiceType === 'total-only' ? (
                         <>
                           <br />
                           A single invoice will be created for the full amount, due 1 week before the event date.
+                        </>
+                      ) : invoiceType === 'total-minus-deposit' ? (
+                        <>
+                          <br />
+                          A single invoice will be created for the total amount minus $100 (assuming deposit was paid outside of Stripe), due 1 week before the event date.
+                        </>
+                      ) : (
+                        <>
+                          <br />
+                          A single invoice will be created for the custom amount you specify, due 1 week before the event date.
                         </>
                       )}
                     </p>
@@ -3554,14 +3633,14 @@ export default function AgreementsPage() {
                     </button>
                     <button
                       onClick={handleConfirmCreateInvoice}
-                      disabled={!invoiceAgreement.client.email}
+                      disabled={!invoiceAgreement.client.email || (invoiceType === 'custom-amount' && !customInvoiceAmount)}
                       style={{
-                        backgroundColor: !invoiceAgreement.client.email ? '#9ca3af' : '#8b5cf6',
+                        backgroundColor: (!invoiceAgreement.client.email || (invoiceType === 'custom-amount' && !customInvoiceAmount)) ? '#9ca3af' : '#8b5cf6',
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
                         borderRadius: '4px',
-                        cursor: !invoiceAgreement.client.email ? 'not-allowed' : 'pointer',
+                        cursor: (!invoiceAgreement.client.email || (invoiceType === 'custom-amount' && !customInvoiceAmount)) ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         fontWeight: '500'
                       }}
