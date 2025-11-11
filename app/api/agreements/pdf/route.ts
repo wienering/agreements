@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { z } from 'zod';
 
 // Generate PDF using jsPDF (serverless-friendly)
-const generatePDF = async (htmlContent: string, agreement: any) => {
+const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolean = false) => {
   // Convert HTML to plain text with proper formatting
   const convertHtmlToText = (html: string) => {
     return html
@@ -83,6 +83,16 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
   addText('Photobooth Guys - Service Agreement', 14, true, 'center');
   yPosition += 10;
 
+  // Add unsigned notice if agreement is not signed
+  if (!isSigned) {
+    addText('⚠️ UNSIGNED DRAFT VERSION ⚠️', 14, true, 'center');
+    yPosition += 3;
+    addText('This document is an unsigned draft and is NOT legally binding.', 10, false, 'center');
+    yPosition += 3;
+    addText('This version is provided for review purposes only. The agreement becomes legally binding only after it has been digitally signed by all parties.', 9, false, 'center');
+    yPosition += 10;
+  }
+
   // Client Information
   addText('CLIENT INFORMATION:', 12, true);
   yPosition += 3;
@@ -117,20 +127,31 @@ const generatePDF = async (htmlContent: string, agreement: any) => {
   });
   yPosition += 10;
 
-  // Digital Signature
-  addText('DIGITAL SIGNATURE:', 12, true);
-  yPosition += 3;
-  addText('This agreement has been digitally signed by:');
-  addText(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
-  addText(`Email: ${agreement.client.email}`);
-  addText(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`);
-  addText(`IP Address: ${agreement.signedFromIP || 'N/A'}`);
-  addText(`Agreement ID: ${agreement.id}`);
-  addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
-  yPosition += 8;
+  // Digital Signature section (only for signed agreements)
+  if (isSigned) {
+    addText('DIGITAL SIGNATURE:', 12, true);
+    yPosition += 3;
+    addText('This agreement has been digitally signed by:');
+    addText(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
+    addText(`Email: ${agreement.client.email}`);
+    addText(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`);
+    addText(`IP Address: ${agreement.signedFromIP || 'N/A'}`);
+    addText(`Agreement ID: ${agreement.id}`);
+    addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
+    yPosition += 8;
+  } else {
+    // For unsigned agreements, just show agreement ID and generation date
+    addText(`Agreement ID: ${agreement.id}`, 10, false);
+    addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`, 10, false);
+    yPosition += 8;
+  }
 
   // Footer
-  addText('This document is legally binding and represents the complete agreement between the parties.', 8, false, 'center');
+  if (isSigned) {
+    addText('This document is legally binding and represents the complete agreement between the parties.', 8, false, 'center');
+  } else {
+    addText('This is an unsigned draft version and is NOT legally binding.', 8, false, 'center');
+  }
   addText('Photobooth Guys', 8, false, 'center');
   addText('Contact: info@photoboothguys.ca', 8, false, 'center');
 
@@ -147,26 +168,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = pdfRequestSchema.parse(body);
 
-    // Find the agreement by token
+    // Find the agreement by token (allow both signed and unsigned)
     const agreement = await prisma.agreement.findFirst({
       where: {
         uniqueToken: validatedData.token,
-        status: 'SIGNED' // Only allow PDF generation for signed agreements
+        OR: [
+          { status: 'SIGNED' },
+          { expiresAt: null },
+          { expiresAt: { gte: new Date() } }
+        ]
       },
       include: {
         client: true,
-        template: true
+        template: true,
+        event: true
       }
     });
 
     if (!agreement) {
       return NextResponse.json({ 
-        error: 'Signed agreement not found or has expired' 
+        error: 'Agreement not found or has expired' 
       }, { status: 404 });
     }
 
+    const isSigned = agreement.status === 'SIGNED';
+
     // Process smart fields in the HTML content
-    const processHtmlContent = (html: string, client: any, agreementId: string) => {
+    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
       let processedHtml = html;
       
       // Replace client fields
@@ -174,15 +202,26 @@ export async function POST(request: NextRequest) {
       processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
       processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
       processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
+      
+      // Use event relation if available, otherwise fall back to client fields
+      const eventDate = event?.eventDate || client.eventDate;
+      const eventType = event?.eventType || client.eventType;
+      const eventLocation = event?.eventLocation || client.eventLocation;
+      const eventStartTime = event?.eventStartTime || client.eventStartTime;
+      const eventDuration = event?.eventDuration || client.eventDuration;
+      const eventPackage = event?.eventPackage || client.eventPackage;
+      const packagePrice = event?.packagePrice || client.packagePrice;
+      
+      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
       
       // Replace event fields
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
+      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType || '');
+      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation || '');
+      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime || '');
+      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration || '');
+      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage || '');
+      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${packagePrice}` : '');
       
       // Replace agreement fields
       processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
@@ -199,11 +238,11 @@ export async function POST(request: NextRequest) {
       processedHtml = agreement.mergedHtml;
     } else {
       // Process the template in real-time for unsigned agreements
-      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
     }
 
     // Generate PDF using jsPDF (serverless-friendly)
-    const pdfBuffer = await generatePDF(processedHtml, agreement);
+    const pdfBuffer = await generatePDF(processedHtml, agreement, isSigned);
 
     // Return PDF as response
     return new NextResponse(pdfBuffer as any, {

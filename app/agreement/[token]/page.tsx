@@ -1447,45 +1447,86 @@ export default function ClientAgreementPage() {
               </a>
             </>
           ) : (
-            <button
-              ref={signButtonRef}
-              onClick={handleSignAgreement}
-              disabled={isSigning}
-              style={{
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                padding: '20px 40px',
-                borderRadius: '8px',
-                cursor: isSigning ? 'not-allowed' : 'pointer',
-                fontSize: '18px',
-                fontWeight: '700',
-                opacity: isSigning ? 0.7 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                boxShadow: '0 6px 12px rgba(220, 38, 38, 0.3)',
-                transition: 'all 0.2s ease',
-                minWidth: '220px',
-                justifyContent: 'center'
-              }}
-              onMouseEnter={(e) => {
-                if (!isSigning) {
-                  e.currentTarget.style.backgroundColor = '#b91c1c';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(220, 38, 38, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSigning) {
-                  e.currentTarget.style.backgroundColor = '#dc2626';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(220, 38, 38, 0.3)';
-                }
-              }}
-            >
-              {isSigning ? '⏳' : '✍️'} {isSigning ? 'Signing...' : 'Sign Agreement'}
-            </button>
+            <>
+              <button
+                ref={signButtonRef}
+                onClick={handleSignAgreement}
+                disabled={isSigning}
+                style={{
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  padding: '20px 40px',
+                  borderRadius: '8px',
+                  cursor: isSigning ? 'not-allowed' : 'pointer',
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  opacity: isSigning ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  boxShadow: '0 6px 12px rgba(220, 38, 38, 0.3)',
+                  transition: 'all 0.2s ease',
+                  minWidth: '220px',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSigning) {
+                    e.currentTarget.style.backgroundColor = '#b91c1c';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(220, 38, 38, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSigning) {
+                    e.currentTarget.style.backgroundColor = '#dc2626';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(220, 38, 38, 0.3)';
+                  }
+                }}
+              >
+                {isSigning ? '⏳' : '✍️'} {isSigning ? 'Signing...' : 'Sign Agreement'}
+              </button>
+              
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                style={{
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px 32px',
+                  borderRadius: '8px',
+                  cursor: isDownloading ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  opacity: isDownloading ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  boxShadow: '0 4px 6px rgba(107, 114, 128, 0.3)',
+                  transition: 'all 0.2s ease',
+                  minWidth: '220px',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isDownloading) {
+                    e.currentTarget.style.backgroundColor = '#4b5563';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(107, 114, 128, 0.4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDownloading) {
+                    e.currentTarget.style.backgroundColor = '#6b7280';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(107, 114, 128, 0.3)';
+                  }
+                }}
+              >
+                {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF (Unsigned)'}
+              </button>
+            </>
           )}
         </div>
 
