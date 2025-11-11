@@ -85,7 +85,7 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
 
   // Add unsigned notice if agreement is not signed
   if (!isSigned) {
-    addText('⚠️ UNSIGNED DRAFT VERSION ⚠️', 14, true, 'center');
+    addText('UNSIGNED DRAFT VERSION', 14, true, 'center');
     yPosition += 3;
     addText('This document is an unsigned draft and is NOT legally binding.', 10, false, 'center');
     yPosition += 3;
@@ -100,16 +100,6 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
   addText(`Email: ${agreement.client.email}`);
   addText(`Phone: ${agreement.client.phone || 'Not provided'}`);
   addText(`Event Date: ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString() : 'Not specified'}`);
-  yPosition += 8;
-
-  // Event Details
-  addText('EVENT DETAILS:', 12, true);
-  yPosition += 3;
-  addText(`Event Type: ${agreement.client.eventType || 'Not specified'}`);
-  addText(`Location: ${agreement.client.eventLocation || 'Not specified'}`);
-  addText(`Start Time: ${agreement.client.eventStartTime || 'Not specified'}`);
-  addText(`Duration: ${agreement.client.eventDuration || 'Not specified'}`);
-  addText(`Package: ${agreement.client.eventPackage || 'Not specified'}`);
   yPosition += 8;
 
   // Agreement Content
