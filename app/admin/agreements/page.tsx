@@ -3590,6 +3590,29 @@ export default function AgreementsPage() {
                           {invoiceAgreement.template.title}
                         </p>
                       </div>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: isDark ? '#94a3b8' : '#64748b',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginBottom: '4px'
+                        }}>
+                          Invoice Amount
+                        </label>
+                        <p style={{
+                          margin: '0',
+                          fontSize: '14px',
+                          color: textColor,
+                          fontWeight: '500'
+                        }}>
+                          {invoiceAgreement.event?.packagePrice || (invoiceAgreement.client as any).packagePrice 
+                            ? `$${Number(invoiceAgreement.event?.packagePrice || (invoiceAgreement.client as any).packagePrice || 0).toFixed(2)}`
+                            : 'Not set'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
