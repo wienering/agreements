@@ -161,16 +161,22 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             .attendant-main {
               grid-template-columns: 1fr !important;
               display: flex !important;
-              flex-direction: column;
+              flex-direction: column !important;
               padding: 32px 24px !important;
+              gap: 24px !important;
+              max-width: 100% !important;
             }
             .attendant-right-column {
               position: static !important;
-              order: -1;
-              margin-bottom: 24px;
+              order: -1 !important;
+              margin-bottom: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
             }
             .attendant-left-column {
-              order: 1;
+              order: 1 !important;
+              width: 100% !important;
+              max-width: 100% !important;
             }
             .attendant-header {
               padding: 20px 0 !important;
@@ -180,10 +186,31 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             }
             .attendant-card {
               padding: 24px !important;
+              width: 100% !important;
+              max-width: 100% !important;
             }
             .attendant-card-grid {
               grid-template-columns: 1fr !important;
               gap: 20px !important;
+            }
+          }
+          @media (max-width: 1000px) {
+            .attendant-main {
+              padding: 28px 20px !important;
+            }
+            .attendant-header-content {
+              padding: 0 20px !important;
+            }
+            .attendant-card {
+              padding: 24px !important;
+            }
+          }
+          @media (max-width: 980px) {
+            .attendant-main {
+              padding: 24px 20px !important;
+            }
+            .attendant-header-content {
+              padding: 0 20px !important;
             }
           }
           @media (max-width: 768px) {
