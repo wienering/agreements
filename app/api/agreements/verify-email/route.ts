@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       include: {
         client: true,
         template: true,
+        event: true,
         fields: true
       }
     });
@@ -29,10 +30,62 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+    // Process smart fields in the HTML content
+    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
+      let processedHtml = html;
+      
+      // Extract address and notes from event if available, otherwise use client data
+      const address = event ? (event.eventLocation ?? '') : (client.address || '');
+      const notes = event ? (event.notes ?? '') : (client.notes || '');
+      
+      // Replace client fields
+      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
+      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
+      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
+      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
+      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
+      
+      // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
+      const eventDate = event ? event.eventDate : client.eventDate;
+      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
+      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
+      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
+      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
+      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
+      const packagePrice = event ? event.packagePrice : client.packagePrice;
+      
+      // Replace event fields - use event data if available, otherwise client fields
+      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
+      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
+      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
+      
+      // Replace agreement fields
+      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
+      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
+      
+      return processedHtml;
+    };
+
     // Check if email matches
     const emailMatches = agreement.client.email.toLowerCase() === validatedData.email.toLowerCase();
     
     if (emailMatches) {
+      // For signed agreements, use the saved snapshot to prevent changes
+      // For unsigned agreements, process the template in real-time
+      let processedHtml;
+      if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+        // Use the saved snapshot for signed agreements
+        processedHtml = agreement.mergedHtml;
+      } else {
+        // Process the template in real-time for unsigned agreements
+        processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+      }
+      
       // Email matches - allow access
       return NextResponse.json({
         success: true,
@@ -40,11 +93,15 @@ export async function POST(request: NextRequest) {
         agreement: {
           id: agreement.id,
           client: agreement.client,
-          template: agreement.template,
+          template: {
+            ...agreement.template,
+            htmlContent: processedHtml
+          },
           status: agreement.status,
           signedAt: agreement.signedAt,
           signedFromIP: agreement.signedFromIP,
           mergedHtml: agreement.mergedHtml,
+          event: agreement.event,
           fields: agreement.fields
         }
       });
