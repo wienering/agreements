@@ -116,6 +116,7 @@ export default function AgreementsPage() {
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [invoiceType, setInvoiceType] = useState<'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount'>('default');
   const [customInvoiceAmount, setCustomInvoiceAmount] = useState<string>('');
+  const [disableOnlinePayment, setDisableOnlinePayment] = useState<boolean>(false);
   
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
@@ -1028,6 +1029,7 @@ export default function AgreementsPage() {
     setInvoiceError(null);
     setInvoiceType('default');
     setCustomInvoiceAmount('');
+    setDisableOnlinePayment(false);
   };
 
   const handleConfirmCreateInvoice = async () => {
@@ -1041,6 +1043,7 @@ export default function AgreementsPage() {
       const requestBody: any = {
         agreementId: invoiceAgreement.id,
         invoiceType: invoiceType,
+        disableOnlinePayment: disableOnlinePayment,
       };
 
       // Add custom amount if invoice type is custom-amount
@@ -1091,6 +1094,7 @@ export default function AgreementsPage() {
     setCreatingInvoice(false);
     setInvoiceType('default');
     setCustomInvoiceAmount('');
+    setDisableOnlinePayment(false);
   };
 
   const handleArchiveAgreement = async (agreementId: string) => {
@@ -3661,6 +3665,42 @@ export default function AgreementsPage() {
                       <option value="total-minus-deposit">Total Amount Minus $100 Deposit</option>
                       <option value="custom-amount">Custom Amount</option>
                     </select>
+                  </div>
+
+                  <div style={{
+                    marginBottom: '24px'
+                  }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={disableOnlinePayment}
+                        onChange={(e) => setDisableOnlinePayment(e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <span style={{
+                        fontSize: '14px',
+                        color: textColor,
+                        fontWeight: '500'
+                      }}>
+                        Disable online payment (invoice will be view-only)
+                      </span>
+                    </label>
+                    <p style={{
+                      margin: '8px 0 0 0',
+                      fontSize: '12px',
+                      color: mutedText
+                    }}>
+                      When enabled, clients will receive the invoice but won't be able to pay online. You can send payment instructions separately.
+                    </p>
                   </div>
 
                   {invoiceType === 'custom-amount' && (

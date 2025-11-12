@@ -7,6 +7,7 @@ const createInvoiceSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
   invoiceType: z.enum(['default', 'total-only', 'total-minus-deposit', 'custom-amount']).optional().default('default'),
   customAmount: z.number().positive().optional(),
+  disableOnlinePayment: z.boolean().optional().default(false),
 });
 
 /**
@@ -306,6 +307,9 @@ export async function POST(request: NextRequest) {
         due_date: Math.floor(today.getTime() / 1000), // Unix timestamp
         description: `Deposit for ${clientName}`,
         footer: thankYouMemo,
+        payment_settings: validatedData.disableOnlinePayment ? {
+          payment_method_types: [], // Disable all payment methods
+        } : undefined,
         metadata: {
           agreementId: agreement.id,
           invoiceType: 'deposit',
@@ -355,6 +359,9 @@ export async function POST(request: NextRequest) {
           ? `Remaining balance for ${clientName}`
           : `Invoice for ${clientName}`,
         footer: thankYouMemo,
+        payment_settings: validatedData.disableOnlinePayment ? {
+          payment_method_types: [], // Disable all payment methods
+        } : undefined,
         metadata: {
           agreementId: agreement.id,
           invoiceType: invoiceDetails.needsTwoInvoices ? 'remaining' : 'full',
