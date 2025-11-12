@@ -2555,13 +2555,13 @@ export default function AgreementsPage() {
               {/* Actions */}
               <div style={{ 
                 display: 'flex', 
-                flexWrap: (isMobile || isTablet) ? 'wrap' : 'nowrap',
-                gap: (isMobile || isTablet) ? '8px' : '12px', 
+                flexWrap: 'wrap',
+                gap: (isMobile || isTablet) ? '8px' : '10px', 
                 justifyContent: 'center',
                 paddingTop: '16px',
                 borderTop: `1px solid ${borderColor}`,
-                paddingLeft: (isMobile || isTablet) ? '8px' : '0',
-                paddingRight: (isMobile || isTablet) ? '8px' : '0'
+                paddingLeft: (isMobile || isTablet) ? '8px' : '4px',
+                paddingRight: (isMobile || isTablet) ? '8px' : '4px'
               }}>
                 <button
                   onClick={handleSaveAgreement}
@@ -2570,13 +2570,14 @@ export default function AgreementsPage() {
                     backgroundColor: saving ? '#9ca3af' : '#059669',
                     color: 'white',
                     border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
                     borderRadius: '6px',
                     cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
                     fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                    whiteSpace: 'nowrap'
                   }}
                   title="Save changes to this agreement"
                 >
@@ -2591,13 +2592,14 @@ export default function AgreementsPage() {
                     backgroundColor: '#3b82f6',
                     color: 'white',
                     border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
                     fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                    whiteSpace: 'nowrap'
                   }}
                   title="Open client view in new tab"
                 >
@@ -2614,13 +2616,14 @@ export default function AgreementsPage() {
                     backgroundColor: '#059669',
                     color: 'white',
                     border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
                     fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                    whiteSpace: 'nowrap'
                   }}
                   title="View attendant page (event details for staff)"
                 >
@@ -2640,13 +2643,14 @@ export default function AgreementsPage() {
                     backgroundColor: '#10b981',
                     color: 'white',
                     border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
                     fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                    whiteSpace: 'nowrap'
                   }}
                   title="View client portal (admin preview)"
                   disabled={!selectedAgreement?.client?.email}
@@ -2659,13 +2663,14 @@ export default function AgreementsPage() {
                     backgroundColor: '#8b5cf6',
                     color: 'white',
                     border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
                     fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                    whiteSpace: 'nowrap'
                   }}
                   title="Preview the email that will be sent to the client"
                 >
@@ -2678,13 +2683,14 @@ export default function AgreementsPage() {
                     backgroundColor: loading ? '#9ca3af' : '#dc2626',
                     color: 'white',
                     border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '12px 24px',
+                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
                     borderRadius: '6px',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '16px',
+                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
                     fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : 'none',
-                    minWidth: (isMobile || isTablet) ? '0' : 'auto'
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                    whiteSpace: 'nowrap'
                   }}
                   title="Send this agreement to the client"
                 >
