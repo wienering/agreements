@@ -328,11 +328,8 @@ export async function POST(request: NextRequest) {
       // Finalize the invoice
       const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
       
-      // Only send the invoice via Stripe if online payment is enabled
-      // When disabled, we don't send it so the client doesn't get the payment button
-      if (!validatedData.disableOnlinePayment) {
-        await stripe.invoices.sendInvoice(finalizedInvoice.id);
-      }
+      // Send the invoice
+      await stripe.invoices.sendInvoice(finalizedInvoice.id);
 
       invoiceResults.push({
         type: 'deposit',
@@ -385,11 +382,8 @@ export async function POST(request: NextRequest) {
       // Finalize the invoice
       const finalizedInvoice = await stripe.invoices.finalizeInvoice(remainingInvoice.id);
       
-      // Only send the invoice via Stripe if online payment is enabled
-      // When disabled, we don't send it so the client doesn't get the payment button
-      if (!validatedData.disableOnlinePayment) {
-        await stripe.invoices.sendInvoice(finalizedInvoice.id);
-      }
+      // Send the invoice
+      await stripe.invoices.sendInvoice(finalizedInvoice.id);
 
       invoiceResults.push({
         type: invoiceDetails.needsTwoInvoices ? 'remaining' : 'full',

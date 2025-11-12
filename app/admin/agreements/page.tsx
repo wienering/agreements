@@ -3699,7 +3699,7 @@ export default function AgreementsPage() {
                       fontSize: '12px',
                       color: mutedText
                     }}>
-                      When enabled, the invoice will be created but NOT automatically emailed by Stripe (to prevent the payment button from appearing). You can download the PDF and send it manually with your payment instructions.
+                      When enabled, clients will receive the invoice but won&apos;t be able to pay online. You can send payment instructions separately.
                     </p>
                   </div>
 
