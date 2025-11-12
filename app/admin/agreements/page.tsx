@@ -3699,7 +3699,7 @@ export default function AgreementsPage() {
                       fontSize: '12px',
                       color: mutedText
                     }}>
-                      When enabled, clients will receive the invoice but won't be able to pay online. You can send payment instructions separately.
+                      When enabled, clients will receive the invoice but won&apos;t be able to pay online. You can send payment instructions separately.
                     </p>
                   </div>
 
