@@ -23,6 +23,7 @@ interface Agreement {
   firstViewedAt?: string;
   lastViewedAt?: string;
   selectedBackdropName?: string;
+  paymentStatus?: string;
   client: {
     id: string;
     firstName: string;
@@ -117,6 +118,9 @@ export default function AgreementsPage() {
   const [invoiceType, setInvoiceType] = useState<'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount'>('default');
   const [customInvoiceAmount, setCustomInvoiceAmount] = useState<string>('');
   const [disableOnlinePayment, setDisableOnlinePayment] = useState<boolean>(false);
+  
+  // Attendant view modal state
+  const [showAttendantModal, setShowAttendantModal] = useState(false);
   
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
@@ -333,6 +337,42 @@ export default function AgreementsPage() {
     
     const warning = warningData.warnings.find(w => w.id === agreement.id);
     return warning?.warningType || null;
+  };
+
+  // Get payment status styling
+  const getPaymentStatusStyle = (paymentStatus?: string) => {
+    if (!paymentStatus) {
+      return {
+        color: mutedText,
+        backgroundColor: isDark ? '#1e293b' : '#f1f5f9'
+      };
+    }
+    
+    const statusLower = paymentStatus.toLowerCase();
+    if (statusLower.includes('paid') && !statusLower.includes('deposit')) {
+      return {
+        color: '#059669',
+        backgroundColor: '#f0fdf4',
+        border: '1px solid #bbf7d0'
+      };
+    } else if (statusLower.includes('deposit')) {
+      return {
+        color: '#d97706',
+        backgroundColor: '#fffbeb',
+        border: '1px solid #fde68a'
+      };
+    } else if (statusLower.includes('not paid') || statusLower.includes('unpaid')) {
+      return {
+        color: '#dc2626',
+        backgroundColor: '#fef2f2',
+        border: '1px solid #fecaca'
+      };
+    }
+    
+    return {
+      color: mutedText,
+      backgroundColor: isDark ? '#1e293b' : '#f1f5f9'
+    };
   };
 
   // Extract attendant ID from backdrop link URL
@@ -1777,6 +1817,20 @@ export default function AgreementsPage() {
                         Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                       </span>
                     )}
+                    {agreement.paymentStatus && (
+                      <span style={{ 
+                        fontSize: '12px', 
+                        ...getPaymentStatusStyle(agreement.paymentStatus),
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        alignSelf: isMobile ? 'flex-start' : 'auto',
+                        fontWeight: '500'
+                      }}
+                      title="Payment status"
+                      >
+                        💳 {agreement.paymentStatus}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div style={{ 
@@ -2612,8 +2666,7 @@ export default function AgreementsPage() {
                 <button
                   onClick={() => {
                     if (selectedAgreement?.id) {
-                      const attendantLink = `${window.location.origin}/attendant/${selectedAgreement.id}`;
-                      window.open(attendantLink, '_blank');
+                      setShowAttendantModal(true);
                     }
                   }}
                   style={{
@@ -4111,6 +4164,125 @@ export default function AgreementsPage() {
                   }}
                 >
                   Send Email
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Attendant View Modal */}
+        {showAttendantModal && selectedAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setShowAttendantModal(false)}
+          >
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ 
+                margin: '0 0 16px 0', 
+                fontSize: '18px', 
+                color: textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                👥 Attendant View Options
+              </h3>
+              <p style={{ 
+                margin: '0 0 20px 0', 
+                color: mutedText,
+                fontSize: '14px'
+              }}>
+                Choose an action for the attendant view page
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <button
+                  onClick={() => {
+                    if (selectedAgreement?.id) {
+                      const attendantLink = `${window.location.origin}/attendant/${selectedAgreement.id}`;
+                      navigator.clipboard.writeText(attendantLink).then(() => {
+                        showToast('Link copied to clipboard!', 'success');
+                        setShowAttendantModal(false);
+                      }).catch(() => {
+                        showToast('Failed to copy link', 'error');
+                      });
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  📋 Copy Link
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedAgreement?.id) {
+                      const attendantLink = `${window.location.origin}/attendant/${selectedAgreement.id}`;
+                      window.open(attendantLink, '_blank');
+                      setShowAttendantModal(false);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  👁️ View Page
+                </button>
+                <button
+                  onClick={() => setShowAttendantModal(false)}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  Cancel
                 </button>
               </div>
             </div>

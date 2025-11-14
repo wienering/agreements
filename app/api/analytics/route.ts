@@ -273,44 +273,95 @@ export async function GET(request: NextRequest) {
       ? Math.round(((currentPeriodClients - previousPeriodClients) / previousPeriodClients) * 100)
       : currentPeriodClients > 0 ? 100 : 0;
 
-    // Get upcoming events (clients with eventDate in the future)
+    // Get upcoming events from agreements with DRAFT, LIVE, or SIGNED status
     const now = new Date();
-    const upcomingClients = await prisma.client.findMany({
+    const upcomingAgreements = await prisma.agreement.findMany({
       where: {
-        eventDate: {
-          gte: now
+        status: {
+          in: ['DRAFT', 'LIVE', 'SIGNED']
+        },
+        archived: false,
+        OR: [
+          {
+            event: {
+              eventDate: {
+                gte: now
+              }
+            }
+          },
+          {
+            event: null,
+            client: {
+              eventDate: {
+                gte: now
+              }
+            }
+          }
+        ]
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            eventDate: true,
+            eventStartTime: true,
+            eventType: true,
+            eventLocation: true
+          }
+        },
+        event: {
+          select: {
+            id: true,
+            eventDate: true,
+            eventStartTime: true,
+            eventType: true,
+            eventLocation: true
+          }
         }
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        eventDate: true,
-        eventStartTime: true,
-        eventType: true,
-        eventLocation: true
-      },
-      orderBy: {
-        eventDate: 'asc'
-      },
-      take: 5
+      take: 10
     });
 
-    const upcomingEvents = upcomingClients.map(client => {
-      const eventDate = new Date(client.eventDate!);
-      const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      
-      return {
-        id: client.id,
-        clientName: `${client.firstName} ${client.lastName}`,
-        eventDate: client.eventDate?.toISOString(),
-        eventStartTime: client.eventStartTime,
-        eventType: client.eventType,
-        eventLocation: client.eventLocation,
-        daysUntil
-      };
-    });
+    // Map to upcoming events format, using event.eventDate if available, otherwise client.eventDate
+    const upcomingEvents = upcomingAgreements
+      .map(agreement => {
+        // Use event date if available, otherwise fall back to client event date
+        const eventDate = agreement.event?.eventDate 
+          ? new Date(agreement.event.eventDate)
+          : agreement.client.eventDate 
+            ? new Date(agreement.client.eventDate)
+            : null;
+        
+        if (!eventDate || eventDate < now) {
+          return null; // Filter out past events
+        }
+        
+        const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Use event data if available, otherwise fall back to client data
+        const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
+        const eventType = agreement.event?.eventType || agreement.client.eventType;
+        const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
+        
+        return {
+          id: agreement.id,
+          clientName: `${agreement.client.firstName} ${agreement.client.lastName}`,
+          eventDate: eventDate.toISOString(),
+          eventStartTime,
+          eventType,
+          eventLocation,
+          daysUntil
+        };
+      })
+      .filter((event): event is NonNullable<typeof event> => event !== null)
+      .sort((a, b) => {
+        // Sort by event date ascending (closest first)
+        return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
+      })
+      .slice(0, 5); // Take top 5 closest events
 
     // If days parameter is provided, return simplified overview for admin page with trends
     if (days) {
