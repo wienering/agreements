@@ -171,6 +171,59 @@ export default function AgreementsPage() {
     fetchBackdropLinks();
   }, []);
 
+  // Handle ESC key to close modals
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        // Close modals in order of priority (most specific first)
+        if (showAttendantModal) {
+          setShowAttendantModal(false);
+          setAttendantModalAgreement(null);
+        } else if (showCopyLinkModal) {
+          setShowCopyLinkModal(false);
+          setCopyLinkAgreement(null);
+        } else if (showEmailPreview) {
+          setShowEmailPreview(false);
+          setPreviewAgreement(null);
+        } else if (showInvoiceModal) {
+          setShowInvoiceModal(false);
+          setInvoiceAgreement(null);
+          setInvoiceResult(null);
+          setInvoiceError(null);
+        } else if (showCancelModal) {
+          setShowCancelModal(false);
+          setCancellingAgreement(null);
+          setCancellationStep(1);
+          setCancellationReason('');
+          setAdminName('');
+          setCancellationConfirm('');
+        } else if (editingStatus) {
+          setEditingStatus(false);
+          setEditingStatusAgreementId(null);
+          setNewStatus('');
+        } else if (editingExpiration) {
+          setEditingExpiration(false);
+          setEditingAgreementId(null);
+          setNewExpirationDate('');
+        } else if (selectedAgreement) {
+          setSelectedAgreement(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscKey);
+    return () => window.removeEventListener('keydown', handleEscKey);
+  }, [
+    showAttendantModal,
+    showCopyLinkModal,
+    showEmailPreview,
+    showInvoiceModal,
+    showCancelModal,
+    editingStatus,
+    editingExpiration,
+    selectedAgreement
+  ]);
+
   // Filter agreements based on search term and status
   useEffect(() => {
     let filtered = agreements;
