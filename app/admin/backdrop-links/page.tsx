@@ -20,6 +20,7 @@ export default function BackdropLinksPage() {
   const [editingLink, setEditingLink] = useState<BackdropLink | null>(null);
   const [formData, setFormData] = useState({ name: '', url: '', displayOrder: 0 });
   const [saving, setSaving] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { isDark } = useDarkMode();
   const router = useRouter();
 
@@ -118,6 +119,17 @@ export default function BackdropLinksPage() {
     }
   };
 
+  const copyLink = async (url: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      alert('Failed to copy link to clipboard');
+    }
+  };
+
   const moveLink = async (id: string, direction: 'up' | 'down') => {
     const currentIndex = backdropLinks.findIndex(link => link.id === id);
     if (currentIndex === -1) return;
@@ -152,18 +164,66 @@ export default function BackdropLinksPage() {
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: mainBg,
-      padding: '24px'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @media (max-width: 768px) {
+          .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          .table-container table {
+            min-width: 600px;
+          }
+          .table-container th,
+          .table-container td {
+            padding: 12px 8px !important;
+            font-size: 13px !important;
+          }
+          .header-actions {
+            flex-direction: column !important;
+            gap: 12px !important;
+            align-items: flex-start !important;
+          }
+          .header-actions button {
+            width: 100%;
+          }
+          .action-buttons {
+            gap: 6px !important;
+          }
+          .action-buttons button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .table-container table {
+            min-width: 500px;
+          }
+          .table-container th,
+          .table-container td {
+            padding: 10px 6px !important;
+            font-size: 12px !important;
+          }
+          .action-buttons button {
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+          }
+        }
+      `}} />
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: mainBg,
+        padding: '16px'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ 
+        <div className="header-actions" style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          marginBottom: '32px'
+          marginBottom: '32px',
+          flexWrap: 'wrap',
+          gap: '16px'
         }}>
           <div>
             <button
@@ -224,7 +284,7 @@ export default function BackdropLinksPage() {
         </div>
 
         {/* Backdrop Links List */}
-        <div style={{
+        <div className="table-container" style={{
           backgroundColor: cardBg,
           border: `1px solid ${borderColor}`,
           borderRadius: '8px',
@@ -265,7 +325,7 @@ export default function BackdropLinksPage() {
                     fontSize: '14px',
                     fontWeight: '600',
                     color: mutedText,
-                    width: '50px'
+                    width: '60px'
                   }}>
                     Order
                   </th>
@@ -274,7 +334,8 @@ export default function BackdropLinksPage() {
                     textAlign: 'left', 
                     fontSize: '14px',
                     fontWeight: '600',
-                    color: mutedText
+                    color: mutedText,
+                    minWidth: '100px'
                   }}>
                     Name
                   </th>
@@ -283,7 +344,9 @@ export default function BackdropLinksPage() {
                     textAlign: 'left', 
                     fontSize: '14px',
                     fontWeight: '600',
-                    color: mutedText
+                    color: mutedText,
+                    maxWidth: '200px',
+                    width: '200px'
                   }}>
                     URL
                   </th>
@@ -293,7 +356,8 @@ export default function BackdropLinksPage() {
                     fontSize: '14px',
                     fontWeight: '600',
                     color: mutedText,
-                    width: '200px'
+                    width: '280px',
+                    minWidth: '280px'
                   }}>
                     Actions
                   </th>
@@ -357,34 +421,74 @@ export default function BackdropLinksPage() {
                         {link.name}
                       </div>
                     </td>
-                    <td style={{ padding: '16px' }}>
-                      <a 
-                        href={link.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ 
-                          color: '#3b82f6', 
-                          fontSize: '14px',
-                          textDecoration: 'none'
-                        }}
-                      >
-                        {link.url.length > 50 ? link.url.substring(0, 50) + '...' : link.url}
-                      </a>
+                    <td style={{ padding: '16px', maxWidth: '200px', width: '200px' }}>
+                      <div style={{ 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%'
+                      }}>
+                        <a 
+                          href={link.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ 
+                            color: '#3b82f6', 
+                            fontSize: '14px',
+                            textDecoration: 'none',
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                          title={link.url}
+                        >
+                          {link.url.length > 35 ? link.url.substring(0, 35) + '...' : link.url}
+                        </a>
+                      </div>
                     </td>
                     <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <div className="action-buttons" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => copyLink(link.url, link.id)}
+                          style={{
+                            backgroundColor: copiedId === link.id ? '#10b981' : '#6b7280',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (copiedId !== link.id) {
+                              e.currentTarget.style.backgroundColor = '#4b5563';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (copiedId !== link.id) {
+                              e.currentTarget.style.backgroundColor = '#6b7280';
+                            }
+                          }}
+                        >
+                          {copiedId === link.id ? '✓ Copied' : 'Copy Link'}
+                        </button>
                         <button
                           onClick={() => handleEdit(link)}
                           style={{
                             backgroundColor: '#f59e0b',
                             color: 'white',
                             border: 'none',
-                            padding: '8px 16px',
+                            padding: '8px 12px',
                             borderRadius: '6px',
                             cursor: 'pointer',
-                            fontSize: '14px',
+                            fontSize: '13px',
                             fontWeight: '500',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#d97706';
@@ -401,12 +505,13 @@ export default function BackdropLinksPage() {
                             backgroundColor: '#ef4444',
                             color: 'white',
                             border: 'none',
-                            padding: '8px 16px',
+                            padding: '8px 12px',
                             borderRadius: '6px',
                             cursor: 'pointer',
-                            fontSize: '14px',
+                            fontSize: '13px',
                             fontWeight: '500',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#dc2626';
@@ -592,8 +697,9 @@ export default function BackdropLinksPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
