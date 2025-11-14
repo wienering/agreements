@@ -74,14 +74,14 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     const eventContactName = event?.eventName || client.firstName;
     const eventContactPhone = event?.eventPhone || client.phone;
 
-    // Check if event has passed and is more than 24 hours ago
-    const isEventExpired = (() => {
-      if (!eventDate) return false;
+    // Helper function to calculate event datetime
+    const getEventDateTime = () => {
+      if (!eventDate) return null;
       
       try {
         // Parse event date
         const parsedEventDate = new Date(eventDate);
-        if (isNaN(parsedEventDate.getTime())) return false;
+        if (isNaN(parsedEventDate.getTime())) return null;
         
         // If eventStartTime is provided, try to parse it and add to event date
         let eventDateTime = new Date(parsedEventDate);
@@ -105,17 +105,36 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
           }
         }
         
-        // Calculate 24 hours after event date/time
-        const expirationTime = new Date(eventDateTime);
-        expirationTime.setHours(expirationTime.getHours() + 24);
-        
-        // Check if current time is past expiration
-        return new Date() > expirationTime;
+        return eventDateTime;
       } catch (error) {
-        // If there's an error parsing dates, don't expire (fail open)
-        console.error('Error checking event expiration:', error);
-        return false;
+        console.error('Error parsing event datetime:', error);
+        return null;
       }
+    };
+
+    // Check if event has passed and is more than 24 hours ago
+    const isEventExpired = (() => {
+      const eventDateTime = getEventDateTime();
+      if (!eventDateTime) return false;
+      
+      // Calculate 24 hours after event date/time
+      const expirationTime = new Date(eventDateTime);
+      expirationTime.setHours(expirationTime.getHours() + 24);
+      
+      // Check if current time is past expiration
+      return new Date() > expirationTime;
+    })();
+
+    // Check if event is less than 18 hours away (to show phone number)
+    const isEventWithin18Hours = (() => {
+      const eventDateTime = getEventDateTime();
+      if (!eventDateTime) return false;
+      
+      const now = new Date();
+      const hoursUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      // Show phone if event is within 18 hours (0 to 18 hours)
+      return hoursUntilEvent >= 0 && hoursUntilEvent <= 18;
     })();
 
     // If event has expired (more than 24 hours after), show expired message
@@ -381,7 +400,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       {client.firstName}
                     </p>
                   </div>
-                  {client.phone && (
+                  {client.phone && isEventWithin18Hours && (
                     <div>
                       <p
                         style={{
@@ -468,7 +487,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       {eventContactName}
                     </p>
                   </div>
-                  {eventContactPhone && (
+                  {eventContactPhone && isEventWithin18Hours && (
                     <div>
                       <p
                         style={{
