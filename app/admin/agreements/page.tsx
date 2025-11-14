@@ -121,6 +121,7 @@ export default function AgreementsPage() {
   
   // Attendant view modal state
   const [showAttendantModal, setShowAttendantModal] = useState(false);
+  const [attendantModalAgreement, setAttendantModalAgreement] = useState<Agreement | null>(null);
   
   // Copy link modal state
   const [showCopyLinkModal, setShowCopyLinkModal] = useState(false);
@@ -1921,7 +1922,7 @@ export default function AgreementsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setSelectedAgreement(agreement);
+                      setAttendantModalAgreement(agreement);
                       setShowAttendantModal(true);
                     }}
                     style={{
@@ -2124,7 +2125,7 @@ export default function AgreementsPage() {
         )}
 
         {/* Edit Modal */}
-        {selectedAgreement && (
+        {selectedAgreement && !showAttendantModal && !showCopyLinkModal && (
           <div style={{
             position: 'fixed',
             top: 0,
@@ -4178,7 +4179,7 @@ export default function AgreementsPage() {
         )}
 
         {/* Attendant View Modal */}
-        {showAttendantModal && selectedAgreement && (
+        {showAttendantModal && (attendantModalAgreement || selectedAgreement) && (
           <div style={{
             position: 'fixed',
             top: 0,
@@ -4192,7 +4193,10 @@ export default function AgreementsPage() {
             zIndex: 1000,
             padding: '20px'
           }}
-          onClick={() => setShowAttendantModal(false)}
+          onClick={() => {
+            setShowAttendantModal(false);
+            setAttendantModalAgreement(null);
+          }}
           >
             <div style={{
               backgroundColor: cardBg,
@@ -4229,11 +4233,13 @@ export default function AgreementsPage() {
               }}>
                 <button
                   onClick={() => {
-                    if (selectedAgreement?.id) {
-                      const attendantLink = `${window.location.origin}/attendant/${selectedAgreement.id}`;
+                    const agreement = attendantModalAgreement || selectedAgreement;
+                    if (agreement?.id) {
+                      const attendantLink = `${window.location.origin}/attendant/${agreement.id}`;
                       navigator.clipboard.writeText(attendantLink).then(() => {
                         showToast('Link copied to clipboard!', 'success');
                         setShowAttendantModal(false);
+                        setAttendantModalAgreement(null);
                       }).catch(() => {
                         showToast('Failed to copy link', 'error');
                       });
@@ -4255,10 +4261,12 @@ export default function AgreementsPage() {
                 </button>
                 <button
                   onClick={() => {
-                    if (selectedAgreement?.id) {
-                      const attendantLink = `${window.location.origin}/attendant/${selectedAgreement.id}`;
+                    const agreement = attendantModalAgreement || selectedAgreement;
+                    if (agreement?.id) {
+                      const attendantLink = `${window.location.origin}/attendant/${agreement.id}`;
                       window.open(attendantLink, '_blank');
                       setShowAttendantModal(false);
+                      setAttendantModalAgreement(null);
                     }
                   }}
                   style={{
@@ -4276,7 +4284,10 @@ export default function AgreementsPage() {
                   👁️ View Page
                 </button>
                 <button
-                  onClick={() => setShowAttendantModal(false)}
+                  onClick={() => {
+                    setShowAttendantModal(false);
+                    setAttendantModalAgreement(null);
+                  }}
                   style={{
                     backgroundColor: '#6b7280',
                     color: 'white',
