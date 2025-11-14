@@ -122,6 +122,10 @@ export default function AgreementsPage() {
   // Attendant view modal state
   const [showAttendantModal, setShowAttendantModal] = useState(false);
   
+  // Copy link modal state
+  const [showCopyLinkModal, setShowCopyLinkModal] = useState(false);
+  const [copyLinkAgreement, setCopyLinkAgreement] = useState<Agreement | null>(null);
+  
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
     const date = new Date();
@@ -1942,7 +1946,10 @@ export default function AgreementsPage() {
                     Attendant View
                   </button>
                   <button
-                    onClick={() => handleCopyLink(agreement.uniqueToken)}
+                    onClick={() => {
+                      setCopyLinkAgreement(agreement);
+                      setShowCopyLinkModal(true);
+                    }}
                     style={{
                       backgroundColor: '#3b82f6',
                       color: 'white',
@@ -4270,6 +4277,133 @@ export default function AgreementsPage() {
                 </button>
                 <button
                   onClick={() => setShowAttendantModal(false)}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Copy Link Modal */}
+        {showCopyLinkModal && copyLinkAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => {
+            setShowCopyLinkModal(false);
+            setCopyLinkAgreement(null);
+          }}
+          >
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ 
+                margin: '0 0 16px 0', 
+                fontSize: '18px', 
+                color: textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                🔗 Agreement Link Options
+              </h3>
+              <p style={{ 
+                margin: '0 0 20px 0', 
+                color: mutedText,
+                fontSize: '14px'
+              }}>
+                Choose an action for the agreement link
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <button
+                  onClick={() => {
+                    if (copyLinkAgreement?.uniqueToken) {
+                      const clientLink = `${window.location.origin}/agreement/${copyLinkAgreement.uniqueToken}`;
+                      navigator.clipboard.writeText(clientLink).then(() => {
+                        showToast('Link copied to clipboard!', 'success');
+                        setShowCopyLinkModal(false);
+                        setCopyLinkAgreement(null);
+                      }).catch(() => {
+                        showToast('Failed to copy link', 'error');
+                      });
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  📋 Copy Link
+                </button>
+                <button
+                  onClick={() => {
+                    if (copyLinkAgreement?.uniqueToken) {
+                      const clientLink = `${window.location.origin}/agreement/${copyLinkAgreement.uniqueToken}`;
+                      window.open(clientLink, '_blank');
+                      setShowCopyLinkModal(false);
+                      setCopyLinkAgreement(null);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  👁️ View Page
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCopyLinkModal(false);
+                    setCopyLinkAgreement(null);
+                  }}
                   style={{
                     backgroundColor: '#6b7280',
                     color: 'white',

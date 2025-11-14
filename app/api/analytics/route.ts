@@ -275,6 +275,8 @@ export async function GET(request: NextRequest) {
 
     // Get upcoming events from agreements with DRAFT, LIVE, or SIGNED status
     const now = new Date();
+    // Get more agreements to ensure we have enough events after filtering
+    // We check both event.eventDate and client.eventDate to capture all possible events
     const upcomingAgreements = await prisma.agreement.findMany({
       where: {
         status: {
@@ -282,6 +284,7 @@ export async function GET(request: NextRequest) {
         },
         archived: false,
         OR: [
+          // Agreement has an event with a future date
           {
             event: {
               eventDate: {
@@ -289,8 +292,20 @@ export async function GET(request: NextRequest) {
               }
             }
           },
+          // Agreement has no event, but client has a future event date
           {
             event: null,
+            client: {
+              eventDate: {
+                gte: now
+              }
+            }
+          },
+          // Agreement has an event but event date might be null, check client date
+          {
+            event: {
+              eventDate: null
+            },
             client: {
               eventDate: {
                 gte: now
@@ -322,7 +337,7 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      take: 10
+      take: 100 // Get more agreements to ensure we capture all events
     });
 
     // Map to upcoming events format, using event.eventDate if available, otherwise client.eventDate
@@ -335,8 +350,9 @@ export async function GET(request: NextRequest) {
             ? new Date(agreement.client.eventDate)
             : null;
         
+        // Filter out past events and events without dates
         if (!eventDate || eventDate < now) {
-          return null; // Filter out past events
+          return null;
         }
         
         const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -361,7 +377,7 @@ export async function GET(request: NextRequest) {
         // Sort by event date ascending (closest first)
         return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
       })
-      .slice(0, 5); // Take top 5 closest events
+      .slice(0, 10); // Take top 10 closest events (increased from 5)
 
     // If days parameter is provided, return simplified overview for admin page with trends
     if (days) {
