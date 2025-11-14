@@ -58,6 +58,7 @@ interface WarningData {
 
 export default function AgreementsPage() {
   const hasFetchedData = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [filteredAgreements, setFilteredAgreements] = useState<Agreement[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,6 +170,28 @@ export default function AgreementsPage() {
     fetchTemplates();
     fetchWarningData();
     fetchBackdropLinks();
+  }, []);
+
+  // Handle "/" key to focus search bar
+  useEffect(() => {
+    const handleSlashKey = (event: KeyboardEvent) => {
+      // Only trigger if "/" is pressed and user is not already typing in an input/textarea
+      if (event.key === '/' && searchInputRef.current) {
+        const target = event.target as HTMLElement;
+        const isInputFocused = target.tagName === 'INPUT' || 
+                              target.tagName === 'TEXTAREA' || 
+                              target.isContentEditable;
+        
+        // Don't trigger if user is already typing in an input field
+        if (!isInputFocused) {
+          event.preventDefault();
+          searchInputRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleSlashKey);
+    return () => window.removeEventListener('keydown', handleSlashKey);
   }, []);
 
   // Handle ESC key to close modals
@@ -1350,6 +1373,7 @@ export default function AgreementsPage() {
                 />
               </svg>
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search agreements by client name, email, template, event details, or status..."
                 value={searchTerm}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -70,6 +70,7 @@ interface DashboardData {
 }
 
 export default function PortalDashboard() {
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
@@ -132,6 +133,28 @@ export default function PortalDashboard() {
       fetchDashboardData();
     }
   }, [statusFilter]);
+
+  // Handle "/" key to focus search bar
+  useEffect(() => {
+    const handleSlashKey = (event: KeyboardEvent) => {
+      // Only trigger if "/" is pressed and user is not already typing in an input/textarea
+      if (event.key === '/' && searchInputRef.current) {
+        const target = event.target as HTMLElement;
+        const isInputFocused = target.tagName === 'INPUT' || 
+                              target.tagName === 'TEXTAREA' || 
+                              target.isContentEditable;
+        
+        // Don't trigger if user is already typing in an input field
+        if (!isInputFocused) {
+          event.preventDefault();
+          searchInputRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleSlashKey);
+    return () => window.removeEventListener('keydown', handleSlashKey);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -336,6 +359,7 @@ export default function PortalDashboard() {
             {/* Search */}
             <form onSubmit={handleSearch} className="flex gap-2">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search agreements..."
                 value={searchQuery}

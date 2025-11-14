@@ -47,6 +47,7 @@ interface Client {
 
 export default function ClientsPage() {
   const hasFetchedData = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -104,6 +105,28 @@ export default function ClientsPage() {
     hasFetchedData.current = true;
     
     fetchClients();
+  }, []);
+
+  // Handle "/" key to focus search bar
+  useEffect(() => {
+    const handleSlashKey = (event: KeyboardEvent) => {
+      // Only trigger if "/" is pressed and user is not already typing in an input/textarea
+      if (event.key === '/' && searchInputRef.current) {
+        const target = event.target as HTMLElement;
+        const isInputFocused = target.tagName === 'INPUT' || 
+                              target.tagName === 'TEXTAREA' || 
+                              target.isContentEditable;
+        
+        // Don't trigger if user is already typing in an input field
+        if (!isInputFocused) {
+          event.preventDefault();
+          searchInputRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleSlashKey);
+    return () => window.removeEventListener('keydown', handleSlashKey);
   }, []);
 
   // Filter clients based on search term
@@ -559,6 +582,7 @@ export default function ClientsPage() {
                 />
               </svg>
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search clients by name, email, phone, event details, or notes..."
                 value={searchTerm}
