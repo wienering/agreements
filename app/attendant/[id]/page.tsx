@@ -833,7 +833,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   )}
 
                   {/* Contact Phone / Event Contact Phone */}
-                  {(isWhitelistClient ? eventContactPhone : client.phone) && (
+                  {(isWhitelistClient ? eventContactPhone : client.phone) && isEventWithin18Hours && (
                     <div>
                       <p
                         style={{
