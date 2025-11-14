@@ -1921,8 +1921,8 @@ export default function AgreementsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const attendantLink = `${window.location.origin}/attendant/${agreement.id}`;
-                      window.open(attendantLink, '_blank');
+                      setSelectedAgreement(agreement);
+                      setShowAttendantModal(true);
                     }}
                     style={{
                       backgroundColor: '#10b981',
