@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface Agreement {
@@ -58,18 +58,70 @@ interface AgreementData {
   client: Client;
 }
 
-export default function AgreementDetail() {
+function AgreementDetailContent() {
   const [data, setData] = useState<AgreementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newNote, setNewNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
+  const [isAdminPreview, setIsAdminPreview] = useState(false);
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const agreementId = params.id as string;
+
+  // Check if we're in admin preview mode
+  useEffect(() => {
+    const adminPreview = searchParams.get('adminPreview') === 'true';
+    setIsAdminPreview(adminPreview);
+  }, [searchParams]);
 
   // Fetch agreement data
   const fetchAgreementData = async () => {
+    // Check if we're in admin preview mode from search params
+    const adminPreview = searchParams.get('adminPreview') === 'true';
+    
+    // If in admin preview mode, use admin preview API
+    if (adminPreview) {
+      const email = searchParams.get('email');
+      const clientId = searchParams.get('clientId');
+      
+      if (!email && !clientId) {
+        setError('Email or Client ID is required for admin preview');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams();
+        if (email) {
+          params.append('email', email);
+        } else if (clientId) {
+          params.append('clientId', clientId);
+        }
+        
+        const response = await fetch(`/api/agreements/portal/admin-preview/agreement/${agreementId}?${params.toString()}`);
+
+        if (response.ok) {
+          const agreementData = await response.json();
+          setData(agreementData);
+        } else if (response.status === 401 || response.status === 403) {
+          setError('Admin access required');
+        } else if (response.status === 404) {
+          setError('Agreement not found');
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to load agreement' }));
+          setError(errorData.error || 'Failed to load agreement');
+        }
+      } catch (error) {
+        setError('Network error. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Regular portal flow - requires session token
     const token = localStorage.getItem('portal_session_token');
     if (!token) {
       router.push('/portal/login');
@@ -106,10 +158,14 @@ export default function AgreementDetail() {
     if (agreementId) {
       fetchAgreementData();
     }
-  }, [agreementId, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agreementId, searchParams]);
 
   // Activity tracking for session refresh (throttled to prevent excessive calls)
+  // Only run if not in admin preview mode
   useEffect(() => {
+    if (isAdminPreview) return; // Skip session refresh in admin preview mode
+
     let lastRefresh = 0;
     const REFRESH_INTERVAL = 60000; // Only refresh once per minute
 
@@ -145,7 +201,7 @@ export default function AgreementDetail() {
         document.removeEventListener(event, handleActivity, true);
       });
     };
-  }, [router]);
+  }, [router, isAdminPreview]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -178,8 +234,20 @@ export default function AgreementDetail() {
     e.preventDefault();
     if (!newNote.trim()) return;
 
+    // Don't allow adding notes in admin preview mode
+    if (isAdminPreview) {
+      setError('Adding notes is not available in admin preview mode');
+      return;
+    }
+
     setAddingNote(true);
     const token = localStorage.getItem('portal_session_token');
+
+    if (!token) {
+      setError('Session token required');
+      setAddingNote(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/agreements/portal/add-note', {
@@ -209,8 +277,18 @@ export default function AgreementDetail() {
   };
 
   const handleExport = async (format: 'json' | 'csv' | 'pdf') => {
+    // In admin preview mode, export is not available through portal API
+    // Admins should use the admin interface for exports
+    if (isAdminPreview) {
+      setError('Export is not available in admin preview mode. Please use the admin interface.');
+      return;
+    }
+
     const token = localStorage.getItem('portal_session_token');
-    if (!token) return;
+    if (!token) {
+      setError('Session token required');
+      return;
+    }
 
     try {
       // For PDF export, we need to include HTML content
@@ -283,6 +361,26 @@ export default function AgreementDetail() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
+      {/* Admin Preview Banner */}
+      {isAdminPreview && (
+        <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-200">🔍 Admin Preview Mode</h2>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Viewing agreement as admin
+              </p>
+            </div>
+            <Link
+              href={`/portal/admin-preview?${searchParams.get('email') ? `email=${encodeURIComponent(searchParams.get('email')!)}` : `clientId=${encodeURIComponent(searchParams.get('clientId')!)}`}`}
+              className="rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+            >
+              Back to Portal Preview
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -298,12 +396,21 @@ export default function AgreementDetail() {
             <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(agreement.status)}`}>
               {agreement.status}
             </span>
-            <Link
-              href="/portal/dashboard"
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              Back to Dashboard
-            </Link>
+            {isAdminPreview ? (
+              <Link
+                href={`/portal/admin-preview?${searchParams.get('email') ? `email=${encodeURIComponent(searchParams.get('email')!)}` : `clientId=${encodeURIComponent(searchParams.get('clientId')!)}`}`}
+                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                Back to Portal Preview
+              </Link>
+            ) : (
+              <Link
+                href="/portal/dashboard"
+                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                Back to Dashboard
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -642,7 +749,8 @@ export default function AgreementDetail() {
       <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Notes</h2>
         
-        {/* Add Note Form */}
+        {/* Add Note Form - Hidden in admin preview mode */}
+        {!isAdminPreview && (
         <form onSubmit={handleAddNote} className="mb-6">
           <div className="space-y-4">
             <div>
@@ -667,6 +775,7 @@ export default function AgreementDetail() {
             </button>
           </div>
         </form>
+        )}
 
         {/* Notes List */}
         {agreement.notes.length === 0 ? (
@@ -691,5 +800,20 @@ export default function AgreementDetail() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AgreementDetail() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AgreementDetailContent />
+    </Suspense>
   );
 }

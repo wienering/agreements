@@ -408,13 +408,17 @@ function PortalAdminPreviewContent() {
             </div>
           ) : (
             <div className="space-y-4">
-              {data.agreements.map((agreement) => (
+              {data.agreements.map((agreement) => {
+                const email = searchParams.get('email');
+                const clientId = searchParams.get('clientId');
+                const adminPreviewParams = `adminPreview=true&${email ? `email=${encodeURIComponent(email)}` : `clientId=${encodeURIComponent(clientId || data.client.id)}`}`;
+                return (
                 <div
                   key={agreement.id}
                   className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
                 >
                   <Link
-                    href={`/portal/agreement/${agreement.id}`}
+                    href={`/portal/agreement/${agreement.id}?${adminPreviewParams}`}
                     className="block p-6 transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   >
                     <div className="flex items-start justify-between">
@@ -535,7 +539,8 @@ function PortalAdminPreviewContent() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
