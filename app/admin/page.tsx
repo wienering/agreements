@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from 'recharts';
 
 interface DashboardStats {
   totalClients: number;
@@ -77,12 +77,22 @@ interface UpcomingEvent {
   daysUntil: number;
 }
 
+interface WeeklyLoadForecast {
+  weekStart: string;
+  weekEnd: string;
+  weekLabel: string;
+  eventCount: number;
+  totalHours: number;
+}
+
 export default function AdminHome() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [warnings, setWarnings] = useState<WarningsData | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [loadForecast, setLoadForecast] = useState<WeeklyLoadForecast[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingForecast, setLoadingForecast] = useState(true);
   const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'year'>('month');
   const { isDark } = useDarkMode();
   const router = useRouter();
@@ -108,7 +118,23 @@ export default function AdminHome() {
   useEffect(() => {
     fetchStats();
     fetchWarnings();
+    fetchLoadForecast();
   }, [fetchStats]);
+
+  const fetchLoadForecast = async () => {
+    try {
+      setLoadingForecast(true);
+      const response = await fetch('/api/analytics/load-forecast?weeks=12');
+      if (response.ok) {
+        const data = await response.json();
+        setLoadForecast(data.forecast || []);
+      }
+    } catch (error) {
+      console.error('Error fetching load forecast:', error);
+    } finally {
+      setLoadingForecast(false);
+    }
+  };
 
   const fetchWarnings = async () => {
     try {
@@ -806,6 +832,130 @@ export default function AdminHome() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Weekly Load Forecast */}
+        <div style={{
+          backgroundColor: cardBg,
+          borderRadius: '12px',
+          padding: '24px',
+          border: `1px solid ${borderColor}`,
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          marginBottom: '32px'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '24px'
+          }}>
+            <div>
+              <h2 style={{ 
+                margin: '0 0 8px 0', 
+                fontSize: '24px', 
+                fontWeight: '700', 
+                color: textColor 
+              }}>
+                Weekly Load Forecast
+              </h2>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '14px', 
+                color: mutedText 
+              }}>
+                Track upcoming events and booth hours to identify capacity constraints
+              </p>
+            </div>
+          </div>
+
+          {loadingForecast ? (
+            <div style={{ 
+              height: '300px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: mutedText
+            }}>
+              Loading forecast...
+            </div>
+          ) : loadForecast && loadForecast.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={loadForecast}>
+                <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
+                <XAxis 
+                  dataKey="weekLabel" 
+                  stroke={mutedText}
+                  fontSize={11}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  yAxisId="left"
+                  stroke={mutedText}
+                  fontSize={12}
+                  label={{ value: 'Events', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: mutedText } }}
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  stroke={mutedText}
+                  fontSize={12}
+                  label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: mutedText } }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: cardBg,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '6px',
+                    color: textColor
+                  }}
+                  formatter={(value: any, name: string) => {
+                    if (name === 'eventCount') {
+                      return [value, 'Events'];
+                    } else if (name === 'totalHours') {
+                      return [value, 'Hours'];
+                    }
+                    return [value, name];
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  formatter={(value) => {
+                    if (value === 'eventCount') return 'Events';
+                    if (value === 'totalHours') return 'Hours';
+                    return value;
+                  }}
+                />
+                <Bar 
+                  yAxisId="left"
+                  dataKey="eventCount" 
+                  fill="#3b82f6" 
+                  radius={[4, 4, 0, 0]}
+                  name="eventCount"
+                />
+                <Line 
+                  yAxisId="right"
+                  type="monotone" 
+                  dataKey="totalHours" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  dot={{ fill: '#10b981', r: 4 }}
+                  name="totalHours"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ 
+              height: '300px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: mutedText
+            }}>
+              No forecast data available
+            </div>
+          )}
         </div>
 
       </div>
