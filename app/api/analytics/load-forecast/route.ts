@@ -94,7 +94,8 @@ function parseDurationToHours(duration: string | null | undefined): number {
 }
 
 // Helper function to get Sunday of a week for a given date in Eastern timezone
-function getWeekStart(date: Date): Date {
+// Returns both the Date object and the date components to ensure consistency
+function getWeekStart(date: Date): { date: Date; year: number; month: number; day: number } {
   // Get date components in Eastern timezone
   const { year, month, day, dayOfWeek } = getEasternDateParts(date);
   
@@ -118,7 +119,12 @@ function getWeekStart(date: Date): Date {
     sundayDayAdjusted += daysInPrevMonth;
   }
   
-  return createEasternDateForQuery(sundayYear, sundayMonth, sundayDayAdjusted);
+  return {
+    date: createEasternDateForQuery(sundayYear, sundayMonth, sundayDayAdjusted),
+    year: sundayYear,
+    month: sundayMonth,
+    day: sundayDayAdjusted
+  };
 }
 
 // Helper function to format week label (Sunday to Saturday)
@@ -236,16 +242,30 @@ export async function GET(request: NextRequest) {
       if (!event.eventDate) return;
       
       // Get week start in Eastern timezone for this event date
-      const weekStart = getWeekStart(event.eventDate);
-      // Use a consistent key format based on Eastern date
-      const weekStartEastern = getEasternDateParts(weekStart);
-      const weekKey = `${weekStartEastern.year}-${String(weekStartEastern.month + 1).padStart(2, '0')}-${String(weekStartEastern.day).padStart(2, '0')}`;
+      const weekStartInfo = getWeekStart(event.eventDate);
+      // Use the calculated date components directly for the week key to ensure consistency
+      const weekKey = `${weekStartInfo.year}-${String(weekStartInfo.month + 1).padStart(2, '0')}-${String(weekStartInfo.day).padStart(2, '0')}`;
       
       if (!weeklyData.has(weekKey)) {
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
+        // Calculate week end (Saturday) in Eastern timezone
+        let weekEndYear = weekStartInfo.year;
+        let weekEndMonth = weekStartInfo.month;
+        let weekEndDay = weekStartInfo.day + 6;
+        
+        // Handle month rollover
+        const daysInMonth = new Date(weekEndYear, weekEndMonth + 1, 0).getDate();
+        if (weekEndDay > daysInMonth) {
+          weekEndDay -= daysInMonth;
+          weekEndMonth++;
+          if (weekEndMonth > 11) {
+            weekEndMonth = 0;
+            weekEndYear++;
+          }
+        }
+        
+        const weekEnd = createEasternDateForQuery(weekEndYear, weekEndMonth, weekEndDay);
         weeklyData.set(weekKey, {
-          weekStart,
+          weekStart: weekStartInfo.date,
           weekEnd,
           events: []
         });
@@ -264,14 +284,13 @@ export async function GET(request: NextRequest) {
     }> = [];
     
     // Get current week start in Eastern timezone
-    const currentWeekStart = getWeekStart(now);
-    const currentWeekStartEastern = getEasternDateParts(currentWeekStart);
+    const currentWeekStartInfo = getWeekStart(now);
     
     for (let i = 0; i < weeks; i++) {
-      // Calculate week start date in Eastern timezone
-      let weekYear = currentWeekStartEastern.year;
-      let weekMonth = currentWeekStartEastern.month;
-      let weekDay = currentWeekStartEastern.day + (i * 7);
+      // Calculate week start date in Eastern timezone using the date components directly
+      let weekYear = currentWeekStartInfo.year;
+      let weekMonth = currentWeekStartInfo.month;
+      let weekDay = currentWeekStartInfo.day + (i * 7);
       
       // Handle month/year rollover
       while (weekDay > 28) {
@@ -289,8 +308,8 @@ export async function GET(request: NextRequest) {
       }
       
       const weekStart = createEasternDateForQuery(weekYear, weekMonth, weekDay);
-      
-      const weekStartEastern = getEasternDateParts(weekStart);
+      // Use the calculated components directly for the week key to ensure consistency
+      const weekStartEastern = { year: weekYear, month: weekMonth, day: weekDay };
       const weekEndEastern = getEasternDateParts(new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000));
       
       // Check if we've exceeded the end date
