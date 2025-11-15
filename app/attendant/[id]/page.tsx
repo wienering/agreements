@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { Metadata } from 'next';
 
 interface AttendantPageProps {
   params: Promise<{ id: string }>;
@@ -7,6 +8,61 @@ interface AttendantPageProps {
 // Force dynamic rendering to ensure backdrop selections update immediately
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+export async function generateMetadata({ params }: AttendantPageProps): Promise<Metadata> {
+  const { id } = await params;
+  
+  try {
+    // Fetch agreement with event date for title
+    const agreement = await prisma.agreement.findUnique({
+      where: { id },
+      select: {
+        event: {
+          select: {
+            eventDate: true,
+          },
+        },
+        client: {
+          select: {
+            eventDate: true,
+          },
+        },
+      },
+    });
+
+    if (!agreement) {
+      return {
+        title: 'Event Details Not Found',
+      };
+    }
+
+    // Use event data when available, otherwise fall back to client data
+    const eventDate = agreement.event?.eventDate || agreement.client?.eventDate;
+    
+    // Format event date for title (e.g., "November 2, 2025")
+    const formattedEventDate = eventDate
+      ? new Date(eventDate).toLocaleDateString('en-US', {
+          timeZone: 'America/Toronto',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : null;
+
+    const title = formattedEventDate 
+      ? `Event Details - ${formattedEventDate}`
+      : 'Event Details';
+
+    return {
+      title,
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
+    return {
+      title: 'Event Details',
+    };
+  }
+}
 
 export default async function AttendantPage({ params }: AttendantPageProps) {
   const { id } = await params;
