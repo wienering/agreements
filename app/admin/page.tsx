@@ -83,6 +83,7 @@ interface WeeklyLoadForecast {
   weekLabel: string;
   eventCount: number;
   totalHours: number;
+  clientNames: string[];
 }
 
 export default function AdminHome() {
@@ -904,19 +905,58 @@ export default function AdminHome() {
                   label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: mutedText } }}
                 />
                 <Tooltip 
-                  contentStyle={{
-                    backgroundColor: cardBg,
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    color: textColor
-                  }}
-                  formatter={(value: any, name: string) => {
-                    if (name === 'eventCount') {
-                      return [value, 'Events'];
-                    } else if (name === 'totalHours') {
-                      return [value, 'Hours'];
-                    }
-                    return [value, name];
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload || payload.length === 0) return null;
+                    
+                    const data = payload[0]?.payload as WeeklyLoadForecast;
+                    const eventCount = data?.eventCount || 0;
+                    const totalHours = data?.totalHours || 0;
+                    const clientNames = data?.clientNames || [];
+                    
+                    return (
+                      <div style={{
+                        backgroundColor: cardBg,
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '6px',
+                        padding: '12px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <div style={{ 
+                          color: textColor, 
+                          fontWeight: '600', 
+                          marginBottom: '8px',
+                          fontSize: '14px'
+                        }}>
+                          {label}
+                        </div>
+                        <div style={{ 
+                          color: textColor, 
+                          marginBottom: '4px',
+                          fontSize: '13px'
+                        }}>
+                          <strong>{eventCount}</strong> Event{eventCount !== 1 ? 's' : ''}
+                        </div>
+                        <div style={{ 
+                          color: textColor, 
+                          marginBottom: clientNames.length > 0 ? '8px' : '0',
+                          fontSize: '13px'
+                        }}>
+                          <strong>{totalHours}</strong> Hours
+                        </div>
+                        {clientNames.length > 0 && (
+                          <div style={{ 
+                            fontSize: '12px', 
+                            color: mutedText,
+                            marginTop: '8px',
+                            paddingTop: '8px',
+                            borderTop: `1px solid ${borderColor}`
+                          }}>
+                            <div style={{ fontWeight: '600', marginBottom: '4px', color: textColor }}>Clients:</div>
+                            <div>{clientNames.join(', ')}</div>
+                          </div>
+                        )}
+                      </div>
+                    );
                   }}
                 />
                 <Legend 

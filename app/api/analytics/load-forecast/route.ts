@@ -190,7 +190,12 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         eventDate: true,
-        eventDuration: true
+        eventDuration: true,
+        client: {
+          select: {
+            firstName: true
+          }
+        }
       },
       orderBy: {
         eventDate: 'asc'
@@ -208,7 +213,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         eventDate: true,
-        eventDuration: true
+        eventDuration: true,
+        firstName: true
       }
     });
     
@@ -216,18 +222,21 @@ export async function GET(request: NextRequest) {
     const allEvents: Array<{
       eventDate: Date;
       eventDuration: string | null;
+      clientFirstName: string;
     }> = [
       ...events
         .filter(e => e.eventDate !== null)
         .map(e => ({
           eventDate: e.eventDate!,
-          eventDuration: e.eventDuration
+          eventDuration: e.eventDuration,
+          clientFirstName: e.client.firstName
         })),
       ...clientsWithEvents
         .filter(c => c.eventDate !== null)
         .map(c => ({
           eventDate: c.eventDate!,
-          eventDuration: c.eventDuration
+          eventDuration: c.eventDuration,
+          clientFirstName: c.firstName
         }))
     ];
     
@@ -235,7 +244,7 @@ export async function GET(request: NextRequest) {
     const weeklyData = new Map<string, {
       weekStart: Date;
       weekEnd: Date;
-      events: Array<{ eventDate: Date; eventDuration: string | null }>;
+      events: Array<{ eventDate: Date; eventDuration: string | null; clientFirstName: string }>;
     }>();
     
     allEvents.forEach(event => {
@@ -281,6 +290,7 @@ export async function GET(request: NextRequest) {
       weekLabel: string;
       eventCount: number;
       totalHours: number;
+      clientNames: string[];
     }> = [];
     
     // Get current week start in Eastern timezone
@@ -327,6 +337,9 @@ export async function GET(request: NextRequest) {
         return sum + parseDurationToHours(event.eventDuration);
       }, 0);
       
+      // Extract client first names from events
+      const clientNames = events.map(event => event.clientFirstName).filter(name => name);
+      
       // Calculate week end (Saturday) in Eastern timezone
       let weekEndYear = weekStartEastern.year;
       let weekEndMonth = weekStartEastern.month;
@@ -350,7 +363,8 @@ export async function GET(request: NextRequest) {
         weekEnd: weekEnd.toISOString(),
         weekLabel: formatWeekLabel(weekStart),
         eventCount: events.length,
-        totalHours: Math.round(totalHours * 10) / 10 // Round to 1 decimal place
+        totalHours: Math.round(totalHours * 10) / 10, // Round to 1 decimal place
+        clientNames: clientNames
       });
     }
     
