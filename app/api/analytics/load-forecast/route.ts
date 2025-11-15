@@ -25,21 +25,21 @@ function parseDurationToHours(duration: string | null | undefined): number {
   return numericValue / 60;
 }
 
-// Helper function to get Monday of a week for a given date
+// Helper function to get Sunday of a week for a given date
 function getWeekStart(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0); // Normalize to start of day
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+  const day = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const diff = d.getDate() - day; // Sunday is day 0, so subtract to get to Sunday
   const weekStart = new Date(d);
   weekStart.setDate(diff);
   return weekStart;
 }
 
-// Helper function to format week label
+// Helper function to format week label (Sunday to Saturday)
 function formatWeekLabel(weekStart: Date): string {
   const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setDate(weekEnd.getDate() + 6); // Saturday is 6 days after Sunday
   
   const startMonth = weekStart.toLocaleDateString('en-US', { month: 'short' });
   const startDay = weekStart.getDate();
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
       }, 0);
       
       const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setDate(weekEnd.getDate() + 6); // Saturday is 6 days after Sunday
       
       forecastData.push({
         weekStart: weekStart.toISOString(),
