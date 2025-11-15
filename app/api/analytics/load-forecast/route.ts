@@ -1,6 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+const TIMEZONE = 'America/Toronto'; // Eastern Time
+
+// Helper function to get date components in Eastern timezone
+function getEasternDateParts(date: Date): { year: number; month: number; day: number; dayOfWeek: number } {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'long'
+  });
+  
+  const parts = formatter.formatToParts(date);
+  const year = parseInt(parts.find(p => p.type === 'year')!.value);
+  const month = parseInt(parts.find(p => p.type === 'month')!.value) - 1; // 0-indexed
+  const day = parseInt(parts.find(p => p.type === 'day')!.value);
+  const weekday = parts.find(p => p.type === 'weekday')!.value;
+  
+  // Convert weekday to number (0 = Sunday, 1 = Monday, etc.)
+  const weekdayMap: Record<string, number> = {
+    'Sunday': 0,
+    'Monday': 1,
+    'Tuesday': 2,
+    'Wednesday': 3,
+    'Thursday': 4,
+    'Friday': 5,
+    'Saturday': 6
+  };
+  const dayOfWeek = weekdayMap[weekday] ?? 0;
+  
+  return { year, month, day, dayOfWeek };
+}
+
+// Helper function to create a Date object for querying that represents a date in Eastern timezone
+// For database queries, we need UTC dates that represent the start/end of a day in Eastern
+function createEasternDateForQuery(year: number, month: number, day: number): Date {
+  // Create a date string in ISO format
+  // We'll create it as if it's midnight Eastern, which we need to convert to UTC
+  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00`;
+  
+  // Create a temporary date to get the timezone offset
+  const tempDate = new Date(dateStr);
+  
+  // Get what this date represents in Eastern timezone
+  const easternParts = getEasternDateParts(tempDate);
+  
+  // If the date doesn't match, we need to find the UTC time that represents midnight Eastern
+  // We'll iterate to find the right UTC time
+  let candidate = new Date(Date.UTC(year, month, day, 5, 0, 0)); // Start with 5am UTC (roughly midnight EST)
+  let candidateParts = getEasternDateParts(candidate);
+  let attempts = 0;
+  
+  while ((candidateParts.year !== year || candidateParts.month !== month || candidateParts.day !== day) && attempts < 10) {
+    const dayDiff = (candidateParts.year - year) * 365 + (candidateParts.month - month) * 30 + (candidateParts.day - day);
+    candidate = new Date(candidate.getTime() - dayDiff * 24 * 60 * 60 * 1000);
+    candidateParts = getEasternDateParts(candidate);
+    attempts++;
+  }
+  
+  // Now adjust to midnight Eastern (subtract hours to get to midnight)
+  const hourInEastern = parseInt(candidate.toLocaleString('en-US', { timeZone: TIMEZONE, hour: 'numeric', hour12: false }));
+  const minuteInEastern = parseInt(candidate.toLocaleString('en-US', { timeZone: TIMEZONE, minute: 'numeric' }));
+  const secondsInEastern = parseInt(candidate.toLocaleString('en-US', { timeZone: TIMEZONE, second: 'numeric' }));
+  
+  const totalSeconds = hourInEastern * 3600 + minuteInEastern * 60 + secondsInEastern;
+  return new Date(candidate.getTime() - totalSeconds * 1000);
+}
+
 // Helper function to parse duration string to hours
 function parseDurationToHours(duration: string | null | undefined): number {
   if (!duration) return 0;
@@ -25,15 +93,32 @@ function parseDurationToHours(duration: string | null | undefined): number {
   return numericValue / 60;
 }
 
-// Helper function to get Sunday of a week for a given date
+// Helper function to get Sunday of a week for a given date in Eastern timezone
 function getWeekStart(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0); // Normalize to start of day
-  const day = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const diff = d.getDate() - day; // Sunday is day 0, so subtract to get to Sunday
-  const weekStart = new Date(d);
-  weekStart.setDate(diff);
-  return weekStart;
+  // Get date components in Eastern timezone
+  const { year, month, day, dayOfWeek } = getEasternDateParts(date);
+  
+  // Calculate days to subtract to get to Sunday (dayOfWeek is 0=Sunday, 1=Monday, etc.)
+  const daysToSubtract = dayOfWeek;
+  const sundayDay = day - daysToSubtract;
+  
+  // Create date for Sunday in Eastern timezone
+  // Handle month/year rollover for sundayDay
+  let sundayYear = year;
+  let sundayMonth = month;
+  let sundayDayAdjusted = sundayDay;
+  
+  if (sundayDayAdjusted < 1) {
+    sundayMonth--;
+    if (sundayMonth < 0) {
+      sundayMonth = 11;
+      sundayYear--;
+    }
+    const daysInPrevMonth = new Date(sundayYear, sundayMonth + 1, 0).getDate();
+    sundayDayAdjusted += daysInPrevMonth;
+  }
+  
+  return createEasternDateForQuery(sundayYear, sundayMonth, sundayDayAdjusted);
 }
 
 // Helper function to format week label (Sunday to Saturday)
@@ -58,20 +143,42 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const weeks = parseInt(searchParams.get('weeks') || '12'); // Default to 12 weeks
     
+    // Get current date in Eastern timezone
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    const nowEastern = getEasternDateParts(now);
+    const nowEasternDate = createEasternDateForQuery(nowEastern.year, nowEastern.month, nowEastern.day);
     
-    // Calculate end date (weeks from now)
-    const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() + (weeks * 7));
+    // Calculate end date (weeks from now) in Eastern timezone
+    // Add weeks to the day, handling month/year rollover
+    let endYear = nowEastern.year;
+    let endMonth = nowEastern.month;
+    let endDay = nowEastern.day + (weeks * 7);
+    
+    // Handle month rollover
+    while (endDay > 28) { // Rough check
+      const daysInMonth = new Date(endYear, endMonth + 1, 0).getDate();
+      if (endDay > daysInMonth) {
+        endDay -= daysInMonth;
+        endMonth++;
+        if (endMonth > 11) {
+          endMonth = 0;
+          endYear++;
+        }
+      } else {
+        break;
+      }
+    }
+    
+    const endDateEastern = createEasternDateForQuery(endYear, endMonth, endDay);
     
     // Get all upcoming events (non-archived, with eventDate in the future)
+    // Note: Prisma queries use UTC, so we need to convert our Eastern dates to UTC for comparison
     const events = await prisma.event.findMany({
       where: {
         archived: false,
         eventDate: {
-          gte: now,
-          lte: endDate
+          gte: nowEasternDate,
+          lte: endDateEastern
         }
       },
       select: {
@@ -88,8 +195,8 @@ export async function GET(request: NextRequest) {
     const clientsWithEvents = await prisma.client.findMany({
       where: {
         eventDate: {
-          gte: now,
-          lte: endDate
+          gte: nowEasternDate,
+          lte: endDateEastern
         }
       },
       select: {
@@ -128,8 +235,11 @@ export async function GET(request: NextRequest) {
     allEvents.forEach(event => {
       if (!event.eventDate) return;
       
+      // Get week start in Eastern timezone for this event date
       const weekStart = getWeekStart(event.eventDate);
-      const weekKey = weekStart.toISOString();
+      // Use a consistent key format based on Eastern date
+      const weekStartEastern = getEasternDateParts(weekStart);
+      const weekKey = `${weekStartEastern.year}-${String(weekStartEastern.month + 1).padStart(2, '0')}-${String(weekStartEastern.day).padStart(2, '0')}`;
       
       if (!weeklyData.has(weekKey)) {
         const weekEnd = new Date(weekStart);
@@ -153,15 +263,44 @@ export async function GET(request: NextRequest) {
       totalHours: number;
     }> = [];
     
+    // Get current week start in Eastern timezone
     const currentWeekStart = getWeekStart(now);
+    const currentWeekStartEastern = getEasternDateParts(currentWeekStart);
     
     for (let i = 0; i < weeks; i++) {
-      const weekStart = new Date(currentWeekStart);
-      weekStart.setDate(weekStart.getDate() + (i * 7));
+      // Calculate week start date in Eastern timezone
+      let weekYear = currentWeekStartEastern.year;
+      let weekMonth = currentWeekStartEastern.month;
+      let weekDay = currentWeekStartEastern.day + (i * 7);
       
-      if (weekStart > endDate) break;
+      // Handle month/year rollover
+      while (weekDay > 28) {
+        const daysInMonth = new Date(weekYear, weekMonth + 1, 0).getDate();
+        if (weekDay > daysInMonth) {
+          weekDay -= daysInMonth;
+          weekMonth++;
+          if (weekMonth > 11) {
+            weekMonth = 0;
+            weekYear++;
+          }
+        } else {
+          break;
+        }
+      }
       
-      const weekKey = weekStart.toISOString();
+      const weekStart = createEasternDateForQuery(weekYear, weekMonth, weekDay);
+      
+      const weekStartEastern = getEasternDateParts(weekStart);
+      const weekEndEastern = getEasternDateParts(new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000));
+      
+      // Check if we've exceeded the end date
+      if (weekStartEastern.year > nowEastern.year || 
+          (weekStartEastern.year === nowEastern.year && weekStartEastern.month > nowEastern.month) ||
+          (weekStartEastern.year === nowEastern.year && weekStartEastern.month === nowEastern.month && weekStartEastern.day > nowEastern.day + (weeks * 7))) {
+        break;
+      }
+      
+      const weekKey = `${weekStartEastern.year}-${String(weekStartEastern.month + 1).padStart(2, '0')}-${String(weekStartEastern.day).padStart(2, '0')}`;
       const weekData = weeklyData.get(weekKey);
       
       const events = weekData?.events || [];
@@ -169,8 +308,23 @@ export async function GET(request: NextRequest) {
         return sum + parseDurationToHours(event.eventDuration);
       }, 0);
       
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6); // Saturday is 6 days after Sunday
+      // Calculate week end (Saturday) in Eastern timezone
+      let weekEndYear = weekStartEastern.year;
+      let weekEndMonth = weekStartEastern.month;
+      let weekEndDay = weekStartEastern.day + 6;
+      
+      // Handle month rollover
+      const daysInMonth = new Date(weekEndYear, weekEndMonth + 1, 0).getDate();
+      if (weekEndDay > daysInMonth) {
+        weekEndDay -= daysInMonth;
+        weekEndMonth++;
+        if (weekEndMonth > 11) {
+          weekEndMonth = 0;
+          weekEndYear++;
+        }
+      }
+      
+      const weekEnd = createEasternDateForQuery(weekEndYear, weekEndMonth, weekEndDay);
       
       forecastData.push({
         weekStart: weekStart.toISOString(),
