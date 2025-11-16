@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -65,6 +65,7 @@ function AgreementDetailContent() {
   const [newNote, setNewNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
   const [isAdminPreview, setIsAdminPreview] = useState(false);
+  const [isAgreementExpanded, setIsAgreementExpanded] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -229,6 +230,22 @@ function AgreementDetailContent() {
       minute: '2-digit'
     });
   };
+
+  // Calculate if agreement has more than 20 lines (client-side only)
+  const hasMoreContent = useMemo(() => {
+    if (!data?.agreement?.mergedHtml || typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = data.agreement.mergedHtml;
+      const textContent = tempDiv.textContent || tempDiv.innerText || '';
+      const lines = textContent.split(/\r?\n/).filter(line => line.trim().length > 0);
+      return lines.length > 20;
+    } catch {
+      return false;
+    }
+  }, [data?.agreement?.mergedHtml]);
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -557,10 +574,36 @@ function AgreementDetailContent() {
           <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Agreement Content</h2>
             {agreement.mergedHtml ? (
-              <div 
-                className="prose max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: agreement.mergedHtml }}
-              />
+              <div>
+                <div 
+                  className={`prose max-w-none dark:prose-invert transition-all duration-300 ${
+                    !isAgreementExpanded && hasMoreContent ? 'max-h-[30rem] overflow-hidden' : ''
+                  }`}
+                  style={!isAgreementExpanded && hasMoreContent ? {
+                    maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)'
+                  } : {}}
+                  dangerouslySetInnerHTML={{ __html: agreement.mergedHtml }}
+                />
+                {hasMoreContent && (
+                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <button
+                      onClick={() => setIsAgreementExpanded(!isAgreementExpanded)}
+                      className="flex items-center justify-center gap-2 w-full rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <span>{isAgreementExpanded ? 'Show Less' : 'Show More'}</span>
+                      <svg
+                        className={`h-5 w-5 transition-transform ${isAgreementExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <p className="text-slate-600 dark:text-slate-300">No content available for this agreement.</p>
             )}
