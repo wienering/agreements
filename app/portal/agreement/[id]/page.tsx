@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -66,6 +66,8 @@ function AgreementDetailContent() {
   const [addingNote, setAddingNote] = useState(false);
   const [isAdminPreview, setIsAdminPreview] = useState(false);
   const [isAgreementExpanded, setIsAgreementExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [hasMoreContent, setHasMoreContent] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -231,19 +233,24 @@ function AgreementDetailContent() {
     });
   };
 
-  // Calculate if agreement has more than 20 lines (client-side only)
-  const hasMoreContent = useMemo(() => {
-    if (!data?.agreement?.mergedHtml || typeof window === 'undefined') {
-      return false;
-    }
-    try {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = data.agreement.mergedHtml;
-      const textContent = tempDiv.textContent || tempDiv.innerText || '';
-      const lines = textContent.split(/\r?\n/).filter(line => line.trim().length > 0);
-      return lines.length > 20;
-    } catch {
-      return false;
+  // Check content height after render to determine if accordion is needed
+  useEffect(() => {
+    if (contentRef.current && data?.agreement?.mergedHtml) {
+      const element = contentRef.current;
+      // Check if content height exceeds approximately 20 lines (30rem = ~480px)
+      // Using a small delay to ensure content is fully rendered
+      const checkHeight = () => {
+        const maxHeight = 30 * 16; // 30rem in pixels (assuming 16px base)
+        setHasMoreContent(element.scrollHeight > maxHeight);
+      };
+      
+      // Check immediately and after a short delay to account for rendering
+      checkHeight();
+      const timeoutId = setTimeout(checkHeight, 100);
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setHasMoreContent(false);
     }
   }, [data?.agreement?.mergedHtml]);
 
@@ -576,6 +583,7 @@ function AgreementDetailContent() {
             {agreement.mergedHtml ? (
               <div>
                 <div 
+                  ref={contentRef}
                   className={`prose max-w-none dark:prose-invert transition-all duration-300 ${
                     !isAgreementExpanded && hasMoreContent ? 'max-h-[30rem] overflow-hidden' : ''
                   }`}
