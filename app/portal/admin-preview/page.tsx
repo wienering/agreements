@@ -23,6 +23,10 @@ interface Agreement {
     name: string;
     url: string;
   } | null;
+  event: {
+    eventName: string | null;
+    eventDate: string | null;
+  } | null;
   summary: {
     templateTitle: string;
     status: string;
@@ -428,18 +432,38 @@ function PortalAdminPreviewContent() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                            {agreement.summary.templateTitle}
-                          </h3>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
-                              agreement.status
-                            )}`}
-                          >
-                            {agreement.status}
-                          </span>
+                        <div className="mb-3">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                              {agreement.summary.templateTitle}
+                            </h3>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
+                                agreement.status
+                              )}`}
+                            >
+                              {agreement.status}
+                            </span>
+                          </div>
+
+                          {/* Event Date - Prominently displayed right below title */}
+                          {(agreement.event?.eventDate || data.client.eventDate) && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                                📅 {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                              </span>
+                            </div>
+                          )}
                         </div>
+
+                        {/* Event Name */}
+                        {agreement.event?.eventName && (
+                          <div className="mb-2">
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              🎉 {agreement.event.eventName}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Activity Timeline */}
                         <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 mb-3">

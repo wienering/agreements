@@ -81,3 +81,6 @@ SELECT
     COUNT(*) FILTER (WHERE "eventPhone" IS NOT NULL)::text as events_with_phone
 FROM "Event";
 
+
+
+

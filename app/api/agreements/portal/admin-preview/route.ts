@@ -214,7 +214,11 @@ export async function GET(request: NextRequest) {
           canSign: agreement.status === 'DRAFT' || agreement.status === 'SENT',
           isSigned: agreement.status === 'SIGNED',
           daysUntilExpiry: agreement.expiresAt ? Math.ceil((agreement.expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null
-        }
+        },
+        event: agreement.event ? {
+          eventName: agreement.event.eventName,
+          eventDate: agreement.event.eventDate
+        } : null
       };
     });
 

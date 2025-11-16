@@ -5,3 +5,6 @@ ALTER TABLE "Client" ADD COLUMN "isWhitelistClient" BOOLEAN NOT NULL DEFAULT fal
 ALTER TABLE "Event" ADD COLUMN "eventName" TEXT;
 ALTER TABLE "Event" ADD COLUMN "eventPhone" TEXT;
 
+
+
+
