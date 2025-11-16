@@ -34,6 +34,11 @@ interface AgreementData {
 }
 
 export default function AdminPreviewPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Agreement Preview | Admin | Photobooth Guys';
+  }, []);
+
   const params = useParams();
   const token = params.token as string;
   

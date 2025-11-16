@@ -67,6 +67,11 @@ interface DashboardData {
 }
 
 function PortalAdminPreviewContent() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Admin Preview | Client Portal';
+  }, []);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);

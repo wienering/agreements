@@ -30,6 +30,11 @@ interface Agreement {
 }
 
 export default function ArchivedAgreementsPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Archived Agreements | Admin | Photobooth Guys';
+  }, []);
+
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

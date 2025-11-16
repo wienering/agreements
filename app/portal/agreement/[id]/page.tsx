@@ -164,6 +164,13 @@ function AgreementDetailContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agreementId, searchParams]);
 
+  // Set page title when agreement data is loaded
+  useEffect(() => {
+    if (data?.agreement) {
+      document.title = `${data.agreement.templateName} | Client Portal`;
+    }
+  }, [data?.agreement]);
+
   // Activity tracking for session refresh (throttled to prevent excessive calls)
   // Only run if not in admin preview mode
   useEffect(() => {

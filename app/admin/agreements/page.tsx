@@ -57,6 +57,11 @@ interface WarningData {
 }
 
 export default function AgreementsPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Agreements | Admin | Photobooth Guys';
+  }, []);
+
   const hasFetchedData = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [agreements, setAgreements] = useState<Agreement[]>([]);

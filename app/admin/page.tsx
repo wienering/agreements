@@ -87,6 +87,10 @@ interface WeeklyLoadForecast {
 }
 
 export default function AdminHome() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Admin Dashboard | Photobooth Guys';
+  }, []);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [warnings, setWarnings] = useState<WarningsData | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);

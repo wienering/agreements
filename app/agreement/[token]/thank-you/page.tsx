@@ -47,6 +47,11 @@ export default function ThankYouPage() {
   const [emailAddress, setEmailAddress] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
 
+  // Set page title
+  useEffect(() => {
+    document.title = 'Thank You | Agreement Signed | Photobooth Guys';
+  }, []);
+
   useEffect(() => {
     fetchAgreement();
   }, [token]);

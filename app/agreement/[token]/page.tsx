@@ -236,7 +236,7 @@ export default function ClientAgreementPage() {
   // Update document title when agreement is loaded
   useEffect(() => {
     if (agreement) {
-      document.title = `Agreement - ${agreement.client.firstName} ${agreement.client.lastName}`;
+      document.title = `${agreement.template.title} - ${agreement.client.firstName} ${agreement.client.lastName} | Photobooth Guys`;
     } else {
       document.title = 'Agreement - Loading...';
     }

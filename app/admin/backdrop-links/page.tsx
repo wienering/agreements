@@ -14,6 +14,11 @@ interface BackdropLink {
 }
 
 export default function BackdropLinksPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Backdrop Links | Admin | Photobooth Guys';
+  }, []);
+
   const [backdropLinks, setBackdropLinks] = useState<BackdropLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);

@@ -40,6 +40,11 @@ interface AnalyticsData {
 }
 
 export default function DashboardPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Analytics Dashboard | Admin | Photobooth Guys';
+  }, []);
+
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

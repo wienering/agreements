@@ -37,6 +37,11 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Templates | Admin | Photobooth Guys';
+  }, []);
+
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSmartFields, setShowSmartFields] = useState(false);

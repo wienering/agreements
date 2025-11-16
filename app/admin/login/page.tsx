@@ -15,6 +15,11 @@ export default function AdminLogin() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Set page title
+  useEffect(() => {
+    document.title = 'Admin Login | Photobooth Guys';
+  }, []);
+
   useEffect(() => {
     if (status === 'authenticated') {
       router.push('/admin');

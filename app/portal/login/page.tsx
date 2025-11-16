@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface VerifyResponse {
@@ -28,6 +28,11 @@ export default function PortalLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Set page title
+  useEffect(() => {
+    document.title = 'Client Portal Login | Photobooth Guys';
+  }, []);
   const router = useRouter();
 
   const handleRequestCode = async (e: React.FormEvent) => {

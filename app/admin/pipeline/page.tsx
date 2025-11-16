@@ -61,6 +61,11 @@ interface PipelineData {
 }
 
 export default function PipelinePage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Pipeline | Admin | Photobooth Guys';
+  }, []);
+
   const { isDark } = useDarkMode();
   const [data, setData] = useState<PipelineData | null>(null);
   const [loading, setLoading] = useState(true);

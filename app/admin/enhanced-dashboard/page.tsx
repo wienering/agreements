@@ -36,6 +36,11 @@ interface AuditData {
 }
 
 export default function EnhancedDashboard() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Enhanced Dashboard | Admin | Photobooth Guys';
+  }, []);
+
   const { isDark } = useDarkMode();
   const router = useRouter();
   const [revenueData, setRevenueData] = useState<RevenueData | null>(null);

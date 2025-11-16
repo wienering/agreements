@@ -1,3 +1,10 @@
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Photobooth Guys - Agreement Management System',
+  description: 'Streamlined client agreement management for Photobooth Guys. Create templates, personalize with smart fields, send for e-signature, and deliver PDFs.',
+};
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">

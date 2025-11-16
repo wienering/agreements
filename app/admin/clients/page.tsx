@@ -46,6 +46,11 @@ interface Client {
 }
 
 export default function ClientsPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Clients | Admin | Photobooth Guys';
+  }, []);
+
   const hasFetchedData = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [clients, setClients] = useState<Client[]>([]);

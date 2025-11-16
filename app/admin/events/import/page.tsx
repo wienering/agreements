@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../components/Toast';
@@ -37,6 +37,11 @@ interface ImportResponse {
 }
 
 export default function ImportEventsPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Import Events | Admin | Photobooth Guys';
+  }, []);
+
   const [file, setFile] = useState<File | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');

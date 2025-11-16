@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 
 interface ContactInfo {
@@ -39,6 +39,11 @@ const PRICING = {
 };
 
 export default function QuotesPage() {
+  // Set page title
+  useEffect(() => {
+    document.title = 'Quotes | Admin | Photobooth Guys';
+  }, []);
+
   const { isDark } = useDarkMode();
   const [currentStep, setCurrentStep] = useState(1);
   const [contactInfo, setContactInfo] = useState<ContactInfo>({

@@ -80,6 +80,15 @@ export default function PortalDashboard() {
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const router = useRouter();
 
+  // Set page title
+  useEffect(() => {
+    if (data?.client) {
+      document.title = `Dashboard - ${data.client.firstName} ${data.client.lastName} | Client Portal`;
+    } else {
+      document.title = 'Dashboard | Client Portal';
+    }
+  }, [data?.client]);
+
   const fetchDashboardData = async () => {
     const token = localStorage.getItem('portal_session_token');
     if (!token) {

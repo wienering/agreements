@@ -14,13 +14,20 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
   const [clientFirstName, setClientFirstName] = useState<string | null>(null);
   const router = useRouter();
 
-  // Update document title when clientFirstName changes
+  // Update document title when clientFirstName changes, but only if title hasn't been set by page metadata
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      if (clientFirstName) {
-        document.title = `Client Portal - ${clientFirstName}`;
-      } else {
-        document.title = 'Client Portal';
+      // Only set default title if current title is the root default or hasn't been customized
+      const currentTitle = document.title;
+      const isDefaultTitle = currentTitle === 'Agreements' || currentTitle === 'Client Portal' || currentTitle.startsWith('Client Portal -');
+      
+      // Only update if it's still the default title (not set by page metadata)
+      if (isDefaultTitle) {
+        if (clientFirstName) {
+          document.title = `Client Portal - ${clientFirstName}`;
+        } else {
+          document.title = 'Client Portal';
+        }
       }
     }
   }, [clientFirstName]);
