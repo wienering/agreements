@@ -280,7 +280,7 @@ export default function ClientsPage() {
     setEditingClient(null);
     setEditingEvent(null);
     setAddingEventToClient(null);
-    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
+    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
     setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
   };
 
