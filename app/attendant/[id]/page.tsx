@@ -87,7 +87,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             eventType: true,
             notes: true,
             address: true,
-            isWhitelistClient: true,
+            isWhitelabelClient: true,
           },
         },
         event: {
@@ -125,8 +125,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     const eventType = event ? event.eventType : client.eventType;
     const notes = event ? event.notes : client.notes;
     
-    // For whitelist clients, get event-specific contact info
-    const isWhitelistClient = client.isWhitelistClient || false;
+    // For whitelabel clients, get event-specific contact info
+    const isWhitelabelClient = client.isWhitelabelClient || false;
     const eventContactName = event?.eventName || client.firstName;
     const eventContactPhone = event?.eventPhone || client.phone;
 
@@ -399,8 +399,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
           >
             {/* Left Column - Detailed Cards */}
             <div className="attendant-left-column">
-            {/* Client Information Card - Hidden for whitelist events */}
-            {client.firstName && !isWhitelistClient && (
+            {/* Client Information Card - Hidden for whitelabel events */}
+            {client.firstName && !isWhitelabelClient && (
               <div
                 className="attendant-card"
                 style={{
@@ -486,8 +486,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               </div>
             )}
 
-            {/* Event Contact Information Card - Only for whitelist clients */}
-            {isWhitelistClient && (
+            {/* Event Contact Information Card - Only for whitelabel clients */}
+            {isWhitelabelClient && (
               <div
                 className="attendant-card"
                 style={{
@@ -861,7 +861,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   )}
 
                   {/* Client Name / Event Contact Name */}
-                  {(isWhitelistClient ? eventContactName : client.firstName) && (
+                  {(isWhitelabelClient ? eventContactName : client.firstName) && (
                     <div>
                       <p
                         style={{
@@ -873,7 +873,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        {isWhitelistClient ? 'Event Contact Name:' : 'Client Name:'}
+                        {isWhitelabelClient ? 'Event Contact Name:' : 'Client Name:'}
                       </p>
                       <p
                         style={{
@@ -883,13 +883,13 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '500',
                         }}
                       >
-                        {isWhitelistClient ? eventContactName : client.firstName}
+                        {isWhitelabelClient ? eventContactName : client.firstName}
                       </p>
                     </div>
                   )}
 
                   {/* Contact Phone / Event Contact Phone */}
-                  {(isWhitelistClient ? eventContactPhone : client.phone) && isEventWithin18Hours && (
+                  {(isWhitelabelClient ? eventContactPhone : client.phone) && isEventWithin18Hours && (
                     <div>
                       <p
                         style={{
@@ -901,7 +901,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           letterSpacing: '0.05em',
                         }}
                       >
-                        {isWhitelistClient ? 'Event Contact Phone:' : 'Contact Phone:'}
+                        {isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}
                       </p>
                       <p
                         style={{
@@ -911,7 +911,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '500',
                         }}
                       >
-                        {isWhitelistClient ? eventContactPhone : client.phone}
+                        {isWhitelabelClient ? eventContactPhone : client.phone}
                       </p>
                     </div>
                   )}

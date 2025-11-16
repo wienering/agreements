@@ -66,6 +66,7 @@ interface DashboardData {
     eventLocation: string | null;
     eventPackage: string | null;
     packagePrice: number | null;
+    isWhitelabelClient: boolean;
   };
 }
 
@@ -414,15 +415,30 @@ export default function PortalDashboard() {
                           </span>
                         </div>
 
-                        {/* Event Name and Date */}
-                        {(agreement.event?.eventName || agreement.event?.eventDate) && (
-                          <div className="flex flex-wrap gap-3 text-sm text-slate-700 dark:text-slate-300 mb-3 font-medium">
-                            {agreement.event?.eventName && (
-                              <span>🎉 {agreement.event.eventName}</span>
-                            )}
-                            {agreement.event?.eventDate && (
-                              <span>📅 {new Date(agreement.event.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                            )}
+                        {/* Event Date - Always show if available */}
+                        {(agreement.event?.eventDate || data.client.eventDate) && (
+                          <div className="mb-2">
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              📅 Event Date: {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Event Name */}
+                        {agreement.event?.eventName && (
+                          <div className="mb-2">
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              🎉 {agreement.event.eventName}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Whitelabel Client Information */}
+                        {data.client.isWhitelabelClient && (
+                          <div className="mb-2">
+                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200">
+                              🏢 Whitelabel Client
+                            </span>
                           </div>
                         )}
 

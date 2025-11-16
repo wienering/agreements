@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       eventPackage,
       packagePrice,
       notes,
-      isWhitelistClient
+      isWhitelabelClient
     } = body;
 
     // Validate required fields
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
           email,
           phone: phone || null,
           notes: notes || null,
-          isWhitelistClient: isWhitelistClient || false,
+          isWhitelabelClient: isWhitelabelClient || false,
         },
       });
     } else {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
           lastName,
           phone: phone !== undefined ? phone : undefined,
           notes: notes !== undefined ? notes : undefined,
-          isWhitelistClient: isWhitelistClient !== undefined ? isWhitelistClient : undefined,
+          isWhitelabelClient: isWhitelabelClient !== undefined ? isWhitelabelClient : undefined,
         },
       });
     }

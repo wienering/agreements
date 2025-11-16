@@ -31,7 +31,7 @@ interface Client {
   email: string;
   phone?: string;
   notes?: string;
-  isWhitelistClient?: boolean;
+  isWhitelabelClient?: boolean;
   createdAt: string;
   updatedAt: string;
   events?: Event[];
@@ -70,7 +70,7 @@ export default function ClientsPage() {
     eventPackage: '',
     packagePrice: '',
     notes: '',
-    isWhitelistClient: false
+    isWhitelabelClient: false
   });
   const [newEvent, setNewEvent] = useState({
     eventDate: '',
@@ -195,7 +195,7 @@ export default function ClientsPage() {
         const createdClient = await response.json();
         setClients([createdClient, ...clients]);
         setShowAddForm(false);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
         showToast('Client added successfully!');
       } else {
         try {
@@ -235,7 +235,7 @@ export default function ClientsPage() {
         setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
         setShowAddForm(false);
         setEditingClient(null);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelistClient: false });
+        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
         showToast('Client updated successfully!');
       } else {
         try {
@@ -270,7 +270,7 @@ export default function ClientsPage() {
       eventPackage: client.eventPackage || '',
       packagePrice: client.packagePrice ? client.packagePrice.toString() : '',
       notes: client.notes || '',
-      isWhitelistClient: client.isWhitelistClient || false
+      isWhitelabelClient: client.isWhitelabelClient || false
     });
     setShowAddForm(true);
   };
@@ -836,7 +836,7 @@ export default function ClientsPage() {
                         fontWeight: '500', 
                         color: textColor 
                       }}>
-                        Event Name (for whitelist clients)
+                        Event Name (for whitelabel clients)
                       </label>
                       <input
                         type="text"
@@ -868,7 +868,7 @@ export default function ClientsPage() {
                         fontWeight: '500', 
                         color: textColor 
                       }}>
-                        Event Contact Phone (for whitelist clients)
+                        Event Contact Phone (for whitelabel clients)
                       </label>
                       <input
                         type="tel"
@@ -1238,15 +1238,15 @@ export default function ClientsPage() {
                       }}>
                         <input
                           type="checkbox"
-                          checked={newClient.isWhitelistClient}
-                          onChange={(e) => setNewClient({ ...newClient, isWhitelistClient: e.target.checked })}
+                          checked={newClient.isWhitelabelClient}
+                          onChange={(e) => setNewClient({ ...newClient, isWhitelabelClient: e.target.checked })}
                           style={{
                             width: '18px',
                             height: '18px',
                             cursor: 'pointer'
                           }}
                         />
-                        <span>Whitelist Client (Company with multiple events)</span>
+                        <span>Whitelabel Client (Company with multiple events)</span>
                       </label>
                       <p style={{ 
                         margin: '4px 0 0 0', 
@@ -1332,7 +1332,7 @@ export default function ClientsPage() {
                       <h3 style={{ margin: '0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
                         {client.firstName} {client.lastName}
                       </h3>
-                      {client.isWhitelistClient && (
+                      {client.isWhitelabelClient && (
                         <span style={{
                           backgroundColor: '#3b82f6',
                           color: 'white',
@@ -1343,7 +1343,7 @@ export default function ClientsPage() {
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em'
                         }}>
-                          Whitelist
+                          Whitelabel
                         </span>
                       )}
                     </div>

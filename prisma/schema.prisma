@@ -35,7 +35,7 @@ model Client {
   address        String?
   addressAddedAt DateTime?
   phoneAddedAt   DateTime?
-  isWhitelistClient Boolean       @default(false)
+  isWhitelabelClient Boolean       @default(false)
   agreements     Agreement[]
   sessions       ClientSession[]
   clientNotes    ClientNote[]    @relation("ClientNotes")

@@ -285,6 +285,7 @@ export async function GET(request: NextRequest) {
         eventLocation: session.client.eventLocation,
         eventPackage: session.client.eventPackage,
         packagePrice: session.client.packagePrice ? Number(session.client.packagePrice) : null,
+        isWhitelabelClient: session.client.isWhitelabelClient || false,
       }
     });
 

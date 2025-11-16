@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
       // Filter agreements based on matching criteria
       const matchingAgreements = client.agreements.filter((agreement) => {
-        // First, try to match by event date from the Event model (for whitelist clients)
+        // First, try to match by event date from the Event model (for whitelabel clients)
         if (agreement.event?.eventDate) {
           const eventDate = new Date(agreement.event.eventDate);
           const eventDateOnly = new Date(
