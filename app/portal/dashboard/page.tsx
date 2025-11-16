@@ -402,27 +402,29 @@ export default function PortalDashboard() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                            {agreement.summary.templateTitle}
-                          </h3>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
-                              agreement.status
-                            )}`}
-                          >
-                            {agreement.status}
-                          </span>
-                        </div>
-
-                        {/* Event Date - Always show if available */}
-                        {(agreement.event?.eventDate || data.client.eventDate) && (
-                          <div className="mb-2">
-                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                              📅 Event Date: {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        <div className="mb-3">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                              {agreement.summary.templateTitle}
+                            </h3>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
+                                agreement.status
+                              )}`}
+                            >
+                              {agreement.status}
                             </span>
                           </div>
-                        )}
+                          
+                          {/* Event Date - Prominently displayed right below title */}
+                          {(agreement.event?.eventDate || data.client.eventDate) && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                                📅 {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
 
                         {/* Event Name */}
                         {agreement.event?.eventName && (
