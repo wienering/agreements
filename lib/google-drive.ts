@@ -1,46 +1,40 @@
 import { google } from 'googleapis';
-import { JWT } from 'google-auth-library';
+import { OAuth2Client } from 'google-auth-library';
 import { Readable } from 'stream';
 
 let driveClient: ReturnType<typeof google.drive> | null = null;
 
 /**
- * Get authenticated Google Drive client using Service Account
+ * Get authenticated Google Drive client using OAuth2
  */
 export function getGoogleDriveClient() {
   if (driveClient) {
     return driveClient;
   }
 
-  const serviceAccountKey = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY;
-  
-  if (!serviceAccountKey) {
-    throw new Error('Google Drive service account key is not configured. Please set GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY environment variable with the JSON key content.');
+  const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Google Drive OAuth2 credentials are not configured. Please set GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET, and GOOGLE_DRIVE_REFRESH_TOKEN environment variables.');
   }
 
-  let credentials;
-  try {
-    // Try to parse as JSON string first
-    credentials = typeof serviceAccountKey === 'string' 
-      ? JSON.parse(serviceAccountKey) 
-      : serviceAccountKey;
-  } catch (error) {
-    throw new Error('Invalid service account key format. Must be valid JSON. Make sure to escape quotes if pasting directly, or use a file path.');
-  }
+  const redirectUri = process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback';
 
-  if (!credentials.client_email || !credentials.private_key) {
-    throw new Error('Service account key is missing required fields (client_email or private_key).');
-  }
+  const oauth2Client = new OAuth2Client(
+    clientId,
+    clientSecret,
+    redirectUri
+  );
 
-  const jwtClient = new JWT({
-    email: credentials.client_email,
-    key: credentials.private_key,
-    scopes: ['https://www.googleapis.com/auth/drive.file'],
+  oauth2Client.setCredentials({
+    refresh_token: refreshToken,
   });
 
   driveClient = google.drive({
     version: 'v3',
-    auth: jwtClient,
+    auth: oauth2Client,
   });
 
   return driveClient;
@@ -82,6 +76,7 @@ export async function findOrCreateClientFolder(clientName: string): Promise<stri
       spaces: 'drive',
       includeItemsFromAllDrives: true,
       supportsAllDrives: true,
+      corpora: 'allDrives',
     });
 
     if (clientFilesResponse.data.files && clientFilesResponse.data.files.length > 0) {
@@ -121,6 +116,7 @@ export async function findOrCreateClientFolder(clientName: string): Promise<stri
       spaces: 'drive',
       includeItemsFromAllDrives: true,
       supportsAllDrives: true,
+      corpora: 'allDrives',
     });
 
     if (response.data.files && response.data.files.length > 0) {
