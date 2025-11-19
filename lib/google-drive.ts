@@ -99,7 +99,8 @@ export async function findOrCreateClientFolder(clientName: string): Promise<stri
     }
   } catch (error) {
     console.error('Error finding/creating Client Files folder:', error);
-    throw new Error(`Failed to access shared folder. Make sure the folder (ID: ${rootFolderId}) is shared with the service account (drive-upload-service@agreementsupload-478717.iam.gserviceaccount.com) with Editor permissions.`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to access Google Drive folder (ID: ${rootFolderId}). Make sure the folder exists in your Google Drive and that your OAuth2 credentials are properly configured. Error: ${errorMessage}`);
   }
 
   if (!clientFilesFolderId) {
