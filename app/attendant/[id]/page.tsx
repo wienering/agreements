@@ -77,6 +77,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
         selectedBackdropName: true,
         eventId: true,
         showPhoneNumberAlways: true,
+        forceVirtualGreenScreen: true,
         client: {
           select: {
             firstName: true,
@@ -116,7 +117,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return <NotFoundError />;
     }
 
-    const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways } = agreement;
+    const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways, forceVirtualGreenScreen } = agreement;
     
     // Use event data when available, otherwise fall back to client data
     const eventDate = event ? event.eventDate : client.eventDate;
@@ -981,7 +982,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   )}
 
                   {/* Selected Backdrop */}
-                  {selectedBackdropName && (
+                  {(forceVirtualGreenScreen || selectedBackdropName) && (
                     <div>
                       <p
                         style={{
@@ -1003,7 +1004,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                           fontWeight: '600',
                         }}
                       >
-                        {selectedBackdropName}
+                        {forceVirtualGreenScreen ? 'Virtual Green Screen' : selectedBackdropName}
                       </p>
                     </div>
                   )}

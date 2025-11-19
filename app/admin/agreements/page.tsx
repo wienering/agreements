@@ -25,6 +25,7 @@ interface Agreement {
   selectedBackdropName?: string;
   paymentStatus?: string;
   showPhoneNumberAlways?: boolean;
+  forceVirtualGreenScreen?: boolean;
   client: {
     id: string;
     firstName: string;
@@ -131,6 +132,8 @@ export default function AgreementsPage() {
   const [attendantModalAgreement, setAttendantModalAgreement] = useState<Agreement | null>(null);
   const [phoneVisibilityToggle, setPhoneVisibilityToggle] = useState(false);
   const [updatingPhoneVisibility, setUpdatingPhoneVisibility] = useState(false);
+  const [virtualGreenScreenToggle, setVirtualGreenScreenToggle] = useState(false);
+  const [updatingVirtualGreenScreen, setUpdatingVirtualGreenScreen] = useState(false);
   
   // Copy link modal state
   const [showCopyLinkModal, setShowCopyLinkModal] = useState(false);
@@ -2009,6 +2012,7 @@ export default function AgreementsPage() {
                     onClick={() => {
                       setAttendantModalAgreement(agreement);
                       setPhoneVisibilityToggle(agreement.showPhoneNumberAlways || false);
+                      setVirtualGreenScreenToggle(agreement.forceVirtualGreenScreen || false);
                       setShowAttendantModal(true);
                     }}
                     style={{
@@ -2761,6 +2765,7 @@ export default function AgreementsPage() {
                   onClick={() => {
                     if (selectedAgreement?.id) {
                       setPhoneVisibilityToggle(selectedAgreement.showPhoneNumberAlways || false);
+                      setVirtualGreenScreenToggle(selectedAgreement.forceVirtualGreenScreen || false);
                       setShowAttendantModal(true);
                     }
                   }}
@@ -4319,7 +4324,7 @@ export default function AgreementsPage() {
               <div style={{
                 marginBottom: '20px',
                 padding: '16px',
-                backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
                 borderRadius: '6px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -4389,7 +4394,7 @@ export default function AgreementsPage() {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: phoneVisibilityToggle ? '#059669' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: phoneVisibilityToggle ? '#059669' : (isDarkMode ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: updatingPhoneVisibility ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -4417,6 +4422,111 @@ export default function AgreementsPage() {
                   {phoneVisibilityToggle 
                     ? 'Phone number will be visible on the attendant page regardless of event time'
                     : 'Phone number will only be visible 24 hours before the event starts (default)'}
+                </p>
+              </div>
+
+              {/* Virtual Green Screen Toggle */}
+              <div style={{
+                marginBottom: '20px',
+                padding: '16px',
+                backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+                borderRadius: '6px',
+                border: `1px solid ${borderColor}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}>
+                  <label style={{
+                    color: textColor,
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    🎬 Force Virtual Green Screen
+                  </label>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const agreement = attendantModalAgreement || selectedAgreement;
+                      if (!agreement?.id) return;
+                      
+                      const newValue = !virtualGreenScreenToggle;
+                      setUpdatingVirtualGreenScreen(true);
+                      
+                      try {
+                        const response = await fetch('/api/agreements/update-virtual-green-screen', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            agreementId: agreement.id,
+                            forceVirtualGreenScreen: newValue
+                          })
+                        });
+                        
+                        if (response.ok) {
+                          setVirtualGreenScreenToggle(newValue);
+                          // Update the agreement in state
+                          if (attendantModalAgreement) {
+                            setAttendantModalAgreement({ ...attendantModalAgreement, forceVirtualGreenScreen: newValue });
+                          }
+                          if (selectedAgreement) {
+                            setSelectedAgreement({ ...selectedAgreement, forceVirtualGreenScreen: newValue });
+                          }
+                          // Update in agreements list
+                          setAgreements(prev => prev.map(a => 
+                            a.id === agreement.id ? { ...a, forceVirtualGreenScreen: newValue } : a
+                          ));
+                          showToast(newValue ? 'Virtual Green Screen will be displayed on attendant page' : 'Backdrop selection will behave normally', 'success');
+                        } else {
+                          showToast('Failed to update virtual green screen override', 'error');
+                        }
+                      } catch (error) {
+                        console.error('Error updating virtual green screen override:', error);
+                        showToast('Failed to update virtual green screen override', 'error');
+                      } finally {
+                        setUpdatingVirtualGreenScreen(false);
+                      }
+                    }}
+                    disabled={updatingVirtualGreenScreen}
+                    style={{
+                      position: 'relative',
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      backgroundColor: virtualGreenScreenToggle ? '#059669' : (isDarkMode ? '#475569' : '#cbd5e1'),
+                      border: 'none',
+                      cursor: updatingVirtualGreenScreen ? 'not-allowed' : 'pointer',
+                      transition: 'background-color 0.2s',
+                      opacity: updatingVirtualGreenScreen ? 0.6 : 1
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: virtualGreenScreenToggle ? '22px' : '2px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      transition: 'left 0.2s',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }} />
+                  </button>
+                </div>
+                <p style={{
+                  margin: '0',
+                  fontSize: '12px',
+                  color: mutedText
+                }}>
+                  {virtualGreenScreenToggle 
+                    ? 'Virtual Green Screen will override the selected backdrop on the attendant page'
+                    : 'Backdrop selection will behave normally (no override)'}
                 </p>
               </div>
               
@@ -4482,6 +4592,7 @@ export default function AgreementsPage() {
                     setShowAttendantModal(false);
                     setAttendantModalAgreement(null);
                     setPhoneVisibilityToggle(false);
+                    setVirtualGreenScreenToggle(false);
                   }}
                   style={{
                     backgroundColor: '#6b7280',
