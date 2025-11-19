@@ -82,8 +82,10 @@ export async function POST(request: NextRequest) {
         // Use the saved snapshot for signed agreements
         processedHtml = agreement.mergedHtml;
       } else {
-        // Process the template in real-time for unsigned agreements
-        processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+        // Process the content in real-time for unsigned agreements
+        // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+        const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+        processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
       }
       
       // Email matches - allow access

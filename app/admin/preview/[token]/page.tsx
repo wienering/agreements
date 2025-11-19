@@ -27,6 +27,7 @@ interface AgreementData {
   signedAt: string | null;
   signedFromIP: string | null;
   mergedHtml: string | null;
+  customHtmlContent?: string | null;
   fields: Array<{
     key: string;
     value: string;
@@ -731,7 +732,7 @@ export default function AdminPreviewPage() {
                 dangerouslySetInnerHTML={{ 
                   __html: agreement.status === 'SIGNED' && agreement.mergedHtml 
                     ? agreement.mergedHtml 
-                    : agreement.template.htmlContent 
+                    : (agreement.customHtmlContent || agreement.template.htmlContent)
                 }}
               />
             </div>

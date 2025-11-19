@@ -708,7 +708,8 @@ export default function AgreementsPage() {
 
   const handleEditAgreement = (agreement: Agreement) => {
     setSelectedAgreement(agreement);
-    setEditingContent(agreement.template.htmlContent);
+    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+    setEditingContent((agreement as any).customHtmlContent || agreement.template.htmlContent);
     // Load portal enhancement fields
     setPaymentStatus((agreement as any).paymentStatus || '');
     setStripePaymentLink((agreement as any).stripePaymentLink || '');

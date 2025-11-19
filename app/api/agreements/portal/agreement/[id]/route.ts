@@ -28,6 +28,7 @@ export async function GET(
       include: {
         client: true,
         template: true,
+        event: true,
         notes: {
           orderBy: { createdAt: 'desc' }
         },
@@ -41,6 +42,21 @@ export async function GET(
         { error: 'Agreement not found', code: 'AGREEMENT_NOT_FOUND' },
         { status: 404 }
       );
+    }
+
+    // Process HTML content using processHtmlContent from shared utils
+    const { processHtmlContent } = await import('../../shared/agreement-utils');
+    
+    // Determine which HTML content to use (priority: mergedHtml > customHtmlContent > template.htmlContent)
+    let processedHtml;
+    const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+      ? agreement.mergedHtml
+      : (agreement.customHtmlContent || agreement.template.htmlContent);
+    
+    if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+      processedHtml = agreement.mergedHtml;
+    } else {
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 
     // Return agreement data
@@ -57,7 +73,7 @@ export async function GET(
         lastViewedAt: agreement.lastViewedAt?.toISOString() || null,
         viewCount: agreement.viewCount,
         templateName: agreement.template.title,
-        mergedHtml: agreement.mergedHtml,
+        mergedHtml: processedHtml,
         paymentStatus: agreement.paymentStatus,
         stripePaymentLink: agreement.stripePaymentLink,
         stripeReceiptLink: agreement.stripeReceiptLink,

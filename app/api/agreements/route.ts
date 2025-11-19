@@ -70,6 +70,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get the template to copy its content
+    const template = await prisma.template.findUnique({
+      where: { id: templateId },
+      select: { htmlContent: true }
+    });
+
+    if (!template) {
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+    }
+
     // Generate unique token
     const uniqueToken = randomBytes(32).toString('hex');
 
@@ -81,6 +91,7 @@ export async function POST(request: NextRequest) {
         uniqueToken,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         status: 'DRAFT',
+        customHtmlContent: template.htmlContent, // Copy template content to agreement
       },
       include: {
         client: true,

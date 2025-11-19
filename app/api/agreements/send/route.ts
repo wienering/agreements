@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
       return processedHtml;
     };
 
-    const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+    const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+    const processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     
     // Get the base URL from the request headers or environment
     const protocol = request.headers.get('x-forwarded-proto') || 'http';

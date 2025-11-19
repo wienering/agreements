@@ -111,7 +111,9 @@ export async function POST(request: NextRequest) {
     };
 
     // Create a snapshot of the agreement content at the time of signing
-    const signedHtmlContent = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+    const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+    const signedHtmlContent = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     console.log('🔍 SIGN API: Created snapshot length:', signedHtmlContent.length);
     console.log('🔍 SIGN API: Snapshot preview:', signedHtmlContent.substring(0, 200) + '...');
 

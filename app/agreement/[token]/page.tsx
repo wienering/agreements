@@ -27,6 +27,7 @@ interface AgreementData {
   signedAt: string | null;
   signedFromIP: string | null;
   mergedHtml: string | null;
+  customHtmlContent?: string | null;
   event?: {
     id: string;
     eventDate?: string;
@@ -1222,7 +1223,7 @@ export default function ClientAgreementPage() {
             dangerouslySetInnerHTML={{ 
               __html: agreement.status === 'SIGNED' && agreement.mergedHtml 
                 ? agreement.mergedHtml 
-                : agreement.template.htmlContent 
+                : (agreement.customHtmlContent || agreement.template.htmlContent)
             }}
           />
         </div>

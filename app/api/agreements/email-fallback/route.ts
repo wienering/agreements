@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
       return processedHtml;
     };
 
-    const processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+    const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+    const processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id);
 
     // Create a shareable link instead of sending email
     // Get the base URL from the request headers or environment

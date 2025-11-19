@@ -77,24 +77,28 @@ export async function GET(request: NextRequest) {
       return processedHtml;
     };
 
+    // Determine which HTML content to use (priority: mergedHtml > customHtmlContent > template.htmlContent)
     // For signed agreements, use the saved snapshot to prevent changes
-    // For unsigned agreements, process the template in real-time
+    // For unsigned agreements, use customHtmlContent if available, otherwise template.htmlContent
     let processedHtml;
+    const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+      ? agreement.mergedHtml
+      : (agreement.customHtmlContent || agreement.template.htmlContent);
+    
     console.log('🔍 CLIENT API: Agreement status:', agreement.status);
     console.log('🔍 CLIENT API: Has mergedHtml:', !!agreement.mergedHtml);
-    console.log('🔍 CLIENT API: mergedHtml length:', agreement.mergedHtml?.length || 0);
-    console.log('🔍 CLIENT API: Template content length:', agreement.template.htmlContent?.length || 0);
+    console.log('🔍 CLIENT API: Has customHtmlContent:', !!agreement.customHtmlContent);
+    console.log('🔍 CLIENT API: Using template fallback:', !agreement.customHtmlContent && !agreement.mergedHtml);
     
     if (agreement.status === 'SIGNED') {
       if (agreement.mergedHtml && agreement.mergedHtml.trim().length > 0) {
         // Use the saved snapshot for signed agreements
         console.log('🔍 CLIENT API: Using saved snapshot for signed agreement');
-        console.log('🔍 CLIENT API: Snapshot is different from template:', agreement.mergedHtml !== agreement.template.htmlContent);
         processedHtml = agreement.mergedHtml;
       } else {
         // Fallback: create snapshot now if it's missing (shouldn't happen)
         console.log('🔍 CLIENT API: WARNING - Signed agreement missing snapshot, creating one now');
-        processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+        processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
         
         // Save the snapshot for future use
         await prisma.agreement.update({
@@ -103,9 +107,9 @@ export async function GET(request: NextRequest) {
         });
       }
     } else {
-      // Process the template in real-time for unsigned agreements
-      console.log('🔍 CLIENT API: Processing template in real-time for unsigned agreement');
-      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+      // Process the content in real-time for unsigned agreements
+      console.log('🔍 CLIENT API: Processing content in real-time for unsigned agreement');
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 
     // Convert Decimal fields to numbers for JSON serialization

@@ -224,15 +224,20 @@ export async function POST(request: NextRequest) {
       return processedHtml;
     };
 
+    // Determine which HTML content to use (priority: mergedHtml > customHtmlContent > template.htmlContent)
     // For signed agreements, use the saved snapshot to prevent changes
-    // For unsigned agreements, process the template in real-time
+    // For unsigned agreements, use customHtmlContent if available, otherwise template.htmlContent
     let processedHtml;
+    const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+      ? agreement.mergedHtml
+      : (agreement.customHtmlContent || agreement.template.htmlContent);
+    
     if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
       // Use the saved snapshot for signed agreements
       processedHtml = agreement.mergedHtml;
     } else {
-      // Process the template in real-time for unsigned agreements
-      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+      // Process the content in real-time for unsigned agreements
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 
     // Generate PDF using jsPDF (serverless-friendly)

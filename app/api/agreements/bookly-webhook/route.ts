@@ -397,6 +397,7 @@ export async function POST(request: NextRequest) {
               uniqueToken,
               status: 'DRAFT',
               expiresAt: null,
+              customHtmlContent: template.htmlContent, // Copy template content to agreement
             },
             include: {
               client: true,

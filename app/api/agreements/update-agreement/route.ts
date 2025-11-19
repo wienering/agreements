@@ -35,27 +35,21 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 });
     }
 
-    console.log('Found agreement, template ID:', agreement.templateId);
+    console.log('Found agreement, updating customHtmlContent');
 
-    // Update the template content
-    await prisma.template.update({
-      where: { id: agreement.templateId },
-      data: {
-        htmlContent: validatedData.htmlContent,
-        version: { increment: 1 }
-      }
-    });
-
-    console.log('Template updated successfully');
-
-    // Get the updated agreement with relations
-    const updatedAgreement = await prisma.agreement.findUnique({
+    // Update the agreement's custom content (not the template)
+    const updatedAgreement = await prisma.agreement.update({
       where: { id },
+      data: {
+        customHtmlContent: validatedData.htmlContent
+      },
       include: {
         client: true,
         template: true
       }
     });
+
+    console.log('Agreement customHtmlContent updated successfully');
 
     if (!updatedAgreement) {
       console.error('Agreement not found after update:', id);

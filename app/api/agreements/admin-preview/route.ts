@@ -108,12 +108,15 @@ export async function GET(request: NextRequest) {
       } else {
         // Fallback: create snapshot now if it's missing
         console.log('🔍 Admin Preview API: WARNING - Signed agreement missing snapshot, creating one now');
-        processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+        const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+        processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
       }
     } else {
-      // Process the template in real-time for unsigned agreements
-      console.log('🔍 Admin Preview API: Processing template in real-time for unsigned agreement');
-      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+      // Process the content in real-time for unsigned agreements
+      // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+      console.log('🔍 Admin Preview API: Processing content in real-time for unsigned agreement');
+      const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 
     // Convert Decimal fields to numbers for JSON serialization

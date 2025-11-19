@@ -120,14 +120,19 @@ export async function GET(request: NextRequest) {
 
       if (includeHtml) {
         // Process HTML content
+        // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+        const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+          ? agreement.mergedHtml
+          : (agreement.customHtmlContent || agreement.template.htmlContent);
+        
         let processedHtml = agreement.status === 'SIGNED' && agreement.mergedHtml 
           ? agreement.mergedHtml 
-          : processHtmlContent(agreement.template.htmlContent, session.client, agreement.id);
+          : processHtmlContent(htmlToProcess, session.client, agreement.id);
         
         return {
           ...baseData,
           htmlContent: processedHtml,
-          rawHtmlContent: agreement.template.htmlContent
+          rawHtmlContent: agreement.customHtmlContent || agreement.template.htmlContent
         };
       }
 

@@ -173,10 +173,15 @@ export async function GET(request: NextRequest) {
     const processedAgreements = agreements.map(agreement => {
       let processedHtml;
       
+      // Use customHtmlContent if available, otherwise fall back to template.htmlContent
+      const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+        ? agreement.mergedHtml
+        : (agreement.customHtmlContent || agreement.template.htmlContent);
+      
       if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {
-        processedHtml = processHtmlContent(agreement.template.htmlContent, session.client, agreement.id, agreement.event);
+        processedHtml = processHtmlContent(htmlToProcess, session.client, agreement.id, agreement.event);
       }
 
       const client = {

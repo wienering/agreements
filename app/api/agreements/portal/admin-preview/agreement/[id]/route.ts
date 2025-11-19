@@ -120,12 +120,17 @@ export async function GET(
       return processedHtml;
     };
 
+    // Determine which HTML content to use (priority: mergedHtml > customHtmlContent > template.htmlContent)
     // Process HTML content
     let processedHtml;
+    const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+      ? agreement.mergedHtml
+      : (agreement.customHtmlContent || agreement.template.htmlContent);
+    
     if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
       processedHtml = agreement.mergedHtml;
     } else {
-      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id, agreement.event);
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 
     // Convert Decimal fields to numbers for JSON serialization

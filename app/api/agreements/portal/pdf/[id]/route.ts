@@ -151,11 +151,16 @@ export async function GET(
     };
 
     // Use saved snapshot for signed agreements, otherwise process in real-time
+    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
     let processedHtml;
+    const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+      ? agreement.mergedHtml
+      : (agreement.customHtmlContent || agreement.template.htmlContent);
+    
     if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
       processedHtml = agreement.mergedHtml;
     } else {
-      processedHtml = processHtmlContent(agreement.template.htmlContent, agreement.client, agreement.id);
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id);
     }
 
     // Generate PDF
