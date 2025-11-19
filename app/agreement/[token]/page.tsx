@@ -73,6 +73,7 @@ export default function ClientAgreementPage() {
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Signing animation states
   const [showSignSuccess, setShowSignSuccess] = useState(false);
@@ -80,6 +81,17 @@ export default function ClientAgreementPage() {
   
   // Focus management
   const signButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Function to track agreement view
   const trackAgreementView = async () => {
@@ -1332,10 +1344,11 @@ export default function ClientAgreementPage() {
         {/* Action Buttons */}
         <div style={{ 
           display: 'flex', 
-          gap: '20px', 
+          gap: isMobile ? '12px' : '20px', 
           justifyContent: 'center',
           flexWrap: 'wrap',
-          marginBottom: '40px'
+          marginBottom: isMobile ? '24px' : '40px',
+          padding: isMobile ? '0 16px' : '0'
         }}>
           {agreement && agreement.status === 'SIGNED' ? (
             <>
@@ -1610,12 +1623,12 @@ export default function ClientAgreementPage() {
                   }}
                   style={{
                     width: '100%',
-                    padding: window.innerWidth < 768 ? '16px' : '12px',
+                    padding: isMobile ? '16px' : '12px',
                     border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
                     borderRadius: '6px',
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
                     color: isDark ? '#f1f5f9' : '#1e293b',
-                    fontSize: window.innerWidth < 768 ? '16px' : '14px',
+                    fontSize: isMobile ? '16px' : '14px',
                     transition: 'all 0.2s ease',
                     outline: 'none'
                   }}
@@ -1649,12 +1662,12 @@ export default function ClientAgreementPage() {
                   }}
                   style={{
                     width: '100%',
-                    padding: window.innerWidth < 768 ? '16px' : '12px',
+                    padding: isMobile ? '16px' : '12px',
                     border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
                     borderRadius: '6px',
                     backgroundColor: isDark ? '#0f172a' : '#ffffff',
                     color: isDark ? '#f1f5f9' : '#1e293b',
-                    fontSize: window.innerWidth < 768 ? '16px' : '14px',
+                    fontSize: isMobile ? '16px' : '14px',
                     transition: 'all 0.2s ease',
                     outline: 'none'
                   }}
@@ -1708,7 +1721,8 @@ export default function ClientAgreementPage() {
               <div style={{ 
                 display: 'flex', 
                 gap: '12px', 
-                justifyContent: 'flex-end' 
+                justifyContent: 'flex-end',
+                flexWrap: 'wrap'
               }}>
                 <button
                   onClick={() => {
@@ -1729,10 +1743,11 @@ export default function ClientAgreementPage() {
                     backgroundColor: 'transparent',
                     color: isDark ? '#94a3b8' : '#64748b',
                     border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
-                    padding: '12px 24px',
+                    padding: isMobile ? '12px 20px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    flex: isMobile ? '1 1 100%' : '0 0 auto'
                   }}
                 >
                   Cancel
@@ -1780,15 +1795,17 @@ export default function ClientAgreementPage() {
           }}>
             <div style={{
               backgroundColor: isDark ? '#1e293b' : '#ffffff',
-              padding: '32px',
+              padding: isMobile ? '20px' : '32px',
               borderRadius: '8px',
               border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
               maxWidth: '400px',
-              width: '90%'
+              width: '90%',
+              maxHeight: '90vh',
+              overflowY: 'auto'
             }}>
               <h2 style={{ 
                 margin: '0 0 24px 0', 
-                fontSize: '20px', 
+                fontSize: isMobile ? '18px' : '20px', 
                 color: isDark ? '#f1f5f9' : '#1e293b' 
               }}>
                 Email Agreement
@@ -1838,7 +1855,8 @@ export default function ClientAgreementPage() {
               <div style={{ 
                 display: 'flex', 
                 gap: '12px', 
-                justifyContent: 'flex-end' 
+                justifyContent: 'flex-end',
+                flexWrap: 'wrap'
               }}>
                 <button
                   onClick={() => {
@@ -1850,10 +1868,11 @@ export default function ClientAgreementPage() {
                     backgroundColor: 'transparent',
                     color: isDark ? '#94a3b8' : '#64748b',
                     border: `1px solid ${isDark ? '#334155' : '#d1d5db'}`,
-                    padding: '12px 24px',
+                    padding: isMobile ? '12px 20px' : '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    flex: isMobile ? '1 1 100%' : '0 0 auto'
                   }}
                 >
                   Cancel

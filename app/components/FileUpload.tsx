@@ -25,7 +25,19 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const ALLOWED_TYPES = ['application/zip', 'application/x-zip-compressed', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -243,7 +255,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         style={{
           border: `2px dashed ${isDragging ? '#3b82f6' : '#cbd5e1'}`,
           borderRadius: '8px',
-          padding: '32px',
+          padding: isMobile ? '24px 16px' : '32px',
           textAlign: 'center',
           cursor: 'pointer',
           backgroundColor: isDragging ? '#eff6ff' : '#f8fafc',
@@ -271,14 +283,14 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
           style={{ display: 'none' }}
           disabled={isUploading}
         />
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>📤</div>
-        <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
+                <div style={{ fontSize: isMobile ? '36px' : '48px', marginBottom: '12px' }}>📤</div>
+        <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
           {isUploading ? 'Uploading...' : 'Drag and drop files here'}
         </div>
-        <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '12px' }}>
+        <div style={{ fontSize: isMobile ? '13px' : '14px', color: '#64748b', marginBottom: '12px' }}>
           or click to browse
         </div>
-        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+        <div style={{ fontSize: isMobile ? '11px' : '12px', color: '#94a3b8' }}>
           ZIP, JPG, PNG, GIF, WEBP (max 100MB)
         </div>
         {isUploading && (
@@ -350,14 +362,15 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    padding: '6px 12px',
+                    padding: isMobile ? '8px 12px' : '6px 12px',
                     backgroundColor: '#3b82f6',
                     color: 'white',
                     borderRadius: '6px',
-                    fontSize: '12px',
+                    fontSize: isMobile ? '13px' : '12px',
                     fontWeight: '500',
                     textDecoration: 'none',
                     transition: 'background-color 0.2s',
+                    whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#2563eb';
@@ -375,15 +388,16 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   }}
                   disabled={deletingFileId === file.id}
                   style={{
-                    padding: '6px 12px',
+                    padding: isMobile ? '8px 12px' : '6px 12px',
                     backgroundColor: deletingFileId === file.id ? '#9ca3af' : '#dc2626',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
-                    fontSize: '12px',
+                    fontSize: isMobile ? '13px' : '12px',
                     fontWeight: '500',
                     cursor: deletingFileId === file.id ? 'not-allowed' : 'pointer',
                     transition: 'background-color 0.2s',
+                    whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
                     if (deletingFileId !== file.id) {

@@ -39,3 +39,90 @@ body {
     gap: 16px !important;
   }
 }
+
+/* Global Responsive Styles */
+/* Ensure modals are mobile-friendly */
+@media (max-width: 768px) {
+  /* Modal padding adjustments */
+  [style*="position: fixed"][style*="zIndex"] > div[style*="maxWidth"] {
+    padding: 20px !important;
+    margin: 16px !important;
+    max-width: calc(100% - 32px) !important;
+  }
+  
+  /* Form inputs on mobile should be larger for better touch targets */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="datetime-local"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 12px 16px !important;
+  }
+  
+  /* Buttons should stack on mobile */
+  button + button,
+  a + button,
+  button + a {
+    margin-top: 8px;
+  }
+  
+  /* Ensure text wraps properly */
+  * {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Tables should scroll horizontally */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* File upload areas should be touch-friendly */
+  [style*="padding: 32px"] {
+    padding: 24px 16px !important;
+  }
+  
+  /* Action button groups should wrap */
+  [style*="display: flex"][style*="gap"] {
+    flex-wrap: wrap !important;
+  }
+  
+  /* Grid layouts should stack on mobile */
+  [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Modals can be slightly wider on tablets */
+  [style*="position: fixed"][style*="zIndex"] > div[style*="maxWidth"] {
+    max-width: 500px !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  /* Even smaller padding on very small screens */
+  [style*="position: fixed"][style*="zIndex"] > div[style*="maxWidth"] {
+    padding: 16px !important;
+    margin: 12px !important;
+    max-width: calc(100% - 24px) !important;
+  }
+  
+  /* Smaller font sizes for very small screens */
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 18px !important; }
+  
+  /* Compact button padding */
+  button {
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+  }
+}
