@@ -73,8 +73,30 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload file');
+        // Try to parse as JSON, but handle non-JSON responses
+        let errorMessage = 'Failed to upload file';
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            // If JSON parsing fails, use status text
+            errorMessage = response.statusText || errorMessage;
+          }
+        } else {
+          // Non-JSON response (likely HTML error page)
+          const statusText = response.statusText;
+          if (response.status === 413) {
+            errorMessage = 'File is too large. Maximum size is 100MB.';
+          } else if (response.status === 502 || response.status === 503) {
+            errorMessage = 'Server error. Please try again later.';
+          } else {
+            errorMessage = statusText || `Upload failed with status ${response.status}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
