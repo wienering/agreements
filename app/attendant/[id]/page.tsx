@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Metadata } from 'next';
+import AttendantFilesSection from './AttendantFilesSection';
 
 interface AttendantPageProps {
   params: Promise<{ id: string }>;
@@ -1050,6 +1051,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                 </div>
               </div>
             </div>
+
+            {/* Files Section */}
+            <AttendantFilesSection agreementId={agreement.id} />
           </main>
 
           {/* Footer */}

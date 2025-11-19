@@ -40,6 +40,7 @@ model Client {
   sessions       ClientSession[]
   clientNotes    ClientNote[]    @relation("ClientNotes")
   events         Event[]
+  files          ClientFile[]
 }
 
 model Template {
@@ -206,9 +207,31 @@ model Event {
   
   client         Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   agreements     Agreement[]
+  files          ClientFile[]
 
   @@index([clientId])
   @@index([archived])
+}
+
+model ClientFile {
+  id                  String    @id @default(cuid())
+  clientId            String
+  eventId             String?
+  fileName             String
+  fileType             String
+  fileSize             Int
+  googleDriveFileId    String
+  googleDriveLink      String
+  googleDriveFolderId  String
+  uploadedBy           String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  client               Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  event                Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([eventId])
 }
 
 enum AgreementStatus {

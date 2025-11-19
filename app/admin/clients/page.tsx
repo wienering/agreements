@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
+import FileUpload from '../../components/FileUpload';
 
 interface Event {
   id: string;
@@ -62,6 +63,7 @@ export default function ClientsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [addingEventToClient, setAddingEventToClient] = useState<Client | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState<Record<string, boolean>>({});
   const [newClient, setNewClient] = useState({
     firstName: '',
     lastName: '',
@@ -1654,7 +1656,54 @@ export default function ClientsPage() {
                   >
                     {loading ? 'Deleting...' : 'Delete'}
                   </button>
+                  <button
+                    onClick={() => setShowFileUpload(prev => ({ ...prev, [client.id]: !prev[client.id] }))}
+                    style={{
+                      backgroundColor: showFileUpload[client.id] ? '#64748b' : '#8b5cf6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = showFileUpload[client.id] ? '#475569' : '#7c3aed';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = showFileUpload[client.id] ? '#64748b' : '#8b5cf6';
+                    }}
+                    title="Upload files to Google Drive"
+                  >
+                    {showFileUpload[client.id] ? 'Hide Upload' : 'Upload Files'}
+                  </button>
                 </div>
+                {/* File Upload Section */}
+                {showFileUpload[client.id] && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '16px',
+                    backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '8px'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: textColor }}>
+                      Upload Files to Google Drive
+                    </h4>
+                    <FileUpload
+                      clientId={client.id}
+                      eventId={null}
+                      onUploadSuccess={() => {
+                        showToast('File uploaded successfully!');
+                      }}
+                      onUploadError={(error) => {
+                        showToast(error, 'error');
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
