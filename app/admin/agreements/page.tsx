@@ -4319,7 +4319,7 @@ export default function AgreementsPage() {
               <div style={{
                 marginBottom: '20px',
                 padding: '16px',
-                backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+                backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
                 borderRadius: '6px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -4389,7 +4389,7 @@ export default function AgreementsPage() {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: phoneVisibilityToggle ? '#059669' : (isDarkMode ? '#475569' : '#cbd5e1'),
+                      backgroundColor: phoneVisibilityToggle ? '#059669' : (isDark ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: updatingPhoneVisibility ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
