@@ -62,18 +62,26 @@ function sanitizeFolderName(name: string): string {
  */
 export async function findOrCreateClientFolder(clientName: string): Promise<string> {
   const drive = getGoogleDriveClient();
-  const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || 'root';
+  const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+  
+  if (!rootFolderId) {
+    throw new Error('GOOGLE_DRIVE_FOLDER_ID environment variable is required. Please create a folder in your Google Drive, share it with the service account, and set the folder ID.');
+  }
+  
   const sanitizedName = sanitizeFolderName(clientName);
 
   // First, try to find the "Client Files" folder in root
   let clientFilesFolderId: string | null = null;
   
   try {
+    // Search in shared folders (folders shared with service account)
     const clientFilesQuery = `name='Client Files' and mimeType='application/vnd.google-apps.folder' and '${rootFolderId}' in parents and trashed=false`;
     const clientFilesResponse = await drive.files.list({
       q: clientFilesQuery,
       fields: 'files(id, name)',
       spaces: 'drive',
+      includeItemsFromAllDrives: true,
+      supportsAllDrives: true,
     });
 
     if (clientFilesResponse.data.files && clientFilesResponse.data.files.length > 0) {
@@ -83,20 +91,20 @@ export async function findOrCreateClientFolder(clientName: string): Promise<stri
       const folderMetadata = {
         name: 'Client Files',
         mimeType: 'application/vnd.google-apps.folder',
-        parents: rootFolderId !== 'root' ? [rootFolderId] : undefined,
+        parents: [rootFolderId],
       };
 
       const createResponse = await drive.files.create({
         requestBody: folderMetadata,
         fields: 'id',
+        supportsAllDrives: true,
       });
 
       clientFilesFolderId = createResponse.data.id || null;
     }
   } catch (error) {
     console.error('Error finding/creating Client Files folder:', error);
-    // If root folder doesn't exist or we can't create Client Files folder, use root
-    clientFilesFolderId = rootFolderId;
+    throw new Error(`Failed to access shared folder. Make sure the folder (ID: ${rootFolderId}) is shared with the service account (drive-upload-service@agreementsupload-478717.iam.gserviceaccount.com) with Editor permissions.`);
   }
 
   if (!clientFilesFolderId) {
@@ -111,6 +119,8 @@ export async function findOrCreateClientFolder(clientName: string): Promise<stri
       q: clientFolderQuery,
       fields: 'files(id, name)',
       spaces: 'drive',
+      includeItemsFromAllDrives: true,
+      supportsAllDrives: true,
     });
 
     if (response.data.files && response.data.files.length > 0) {
@@ -128,6 +138,7 @@ export async function findOrCreateClientFolder(clientName: string): Promise<stri
     const createResponse = await drive.files.create({
       requestBody: folderMetadata,
       fields: 'id',
+      supportsAllDrives: true,
     });
 
     const folderId = createResponse.data.id;
@@ -171,6 +182,7 @@ export async function uploadFileToDrive(
       requestBody: fileMetadata,
       media: media,
       fields: 'id, webViewLink, webContentLink',
+      supportsAllDrives: true,
     });
 
     const fileId = response.data.id;
