@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
+import { Readable } from 'stream';
 
 let driveClient: ReturnType<typeof google.drive> | null = null;
 
@@ -158,9 +159,12 @@ export async function uploadFileToDrive(
       parents: [folderId],
     };
 
+    // Convert Buffer to Stream
+    const stream = Readable.from(fileBuffer);
+
     const media = {
       mimeType: mimeType || 'application/octet-stream',
-      body: fileBuffer,
+      body: stream,
     };
 
     const response = await drive.files.create({
