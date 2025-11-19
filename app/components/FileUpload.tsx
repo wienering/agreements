@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
 
 interface FileUploadProps {
   clientId: string;
@@ -24,6 +24,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ALLOWED_TYPES = ['application/zip', 'application/x-zip-compressed', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -170,6 +171,66 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
     return '📄';
   };
 
+  const handleDeleteFile = async (fileId: string) => {
+    if (!confirm('Are you sure you want to delete this file? This will remove it from Google Drive and cannot be undone.')) {
+      return;
+    }
+
+    setDeletingFileId(fileId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        let errorMessage = 'Failed to delete file';
+        
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            errorMessage = response.statusText || errorMessage;
+          }
+        } else {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Remove file from the list
+      setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+      onUploadSuccess?.(); // Trigger refresh callback if needed
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete file';
+      setError(errorMessage);
+      onUploadError?.(errorMessage);
+    } finally {
+      setDeletingFileId(null);
+    }
+  };
+
+  // Fetch existing files on mount
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const response = await fetch(`/api/files/client/${clientId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUploadedFiles(data.files || []);
+        }
+      } catch (err) {
+        // Silently fail - files will show after upload
+        console.error('Error fetching files:', err);
+      }
+    };
+
+    fetchFiles();
+  }, [clientId]);
+
   return (
     <div style={{ width: '100%' }}>
       {/* Upload Area */}
@@ -259,7 +320,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
       {uploadedFiles.length > 0 && (
         <div style={{ marginTop: '16px' }}>
           <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#1e293b' }}>
-            Recently Uploaded:
+            Uploaded Files:
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {uploadedFiles.map((file) => (
@@ -307,6 +368,37 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                 >
                   Open
                 </a>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFile(file.id);
+                  }}
+                  disabled={deletingFileId === file.id}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: deletingFileId === file.id ? '#9ca3af' : '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: deletingFileId === file.id ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (deletingFileId !== file.id) {
+                      e.currentTarget.style.backgroundColor = '#b91c1c';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (deletingFileId !== file.id) {
+                      e.currentTarget.style.backgroundColor = '#dc2626';
+                    }
+                  }}
+                  title="Delete file from Google Drive"
+                >
+                  {deletingFileId === file.id ? 'Deleting...' : 'Delete'}
+                </button>
               </div>
             ))}
           </div>
