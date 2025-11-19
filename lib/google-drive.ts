@@ -32,6 +32,14 @@ export function getGoogleDriveClient() {
     refresh_token: refreshToken,
   });
 
+  // Set up automatic token refresh with better error handling
+  oauth2Client.on('tokens', (tokens) => {
+    if (tokens.refresh_token) {
+      // If we get a new refresh token, log it (user should update their env var)
+      console.log('New refresh token received. Update GOOGLE_DRIVE_REFRESH_TOKEN in Vercel.');
+    }
+  });
+
   driveClient = google.drive({
     version: 'v3',
     auth: oauth2Client,

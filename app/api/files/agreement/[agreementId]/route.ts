@@ -25,36 +25,31 @@ export async function GET(
       );
     }
 
-    // Get files for the event if it exists, otherwise get files for the client
-    let files;
-    if (agreement.eventId) {
-      files = await prisma.clientFile.findMany({
-        where: { eventId: agreement.eventId },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          fileName: true,
-          fileType: true,
-          fileSize: true,
-          googleDriveLink: true,
-          createdAt: true,
-        },
-      });
-    } else {
-      // Fallback to client files if no event
-      files = await prisma.clientFile.findMany({
-        where: { clientId: agreement.clientId },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          fileName: true,
-          fileType: true,
-          fileSize: true,
-          googleDriveLink: true,
-          createdAt: true,
-        },
-      });
-    }
+    // Get files for the client - include both event-specific files and general client files
+    // This shows all files associated with the client, whether they're linked to an event or not
+    const files = await prisma.clientFile.findMany({
+      where: {
+        clientId: agreement.clientId,
+        // Show files that either:
+        // 1. Match the agreement's eventId (if it exists), OR
+        // 2. Have no eventId (general client files)
+        OR: agreement.eventId
+          ? [
+              { eventId: agreement.eventId },
+              { eventId: null },
+            ]
+          : undefined,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        fileName: true,
+        fileType: true,
+        fileSize: true,
+        googleDriveLink: true,
+        createdAt: true,
+      },
+    });
 
     return NextResponse.json({ files });
   } catch (error: any) {
