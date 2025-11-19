@@ -24,6 +24,7 @@ interface Agreement {
   lastViewedAt?: string;
   selectedBackdropName?: string;
   paymentStatus?: string;
+  showPhoneNumberAlways?: boolean;
   client: {
     id: string;
     firstName: string;
@@ -128,6 +129,8 @@ export default function AgreementsPage() {
   // Attendant view modal state
   const [showAttendantModal, setShowAttendantModal] = useState(false);
   const [attendantModalAgreement, setAttendantModalAgreement] = useState<Agreement | null>(null);
+  const [phoneVisibilityToggle, setPhoneVisibilityToggle] = useState(false);
+  const [updatingPhoneVisibility, setUpdatingPhoneVisibility] = useState(false);
   
   // Copy link modal state
   const [showCopyLinkModal, setShowCopyLinkModal] = useState(false);
@@ -2005,6 +2008,7 @@ export default function AgreementsPage() {
                   <button
                     onClick={() => {
                       setAttendantModalAgreement(agreement);
+                      setPhoneVisibilityToggle(agreement.showPhoneNumberAlways || false);
                       setShowAttendantModal(true);
                     }}
                     style={{
@@ -2756,6 +2760,7 @@ export default function AgreementsPage() {
                 <button
                   onClick={() => {
                     if (selectedAgreement?.id) {
+                      setPhoneVisibilityToggle(selectedAgreement.showPhoneNumberAlways || false);
                       setShowAttendantModal(true);
                     }
                   }}
@@ -4278,6 +4283,7 @@ export default function AgreementsPage() {
           onClick={() => {
             setShowAttendantModal(false);
             setAttendantModalAgreement(null);
+            setPhoneVisibilityToggle(false);
           }}
           >
             <div style={{
@@ -4308,6 +4314,112 @@ export default function AgreementsPage() {
               }}>
                 Choose an action for the attendant view page
               </p>
+              
+              {/* Phone Number Visibility Toggle */}
+              <div style={{
+                marginBottom: '20px',
+                padding: '16px',
+                backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+                borderRadius: '6px',
+                border: `1px solid ${borderColor}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}>
+                  <label style={{
+                    color: textColor,
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    📞 Always Show Phone Number
+                  </label>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const agreement = attendantModalAgreement || selectedAgreement;
+                      if (!agreement?.id) return;
+                      
+                      const newValue = !phoneVisibilityToggle;
+                      setUpdatingPhoneVisibility(true);
+                      
+                      try {
+                        const response = await fetch('/api/agreements/update-phone-visibility', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            agreementId: agreement.id,
+                            showPhoneNumberAlways: newValue
+                          })
+                        });
+                        
+                        if (response.ok) {
+                          setPhoneVisibilityToggle(newValue);
+                          // Update the agreement in state
+                          if (attendantModalAgreement) {
+                            setAttendantModalAgreement({ ...attendantModalAgreement, showPhoneNumberAlways: newValue });
+                          }
+                          if (selectedAgreement) {
+                            setSelectedAgreement({ ...selectedAgreement, showPhoneNumberAlways: newValue });
+                          }
+                          // Update in agreements list
+                          setAgreements(prev => prev.map(a => 
+                            a.id === agreement.id ? { ...a, showPhoneNumberAlways: newValue } : a
+                          ));
+                          showToast(newValue ? 'Phone number will always be visible' : 'Phone number visibility set to default (24 hours before event)', 'success');
+                        } else {
+                          showToast('Failed to update phone visibility', 'error');
+                        }
+                      } catch (error) {
+                        console.error('Error updating phone visibility:', error);
+                        showToast('Failed to update phone visibility', 'error');
+                      } finally {
+                        setUpdatingPhoneVisibility(false);
+                      }
+                    }}
+                    disabled={updatingPhoneVisibility}
+                    style={{
+                      position: 'relative',
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      backgroundColor: phoneVisibilityToggle ? '#059669' : (isDarkMode ? '#475569' : '#cbd5e1'),
+                      border: 'none',
+                      cursor: updatingPhoneVisibility ? 'not-allowed' : 'pointer',
+                      transition: 'background-color 0.2s',
+                      opacity: updatingPhoneVisibility ? 0.6 : 1
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: phoneVisibilityToggle ? '22px' : '2px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      transition: 'left 0.2s',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }} />
+                  </button>
+                </div>
+                <p style={{
+                  margin: '0',
+                  fontSize: '12px',
+                  color: mutedText
+                }}>
+                  {phoneVisibilityToggle 
+                    ? 'Phone number will be visible on the attendant page regardless of event time'
+                    : 'Phone number will only be visible 24 hours before the event starts (default)'}
+                </p>
+              </div>
+              
               <div style={{ 
                 display: 'flex', 
                 flexDirection: 'column',
@@ -4369,6 +4481,7 @@ export default function AgreementsPage() {
                   onClick={() => {
                     setShowAttendantModal(false);
                     setAttendantModalAgreement(null);
+                    setPhoneVisibilityToggle(false);
                   }}
                   style={{
                     backgroundColor: '#6b7280',

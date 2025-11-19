@@ -76,6 +76,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
         id: true,
         selectedBackdropName: true,
         eventId: true,
+        showPhoneNumberAlways: true,
         client: {
           select: {
             firstName: true,
@@ -115,7 +116,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return <NotFoundError />;
     }
 
-    const { client, event, backdropLink, selectedBackdropName } = agreement;
+    const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways } = agreement;
     
     // Use event data when available, otherwise fall back to client data
     const eventDate = event ? event.eventDate : client.eventDate;
@@ -181,16 +182,16 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return new Date() > expirationTime;
     })();
 
-    // Check if event is less than 18 hours away (to show phone number)
-    const isEventWithin18Hours = (() => {
+    // Check if event is less than 24 hours away (to show phone number)
+    const isEventWithin24Hours = (() => {
       const eventDateTime = getEventDateTime();
       if (!eventDateTime) return false;
       
       const now = new Date();
       const hoursUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
       
-      // Show phone if event is within 18 hours (0 to 18 hours)
-      return hoursUntilEvent >= 0 && hoursUntilEvent <= 18;
+      // Show phone if event is within 24 hours (0 to 24 hours)
+      return hoursUntilEvent >= 0 && hoursUntilEvent <= 24;
     })();
 
     // If event has expired (more than 24 hours after), show expired message
@@ -456,7 +457,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       {client.firstName}
                     </p>
                   </div>
-                  {client.phone && isEventWithin18Hours && (
+                  {client.phone && (isEventWithin24Hours || showPhoneNumberAlways) && (
                     <div>
                       <p
                         style={{
@@ -543,7 +544,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       {eventContactName}
                     </p>
                   </div>
-                  {eventContactPhone && isEventWithin18Hours && (
+                  {eventContactPhone && (isEventWithin24Hours || showPhoneNumberAlways) && (
                     <div>
                       <p
                         style={{
@@ -889,7 +890,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   )}
 
                   {/* Contact Phone / Event Contact Phone */}
-                  {(isWhitelabelClient ? eventContactPhone : client.phone) && isEventWithin18Hours && (
+                  {(isWhitelabelClient ? eventContactPhone : client.phone) && (isEventWithin24Hours || showPhoneNumberAlways) && (
                     <div>
                       <p
                         style={{

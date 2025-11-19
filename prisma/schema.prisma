@@ -89,6 +89,7 @@ model Agreement {
   backdropLinkId     String?
   backdropLink       BackdropLink?         @relation(fields: [backdropLinkId], references: [id], onDelete: SetNull)
   selectedBackdropName String?
+  showPhoneNumberAlways Boolean            @default(false)
   
   client             Client                @relation(fields: [clientId], references: [id])
   template           Template              @relation(fields: [templateId], references: [id])
