@@ -228,6 +228,14 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
     };
 
+    // Generate tel: link for phone number
+    const getTelLink = (phone: string | null) => {
+      if (!phone) return null;
+      // Remove all non-digit characters except + for international numbers
+      const cleaned = phone.replace(/[^\d+]/g, '');
+      return `tel:${cleaned}`;
+    };
+
     return (
       <>
         <style dangerouslySetInnerHTML={{__html: `
@@ -312,6 +320,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             transition: color 0.2s;
           }
           .address-link:hover {
+            color: #93c5fd !important;
+          }
+          a[href^="tel:"] {
+            transition: color 0.2s;
+          }
+          a[href^="tel:"]:hover {
             color: #93c5fd !important;
           }
         `}} />
@@ -473,16 +487,19 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       >
                         Contact Number
                       </p>
-                      <p
+                      <a
+                        href={getTelLink(client.phone) || '#'}
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#f1f5f9',
+                          color: '#60a5fa',
                           fontWeight: '600',
+                          textDecoration: 'none',
+                          display: 'block',
                         }}
                       >
                         {client.phone}
-                      </p>
+                      </a>
                     </div>
                   )}
                 </div>
@@ -560,16 +577,19 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       >
                         Event Contact Number
                       </p>
-                      <p
+                      <a
+                        href={getTelLink(eventContactPhone) || '#'}
                         style={{
                           margin: '0',
                           fontSize: '18px',
-                          color: '#f1f5f9',
+                          color: '#60a5fa',
                           fontWeight: '600',
+                          textDecoration: 'none',
+                          display: 'block',
                         }}
                       >
                         {eventContactPhone}
-                      </p>
+                      </a>
                     </div>
                   )}
                 </div>
@@ -906,16 +926,19 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                       >
                         {isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}
                       </p>
-                      <p
+                      <a
+                        href={getTelLink(isWhitelabelClient ? eventContactPhone : client.phone) || '#'}
                         style={{
                           margin: '0',
                           fontSize: '16px',
-                          color: '#f1f5f9',
+                          color: '#60a5fa',
                           fontWeight: '500',
+                          textDecoration: 'none',
+                          display: 'block',
                         }}
                       >
                         {isWhitelabelClient ? eventContactPhone : client.phone}
-                      </p>
+                      </a>
                     </div>
                   )}
 
