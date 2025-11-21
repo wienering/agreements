@@ -23,6 +23,9 @@ interface Event {
   archivedAt?: string;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    agreements: number;
+  };
 }
 
 interface Client {
@@ -498,6 +501,11 @@ export default function ClientsPage() {
   const textColor = isDark ? '#f1f5f9' : '#1e293b';
   const mutedText = isDark ? '#94a3b8' : '#64748b';
   const borderColor = isDark ? '#334155' : '#e2e8f0';
+
+  // Helper function to check if an event has no agreements
+  const hasNoAgreements = (event: Event): boolean => {
+    return (event._count?.agreements ?? 0) === 0;
+  };
 
   return (
     <div style={{ 
@@ -1399,13 +1407,16 @@ export default function ClientsPage() {
                       </div>
                       {client.events && client.events.length > 0 && (
                         <>
-                          {client.events.map((event) => (
+                          {client.events.map((event) => {
+                            const noAgreements = hasNoAgreements(event);
+                            return (
                           <div key={event.id} style={{
                             marginBottom: '12px',
                             padding: '12px',
                             backgroundColor: isDark ? '#1e293b' : '#f8fafc',
-                            border: `1px solid ${borderColor}`,
-                            borderRadius: '6px'
+                            border: noAgreements ? '2px solid #f77f00' : `1px solid ${borderColor}`,
+                            borderRadius: '6px',
+                            boxShadow: noAgreements ? '0 0 8px rgba(247, 127, 0, 0.5), 0 0 16px rgba(247, 127, 0, 0.3)' : 'none'
                           }}>
                             {event.eventName && (
                               <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '15px', fontWeight: '600' }}>
@@ -1529,7 +1540,8 @@ export default function ClientsPage() {
                               </button>
                             </div>
                           </div>
-                          ))}
+                          );
+                          })}
                         </>
                       )}
                     </div>

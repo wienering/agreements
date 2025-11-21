@@ -154,9 +154,14 @@ class Bookly_Agreements_Integration {
                 // Check if we've already processed this booking
                 $processed_key = 'bookly_processed_' . $booking_id;
                 if (!get_transient($processed_key)) {
-                    $this->send_booking_to_agreements($booking_id);
-                    // Mark as processed (expires in 24 hours)
-                    set_transient($processed_key, true, 86400);
+                    $result = $this->send_booking_to_agreements($booking_id);
+                    // Only mark as processed if webhook succeeded (expires in 24 hours)
+                    if ($result === true) {
+                        set_transient($processed_key, true, 86400);
+                    } else {
+                        // Track failed booking for retry
+                        $this->track_failed_booking($booking_id, 'Webhook call failed during admin check');
+                    }
                 }
             }
         }
@@ -166,9 +171,11 @@ class Bookly_Agreements_Integration {
      * Send booking data to Agreements app
      * 
      * @param int|array $booking_data Booking ID or booking data array
+     * @return bool True on success, false on failure
      */
     public function send_booking_to_agreements($booking_data) {
-        $this->log_success('Hook triggered! Booking data received: ' . print_r($booking_data, true));
+        $timestamp = current_time('mysql');
+        $this->log_success("[{$timestamp}] Hook triggered! Booking data received: " . print_r($booking_data, true));
         
         // Get booking ID
         $booking_id = is_array($booking_data) 
@@ -176,69 +183,198 @@ class Bookly_Agreements_Integration {
             : $booking_data;
         
         if (!$booking_id) {
-            $this->log_error('No booking ID provided');
+            $this->log_error("[{$timestamp}] Booking ID: N/A - No booking ID provided");
             return false;
         }
         
         // Check if plugin is enabled and configured
         if (!$this->settings['enabled']) {
-            $this->log_error('Integration is disabled in settings');
+            $this->log_error("[{$timestamp}] Booking ID: {$booking_id} - Integration is disabled in settings");
             return false;
         }
         
         if (empty($this->settings['webhook_url'])) {
-            $this->log_error('Webhook URL is not configured. Please set it in Settings → Bookly → Agreements');
+            $this->log_error("[{$timestamp}] Booking ID: {$booking_id} - Webhook URL is not configured. Please set it in Settings → Bookly → Agreements");
             return false;
         }
         
-        $this->log_success("Processing booking ID: $booking_id");
+        $this->log_success("[{$timestamp}] Processing booking ID: {$booking_id}");
         
         // Fetch booking details from Bookly
         $booking_details = $this->get_booking_details($booking_id);
         
         if (!$booking_details) {
-            $this->log_error("Could not fetch booking details for ID: $booking_id");
+            $error_msg = "Could not fetch booking details for ID: {$booking_id}";
+            $this->log_error("[{$timestamp}] Booking ID: {$booking_id} - {$error_msg}");
+            $this->track_failed_booking($booking_id, $error_msg);
             return false;
         }
         
         // Check if we got email (required field)
-        if (empty($booking_details['customer_email'])) {
-            $this->log_error("No customer email found for booking ID: $booking_id. Booking details: " . print_r($booking_details, true));
+        $customer_email = $booking_details['customer_email'] ?? '';
+        if (empty($customer_email)) {
+            $error_msg = "No customer email found for booking ID: {$booking_id}";
+            $this->log_error("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: MISSING - {$error_msg}. Booking details: " . print_r($booking_details, true));
+            $this->track_failed_booking($booking_id, $error_msg);
             return false;
         }
         
-        $this->log_success("Fetched booking details. Email: " . $booking_details['customer_email']);
+        $this->log_success("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: {$customer_email} - Fetched booking details successfully");
         
         // Prepare payload for Agreements app
         $payload = $this->prepare_payload($booking_details);
         
         // Verify email is in payload (required)
         if (empty($payload['email'])) {
-            $this->log_error("No email in prepared payload for booking ID: $booking_id. Payload: " . json_encode($payload));
+            $error_msg = "No email in prepared payload for booking ID: {$booking_id}";
+            $this->log_error("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: {$customer_email} - {$error_msg}. Payload: " . json_encode($payload));
+            $this->track_failed_booking($booking_id, $error_msg);
             return false;
         }
         
-        $this->log_success("Prepared payload with email: " . $payload['email']);
+        $this->log_success("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: {$customer_email} - Prepared payload successfully");
         
         // Send to Agreements app
         $response = $this->send_webhook($payload);
         
         if (is_wp_error($response)) {
+            $error_code = $response->get_error_code();
             $error_msg = $response->get_error_message();
-            $this->log_error("Webhook error for booking $booking_id: $error_msg");
+            $full_error = "Webhook error for booking {$booking_id}: [{$error_code}] {$error_msg}";
+            $this->log_error("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: {$customer_email} - {$full_error}");
+            $this->track_failed_booking($booking_id, $full_error);
             return false;
         } else {
             $response_code = wp_remote_retrieve_response_code($response);
             $response_body = wp_remote_retrieve_body($response);
             
             if ($response_code >= 200 && $response_code < 300) {
-                $this->log_success("Successfully sent booking $booking_id to Agreements app. Response ($response_code): $response_body");
+                $this->log_success("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: {$customer_email} - Successfully sent to Agreements app. Response ({$response_code}): " . substr($response_body, 0, 200));
+                // Clear any previous failure tracking on success
+                $this->clear_failed_booking($booking_id);
                 return true;
             } else {
-                $this->log_error("Webhook failed for booking $booking_id. Code: $response_code, Response: $response_body");
+                $error_msg = "Webhook failed for booking {$booking_id}. HTTP Code: {$response_code}, Response: " . substr($response_body, 0, 200);
+                $this->log_error("[{$timestamp}] Booking ID: {$booking_id}, Customer Email: {$customer_email} - {$error_msg}");
+                $this->track_failed_booking($booking_id, $error_msg);
                 return false;
             }
         }
+    }
+    
+    /**
+     * Track a failed booking for retry
+     * 
+     * @param int $booking_id
+     * @param string $error_message
+     */
+    private function track_failed_booking($booking_id, $error_message) {
+        $failed_key = 'bookly_failed_' . $booking_id;
+        $failed_data = get_transient($failed_key);
+        
+        if ($failed_data === false) {
+            // First failure
+            $failed_data = array(
+                'booking_id' => $booking_id,
+                'error_message' => $error_message,
+                'failure_count' => 1,
+                'first_failure' => current_time('mysql'),
+                'last_attempt' => current_time('mysql'),
+            );
+        } else {
+            // Increment failure count
+            $failed_data['failure_count'] = ($failed_data['failure_count'] ?? 0) + 1;
+            $failed_data['last_attempt'] = current_time('mysql');
+            $failed_data['error_message'] = $error_message; // Update with latest error
+        }
+        
+        // Store for 7 days (604800 seconds)
+        set_transient($failed_key, $failed_data, 604800);
+        
+        // Also store in a list of all failed bookings
+        $failed_list = get_transient('bookly_failed_bookings_list');
+        if ($failed_list === false) {
+            $failed_list = array();
+        }
+        if (!in_array($booking_id, $failed_list)) {
+            $failed_list[] = $booking_id;
+        }
+        set_transient('bookly_failed_bookings_list', $failed_list, 604800);
+    }
+    
+    /**
+     * Clear failed booking tracking on success
+     * 
+     * @param int $booking_id
+     */
+    private function clear_failed_booking($booking_id) {
+        $failed_key = 'bookly_failed_' . $booking_id;
+        delete_transient($failed_key);
+        
+        // Remove from failed list
+        $failed_list = get_transient('bookly_failed_bookings_list');
+        if ($failed_list !== false && in_array($booking_id, $failed_list)) {
+            $failed_list = array_diff($failed_list, array($booking_id));
+            set_transient('bookly_failed_bookings_list', $failed_list, 604800);
+        }
+    }
+    
+    /**
+     * Get all failed bookings
+     * 
+     * @return array Array of failed booking data
+     */
+    private function get_failed_bookings() {
+        $failed_list = get_transient('bookly_failed_bookings_list');
+        if ($failed_list === false || empty($failed_list)) {
+            return array();
+        }
+        
+        $failed_bookings = array();
+        foreach ($failed_list as $booking_id) {
+            $failed_key = 'bookly_failed_' . $booking_id;
+            $failed_data = get_transient($failed_key);
+            if ($failed_data !== false) {
+                $failed_bookings[] = $failed_data;
+            }
+        }
+        
+        // Sort by last attempt (most recent first)
+        usort($failed_bookings, function($a, $b) {
+            return strtotime($b['last_attempt']) - strtotime($a['last_attempt']);
+        });
+        
+        return $failed_bookings;
+    }
+    
+    /**
+     * Check if a booking should be retried based on exponential backoff
+     * 
+     * @param array $failed_data Failed booking data
+     * @return bool True if should retry, false if should wait
+     */
+    private function should_retry_booking($failed_data) {
+        $failure_count = $failed_data['failure_count'] ?? 1;
+        $last_attempt = strtotime($failed_data['last_attempt'] ?? 'now');
+        $now = current_time('timestamp');
+        
+        // Exponential backoff: 5 min, 15 min, 1 hour, then stop
+        $backoff_intervals = array(300, 900, 3600); // seconds
+        $backoff_index = min($failure_count - 1, count($backoff_intervals) - 1);
+        
+        if ($backoff_index < 0) {
+            return true; // First retry
+        }
+        
+        // Max 3 retries
+        if ($failure_count > 3) {
+            return false;
+        }
+        
+        $required_wait = $backoff_intervals[$backoff_index];
+        $time_since_last = $now - $last_attempt;
+        
+        return $time_since_last >= $required_wait;
     }
     
     /**
@@ -598,7 +734,10 @@ class Bookly_Agreements_Integration {
                 'User-Agent' => 'Bookly-WordPress-Integration/' . self::VERSION,
             ),
             'body' => $body,
-            'timeout' => 15,
+            'timeout' => 30, // Increased from 15 to 30 seconds for better reliability
+            'redirection' => 5,
+            'httpversion' => '1.1',
+            'blocking' => true,
         );
         
         // Add webhook signature if API key is configured
@@ -612,7 +751,15 @@ class Bookly_Agreements_Integration {
         
         // Log the actual request details for debugging
         if (is_wp_error($response)) {
-            $this->log_error('WP_Remote_Post Error: ' . $response->get_error_code() . ' - ' . $response->get_error_message());
+            $error_code = $response->get_error_code();
+            $error_message = $response->get_error_message();
+            
+            // Check for timeout specifically
+            if ($error_code === 'http_request_failed' && (stripos($error_message, 'timeout') !== false || stripos($error_message, 'timed out') !== false)) {
+                $this->log_error('WP_Remote_Post Timeout Error: ' . $error_message . ' (timeout set to 30 seconds)');
+            } else {
+                $this->log_error('WP_Remote_Post Error: [' . $error_code . '] ' . $error_message);
+            }
         } else {
             $response_code = wp_remote_retrieve_response_code($response);
             $response_body = wp_remote_retrieve_body($response);
@@ -673,12 +820,13 @@ class Bookly_Agreements_Integration {
     /**
      * Check for recent bookings and process them
      * This can be called manually or automatically
+     * Also retries failed bookings that are ready for retry
      */
     public function check_recent_bookings() {
         global $wpdb;
         
         if (!$this->settings['enabled'] || empty($this->settings['webhook_url'])) {
-            return array('found' => 0, 'processed' => 0, 'errors' => array());
+            return array('found' => 0, 'processed' => 0, 'retried' => 0, 'errors' => array());
         }
         
         // Get bookings from last 24 hours that are approved/completed
@@ -687,7 +835,7 @@ class Bookly_Agreements_Integration {
         // Check if table exists
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$bookly_customer_appointments_table'");
         if (!$table_exists) {
-            return array('found' => 0, 'processed' => 0, 'errors' => array('Table does not exist'));
+            return array('found' => 0, 'processed' => 0, 'retried' => 0, 'errors' => array('Table does not exist'));
         }
         
         // Get bookings with customer info to verify we can access email
@@ -703,26 +851,32 @@ class Bookly_Agreements_Integration {
         
         $recent_bookings_data = $wpdb->get_results($query, ARRAY_A);
         
-        if (empty($recent_bookings_data)) {
-            return array('found' => 0, 'processed' => 0, 'errors' => array());
-        }
-        
         $processed = 0;
+        $retried = 0;
         $errors = array();
         $recent_bookings = array();
         
         // Extract booking IDs and check for emails
-        foreach ($recent_bookings_data as $booking_data) {
-            $booking_id = $booking_data['id'];
-            $recent_bookings[] = $booking_id;
-            
-            // Pre-check: Does this booking have an email?
-            if (empty($booking_data['has_email'])) {
-                $errors[] = "Booking ID $booking_id: Customer has no email in database (customer_id: " . $booking_data['customer_id'] . ")";
+        if (!empty($recent_bookings_data)) {
+            foreach ($recent_bookings_data as $booking_data) {
+                $booking_id = $booking_data['id'];
+                $recent_bookings[] = $booking_id;
+                
+                // Pre-check: Does this booking have an email?
+                if (empty($booking_data['has_email'])) {
+                    $errors[] = "Booking ID $booking_id: Customer has no email in database (customer_id: " . $booking_data['customer_id'] . ")";
+                }
             }
         }
         
+        // Process new bookings
         foreach ($recent_bookings as $booking_id) {
+            // Check if already processed
+            $processed_key = 'bookly_processed_' . $booking_id;
+            if (get_transient($processed_key)) {
+                continue; // Skip already processed
+            }
+            
             try {
                 // First verify we can get booking details
                 $booking_details = $this->get_booking_details($booking_id);
@@ -743,6 +897,8 @@ class Bookly_Agreements_Integration {
                 // Check if it actually succeeded
                 if ($result === true) {
                     $processed++;
+                    // Mark as processed
+                    set_transient($processed_key, true, 86400);
                 } else {
                     $errors[] = "Booking ID $booking_id: Failed to send (check logs for details)";
                 }
@@ -751,9 +907,75 @@ class Bookly_Agreements_Integration {
             }
         }
         
+        // Retry failed bookings that are ready for retry
+        $failed_bookings = $this->get_failed_bookings();
+        foreach ($failed_bookings as $failed_data) {
+            if ($this->should_retry_booking($failed_data)) {
+                $booking_id = $failed_data['booking_id'];
+                try {
+                    $result = $this->send_booking_to_agreements($booking_id);
+                    if ($result === true) {
+                        $retried++;
+                        // Mark as processed
+                        $processed_key = 'bookly_processed_' . $booking_id;
+                        set_transient($processed_key, true, 86400);
+                    }
+                } catch (Exception $e) {
+                    $errors[] = "Retry failed for Booking ID $booking_id: " . $e->getMessage();
+                }
+            }
+        }
+        
         return array(
             'found' => count($recent_bookings), 
             'processed' => $processed,
+            'retried' => $retried,
+            'errors' => $errors
+        );
+    }
+    
+    /**
+     * Retry all failed bookings manually
+     * 
+     * @return array Result with success/failure counts
+     */
+    public function retry_failed_bookings() {
+        $failed_bookings = $this->get_failed_bookings();
+        $success = 0;
+        $failed = 0;
+        $skipped = 0;
+        $errors = array();
+        
+        foreach ($failed_bookings as $failed_data) {
+            $booking_id = $failed_data['booking_id'];
+            
+            // Check if already processed successfully
+            $processed_key = 'bookly_processed_' . $booking_id;
+            if (get_transient($processed_key)) {
+                $skipped++;
+                continue;
+            }
+            
+            try {
+                $result = $this->send_booking_to_agreements($booking_id);
+                if ($result === true) {
+                    $success++;
+                    // Mark as processed
+                    set_transient($processed_key, true, 86400);
+                } else {
+                    $failed++;
+                }
+            } catch (Exception $e) {
+                $failed++;
+                $errors[] = "Booking ID $booking_id: " . $e->getMessage();
+            }
+        }
+        
+        return array(
+            'total' => count($failed_bookings),
+            'success' => $success,
+            'failed' => $failed,
+            'skipped' => $skipped,
             'errors' => $errors
         );
     }
@@ -1054,7 +1276,7 @@ class Bookly_Agreements_Integration {
             <form method="post" action="" style="margin: 20px 0;">
                 <?php wp_nonce_field('bookly_sync_bookings'); ?>
                 <input type="hidden" name="bookly_sync_action" value="sync_recent">
-                <p>Check for bookings from the last 24 hours and send them to Agreements app. Useful if hooks aren't firing.</p>
+                <p>Check for bookings from the last 24 hours and send them to Agreements app. Useful if hooks aren't firing. Also automatically retries failed bookings that are ready.</p>
                 <button type="submit" class="button button-primary">Check & Sync Recent Bookings</button>
             </form>
             
@@ -1063,39 +1285,126 @@ class Bookly_Agreements_Integration {
             if (isset($_POST['bookly_sync_action']) && $_POST['bookly_sync_action'] === 'sync_recent' && check_admin_referer('bookly_sync_bookings')) {
                 $result = $this->check_recent_bookings();
                 if ($result && isset($result['found'])) {
+                    $message_parts = array();
                     if ($result['found'] > 0) {
-                        $message = '<strong>Sync Complete!</strong> Found ' . esc_html($result['found']) . ' recent booking(s), successfully processed ' . esc_html($result['processed']) . '.';
-                        if ($result['processed'] < $result['found']) {
-                            $message .= ' Some bookings failed - check details below.';
+                        $message_parts[] = 'Found ' . esc_html($result['found']) . ' recent booking(s)';
+                    }
+                    if ($result['processed'] > 0) {
+                        $message_parts[] = 'processed ' . esc_html($result['processed']) . ' new booking(s)';
+                    }
+                    if (isset($result['retried']) && $result['retried'] > 0) {
+                        $message_parts[] = 'retried ' . esc_html($result['retried']) . ' failed booking(s)';
+                    }
+                    
+                    if (!empty($message_parts)) {
+                        $message = '<strong>Sync Complete!</strong> ' . implode(', ', $message_parts) . '.';
+                        if (isset($result['retried']) && $result['retried'] > 0 && $result['processed'] == 0 && $result['found'] == 0) {
+                            echo '<div class="notice notice-success"><p>' . $message . '</p></div>';
+                        } else {
+                            echo '<div class="notice notice-' . ($result['processed'] > 0 || (isset($result['retried']) && $result['retried'] > 0) ? 'success' : 'warning') . '"><p>' . $message . '</p></div>';
                         }
-                        echo '<div class="notice notice-' . ($result['processed'] > 0 ? 'success' : 'warning') . '"><p>' . $message . '</p></div>';
-                        
-                        if (!empty($result['errors'])) {
-                            echo '<div class="notice notice-warning"><p><strong>Errors occurred:</strong><br>' . esc_html(implode('<br>', $result['errors'])) . '</p></div>';
-                        }
-                        
-                        if ($result['processed'] == 0) {
-                            echo '<div class="notice notice-warning"><p><strong>Bookings found but none processed.</strong><br>';
-                            if (!empty($result['errors'])) {
-                                echo 'Errors:<br><ul style="margin-left:20px;">';
-                                foreach ($result['errors'] as $error) {
-                                    echo '<li>' . esc_html($error) . '</li>';
-                                }
-                                echo '</ul>';
-                            } else {
-                                echo 'Possible causes:<br>
-                                - Booking details couldn\'t be fetched from database<br>
-                                - Email missing from booking data<br>
-                                - Webhook request failed<br>
-                                Check your server\'s error logs or PHP error logs for detailed messages.';
-                            }
-                            echo '</p></div>';
-                        }
-                    } else {
+                    }
+                    
+                    if (!empty($result['errors'])) {
+                        echo '<div class="notice notice-warning"><p><strong>Errors occurred:</strong><br>' . esc_html(implode('<br>', $result['errors'])) . '</p></div>';
+                    }
+                    
+                    if ($result['processed'] == 0 && (!isset($result['retried']) || $result['retried'] == 0) && $result['found'] == 0) {
                         echo '<div class="notice notice-info"><p>No recent bookings found (last 24 hours with approved/done/waitlisted status).</p></div>';
+                    } elseif ($result['processed'] == 0 && (!isset($result['retried']) || $result['retried'] == 0) && $result['found'] > 0) {
+                        echo '<div class="notice notice-warning"><p><strong>Bookings found but none processed.</strong><br>';
+                        if (!empty($result['errors'])) {
+                            echo 'Errors:<br><ul style="margin-left:20px;">';
+                            foreach ($result['errors'] as $error) {
+                                echo '<li>' . esc_html($error) . '</li>';
+                            }
+                            echo '</ul>';
+                        } else {
+                            echo 'Possible causes:<br>
+                            - Booking details couldn\'t be fetched from database<br>
+                            - Email missing from booking data<br>
+                            - Webhook request failed<br>
+                            Check your server\'s error logs or PHP error logs for detailed messages.';
+                        }
+                        echo '</p></div>';
                     }
                 } else {
                     echo '<div class="notice notice-error"><p>Error checking bookings. Check database connection.</p></div>';
+                }
+            }
+            ?>
+            
+            <h3>Failed Bookings & Retry</h3>
+            <?php
+            $failed_bookings = $this->get_failed_bookings();
+            if (!empty($failed_bookings)) {
+                echo '<p><strong>Found ' . count($failed_bookings) . ' failed booking(s) that need attention:</strong></p>';
+                echo '<table class="wp-list-table widefat fixed striped" style="margin: 20px 0;">';
+                echo '<thead><tr>';
+                echo '<th>Booking ID</th>';
+                echo '<th>Failure Count</th>';
+                echo '<th>First Failure</th>';
+                echo '<th>Last Attempt</th>';
+                echo '<th>Error Message</th>';
+                echo '<th>Retry Status</th>';
+                echo '</tr></thead><tbody>';
+                
+                foreach ($failed_bookings as $failed) {
+                    $can_retry = $this->should_retry_booking($failed);
+                    $retry_status = $can_retry ? '<span style="color:green;">Ready to retry</span>' : '<span style="color:orange;">Waiting (backoff)</span>';
+                    if (($failed['failure_count'] ?? 0) > 3) {
+                        $retry_status = '<span style="color:red;">Max retries reached</span>';
+                    }
+                    
+                    echo '<tr>';
+                    echo '<td>' . esc_html($failed['booking_id']) . '</td>';
+                    echo '<td>' . esc_html($failed['failure_count'] ?? 0) . '</td>';
+                    echo '<td>' . esc_html($failed['first_failure'] ?? 'N/A') . '</td>';
+                    echo '<td>' . esc_html($failed['last_attempt'] ?? 'N/A') . '</td>';
+                    echo '<td><small>' . esc_html(substr($failed['error_message'] ?? 'Unknown error', 0, 100)) . '</small></td>';
+                    echo '<td>' . $retry_status . '</td>';
+                    echo '</tr>';
+                }
+                
+                echo '</tbody></table>';
+                
+                echo '<form method="post" action="" style="margin: 20px 0;">';
+                wp_nonce_field('bookly_retry_failed');
+                echo '<input type="hidden" name="bookly_retry_action" value="retry_failed">';
+                echo '<p>Manually retry all failed bookings (will skip those that have already been processed successfully):</p>';
+                echo '<button type="submit" class="button button-primary">Retry All Failed Bookings</button>';
+                echo '</form>';
+            } else {
+                echo '<p style="color:green;">✓ No failed bookings! All bookings have been processed successfully.</p>';
+            }
+            
+            // Handle retry action
+            if (isset($_POST['bookly_retry_action']) && $_POST['bookly_retry_action'] === 'retry_failed' && check_admin_referer('bookly_retry_failed')) {
+                $retry_result = $this->retry_failed_bookings();
+                if ($retry_result && isset($retry_result['total'])) {
+                    $message = '<strong>Retry Complete!</strong> ';
+                    if ($retry_result['total'] > 0) {
+                        $message .= 'Attempted ' . esc_html($retry_result['total']) . ' failed booking(s): ';
+                        $parts = array();
+                        if ($retry_result['success'] > 0) {
+                            $parts[] = esc_html($retry_result['success']) . ' succeeded';
+                        }
+                        if ($retry_result['failed'] > 0) {
+                            $parts[] = esc_html($retry_result['failed']) . ' failed';
+                        }
+                        if ($retry_result['skipped'] > 0) {
+                            $parts[] = esc_html($retry_result['skipped']) . ' skipped (already processed)';
+                        }
+                        $message .= implode(', ', $parts) . '.';
+                    } else {
+                        $message .= 'No failed bookings to retry.';
+                    }
+                    
+                    echo '<div class="notice notice-' . ($retry_result['success'] > 0 ? 'success' : 'warning') . '"><p>' . $message . '</p></div>';
+                    
+                    if (!empty($retry_result['errors'])) {
+                        echo '<div class="notice notice-warning"><p><strong>Errors during retry:</strong><br>' . esc_html(implode('<br>', $retry_result['errors'])) . '</p></div>';
+                    }
                 }
             }
             ?>

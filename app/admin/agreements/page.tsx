@@ -113,6 +113,11 @@ export default function AgreementsPage() {
   const [cancellationConfirm, setCancellationConfirm] = useState('');
   const [cancelling, setCancelling] = useState(false);
   
+  // Payment warning state
+  const [showPaymentWarningModal, setShowPaymentWarningModal] = useState(false);
+  const [completingAgreement, setCompletingAgreement] = useState<Agreement | null>(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ agreementId: string; status: string } | null>(null);
+  
   // Email preview state
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [previewAgreement, setPreviewAgreement] = useState<Agreement | null>(null);
@@ -231,6 +236,10 @@ export default function AgreementsPage() {
           setCancellationReason('');
           setAdminName('');
           setCancellationConfirm('');
+        } else if (showPaymentWarningModal) {
+          setShowPaymentWarningModal(false);
+          setCompletingAgreement(null);
+          setPendingStatusChange(null);
         } else if (editingStatus) {
           setEditingStatus(false);
           setEditingStatusAgreementId(null);
@@ -253,6 +262,7 @@ export default function AgreementsPage() {
     showEmailPreview,
     showInvoiceModal,
     showCancelModal,
+    showPaymentWarningModal,
     editingStatus,
     editingExpiration,
     selectedAgreement
@@ -1024,6 +1034,23 @@ export default function AgreementsPage() {
       return;
     }
 
+    // Check if trying to complete an agreement that isn't fully paid
+    if (newStatus === 'COMPLETED') {
+      const agreement = agreements.find(a => a.id === agreementId);
+      if (agreement && agreement.paymentStatus?.toLowerCase() !== 'fully paid') {
+        // Show payment warning modal
+        setCompletingAgreement(agreement);
+        setPendingStatusChange({ agreementId, status: newStatus });
+        setShowPaymentWarningModal(true);
+        return;
+      }
+    }
+
+    // Proceed with status update
+    await proceedWithStatusUpdate(agreementId, newStatus);
+  };
+
+  const proceedWithStatusUpdate = async (agreementId: string, status: string) => {
     try {
       setSaving(true);
       const response = await fetch('/api/agreements/update-status', {
@@ -1033,7 +1060,7 @@ export default function AgreementsPage() {
         },
         body: JSON.stringify({ 
           id: agreementId, 
-          status: newStatus 
+          status: status 
         }),
       });
 
@@ -1041,7 +1068,7 @@ export default function AgreementsPage() {
         const updatedAgreement = await response.json();
         
         // If status is COMPLETED, remove from list since it's now archived
-        if (newStatus === 'COMPLETED') {
+        if (status === 'COMPLETED') {
           setAgreements(agreements.filter(a => a.id !== agreementId));
           showToast('Agreement marked as completed and moved to archived section!');
         } else {
@@ -1064,6 +1091,21 @@ export default function AgreementsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleConfirmPaymentWarning = async () => {
+    if (!pendingStatusChange) return;
+    
+    setShowPaymentWarningModal(false);
+    await proceedWithStatusUpdate(pendingStatusChange.agreementId, pendingStatusChange.status);
+    setCompletingAgreement(null);
+    setPendingStatusChange(null);
+  };
+
+  const handleCancelPaymentWarning = () => {
+    setShowPaymentWarningModal(false);
+    setCompletingAgreement(null);
+    setPendingStatusChange(null);
   };
 
   // Cancellation functions
@@ -3400,6 +3442,132 @@ export default function AgreementsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Payment Warning Modal */}
+        {showPaymentWarningModal && completingAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '8px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <h3 style={{ 
+                margin: '0 0 16px 0', 
+                fontSize: '18px', 
+                color: textColor,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ color: '#f59e0b' }}>⚠️</span>
+                Payment Warning
+              </h3>
+
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ margin: '0 0 16px 0', color: textColor, fontSize: '16px', lineHeight: '1.5' }}>
+                  You are about to mark this agreement as <strong>COMPLETED</strong>, but the payment status is not fully paid.
+                </p>
+                
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: isDark ? '#1e293b' : '#fef3c7',
+                  border: `1px solid ${isDark ? '#334155' : '#fde68a'}`,
+                  borderRadius: '6px',
+                  marginBottom: '16px'
+                }}>
+                  <p style={{ margin: '0 0 8px 0', color: textColor, fontSize: '14px', fontWeight: '600' }}>
+                    Agreement Details:
+                  </p>
+                  <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                    <strong>Client:</strong> {completingAgreement.client.firstName} {completingAgreement.client.lastName}
+                  </p>
+                  <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
+                    <strong>Template:</strong> {completingAgreement.template.title}
+                  </p>
+                  <p style={{ margin: '0', color: textColor, fontSize: '14px' }}>
+                    <strong>Current Payment Status:</strong> <span style={{ color: '#f59e0b', fontWeight: '600' }}>{completingAgreement.paymentStatus || 'Not Set'}</span>
+                  </p>
+                </div>
+
+                <p style={{ margin: '0', color: textColor, fontSize: '14px', lineHeight: '1.5' }}>
+                  Are you sure you want to proceed with marking this agreement as completed?
+                </p>
+              </div>
+
+              <div style={{ 
+                display: 'flex', 
+                gap: '12px', 
+                justifyContent: 'flex-end' 
+              }}>
+                <button
+                  onClick={handleCancelPaymentWarning}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4b5563';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#6b7280';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmPaymentWarning}
+                  disabled={saving}
+                  style={{
+                    backgroundColor: saving ? '#9ca3af' : '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '#d97706';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = '#f59e0b';
+                    }
+                  }}
+                >
+                  {saving ? 'Completing...' : 'Yes, Complete Anyway'}
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -9,6 +9,13 @@ export async function GET() {
           where: {
             archived: false
           },
+          include: {
+            _count: {
+              select: {
+                agreements: true
+              }
+            }
+          },
           orderBy: [
             { eventDate: 'asc' },
             { createdAt: 'asc' }
@@ -105,6 +112,13 @@ export async function POST(request: NextRequest) {
         events: {
           where: {
             archived: false
+          },
+          include: {
+            _count: {
+              select: {
+                agreements: true
+              }
+            }
           },
           orderBy: [
             { eventDate: 'asc' },
