@@ -1723,10 +1723,12 @@ export default function AgreementsPage() {
                 )}
 
                 {/* Confidence Indicator for Unresponsive Clients */}
-                {agreement.status === 'LIVE' && agreement.lastEmailedAt && (() => {
-                  const daysSinceEmailed = Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24));
-                  const isUnresponsive = daysSinceEmailed >= 3;
-                  const needsPersonalFollowUp = daysSinceEmailed >= 5;
+                {(() => {
+                  const daysSinceEmailed = agreement.status === 'LIVE' && agreement.lastEmailedAt 
+                    ? Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24))
+                    : null;
+                  const isUnresponsive = daysSinceEmailed !== null && daysSinceEmailed >= 3;
+                  const needsPersonalFollowUp = daysSinceEmailed !== null && daysSinceEmailed >= 5;
                   
                   if (isUnresponsive) {
                     return (
@@ -1743,7 +1745,8 @@ export default function AgreementsPage() {
                         zIndex: 1,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '4px'
+                        gap: '4px',
+                        maxWidth: 'calc(100% - 16px)'
                       }}>
                         {needsPersonalFollowUp ? '🚨' : '⚠️'}
                         {needsPersonalFollowUp ? 'Needs Personal Follow-up' : 'Might need personal follow-up'}
@@ -1759,7 +1762,10 @@ export default function AgreementsPage() {
                   alignItems: 'start',
                   marginBottom: '12px',
                   flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? '12px' : '0'
+                  gap: isMobile ? '12px' : '0',
+                  paddingTop: (agreement.status === 'LIVE' && agreement.lastEmailedAt && 
+                    Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) >= 3) 
+                    ? '36px' : '0'
                 }}>
                   <div style={{ position: 'relative' }}>
                     <h3 style={{ 
