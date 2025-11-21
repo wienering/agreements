@@ -17,9 +17,12 @@ export async function GET() {
     });
     
     // Sort by event date (closest upcoming first), then by creation date
+    // Use event.eventDate if available, otherwise fall back to client.eventDate (deprecated)
     const sortedAgreements = agreements.sort((a, b) => {
-      const aDate = a.event?.eventDate ? new Date(a.event.eventDate).getTime() : Infinity;
-      const bDate = b.event?.eventDate ? new Date(b.event.eventDate).getTime() : Infinity;
+      const aEventDate = a.event?.eventDate || a.client.eventDate;
+      const bEventDate = b.event?.eventDate || b.client.eventDate;
+      const aDate = aEventDate ? new Date(aEventDate).getTime() : Infinity;
+      const bDate = bEventDate ? new Date(bEventDate).getTime() : Infinity;
       
       // If both have event dates, sort by date (ascending - closest first)
       if (aDate !== Infinity && bDate !== Infinity) {

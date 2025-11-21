@@ -31,6 +31,7 @@ interface Agreement {
     firstName: string;
     lastName: string;
     email: string;
+    eventDate?: string; // Deprecated - fallback for legacy agreements
   };
   template: {
     id: string;
@@ -1919,7 +1920,7 @@ export default function AgreementsPage() {
                         Emailed {new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                       </span>
                     )}
-                    {agreement.event?.eventDate && (
+                    {(agreement.event?.eventDate || agreement.client.eventDate) && (
                       <span style={{ 
                         fontSize: '12px', 
                         color: '#7c3aed',
@@ -1930,7 +1931,7 @@ export default function AgreementsPage() {
                         border: '1px solid #c4b5fd'
                       }}
                       >
-                        Event {new Date(agreement.event.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                        Event {new Date(agreement.event?.eventDate || agreement.client.eventDate!).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                       </span>
                     )}
                     {agreement.status !== 'SIGNED' && (
