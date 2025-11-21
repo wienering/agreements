@@ -10,9 +10,12 @@ export async function GET() {
             archived: false
           },
           include: {
-            _count: {
+            agreements: {
+              where: {
+                archived: false
+              },
               select: {
-                agreements: true
+                id: true
               }
             }
           },
@@ -24,7 +27,22 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' }
     });
-    return NextResponse.json(clients);
+    
+    // Transform the response to add _count for agreements (excluding archived)
+    const clientsWithCounts = clients.map(client => ({
+      ...client,
+      events: client.events.map(event => {
+        const { agreements, ...eventWithoutAgreements } = event;
+        return {
+          ...eventWithoutAgreements,
+          _count: {
+            agreements: agreements.length
+          }
+        };
+      })
+    }));
+    
+    return NextResponse.json(clientsWithCounts);
   } catch (error) {
     console.error('Error fetching clients:', error);
     return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
@@ -114,9 +132,12 @@ export async function POST(request: NextRequest) {
             archived: false
           },
           include: {
-            _count: {
+            agreements: {
+              where: {
+                archived: false
+              },
               select: {
-                agreements: true
+                id: true
               }
             }
           },
@@ -127,6 +148,23 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // Transform the response to add _count for agreements (excluding archived)
+    if (clientWithEvents) {
+      const transformedClient = {
+        ...clientWithEvents,
+        events: clientWithEvents.events.map(event => {
+          const { agreements, ...eventWithoutAgreements } = event;
+          return {
+            ...eventWithoutAgreements,
+            _count: {
+              agreements: agreements.length
+            }
+          };
+        })
+      };
+      return NextResponse.json(transformedClient, { status: 201 });
+    }
 
     return NextResponse.json(clientWithEvents, { status: 201 });
   } catch (error: any) {
