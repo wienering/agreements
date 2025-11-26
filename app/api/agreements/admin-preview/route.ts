@@ -28,14 +28,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
+    // Admin preview should show ALL agreements regardless of expiration
     const agreement = await prisma.agreement.findFirst({
       where: {
-        uniqueToken: token,
-        OR: [
-          { status: 'SIGNED' }, // Signed agreements bypass expiration
-          { expiresAt: null },
-          { expiresAt: { gte: new Date() } }
-        ]
+        uniqueToken: token
       },
       include: {
         client: true,
@@ -45,10 +41,13 @@ export async function GET(request: NextRequest) {
     });
 
     console.log('📊 Admin Preview API: Agreement found:', !!agreement);
+    if (agreement) {
+      console.log('📊 Admin Preview API: Agreement details - ID:', agreement.id, 'Status:', agreement.status, 'Archived:', agreement.archived);
+    }
 
     if (!agreement) {
-      console.log('❌ Admin Preview API: Agreement not found or expired');
-      return NextResponse.json({ error: 'Agreement not found or expired' }, { status: 404 });
+      console.log('❌ Admin Preview API: No agreement exists with token:', token);
+      return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
     // Process smart fields in the HTML content
