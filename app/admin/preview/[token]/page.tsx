@@ -730,9 +730,7 @@ export default function AdminPreviewPage() {
                   fontFamily: 'Georgia, serif'
                 }}
                 dangerouslySetInnerHTML={{ 
-                  __html: agreement.status === 'SIGNED' && agreement.mergedHtml 
-                    ? agreement.mergedHtml 
-                    : (agreement.customHtmlContent || agreement.template.htmlContent)
+                  __html: agreement.template.htmlContent
                 }}
               />
             </div>
