@@ -1782,37 +1782,6 @@ export default function AgreementsPage() {
                       // Show engagement tooltip
                       const tooltip = document.createElement('div');
                       tooltip.className = 'engagement-tooltip';
-                      tooltip.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 100%;
-                        transform: translateY(-50%);
-                        margin-left: 12px;
-                        background: ${isDark ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'};
-                        border: 1px solid ${isDark ? '#334155' : '#e2e8f0'};
-                        border-radius: 12px;
-                        padding: 0;
-                        box-shadow: ${isDark ? '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)' : '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.05)'};
-                        z-index: 1000;
-                        min-width: 240px;
-                        font-size: 13px;
-                        color: ${isDark ? '#f1f5f9' : '#1e293b'};
-                        overflow: hidden;
-                        animation: tooltipFadeIn 0.15s ease-out;
-                      `;
-                      
-                      // Add animation keyframes if not exists
-                      if (!document.getElementById('tooltip-styles')) {
-                        const style = document.createElement('style');
-                        style.id = 'tooltip-styles';
-                        style.textContent = \`
-                          @keyframes tooltipFadeIn {
-                            from { opacity: 0; transform: translateY(-50%) translateX(-8px); }
-                            to { opacity: 1; transform: translateY(-50%) translateX(0); }
-                          }
-                        \`;
-                        document.head.appendChild(style);
-                      }
                       
                       const daysSinceEmailed = agreement.lastEmailedAt ? 
                         Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) : null;
@@ -1829,112 +1798,39 @@ export default function AgreementsPage() {
                       
                       const needsFollowUp = agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3;
                       const notViewed = viewCount === 0;
+                      const bgColor = isDark ? '#1e293b' : '#ffffff';
+                      const borderCol = isDark ? '#334155' : '#e2e8f0';
+                      const textCol = isDark ? '#f1f5f9' : '#1e293b';
+                      const mutedCol = isDark ? '#94a3b8' : '#64748b';
+                      const iconBg = isDark ? '#334155' : '#e2e8f0';
                       
-                      tooltip.innerHTML = \`
-                        <!-- Arrow pointer -->
-                        <div style="
-                          position: absolute;
-                          left: -6px;
-                          top: 50%;
-                          transform: translateY(-50%);
-                          width: 12px;
-                          height: 12px;
-                          background: ${isDark ? '#1e293b' : '#ffffff'};
-                          border-left: 1px solid ${isDark ? '#334155' : '#e2e8f0'};
-                          border-bottom: 1px solid ${isDark ? '#334155' : '#e2e8f0'};
-                          transform: translateY(-50%) rotate(45deg);
-                        "></div>
-                        
-                        <!-- Header -->
-                        <div style="
-                          background: linear-gradient(135deg, ${statusColor}22 0%, ${statusColor}11 100%);
-                          border-bottom: 1px solid ${isDark ? '#334155' : '#e2e8f0'};
-                          padding: 12px 16px;
-                          display: flex;
-                          align-items: center;
-                          gap: 8px;
-                        ">
-                          <span style="font-size: 16px;">📊</span>
-                          <span style="font-weight: 700; font-size: 14px; color: ${isDark ? '#f1f5f9' : '#1e293b'};">Engagement</span>
-                          <span style="
-                            margin-left: auto;
-                            padding: 3px 8px;
-                            background: ${statusColor};
-                            color: white;
-                            border-radius: 4px;
-                            font-size: 10px;
-                            font-weight: 700;
-                            text-transform: uppercase;
-                            letter-spacing: 0.5px;
-                          ">${agreement.status}</span>
-                        </div>
-                        
-                        <!-- Content -->
-                        <div style="padding: 14px 16px;">
-                          <!-- Email Stats -->
-                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                            <div style="
-                              width: 32px;
-                              height: 32px;
-                              background: ${isDark ? '#334155' : '#e2e8f0'};
-                              border-radius: 8px;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              font-size: 14px;
-                            ">📧</div>
-                            <div style="flex: 1;">
-                              <div style="font-weight: 600; font-size: 14px; color: ${isDark ? '#f1f5f9' : '#1e293b'};">
-                                ${agreement.emailSendCount || 0} email${agreement.emailSendCount !== 1 ? 's' : ''} sent
-                              </div>
-                              <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'};">
-                                ${agreement.lastEmailedAt ? \`Last: \${new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}\` : 'Never emailed'}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <!-- View Stats -->
-                          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: ${needsFollowUp || notViewed ? '12px' : '0'};">
-                            <div style="
-                              width: 32px;
-                              height: 32px;
-                              background: ${notViewed ? '#fef3c7' : isDark ? '#334155' : '#e2e8f0'};
-                              border-radius: 8px;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
-                              font-size: 14px;
-                            ">${notViewed ? '⚠️' : '👁️'}</div>
-                            <div style="flex: 1;">
-                              <div style="font-weight: 600; font-size: 14px; color: ${notViewed ? '#f59e0b' : isDark ? '#f1f5f9' : '#1e293b'};">
-                                ${viewCount} view${viewCount !== 1 ? 's' : ''}${notViewed ? ' - Not viewed!' : ''}
-                              </div>
-                              <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'};">
-                                ${lastViewed ? \`Last: \${lastViewed}\` : 'Never viewed'}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          ${needsFollowUp ? \`
-                            <!-- Follow-up Alert -->
-                            <div style="
-                              background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                              border: 1px solid #f59e0b;
-                              border-radius: 8px;
-                              padding: 10px 12px;
-                              display: flex;
-                              align-items: center;
-                              gap: 8px;
-                            ">
-                              <span style="font-size: 14px;">🔔</span>
-                              <div>
-                                <div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div>
-                                <div style="font-size: 11px; color: #a16207;">\${daysSinceEmailed} days since last email</div>
-                              </div>
-                            </div>
-                          \` : ''}
-                        </div>
-                      \`;
+                      tooltip.style.cssText = 'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' + bgColor + '; border: 1px solid ' + borderCol + '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 240px; font-size: 13px; color: ' + textCol + '; overflow: hidden;';
+                      
+                      const lastEmailText = agreement.lastEmailedAt ? 'Last: ' + new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'Never emailed';
+                      const lastViewText = lastViewed ? 'Last: ' + lastViewed : 'Never viewed';
+                      
+                      let followUpHtml = '';
+                      if (needsFollowUp) {
+                        followUpHtml = '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px;">🔔</span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' + daysSinceEmailed + ' days since last email</div></div></div>';
+                      }
+                      
+                      tooltip.innerHTML = '<div style="position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; background: ' + bgColor + '; border-left: 1px solid ' + borderCol + '; border-bottom: 1px solid ' + borderCol + '; transform: translateY(-50%) rotate(45deg);"></div>' +
+                        '<div style="background: linear-gradient(135deg, ' + statusColor + '22 0%, ' + statusColor + '11 100%); border-bottom: 1px solid ' + borderCol + '; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">' +
+                          '<span style="font-size: 16px;">📊</span>' +
+                          '<span style="font-weight: 700; font-size: 14px; color: ' + textCol + ';">Engagement</span>' +
+                          '<span style="margin-left: auto; padding: 3px 8px; background: ' + statusColor + '; color: white; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + agreement.status + '</span>' +
+                        '</div>' +
+                        '<div style="padding: 14px 16px;">' +
+                          '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">' +
+                            '<div style="width: 32px; height: 32px; background: ' + iconBg + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">📧</div>' +
+                            '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' + textCol + ';">' + (agreement.emailSendCount || 0) + ' email' + (agreement.emailSendCount !== 1 ? 's' : '') + ' sent</div><div style="font-size: 11px; color: ' + mutedCol + ';">' + lastEmailText + '</div></div>' +
+                          '</div>' +
+                          '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: ' + (needsFollowUp || notViewed ? '12px' : '0') + ';">' +
+                            '<div style="width: 32px; height: 32px; background: ' + (notViewed ? '#fef3c7' : iconBg) + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">' + (notViewed ? '⚠️' : '👁️') + '</div>' +
+                            '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' + (notViewed ? '#f59e0b' : textCol) + ';">' + viewCount + ' view' + (viewCount !== 1 ? 's' : '') + (notViewed ? ' - Not viewed!' : '') + '</div><div style="font-size: 11px; color: ' + mutedCol + ';">' + lastViewText + '</div></div>' +
+                          '</div>' +
+                          followUpHtml +
+                        '</div>';
                       
                       e.currentTarget.appendChild(tooltip);
                     }}
