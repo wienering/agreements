@@ -684,6 +684,8 @@ class Bookly_Agreements_Integration {
     
     /**
      * Split full name into first and last name
+     * For whitelabel clients, detects company names and splits at the boundary
+     * e.g., "Nonstop Entertainment Anthony Di Principe" -> first: "Nonstop Entertainment", last: "Anthony Di Principe"
      * 
      * @param string $full_name
      * @return array
@@ -693,11 +695,45 @@ class Bookly_Agreements_Integration {
             return array('first' => '', 'last' => '');
         }
         
-        $parts = explode(' ', trim($full_name));
+        $full_name = trim($full_name);
+        $parts = explode(' ', $full_name);
+        
         if (count($parts) === 1) {
             return array('first' => $parts[0], 'last' => '');
         }
         
+        // Company keywords that indicate where to split (company name ends after this word)
+        // Case-insensitive matching
+        $company_keywords = array(
+            'entertainment', 'productions', 'events', 'studios', 'studio',
+            'photography', 'photo', 'photos', 'dj', 'djs', 'booth', 'booths',
+            'media', 'creative', 'creatives', 'services', 'solutions',
+            'llc', 'inc', 'corp', 'corporation', 'company', 'co', 'ltd', 'group',
+            'enterprises', 'agency', 'collective', 'unlimited', 'pros', 'pro'
+        );
+        
+        // Look for company keyword in the name parts
+        $split_index = -1;
+        foreach ($parts as $index => $part) {
+            $part_lower = strtolower($part);
+            // Remove trailing punctuation for matching
+            $part_clean = rtrim($part_lower, '.,');
+            
+            if (in_array($part_clean, $company_keywords)) {
+                $split_index = $index;
+                // Don't break - we want the LAST company keyword found
+                // In case of "ABC Entertainment LLC John Doe", we want to split after "LLC"
+            }
+        }
+        
+        // If we found a company keyword, split there
+        if ($split_index >= 0 && $split_index < count($parts) - 1) {
+            $first = implode(' ', array_slice($parts, 0, $split_index + 1));
+            $last = implode(' ', array_slice($parts, $split_index + 1));
+            return array('first' => $first, 'last' => $last);
+        }
+        
+        // Fallback: traditional split (last word is last name)
         $last = array_pop($parts);
         $first = implode(' ', $parts);
         

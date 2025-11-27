@@ -110,16 +110,52 @@ function verifyWebhookSignature(
 }
 
 // Helper function to split full name into first and last name
+// For whitelabel clients, detects company names and splits at the boundary
+// e.g., "Nonstop Entertainment Anthony Di Principe" -> firstName: "Nonstop Entertainment", lastName: "Anthony Di Principe"
 function splitName(fullName: string | undefined): { firstName: string; lastName: string } {
   if (!fullName) {
     return { firstName: '', lastName: '' };
   }
   
-  const parts = fullName.trim().split(/\s+/);
+  const trimmedName = fullName.trim();
+  const parts = trimmedName.split(/\s+/);
+  
   if (parts.length === 1) {
     return { firstName: parts[0], lastName: '' };
   }
   
+  // Company keywords that indicate where to split (company name ends after this word)
+  // Case-insensitive matching
+  const companyKeywords = [
+    'entertainment', 'productions', 'events', 'studios', 'studio',
+    'photography', 'photo', 'photos', 'dj', 'djs', 'booth', 'booths',
+    'media', 'creative', 'creatives', 'services', 'solutions',
+    'llc', 'inc', 'corp', 'corporation', 'company', 'co', 'ltd', 'group',
+    'enterprises', 'agency', 'collective', 'unlimited', 'pros', 'pro'
+  ];
+  
+  // Look for company keyword in the name parts
+  let splitIndex = -1;
+  for (let i = 0; i < parts.length; i++) {
+    const partLower = parts[i].toLowerCase();
+    // Remove trailing punctuation for matching
+    const partClean = partLower.replace(/[.,]$/, '');
+    
+    if (companyKeywords.includes(partClean)) {
+      splitIndex = i;
+      // Don't break - we want the LAST company keyword found
+      // In case of "ABC Entertainment LLC John Doe", we want to split after "LLC"
+    }
+  }
+  
+  // If we found a company keyword, split there
+  if (splitIndex >= 0 && splitIndex < parts.length - 1) {
+    const firstName = parts.slice(0, splitIndex + 1).join(' ');
+    const lastName = parts.slice(splitIndex + 1).join(' ');
+    return { firstName, lastName };
+  }
+  
+  // Fallback: traditional split (last word is last name)
   const lastName = parts.pop() || '';
   const firstName = parts.join(' ');
   return { firstName, lastName };
