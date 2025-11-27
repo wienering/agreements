@@ -14,11 +14,14 @@ const createInvoiceSchema = z.object({
  * Calculate invoice due dates based on event date
  * Rules:
  * - If invoiceType is 'total-only':
- *   - Single invoice for full amount, due 7 days before event date (or today if no event date)
+ *   - Single invoice for full amount, due 7 days before event date
+ *   - If event is less than 7 days away, due today
  * - If invoiceType is 'total-minus-deposit':
- *   - Single invoice for total amount minus $100, due 7 days before event date (or today if no event date)
+ *   - Single invoice for total amount minus $100, due 7 days before event date
+ *   - If event is less than 7 days away, due today
  * - If invoiceType is 'custom-amount':
- *   - Single invoice for custom amount, due 7 days before event date (or today if no event date)
+ *   - Single invoice for custom amount, due 7 days before event date
+ *   - If event is less than 7 days away, due today
  * - If invoiceType is 'default':
  *   - If event date is > 7 days in the future:
  *     - Deposit: $100 due today
@@ -54,11 +57,14 @@ function calculateInvoiceDetails(
     const remainingDueDate = new Date(event);
     remainingDueDate.setDate(remainingDueDate.getDate() - 7);
 
+    // If due date is in the past or less than 7 days away, use today
+    const finalDueDate = remainingDueDate < today ? today : remainingDueDate;
+
     return {
       depositAmount: 0,
       remainingAmount: totalAmount,
-      depositDueDate: remainingDueDate,
-      remainingDueDate,
+      depositDueDate: finalDueDate,
+      remainingDueDate: finalDueDate,
       needsTwoInvoices: false,
     };
   }
@@ -84,11 +90,14 @@ function calculateInvoiceDetails(
     const remainingDueDate = new Date(event);
     remainingDueDate.setDate(remainingDueDate.getDate() - 7);
 
+    // If due date is in the past or less than 7 days away, use today
+    const finalDueDate = remainingDueDate < today ? today : remainingDueDate;
+
     return {
       depositAmount: 0,
       remainingAmount: invoiceAmount,
-      depositDueDate: remainingDueDate,
-      remainingDueDate,
+      depositDueDate: finalDueDate,
+      remainingDueDate: finalDueDate,
       needsTwoInvoices: false,
     };
   }
@@ -116,11 +125,14 @@ function calculateInvoiceDetails(
     const remainingDueDate = new Date(event);
     remainingDueDate.setDate(remainingDueDate.getDate() - 7);
 
+    // If due date is in the past or less than 7 days away, use today
+    const finalDueDate = remainingDueDate < today ? today : remainingDueDate;
+
     return {
       depositAmount: 0,
       remainingAmount: customAmount,
-      depositDueDate: remainingDueDate,
-      remainingDueDate,
+      depositDueDate: finalDueDate,
+      remainingDueDate: finalDueDate,
       needsTwoInvoices: false,
     };
   }
