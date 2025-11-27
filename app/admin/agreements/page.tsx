@@ -1776,9 +1776,12 @@ export default function AgreementsPage() {
                       position: 'relative'
                     }}
                     onMouseEnter={(e) => {
+                      // Remove any existing tooltips first (cleanup)
+                      document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
+                      
                       // Show engagement tooltip
                       const tooltip = document.createElement('div');
-                      tooltip.id = 'engagement-tooltip';
+                      tooltip.className = 'engagement-tooltip';
                       tooltip.style.cssText = `
                         position: absolute;
                         top: -10px;
@@ -1840,7 +1843,8 @@ export default function AgreementsPage() {
                       e.currentTarget.appendChild(tooltip);
                     }}
                     onMouseLeave={(e) => {
-                      const tooltip = document.getElementById('engagement-tooltip');
+                      // Remove tooltip from this element
+                      const tooltip = e.currentTarget.querySelector('.engagement-tooltip');
                       if (tooltip) {
                         tooltip.remove();
                       }
