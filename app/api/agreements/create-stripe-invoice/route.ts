@@ -273,6 +273,15 @@ export async function POST(request: NextRequest) {
       end: Math.floor(new Date(eventDate).getTime() / 1000), // Same day for service date
     } : undefined;
 
+    // Format event date for display on invoice
+    const formattedEventDate = eventDate 
+      ? new Date(eventDate).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })
+      : null;
+
     // Thank you memo
     const thankYouMemo = 'Thanks for choosing Photobooth Guys for your event! We appreciate your business.';
 
@@ -317,7 +326,7 @@ export async function POST(request: NextRequest) {
         customer: customerId,
         collection_method: 'send_invoice',
         due_date: Math.floor(today.getTime() / 1000), // Unix timestamp
-        description: `Deposit for ${clientName}`,
+        description: `Deposit for ${clientName}${formattedEventDate ? `\nEvent Date: ${formattedEventDate}` : ''}`,
         footer: thankYouMemo,
         payment_settings: validatedData.disableOnlinePayment ? {
           payment_method_types: [], // Disable all payment methods
@@ -368,8 +377,8 @@ export async function POST(request: NextRequest) {
         collection_method: 'send_invoice',
         due_date: dueDateTimestamp, // Unix timestamp
         description: invoiceDetails.needsTwoInvoices 
-          ? `Remaining balance for ${clientName}`
-          : `Invoice for ${clientName}`,
+          ? `Remaining balance for ${clientName}${formattedEventDate ? `\nEvent Date: ${formattedEventDate}` : ''}`
+          : `Invoice for ${clientName}${formattedEventDate ? `\nEvent Date: ${formattedEventDate}` : ''}`,
         footer: thankYouMemo,
         payment_settings: validatedData.disableOnlinePayment ? {
           payment_method_types: [], // Disable all payment methods
