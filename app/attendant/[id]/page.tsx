@@ -138,31 +138,33 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       if (!eventDate) return null;
       
       try {
-        // Parse event date - handle timezone correctly by extracting date components
-        // This avoids the issue where new Date("2025-11-28") parses as UTC midnight
+        // Parse event date - handle timezone correctly by extracting UTC date components
+        // Dates from Prisma are stored as UTC midnight, so we need to extract the UTC
+        // year/month/day to get the intended calendar date, then create a local date
         let year: number, month: number, day: number;
         
         // Convert to Date object first (handles both Date objects and ISO strings)
         const dateObj = new Date(eventDate);
         if (isNaN(dateObj.getTime())) return null;
         
-        // Check if we got a string representation to parse for local date
-        const dateStr = String(eventDate);
-        const dateMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+        // Use toISOString() to get a reliable format for parsing the intended date
+        // This gives us "2025-11-28T00:00:00.000Z" format regardless of input type
+        const isoString = dateObj.toISOString();
+        const dateMatch = isoString.match(/(\d{4})-(\d{2})-(\d{2})/);
         
         if (dateMatch) {
-          // Parse from ISO string format to get correct local date
+          // Parse from ISO string format to get the intended calendar date
           year = parseInt(dateMatch[1], 10);
           month = parseInt(dateMatch[2], 10) - 1; // JavaScript months are 0-indexed
           day = parseInt(dateMatch[3], 10);
         } else {
-          // Use the Date object's local values
-          year = dateObj.getFullYear();
-          month = dateObj.getMonth();
-          day = dateObj.getDate();
+          // Fallback: use UTC values to get the intended date
+          year = dateObj.getUTCFullYear();
+          month = dateObj.getUTCMonth();
+          day = dateObj.getUTCDate();
         }
         
-        // Create date in local timezone (midnight)
+        // Create date in local timezone at midnight, using the intended calendar date
         let eventDateTime = new Date(year, month, day, 0, 0, 0, 0);
         
         // If eventStartTime is provided, try to parse it and add to event date
@@ -1418,6 +1420,17 @@ function NotFoundError() {
             >
               Photobooth Guys
             </h3>
+            <a
+              href="tel:+16473785332"
+              style={{
+                fontSize: '14px',
+                color: '#93c5fd',
+                textDecoration: 'none',
+                marginLeft: '12px',
+              }}
+            >
+              647-378-5332
+            </a>
           </div>
         </div>
       </div>
