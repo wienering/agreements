@@ -138,36 +138,28 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       if (!eventDate) return null;
       
       try {
-        // Parse event date - handle timezone correctly by parsing components
+        // Parse event date - handle timezone correctly by extracting date components
         // This avoids the issue where new Date("2025-11-28") parses as UTC midnight
         let year: number, month: number, day: number;
         
-        if (typeof eventDate === 'string') {
-          // Handle ISO date strings like "2025-11-28" or "2025-11-28T00:00:00.000Z"
-          const dateMatch = eventDate.match(/(\d{4})-(\d{2})-(\d{2})/);
-          if (dateMatch) {
-            year = parseInt(dateMatch[1], 10);
-            month = parseInt(dateMatch[2], 10) - 1; // JavaScript months are 0-indexed
-            day = parseInt(dateMatch[3], 10);
-          } else {
-            // Fallback to Date parsing if format doesn't match
-            const parsed = new Date(eventDate);
-            if (isNaN(parsed.getTime())) return null;
-            year = parsed.getFullYear();
-            month = parsed.getMonth();
-            day = parsed.getDate();
-          }
-        } else if (eventDate instanceof Date) {
-          year = eventDate.getFullYear();
-          month = eventDate.getMonth();
-          day = eventDate.getDate();
+        // Convert to Date object first (handles both Date objects and ISO strings)
+        const dateObj = new Date(eventDate);
+        if (isNaN(dateObj.getTime())) return null;
+        
+        // Check if we got a string representation to parse for local date
+        const dateStr = String(eventDate);
+        const dateMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+        
+        if (dateMatch) {
+          // Parse from ISO string format to get correct local date
+          year = parseInt(dateMatch[1], 10);
+          month = parseInt(dateMatch[2], 10) - 1; // JavaScript months are 0-indexed
+          day = parseInt(dateMatch[3], 10);
         } else {
-          // Try to parse as Date object
-          const parsed = new Date(eventDate);
-          if (isNaN(parsed.getTime())) return null;
-          year = parsed.getFullYear();
-          month = parsed.getMonth();
-          day = parsed.getDate();
+          // Use the Date object's local values
+          year = dateObj.getFullYear();
+          month = dateObj.getMonth();
+          day = dateObj.getDate();
         }
         
         // Create date in local timezone (midnight)
