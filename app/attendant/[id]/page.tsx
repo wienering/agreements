@@ -138,21 +138,52 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       if (!eventDate) return null;
       
       try {
-        // Parse event date
-        const parsedEventDate = new Date(eventDate);
-        if (isNaN(parsedEventDate.getTime())) return null;
+        // Parse event date - handle timezone correctly by parsing components
+        // This avoids the issue where new Date("2025-11-28") parses as UTC midnight
+        let year: number, month: number, day: number;
+        
+        if (typeof eventDate === 'string') {
+          // Handle ISO date strings like "2025-11-28" or "2025-11-28T00:00:00.000Z"
+          const dateMatch = eventDate.match(/(\d{4})-(\d{2})-(\d{2})/);
+          if (dateMatch) {
+            year = parseInt(dateMatch[1], 10);
+            month = parseInt(dateMatch[2], 10) - 1; // JavaScript months are 0-indexed
+            day = parseInt(dateMatch[3], 10);
+          } else {
+            // Fallback to Date parsing if format doesn't match
+            const parsed = new Date(eventDate);
+            if (isNaN(parsed.getTime())) return null;
+            year = parsed.getFullYear();
+            month = parsed.getMonth();
+            day = parsed.getDate();
+          }
+        } else if (eventDate instanceof Date) {
+          year = eventDate.getFullYear();
+          month = eventDate.getMonth();
+          day = eventDate.getDate();
+        } else {
+          // Try to parse as Date object
+          const parsed = new Date(eventDate);
+          if (isNaN(parsed.getTime())) return null;
+          year = parsed.getFullYear();
+          month = parsed.getMonth();
+          day = parsed.getDate();
+        }
+        
+        // Create date in local timezone (midnight)
+        let eventDateTime = new Date(year, month, day, 0, 0, 0, 0);
         
         // If eventStartTime is provided, try to parse it and add to event date
-        let eventDateTime = new Date(parsedEventDate);
         if (eventStartTime) {
-          // Parse time string (could be formats like "2:00 PM", "14:00", "2 PM", etc.)
-          const timeStr = eventStartTime.trim();
-          const timeMatch = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)?/i);
+          // Parse time string (could be formats like "2:00 PM", "14:00", "2 PM", "6:30:00 PM", etc.)
+          const timeStr = String(eventStartTime).trim();
+          const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i) || 
+                           timeStr.match(/(\d{1,2})\s*(AM|PM)/i);
           
           if (timeMatch) {
             let hours = parseInt(timeMatch[1], 10);
-            const minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
-            const period = timeMatch[3]?.toUpperCase();
+            const minutes = timeMatch[2] && !timeMatch[2].match(/AM|PM/i) ? parseInt(timeMatch[2], 10) : 0;
+            const period = (timeMatch[3] || timeMatch[2])?.toUpperCase();
             
             if (period === 'PM' && hours !== 12) {
               hours += 12;
