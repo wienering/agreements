@@ -1105,14 +1105,13 @@ export default function AgreementsPage() {
       if (response.ok) {
         const updatedAgreement = await response.json();
         
-        // If status is COMPLETED, remove from list since it's now archived
+        // Update the agreement status in the list (COMPLETED agreements stay visible)
+        setAgreements(agreements.map(a => 
+          a.id === agreementId ? { ...a, status: updatedAgreement.status } : a
+        ));
         if (status === 'COMPLETED') {
-          setAgreements(agreements.filter(a => a.id !== agreementId));
-          showToast('Agreement marked as completed and moved to archived section!');
+          showToast('Agreement marked as completed! Client still has portal access.');
         } else {
-          setAgreements(agreements.map(a => 
-            a.id === agreementId ? { ...a, status: updatedAgreement.status } : a
-          ));
           showToast('Status updated successfully!');
         }
         
@@ -1723,8 +1722,32 @@ export default function AgreementsPage() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '16px' }}>
-            {filteredAgreements.map(agreement => {
+          <>
+            {/* Active Agreements Section */}
+            {filteredAgreements.filter(a => a.status !== 'COMPLETED').length > 0 && (
+              <>
+                {statusFilter === 'ALL' && filteredAgreements.some(a => a.status === 'COMPLETED') && (
+                  <h3 style={{ 
+                    margin: '0 0 16px 0', 
+                    fontSize: '16px', 
+                    fontWeight: '600', 
+                    color: textColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    📋 Active Agreements
+                    <span style={{ 
+                      fontSize: '13px', 
+                      fontWeight: '400', 
+                      color: mutedText 
+                    }}>
+                      ({filteredAgreements.filter(a => a.status !== 'COMPLETED').length})
+                    </span>
+                  </h3>
+                )}
+                <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}>
+                  {filteredAgreements.filter(a => a.status !== 'COMPLETED').map(agreement => {
               const warningType = getAgreementWarningType(agreement);
               const getWarningBorderStyle = () => {
                 if (warningType === 'expiration') {
@@ -2268,7 +2291,205 @@ export default function AgreementsPage() {
               </div>
               );
             })}
-          </div>
+                </div>
+              </>
+            )}
+
+            {/* Completed Agreements Section */}
+            {filteredAgreements.filter(a => a.status === 'COMPLETED').length > 0 && (
+              <>
+                {statusFilter === 'ALL' && filteredAgreements.some(a => a.status !== 'COMPLETED') && (
+                  <h3 style={{ 
+                    margin: '0 0 16px 0', 
+                    fontSize: '16px', 
+                    fontWeight: '600', 
+                    color: '#7c3aed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    ✅ Completed Agreements
+                    <span style={{ 
+                      fontSize: '13px', 
+                      fontWeight: '400', 
+                      color: mutedText 
+                    }}>
+                      ({filteredAgreements.filter(a => a.status === 'COMPLETED').length})
+                    </span>
+                  </h3>
+                )}
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {filteredAgreements.filter(a => a.status === 'COMPLETED').map(agreement => {
+                    const warningType = getAgreementWarningType(agreement);
+                    const getWarningBorderStyle = () => {
+                      if (warningType === 'expiration') {
+                        return '3px solid #dc2626';
+                      } else if (warningType === 'critical') {
+                        return '3px solid #dc2626';
+                      } else if (warningType === 'warning') {
+                        return '3px solid #f59e0b';
+                      }
+                      return `1px solid ${borderColor}`;
+                    };
+
+                    return (
+                      <div key={agreement.id} style={{
+                        backgroundColor: cardBg,
+                        border: `2px solid #7c3aed`,
+                        borderRadius: '8px',
+                        padding: '20px',
+                        position: 'relative',
+                        opacity: 0.9
+                      }}>
+                        {/* Completed Badge */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '-10px',
+                          right: '16px',
+                          backgroundColor: '#7c3aed',
+                          color: 'white',
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          textTransform: 'uppercase'
+                        }}>
+                          Completed
+                        </div>
+
+                        {/* Agreement Header */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          marginBottom: '16px',
+                          flexWrap: 'wrap',
+                          gap: '12px'
+                        }}>
+                          <div>
+                            <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: textColor }}>
+                              {agreement.client.firstName} {agreement.client.lastName}
+                            </h3>
+                            <p style={{ margin: '0', fontSize: '14px', color: mutedText }}>
+                              {agreement.client.email}
+                            </p>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '8px',
+                            flexWrap: 'wrap' 
+                          }}>
+                            <span style={{
+                              backgroundColor: '#f3e8ff',
+                              color: '#7c3aed',
+                              padding: '4px 12px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '600'
+                            }}>
+                              {agreement.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Agreement Details */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                          gap: '12px',
+                          marginBottom: '16px'
+                        }}>
+                          <div>
+                            <span style={{ fontSize: '12px', color: mutedText }}>Template</span>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: textColor }}>
+                              {agreement.template.title}
+                            </p>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '12px', color: mutedText }}>Event Date</span>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: textColor }}>
+                              {agreement.event?.eventDate 
+                                ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+                                : agreement.client.eventDate 
+                                  ? new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+                                  : 'Not set'}
+                            </p>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '12px', color: mutedText }}>Signed</span>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: textColor }}>
+                              {agreement.signedAt 
+                                ? new Date(agreement.signedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+                                : 'Not signed'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap'
+                        }}>
+                          <button
+                            onClick={() => {
+                              setCopyLinkAgreement(agreement);
+                              setShowCopyLinkModal(true);
+                            }}
+                            style={{
+                              backgroundColor: '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              padding: '8px 16px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            View Agreement
+                          </button>
+                          <button
+                            onClick={() => handleEditAgreement(agreement)}
+                            style={{
+                              backgroundColor: '#f59e0b',
+                              color: 'white',
+                              border: 'none',
+                              padding: '8px 16px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            Edit Details
+                          </button>
+                          <button
+                            onClick={() => handleArchiveAgreement(agreement.id)}
+                            disabled={archivingAgreement[agreement.id]}
+                            style={{
+                              backgroundColor: archivingAgreement[agreement.id] ? '#9ca3af' : '#6b7280',
+                              color: 'white',
+                              border: 'none',
+                              padding: '8px 16px',
+                              borderRadius: '4px',
+                              cursor: archivingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                            title="Archive this completed agreement"
+                          >
+                            {archivingAgreement[agreement.id] ? 'Archiving...' : 'Archive'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </>
         )}
 
         {/* Edit Modal */}
