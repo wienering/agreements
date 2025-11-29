@@ -95,6 +95,7 @@ export default function AgreementsPage() {
   const [stripePaymentLink, setStripePaymentLink] = useState('');
   const [stripeReceiptLink, setStripeReceiptLink] = useState('');
   const [galleryLink, setGalleryLink] = useState('');
+  const [sendingGalleryEmail, setSendingGalleryEmail] = useState(false);
   const [nextAction, setNextAction] = useState('');
   const [backdropLinks, setBackdropLinks] = useState<any[]>([]);
   const [selectedBackdropLinkId, setSelectedBackdropLinkId] = useState('');
@@ -900,6 +901,42 @@ export default function AgreementsPage() {
       showToast('Failed to send agreement. Please try again later.', 'error');
     } finally {
       setSendingToClient(prev => ({ ...prev, [agreement.id]: false }));
+    }
+  };
+
+  const handleSendGalleryReadyEmail = async () => {
+    if (!selectedAgreement || !galleryLink) return;
+    
+    // Validate URL format
+    try {
+      new URL(galleryLink);
+    } catch {
+      showToast('Please enter a valid gallery link URL first', 'error');
+      return;
+    }
+    
+    try {
+      setSendingGalleryEmail(true);
+      const response = await fetch('/api/agreements/send-gallery-ready-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agreementId: selectedAgreement.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(`Gallery ready email sent to ${selectedAgreement.client.email}!`);
+      } else {
+        showToast(`Error: ${data.error || 'Failed to send gallery ready email'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error sending gallery ready email:', error);
+      showToast('Failed to send gallery ready email. Please try again later.', 'error');
+    } finally {
+      setSendingGalleryEmail(false);
     }
   };
 
@@ -2578,6 +2615,46 @@ export default function AgreementsPage() {
                       fontSize: '14px'
                     }}
                   />
+                  {galleryLink && (
+                    <button
+                      type="button"
+                      onClick={handleSendGalleryReadyEmail}
+                      disabled={sendingGalleryEmail || !galleryLink}
+                      style={{
+                        marginTop: '8px',
+                        padding: '8px 16px',
+                        backgroundColor: sendingGalleryEmail ? '#9ca3af' : '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      {sendingGalleryEmail ? (
+                        <>
+                          <span style={{ 
+                            display: 'inline-block', 
+                            width: '14px', 
+                            height: '14px', 
+                            border: '2px solid white', 
+                            borderTopColor: 'transparent', 
+                            borderRadius: '50%', 
+                            animation: 'spin 1s linear infinite' 
+                          }} />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          📧 Send Gallery Ready Email
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Next Action */}
