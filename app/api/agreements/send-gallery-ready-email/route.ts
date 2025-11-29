@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
+import { generateMagicLoginUrl } from '@/lib/magicToken';
 
 const sendGalleryReadyEmailSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -45,7 +46,14 @@ export async function POST(request: NextRequest) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const host = request.headers.get('host') || 'localhost:3000';
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
-    const portalLink = `${baseUrl}/portal/login`;
+    
+    // Generate magic login link for one-click access
+    const portalLink = generateMagicLoginUrl(
+      baseUrl,
+      agreement.client.id,
+      agreement.client.email,
+      'gallery_access'
+    );
 
     // Create email transporter
     const transporter = nodemailer.createTransport({
@@ -181,16 +189,19 @@ export async function POST(request: NextRequest) {
             <div class="instructions">
               <h3 style="margin: 0 0 15px 0; color: #92400e;">📋 How to Access Your Gallery</h3>
               <ol style="margin: 0; padding-left: 20px; color: #78350f;">
-                <li style="margin-bottom: 8px;">Click the button below to access the <strong>Client Portal</strong></li>
-                <li style="margin-bottom: 8px;">Log in using your email address: <strong>${agreement.client.email}</strong></li>
-                <li style="margin-bottom: 8px;">Once logged in, you'll find the link to your photo gallery in your dashboard</li>
+                <li style="margin-bottom: 8px;">Click the button below - you'll be <strong>automatically logged in</strong></li>
+                <li style="margin-bottom: 8px;">Find your photo gallery link in your dashboard</li>
                 <li style="margin-bottom: 0;">Browse, download, and share your amazing photos!</li>
               </ol>
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${portalLink}" class="button">Access Client Portal</a>
+              <a href="${portalLink}" class="button">View My Gallery</a>
             </div>
+            
+            <p style="text-align: center; font-size: 12px; color: #6b7280;">
+              This link is unique to you and will automatically log you in. It expires in 7 days.
+            </p>
             
             <div class="event-details">
               <h3 style="margin: 0 0 10px 0;">Your Client Portal Features:</h3>

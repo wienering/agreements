@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 interface VerifyResponse {
   success: boolean;
@@ -21,19 +22,67 @@ interface VerifyResponse {
   };
 }
 
-export default function PortalLogin() {
+function PortalLoginContent() {
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [step, setStep] = useState<'email' | 'verify'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [magicLinkProcessing, setMagicLinkProcessing] = useState(false);
 
-  // Set page title
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Set page title and handle magic link token
   useEffect(() => {
     document.title = 'Client Portal Login | Photobooth Guys';
-  }, []);
-  const router = useRouter();
+    
+    // Check for magic link token in URL
+    const token = searchParams.get('token');
+    if (token && !magicLinkProcessing) {
+      handleMagicLogin(token);
+    }
+  }, [searchParams]);
+
+  const handleMagicLogin = async (token: string) => {
+    setMagicLinkProcessing(true);
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/agreements/portal/magic-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store session token
+        localStorage.setItem('portal_session_token', data.sessionToken);
+        
+        // Redirect to dashboard
+        router.push('/portal/dashboard');
+      } else {
+        // Magic link failed - show error and allow manual login
+        setError(data.error || 'Magic link expired or invalid. Please log in manually.');
+        setMagicLinkProcessing(false);
+        setLoading(false);
+        
+        // Remove token from URL without refreshing
+        window.history.replaceState({}, '', '/portal/login');
+      }
+    } catch (error) {
+      setError('Network error. Please try logging in manually.');
+      setMagicLinkProcessing(false);
+      setLoading(false);
+      window.history.replaceState({}, '', '/portal/login');
+    }
+  };
 
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +151,30 @@ export default function PortalLogin() {
       setLoading(false);
     }
   };
+
+  // Show loading state while processing magic link
+  if (magicLinkProcessing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 text-center">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white text-2xl font-bold animate-pulse">
+              PG
+            </div>
+          </div>
+          <h2 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
+            Logging you in...
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300">
+            Please wait while we verify your access.
+          </p>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -226,5 +299,38 @@ export default function PortalLogin() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for magic link processing
+function MagicLinkLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 text-center">
+        <div className="flex justify-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white text-2xl font-bold animate-pulse">
+            PG
+          </div>
+        </div>
+        <h2 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
+          Logging you in...
+        </h2>
+        <p className="text-slate-600 dark:text-slate-300">
+          Please wait while we verify your access.
+        </p>
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Export with Suspense wrapper for useSearchParams
+export default function PortalLogin() {
+  return (
+    <Suspense fallback={<MagicLinkLoading />}>
+      <PortalLoginContent />
+    </Suspense>
   );
 }
