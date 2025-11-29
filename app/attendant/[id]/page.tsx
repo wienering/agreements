@@ -209,7 +209,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       return new Date() > expirationTime;
     })();
 
-    // Check if event is less than 24 hours away (to show phone number)
+    // Check if event is within 24 hours (before or after) to show phone number
     const isEventWithin24Hours = (() => {
       const eventDateTime = getEventDateTime();
       if (!eventDateTime) return false;
@@ -217,8 +217,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       const now = new Date();
       const hoursUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
       
-      // Show phone if event is within 24 hours (0 to 24 hours)
-      return hoursUntilEvent >= 0 && hoursUntilEvent <= 24;
+      // Show phone if event is within 24 hours before OR up to 24 hours after
+      // (Page is accessible until 24 hours after, so phone should be visible in that window too)
+      return hoursUntilEvent >= -24 && hoursUntilEvent <= 24;
     })();
 
     // If event has expired (more than 24 hours after), show expired message
