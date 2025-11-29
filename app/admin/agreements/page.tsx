@@ -2067,8 +2067,8 @@ export default function AgreementsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const adminPreviewLink = `${window.location.origin}/admin/preview/${agreement.uniqueToken}`;
-                      window.open(adminPreviewLink, '_blank');
+                      setCopyLinkAgreement(agreement);
+                      setShowCopyLinkModal(true);
                     }}
                     style={{
                       backgroundColor: '#3b82f6',
@@ -2087,7 +2087,7 @@ export default function AgreementsPage() {
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = '#3b82f6';
                     }}
-                    title="View agreement as client would see it"
+                    title="View agreement options"
                   >
                     View Agreement
                   </button>
@@ -2118,32 +2118,6 @@ export default function AgreementsPage() {
                     title="View attendant page (event details for staff)"
                   >
                     Attendant View
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCopyLinkAgreement(agreement);
-                      setShowCopyLinkModal(true);
-                    }}
-                    style={{
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
-                    }}
-                    title="Copy client link to clipboard"
-                  >
-                    Copy Link
                   </button>
                   {(agreement.status === 'LIVE' || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
                     <button
@@ -4862,7 +4836,7 @@ export default function AgreementsPage() {
           </div>
         )}
 
-        {/* Copy Link Modal */}
+        {/* View Agreement Modal */}
         {showCopyLinkModal && copyLinkAgreement && (
           <div style={{
             position: 'fixed',
@@ -4901,20 +4875,66 @@ export default function AgreementsPage() {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                🔗 Agreement Link Options
+                📄 View Agreement
               </h3>
               <p style={{ 
                 margin: '0 0 20px 0', 
                 color: mutedText,
                 fontSize: '14px'
               }}>
-                Choose an action for the agreement link
+                Choose how to view or share this agreement
               </p>
               <div style={{ 
                 display: 'flex', 
                 flexDirection: 'column',
                 gap: '12px'
               }}>
+                <button
+                  onClick={() => {
+                    if (copyLinkAgreement?.uniqueToken) {
+                      const adminPreviewLink = `${window.location.origin}/admin/preview/${copyLinkAgreement.uniqueToken}`;
+                      window.open(adminPreviewLink, '_blank');
+                      setShowCopyLinkModal(false);
+                      setCopyLinkAgreement(null);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#8b5cf6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  🔐 Admin View
+                </button>
+                <button
+                  onClick={() => {
+                    if (copyLinkAgreement?.uniqueToken) {
+                      const clientLink = `${window.location.origin}/agreement/${copyLinkAgreement.uniqueToken}`;
+                      window.open(clientLink, '_blank');
+                      setShowCopyLinkModal(false);
+                      setCopyLinkAgreement(null);
+                    }
+                  }}
+                  style={{
+                    backgroundColor: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    width: '100%'
+                  }}
+                >
+                  👁️ Client View
+                </button>
                 <button
                   onClick={() => {
                     if (copyLinkAgreement?.uniqueToken) {
@@ -4940,30 +4960,7 @@ export default function AgreementsPage() {
                     width: '100%'
                   }}
                 >
-                  📋 Copy Link
-                </button>
-                <button
-                  onClick={() => {
-                    if (copyLinkAgreement?.uniqueToken) {
-                      const clientLink = `${window.location.origin}/agreement/${copyLinkAgreement.uniqueToken}`;
-                      window.open(clientLink, '_blank');
-                      setShowCopyLinkModal(false);
-                      setCopyLinkAgreement(null);
-                    }
-                  }}
-                  style={{
-                    backgroundColor: '#059669',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    width: '100%'
-                  }}
-                >
-                  👁️ View Page
+                  📋 Copy Client Link
                 </button>
                 <button
                   onClick={() => {
