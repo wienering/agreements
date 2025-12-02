@@ -362,9 +362,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create remaining amount invoice or full invoice
-    const remainingOrFullAmount = invoiceDetails.needsTwoInvoices 
-      ? invoiceDetails.remainingAmount 
-      : totalAmount;
+    // Always use remainingAmount as it's correctly calculated for all invoice types
+    const remainingOrFullAmount = invoiceDetails.remainingAmount;
 
     if (remainingOrFullAmount > 0) {
       // Use the calculated due date
