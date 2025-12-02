@@ -467,9 +467,18 @@ export default function PortalDashboard() {
                         {/* Payment Status Badge */}
                         {agreement.paymentStatus && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
-                              💳 {agreement.paymentStatus}
-                            </span>
+                            {agreement.paymentStatus.toLowerCase().includes('balance due') || agreement.paymentStatus.toLowerCase().includes('balance') ? (
+                              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold drop-shadow-md" style={{
+                                color: '#d97706',
+                                textShadow: '0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)'
+                              }}>
+                                💳 {agreement.paymentStatus}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                                💳 {agreement.paymentStatus}
+                              </span>
+                            )}
                           </div>
                         )}
 

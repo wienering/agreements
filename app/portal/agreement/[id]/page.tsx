@@ -578,6 +578,30 @@ function AgreementDetailContent() {
               </div>
             </div>
           )}
+
+          {/* Payment Status / Balance Due */}
+          {agreement.paymentStatus && (
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                <span className="text-lg">💳</span>
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-900 dark:text-white mb-2">Payment Status</p>
+                {agreement.paymentStatus.toLowerCase().includes('balance due') || agreement.paymentStatus.toLowerCase().includes('balance') ? (
+                  <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-amber-500 dark:text-amber-400 drop-shadow-md" style={{
+                    color: '#d97706',
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)'
+                  }}>
+                    💳 {agreement.paymentStatus}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                    💳 {agreement.paymentStatus}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -806,6 +830,13 @@ function AgreementDetailContent() {
       {/* Notes Section */}
       <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Notes</h2>
+        
+        {/* Privacy Notice - Notes are personal and not sent to Photobooth Guys */}
+        <div className="mb-6 rounded-md bg-slate-50 border border-slate-200 p-3 dark:bg-slate-800/50 dark:border-slate-700">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            💡 <strong>Note:</strong> Your notes are personal and are not sent to Photobooth Guys.
+          </p>
+        </div>
         
         {/* Add Note Form - Hidden in admin preview mode */}
         {!isAdminPreview && (
