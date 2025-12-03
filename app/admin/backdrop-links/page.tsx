@@ -135,6 +135,57 @@ export default function BackdropLinksPage() {
     }
   };
 
+  const extractAttendantIdFromUrl = (url: string): string | null => {
+    try {
+      // Try to extract from path like /select/[attendantId]
+      const pathMatch = url.match(/\/select\/([^/?]+)/);
+      if (pathMatch && pathMatch[1]) {
+        return pathMatch[1];
+      }
+      
+      // Try to extract from query parameter
+      const urlObj = new URL(url);
+      const attendantIdParam = urlObj.searchParams.get('attendantId');
+      if (attendantIdParam) {
+        return attendantIdParam;
+      }
+      
+      // Try to extract from path segments
+      const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+      const selectIndex = pathSegments.indexOf('select');
+      if (selectIndex !== -1 && pathSegments[selectIndex + 1]) {
+        return pathSegments[selectIndex + 1];
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting attendant ID from URL:', error);
+      return null;
+    }
+  };
+
+  const getAttendantHubLink = (backdropLinkUrl: string): string | null => {
+    const attendantId = extractAttendantIdFromUrl(backdropLinkUrl);
+    if (!attendantId) return null;
+    return `${window.location.origin}/attendant/${attendantId}/hub`;
+  };
+
+  const copyHubLink = async (backdropLinkUrl: string, id: string) => {
+    const hubLink = getAttendantHubLink(backdropLinkUrl);
+    if (!hubLink) {
+      alert('Could not extract attendant ID from backdrop link URL');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(hubLink);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy hub link:', error);
+      alert('Failed to copy hub link to clipboard');
+    }
+  };
+
   const moveLink = async (id: string, direction: 'up' | 'down') => {
     const currentIndex = backdropLinks.findIndex(link => link.id === id);
     if (currentIndex === -1) return;
@@ -357,6 +408,17 @@ export default function BackdropLinksPage() {
                   </th>
                   <th style={{ 
                     padding: '16px', 
+                    textAlign: 'left', 
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: mutedText,
+                    width: '180px',
+                    minWidth: '180px'
+                  }}>
+                    Attendant Hub
+                  </th>
+                  <th style={{ 
+                    padding: '16px', 
                     textAlign: 'right', 
                     fontSize: '14px',
                     fontWeight: '600',
@@ -451,6 +513,62 @@ export default function BackdropLinksPage() {
                           {link.url.length > 35 ? link.url.substring(0, 35) + '...' : link.url}
                         </a>
                       </div>
+                    </td>
+                    <td style={{ padding: '16px', width: '180px', minWidth: '180px' }}>
+                      {getAttendantHubLink(link.url) ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <a
+                            href={getAttendantHubLink(link.url) || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: '#10b981',
+                              fontSize: '13px',
+                              textDecoration: 'none',
+                              fontWeight: '500',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              maxWidth: '100%'
+                            }}
+                            title={getAttendantHubLink(link.url) || ''}
+                          >
+                            View Hub →
+                          </a>
+                          <button
+                            onClick={() => copyHubLink(link.url, link.id)}
+                            style={{
+                              backgroundColor: copiedId === link.id ? '#10b981' : '#059669',
+                              color: 'white',
+                              border: 'none',
+                              padding: '6px 10px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              transition: 'background-color 0.2s',
+                              whiteSpace: 'nowrap',
+                              width: 'fit-content'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (copiedId !== link.id) {
+                                e.currentTarget.style.backgroundColor = '#047857';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (copiedId !== link.id) {
+                                e.currentTarget.style.backgroundColor = '#059669';
+                              }
+                            }}
+                          >
+                            {copiedId === link.id ? '✓ Copied' : 'Copy Hub Link'}
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ color: mutedText, fontSize: '13px' }}>
+                          No attendant ID
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: '16px' }}>
                       <div className="action-buttons" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
