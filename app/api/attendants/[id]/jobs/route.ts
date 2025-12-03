@@ -58,8 +58,6 @@ export async function GET(
 
     const backdropLinkIds = await fetchJobsForAttendantIds(attendantIds);
 
-    const backdropLinkIds = backdropLinks.map((link) => link.id);
-
     if (backdropLinkIds.length === 0) {
       return NextResponse.json({
         success: true,
