@@ -188,6 +188,17 @@ model BackdropLink {
   @@index([displayOrder])
 }
 
+model AttendantGroup {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  attendantIds String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}
+
 model Event {
   id             String      @id @default(cuid())
   clientId       String

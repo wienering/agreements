@@ -1,36 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+async function fetchJobsForAttendantIds(attendantIds: string[]) {
+  // Find all BackdropLinks where URL contains any of the attendantIds
+  const backdropLinkConditions = attendantIds.flatMap((attendantId) => {
+    const encodedAttendantId = encodeURIComponent(attendantId);
+    return [
+      { url: { contains: `/select/${attendantId}` } },
+      { url: { contains: `attendantId=${attendantId}` } },
+      { url: { contains: `/select/${encodedAttendantId}` } },
+      { url: { contains: `attendantId=${encodedAttendantId}` } },
+    ];
+  });
+
+  const backdropLinks = await prisma.backdropLink.findMany({
+    where: {
+      OR: backdropLinkConditions,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return backdropLinks.map((link) => link.id);
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: attendantId } = await params;
+    const { id: attendantIdOrSlug } = await params;
 
-    if (!attendantId) {
+    if (!attendantIdOrSlug) {
       return NextResponse.json(
-        { error: 'attendantId is required' },
+        { error: 'attendantId or group slug is required' },
         { status: 400 }
       );
     }
 
-    // Find all BackdropLinks where URL contains the attendantId
-    // Pattern: /select/[attendantId] or similar
-    const backdropLinks = await prisma.backdropLink.findMany({
-      where: {
-        OR: [
-          { url: { contains: `/select/${attendantId}` } },
-          { url: { contains: `attendantId=${attendantId}` } },
-          // Also check for URL-encoded versions
-          { url: { contains: encodeURIComponent(`/select/${attendantId}`) } },
-          { url: { contains: encodeURIComponent(`attendantId=${attendantId}`) } },
-        ],
-      },
-      select: {
-        id: true,
-      },
+    // First, check if this matches a group slug
+    let attendantIds: string[] = [];
+    let groupName: string | undefined;
+
+    const group = await prisma.attendantGroup.findUnique({
+      where: { slug: attendantIdOrSlug },
     });
+
+    if (group) {
+      // It's a group - fetch jobs for all attendant IDs in the group
+      attendantIds = group.attendantIds;
+      groupName = group.name;
+    } else {
+      // Treat as single attendant ID
+      attendantIds = [attendantIdOrSlug];
+    }
+
+    const backdropLinkIds = await fetchJobsForAttendantIds(attendantIds);
 
     const backdropLinkIds = backdropLinks.map((link) => link.id);
 
@@ -163,6 +189,7 @@ export async function GET(
       success: true,
       jobs,
       metrics,
+      groupName: groupName || null,
     });
   } catch (error: any) {
     console.error('Error fetching attendant jobs:', error);

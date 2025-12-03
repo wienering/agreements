@@ -39,19 +39,22 @@ interface Metrics {
   completedEvents: number;
 }
 
-async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; metrics: Metrics }> {
+async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs: Job[]; metrics: Metrics }> {
   try {
-    // Find all BackdropLinks where URL contains the attendantId
-    // Pre-encode the attendantId to avoid issues in Prisma query
-    const encodedAttendantId = encodeURIComponent(attendantId);
+    // Find all BackdropLinks where URL contains any of the attendantIds
+    const backdropLinkConditions = attendantIds.flatMap((attendantId) => {
+      const encodedAttendantId = encodeURIComponent(attendantId);
+      return [
+        { url: { contains: `/select/${attendantId}` } },
+        { url: { contains: `attendantId=${attendantId}` } },
+        { url: { contains: `/select/${encodedAttendantId}` } },
+        { url: { contains: `attendantId=${encodedAttendantId}` } },
+      ];
+    });
+
     const backdropLinks = await prisma.backdropLink.findMany({
       where: {
-        OR: [
-          { url: { contains: `/select/${attendantId}` } },
-          { url: { contains: `attendantId=${attendantId}` } },
-          { url: { contains: `/select/${encodedAttendantId}` } },
-          { url: { contains: `attendantId=${encodedAttendantId}` } },
-        ],
+        OR: backdropLinkConditions,
       },
       select: {
         id: true,
@@ -180,6 +183,28 @@ async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; m
   }
 }
 
+async function fetchAttendantJobs(attendantIdOrSlug: string): Promise<{ jobs: Job[]; metrics: Metrics; groupName?: string }> {
+  try {
+    // First, check if this matches a group slug
+    const group = await prisma.attendantGroup.findUnique({
+      where: { slug: attendantIdOrSlug },
+    });
+
+    if (group) {
+      // It's a group - fetch jobs for all attendant IDs in the group
+      const result = await fetchJobsForAttendantIds(group.attendantIds);
+      return { ...result, groupName: group.name };
+    }
+
+    // Otherwise, treat as a single attendant ID
+    const result = await fetchJobsForAttendantIds([attendantIdOrSlug]);
+    return result;
+  } catch (error) {
+    console.error('Error fetching attendant jobs:', error);
+    return { jobs: [], metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 } };
+  }
+}
+
 function getStatusColor(status: string): string {
   switch (status) {
     case 'DRAFT':
@@ -219,8 +244,8 @@ function formatEventDate(dateString: string | null): string {
 
 export default async function AttendantHubPage({ params }: AttendantHubPageProps) {
   try {
-    const { id: attendantId } = await params;
-    const { jobs, metrics } = await fetchAttendantJobs(attendantId);
+    const { id: attendantIdOrSlug } = await params;
+    const { jobs, metrics, groupName } = await fetchAttendantJobs(attendantIdOrSlug);
 
     return (
     <>
@@ -320,16 +345,16 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 >
                   Attendant Hub
                 </h1>
-                <p
-                  style={{
-                    margin: '4px 0 0 0',
-                    fontSize: '14px',
-                    color: '#94a3b8',
-                    fontWeight: '500',
-                  }}
-                >
-                  {attendantId}
-                </p>
+                    <p
+                      style={{
+                        margin: '4px 0 0 0',
+                        fontSize: '14px',
+                        color: '#94a3b8',
+                        fontWeight: '500',
+                      }}
+                    >
+                      {groupName || attendantIdOrSlug}
+                    </p>
               </div>
             </div>
           </div>
