@@ -47,10 +47,14 @@ export async function GET(
     }
 
     // Find all Agreements that reference those BackdropLinks
+    // Exclude completed and cancelled agreements
     const agreements = await prisma.agreement.findMany({
       where: {
         backdropLinkId: { in: backdropLinkIds },
-        archived: false, // Only show non-archived agreements
+        archived: false,
+        status: {
+          notIn: ['COMPLETED', 'CANCELLED'],
+        },
       },
       select: {
         id: true,
@@ -84,9 +88,10 @@ export async function GET(
       },
     });
 
-    // Format jobs and calculate metrics
+    // Format jobs and filter out completed ones
     const now = new Date();
-    const jobs = agreements.map((agreement) => {
+    const jobs = agreements
+      .map((agreement) => {
       const eventDate = agreement.event?.eventDate || agreement.client.eventDate;
       const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
       const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
@@ -146,11 +151,11 @@ export async function GET(
       return 0;
     });
 
-    // Calculate metrics
+    // Calculate metrics (only for non-completed jobs)
     const metrics = {
       totalJobs: jobs.length,
       upcomingEvents: jobs.filter((job) => job.isUpcoming).length,
-      completedEvents: jobs.filter((job) => job.isCompleted).length,
+      completedEvents: 0, // Completed jobs are no longer shown
     };
 
     return NextResponse.json({

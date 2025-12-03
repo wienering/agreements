@@ -65,10 +65,14 @@ async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; m
     }
 
     // Find all Agreements that reference those BackdropLinks
+    // Exclude completed and cancelled agreements
     const agreements = await prisma.agreement.findMany({
       where: {
         backdropLinkId: { in: backdropLinkIds },
         archived: false,
+        status: {
+          notIn: ['COMPLETED', 'CANCELLED'],
+        },
       },
       select: {
         id: true,
@@ -102,49 +106,51 @@ async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; m
       },
     });
 
-    // Format jobs and calculate metrics
+    // Format jobs and filter out completed ones
     const now = new Date();
-    const jobs: Job[] = agreements.map((agreement) => {
-      const eventDate = agreement.event?.eventDate || agreement.client.eventDate;
-      const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
-      const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
-      const eventType = agreement.event?.eventType || agreement.client.eventType;
-      const clientName = agreement.event?.eventName || `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || 'Unknown Client';
+    const jobs: Job[] = agreements
+      .map((agreement) => {
+        const eventDate = agreement.event?.eventDate || agreement.client.eventDate;
+        const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
+        const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
+        const eventType = agreement.event?.eventType || agreement.client.eventType;
+        const clientName = agreement.event?.eventName || `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || 'Unknown Client';
 
-      // Determine if event is upcoming or completed
-      let isUpcoming = false;
-      let isCompleted = false;
-      
-      if (eventDate) {
-        const eventDateTime = new Date(eventDate);
-        const expirationTime = new Date(eventDateTime);
-        expirationTime.setHours(expirationTime.getHours() + 24);
+        // Determine if event is upcoming or completed
+        let isUpcoming = false;
+        let isCompleted = false;
         
-        if (now < expirationTime) {
-          isUpcoming = true;
+        if (eventDate) {
+          const eventDateTime = new Date(eventDate);
+          const expirationTime = new Date(eventDateTime);
+          expirationTime.setHours(expirationTime.getHours() + 24);
+          
+          if (now < expirationTime) {
+            isUpcoming = true;
+          } else {
+            isCompleted = true;
+          }
         } else {
-          isCompleted = true;
+          isUpcoming = agreement.status !== 'COMPLETED' && agreement.status !== 'CANCELLED';
+          isCompleted = agreement.status === 'COMPLETED' || agreement.status === 'CANCELLED';
         }
-      } else {
-        isUpcoming = agreement.status !== 'COMPLETED' && agreement.status !== 'CANCELLED';
-        isCompleted = agreement.status === 'COMPLETED' || agreement.status === 'CANCELLED';
-      }
 
-      return {
-        id: agreement.id,
-        status: agreement.status,
-        eventDate: eventDate ? new Date(eventDate).toISOString() : null,
-        eventLocation,
-        eventStartTime,
-        eventType,
-        clientName,
-        backdropSelected: !!agreement.selectedBackdropName,
-        backdropName: agreement.selectedBackdropName || null,
-        backdropLinkName: agreement.backdropLink?.name || null,
-        isUpcoming,
-        isCompleted,
-      };
-    });
+        return {
+          id: agreement.id,
+          status: agreement.status,
+          eventDate: eventDate ? new Date(eventDate).toISOString() : null,
+          eventLocation,
+          eventStartTime,
+          eventType,
+          clientName,
+          backdropSelected: !!agreement.selectedBackdropName,
+          backdropName: agreement.selectedBackdropName || null,
+          backdropLinkName: agreement.backdropLink?.name || null,
+          isUpcoming,
+          isCompleted,
+        };
+      })
+      .filter((job) => !job.isCompleted); // Filter out completed jobs
 
     // Sort by event date (upcoming first, then by date ascending)
     jobs.sort((a, b) => {
@@ -160,11 +166,11 @@ async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; m
       return 0;
     });
 
-    // Calculate metrics
+    // Calculate metrics (only for non-completed jobs)
     const metrics: Metrics = {
       totalJobs: jobs.length,
       upcomingEvents: jobs.filter((job) => job.isUpcoming).length,
-      completedEvents: jobs.filter((job) => job.isCompleted).length,
+      completedEvents: 0, // Completed jobs are no longer shown
     };
 
     return { jobs, metrics };
