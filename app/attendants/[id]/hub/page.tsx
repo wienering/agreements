@@ -554,7 +554,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     color: '#94a3b8',
                   }}
                 >
-                  You don't have any jobs assigned yet. Jobs will appear here once they're assigned to you.
+                  You don&apos;t have any jobs assigned yet. Jobs will appear here once they&apos;re assigned to you.
                 </p>
               </div>
             ) : (
