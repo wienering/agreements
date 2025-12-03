@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import AttendantFilesSection from './AttendantFilesSection';
 
 interface AttendantPageProps {
@@ -108,6 +109,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
         backdropLink: {
           select: {
             name: true,
+            url: true,
           },
         },
       },
@@ -119,6 +121,39 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     }
 
     const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways, forceVirtualGreenScreen } = agreement;
+    
+    // Extract attendantId from backdropLink URL for navigation back to hub
+    const extractAttendantIdFromUrl = (url: string | null): string | null => {
+      if (!url) return null;
+      try {
+        // Try to extract from path like /select/[attendantId]
+        const pathMatch = url.match(/\/select\/([^/?]+)/);
+        if (pathMatch && pathMatch[1]) {
+          return pathMatch[1];
+        }
+        
+        // Try to extract from query parameter
+        const urlObj = new URL(url);
+        const attendantIdParam = urlObj.searchParams.get('attendantId');
+        if (attendantIdParam) {
+          return attendantIdParam;
+        }
+        
+        // Try to extract from path segments
+        const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+        const selectIndex = pathSegments.indexOf('select');
+        if (selectIndex !== -1 && pathSegments[selectIndex + 1]) {
+          return pathSegments[selectIndex + 1];
+        }
+        
+        return null;
+      } catch (error) {
+        console.error('Error extracting attendant ID from URL:', error);
+        return null;
+      }
+    };
+    
+    const attendantId = backdropLink?.url ? extractAttendantIdFromUrl(backdropLink.url) : null;
     
     // Use event data when available, otherwise fall back to client data
     const eventDate = event ? event.eventDate : client.eventDate;
@@ -382,48 +417,81 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                 padding: '0 32px',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 gap: '16px',
               }}
             >
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  backgroundColor: '#3b82f6',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '20px',
-                  fontWeight: '600',
-                }}
-              >
-                📸
-              </div>
-              <div>
-                <h1
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div
                   style={{
-                    margin: '0',
-                    fontSize: '24px',
-                    fontWeight: '700',
-                    color: '#ffffff',
-                    letterSpacing: '-0.01em',
+                    width: '44px',
+                    height: '44px',
+                    backgroundColor: '#3b82f6',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '20px',
+                    fontWeight: '600',
                   }}
                 >
-                  Photobooth Guys
-                </h1>
-                <p
+                  📸
+                </div>
+                <div>
+                  <h1
+                    style={{
+                      margin: '0',
+                      fontSize: '24px',
+                      fontWeight: '700',
+                      color: '#ffffff',
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    Photobooth Guys
+                  </h1>
+                  <p
+                    style={{
+                      margin: '4px 0 0 0',
+                      fontSize: '14px',
+                      color: '#94a3b8',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Event Information
+                  </p>
+                </div>
+              </div>
+              {attendantId && (
+                <Link
+                  href={`/attendants/${attendantId}/hub`}
                   style={{
-                    margin: '4px 0 0 0',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 16px',
+                    backgroundColor: '#334155',
+                    color: '#f1f5f9',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
                     fontSize: '14px',
-                    color: '#94a3b8',
                     fontWeight: '500',
+                    transition: 'all 0.2s',
+                    border: '1px solid #475569',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#475569';
+                    e.currentTarget.style.borderColor = '#64748b';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#334155';
+                    e.currentTarget.style.borderColor = '#475569';
                   }}
                 >
-                  Event Information
-                </p>
-              </div>
+                  <span>←</span>
+                  <span>Back to Hub</span>
+                </Link>
+              )}
             </div>
           </header>
 
