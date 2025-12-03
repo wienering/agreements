@@ -465,6 +465,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               {attendantId && (
                 <Link
                   href={`/attendants/${attendantId}/hub`}
+                  className="back-to-hub-link"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -478,14 +479,6 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                     fontWeight: '500',
                     transition: 'all 0.2s',
                     border: '1px solid #475569',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#475569';
-                    e.currentTarget.style.borderColor = '#64748b';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#334155';
-                    e.currentTarget.style.borderColor = '#475569';
                   }}
                 >
                   <span>←</span>
