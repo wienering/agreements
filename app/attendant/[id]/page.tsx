@@ -304,6 +304,10 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             from { opacity: 0; }
             to { opacity: 1; }
           }
+          .back-to-hub-link:hover {
+            background-color: #475569 !important;
+            border-color: #64748b !important;
+          }
           @media (max-width: 1024px) {
             .attendant-main {
               grid-template-columns: 1fr !important;
