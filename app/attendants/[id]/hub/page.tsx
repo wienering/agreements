@@ -42,13 +42,15 @@ interface Metrics {
 async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; metrics: Metrics }> {
   try {
     // Find all BackdropLinks where URL contains the attendantId
+    // Pre-encode the attendantId to avoid issues in Prisma query
+    const encodedAttendantId = encodeURIComponent(attendantId);
     const backdropLinks = await prisma.backdropLink.findMany({
       where: {
         OR: [
           { url: { contains: `/select/${attendantId}` } },
           { url: { contains: `attendantId=${attendantId}` } },
-          { url: { contains: encodeURIComponent(`/select/${attendantId}`) } },
-          { url: { contains: encodeURIComponent(`attendantId=${attendantId}`) } },
+          { url: { contains: `/select/${encodedAttendantId}` } },
+          { url: { contains: `attendantId=${encodedAttendantId}` } },
         ],
       },
       select: {
