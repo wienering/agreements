@@ -155,6 +155,36 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     
     const attendantId = backdropLink?.url ? extractAttendantIdFromUrl(backdropLink.url) : null;
     
+    // Check if attendantId belongs to a group, and if so, use the group slug for navigation
+    let hubLink: string | null = null;
+    if (attendantId) {
+      try {
+        // Find a group that contains this attendantId
+        const group = await prisma.attendantGroup.findFirst({
+          where: {
+            attendantIds: {
+              has: attendantId,
+            },
+          },
+          select: {
+            slug: true,
+          },
+        });
+        
+        if (group) {
+          // Use group slug for navigation
+          hubLink = `/attendants/${group.slug}/hub`;
+        } else {
+          // Use individual attendant ID
+          hubLink = `/attendants/${attendantId}/hub`;
+        }
+      } catch (error) {
+        console.error('Error checking for attendant group:', error);
+        // Fallback to individual attendant ID
+        hubLink = `/attendants/${attendantId}/hub`;
+      }
+    }
+    
     // Use event data when available, otherwise fall back to client data
     const eventDate = event ? event.eventDate : client.eventDate;
     const eventLocation = event ? event.eventLocation : client.eventLocation;
@@ -466,9 +496,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   </p>
                 </div>
               </div>
-              {attendantId && (
+              {hubLink && (
                 <Link
-                  href={`/attendants/${attendantId}/hub`}
+                  href={hubLink}
                   className="back-to-hub-link"
                   style={{
                     display: 'inline-flex',

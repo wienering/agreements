@@ -68,14 +68,11 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
     }
 
     // Find all Agreements that reference those BackdropLinks
-    // Exclude completed and cancelled agreements
+    // Include all agreements (including completed) so we can count them
     const agreements = await prisma.agreement.findMany({
       where: {
         backdropLinkId: { in: backdropLinkIds },
         archived: false,
-        status: {
-          notIn: ['COMPLETED', 'CANCELLED'],
-        },
       },
       select: {
         id: true,
@@ -109,51 +106,57 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
       },
     });
 
-    // Format jobs and filter out completed ones
+    // Format jobs and calculate metrics
     const now = new Date();
-    const jobs: Job[] = agreements
-      .map((agreement) => {
-        const eventDate = agreement.event?.eventDate || agreement.client.eventDate;
-        const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
-        const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
-        const eventType = agreement.event?.eventType || agreement.client.eventType;
-        const clientName = agreement.event?.eventName || `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || 'Unknown Client';
+    const allJobs: Job[] = agreements.map((agreement) => {
+      const eventDate = agreement.event?.eventDate || agreement.client.eventDate;
+      const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
+      const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
+      const eventType = agreement.event?.eventType || agreement.client.eventType;
+      const clientName = agreement.event?.eventName || `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || 'Unknown Client';
 
-        // Determine if event is upcoming or completed
-        let isUpcoming = false;
-        let isCompleted = false;
+      // Determine if event is upcoming or completed
+      let isUpcoming = false;
+      let isCompleted = false;
+      
+      if (eventDate) {
+        const eventDateTime = new Date(eventDate);
+        const expirationTime = new Date(eventDateTime);
+        expirationTime.setHours(expirationTime.getHours() + 24);
         
-        if (eventDate) {
-          const eventDateTime = new Date(eventDate);
-          const expirationTime = new Date(eventDateTime);
-          expirationTime.setHours(expirationTime.getHours() + 24);
-          
-          if (now < expirationTime) {
-            isUpcoming = true;
-          } else {
-            isCompleted = true;
-          }
+        if (now < expirationTime) {
+          isUpcoming = true;
         } else {
-          isUpcoming = agreement.status !== 'COMPLETED' && agreement.status !== 'CANCELLED';
-          isCompleted = agreement.status === 'COMPLETED' || agreement.status === 'CANCELLED';
+          isCompleted = true;
         }
+      } else {
+        isUpcoming = agreement.status !== 'COMPLETED' && agreement.status !== 'CANCELLED';
+        isCompleted = agreement.status === 'COMPLETED' || agreement.status === 'CANCELLED';
+      }
 
-        return {
-          id: agreement.id,
-          status: agreement.status,
-          eventDate: eventDate ? new Date(eventDate).toISOString() : null,
-          eventLocation,
-          eventStartTime,
-          eventType,
-          clientName,
-          backdropSelected: !!agreement.selectedBackdropName,
-          backdropName: agreement.selectedBackdropName || null,
-          backdropLinkName: agreement.backdropLink?.name || null,
-          isUpcoming,
-          isCompleted,
-        };
-      })
-      .filter((job) => !job.isCompleted); // Filter out completed jobs
+      return {
+        id: agreement.id,
+        status: agreement.status,
+        eventDate: eventDate ? new Date(eventDate).toISOString() : null,
+        eventLocation,
+        eventStartTime,
+        eventType,
+        clientName,
+        backdropSelected: !!agreement.selectedBackdropName,
+        backdropName: agreement.selectedBackdropName || null,
+        backdropLinkName: agreement.backdropLink?.name || null,
+        isUpcoming,
+        isCompleted,
+      };
+    });
+
+    // Calculate metrics before filtering (include completed events in count)
+    const allJobsCount = allJobs.length;
+    const completedCount = allJobs.filter((job) => job.isCompleted).length;
+    const upcomingCount = allJobs.filter((job) => job.isUpcoming).length;
+
+    // Filter out completed jobs from display
+    const jobs = allJobs.filter((job) => !job.isCompleted);
 
     // Sort by event date (upcoming first, then by date ascending)
     jobs.sort((a, b) => {
@@ -169,11 +172,11 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
       return 0;
     });
 
-    // Calculate metrics (only for non-completed jobs)
+    // Calculate metrics (include completed in counts but don't show them)
     const metrics: Metrics = {
-      totalJobs: jobs.length,
-      upcomingEvents: jobs.filter((job) => job.isUpcoming).length,
-      completedEvents: 0, // Completed jobs are no longer shown
+      totalJobs: allJobsCount,
+      upcomingEvents: upcomingCount,
+      completedEvents: completedCount,
     };
 
     return { jobs, metrics };
@@ -203,27 +206,6 @@ async function fetchAttendantJobs(attendantIdOrSlug: string): Promise<{ jobs: Jo
     console.error('Error fetching attendant jobs:', error);
     return { jobs: [], metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 } };
   }
-}
-
-function getStatusColor(status: string): string {
-  switch (status) {
-    case 'DRAFT':
-      return '#94a3b8'; // slate-400
-    case 'LIVE':
-      return '#3b82f6'; // blue-500
-    case 'SIGNED':
-      return '#10b981'; // emerald-500
-    case 'COMPLETED':
-      return '#059669'; // emerald-600
-    case 'CANCELLED':
-      return '#dc2626'; // red-600
-    default:
-      return '#94a3b8';
-  }
-}
-
-function getStatusLabel(status: string): string {
-  return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
 function formatEventDate(dateString: string | null): string {
@@ -619,23 +601,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         flexDirection: 'column',
                       }}
                     >
-                      {/* Status Badge */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            backgroundColor: getStatusColor(job.status) + '20',
-                            color: getStatusColor(job.status),
-                            border: `1px solid ${getStatusColor(job.status)}40`,
-                          }}
-                        >
-                          {getStatusLabel(job.status)}
-                        </span>
-                        {job.backdropSelected && (
+                      {/* Backdrop Selected Badge */}
+                      {job.backdropSelected && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '16px' }}>
                           <span
                             style={{
                               display: 'inline-block',
@@ -649,8 +617,8 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           >
                             ✓ Backdrop Selected
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {/* Client Name */}
                       <h3
