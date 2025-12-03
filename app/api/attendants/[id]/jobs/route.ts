@@ -133,7 +133,8 @@ export async function GET(
         isUpcoming,
         isCompleted,
       };
-    });
+      })
+      .filter((job) => !job.isCompleted); // Filter out completed jobs
 
     // Sort by event date (upcoming first, then by date ascending)
     jobs.sort((a, b) => {
