@@ -210,10 +210,11 @@ function formatEventDate(dateString: string | null): string {
 }
 
 export default async function AttendantHubPage({ params }: AttendantHubPageProps) {
-  const { id: attendantId } = await params;
-  const { jobs, metrics } = await fetchAttendantJobs(attendantId);
+  try {
+    const { id: attendantId } = await params;
+    const { jobs, metrics } = await fetchAttendantJobs(attendantId);
 
-  return (
+    return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn {
@@ -760,6 +761,70 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
         </footer>
       </div>
     </>
-  );
+    );
+  } catch (error) {
+    console.error('Error rendering attendant hub page:', error);
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#0f172a',
+          fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
+          color: '#f1f5f9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '32px',
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: '#1e293b',
+            padding: '48px',
+            borderRadius: '12px',
+            border: '1px solid #334155',
+            textAlign: 'center',
+            maxWidth: '520px',
+          }}
+        >
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              backgroundColor: '#dc2626',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px auto',
+              fontSize: '28px',
+            }}
+          >
+            ⚠️
+          </div>
+          <h1
+            style={{
+              color: '#ffffff',
+              fontSize: '24px',
+              margin: '0 0 16px 0',
+              fontWeight: '700',
+            }}
+          >
+            Error Loading Hub
+          </h1>
+          <p
+            style={{
+              color: '#94a3b8',
+              fontSize: '16px',
+              margin: '0',
+              lineHeight: '1.6',
+            }}
+          >
+            An error occurred while loading the attendant hub. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
 }
 
