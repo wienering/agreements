@@ -464,7 +464,11 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
               </div>
               {attendantId && (
                 <Link
+<<<<<<< HEAD
                   href={`/attendants/${attendantId}/hub`}
+=======
+                  href={`/attendant/${attendantId}/hub`}
+>>>>>>> 65d13285cd46f3aab14975fe12cd10a1f9b6e212
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',

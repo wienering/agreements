@@ -167,7 +167,11 @@ export default function BackdropLinksPage() {
   const getAttendantHubLink = (backdropLinkUrl: string): string | null => {
     const attendantId = extractAttendantIdFromUrl(backdropLinkUrl);
     if (!attendantId) return null;
+<<<<<<< HEAD
     return `${window.location.origin}/attendants/${attendantId}/hub`;
+=======
+    return `${window.location.origin}/attendant/${attendantId}/hub`;
+>>>>>>> 65d13285cd46f3aab14975fe12cd10a1f9b6e212
   };
 
   const copyHubLink = async (backdropLinkUrl: string, id: string) => {
