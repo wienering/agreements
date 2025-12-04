@@ -12,6 +12,12 @@ export async function GET() {
         client: true,
         template: true,
         event: true,
+        backdropLink: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' } // Will be sorted by event date on frontend
     });
@@ -100,6 +106,12 @@ export async function POST(request: NextRequest) {
         client: true,
         template: true,
         event: true,
+        backdropLink: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 

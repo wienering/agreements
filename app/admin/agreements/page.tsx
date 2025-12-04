@@ -1928,6 +1928,11 @@ export default function AgreementsPage() {
                     <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                       {agreement.client.email}
                     </p>
+                    {(agreement as any).backdropLink?.name && (
+                      <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '14px', fontWeight: '500' }}>
+                        🔗 Backdrop Link: {(agreement as any).backdropLink.name}
+                      </p>
+                    )}
                     {agreement.selectedBackdropName && (
                       <p style={{ margin: '4px 0 0 0', color: '#059669', fontSize: '14px', fontWeight: '500' }}>
                         🖼️ Selected Backdrop: {agreement.selectedBackdropName}
