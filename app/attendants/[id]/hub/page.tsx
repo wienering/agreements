@@ -68,11 +68,14 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
     }
 
     // Find all Agreements that reference those BackdropLinks
-    // Include all agreements (including completed) so we can count them
+    // Exclude completed and cancelled agreements from display
     const agreements = await prisma.agreement.findMany({
       where: {
         backdropLinkId: { in: backdropLinkIds },
         archived: false,
+        status: {
+          notIn: ['COMPLETED', 'CANCELLED'],
+        },
       },
       select: {
         id: true,
@@ -150,13 +153,16 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
       };
     });
 
-    // Calculate metrics before filtering (include completed events in count)
-    const allJobsCount = allJobs.length;
-    const completedCount = allJobs.filter((job) => job.isCompleted).length;
-    const upcomingCount = allJobs.filter((job) => job.isUpcoming).length;
-
-    // Filter out completed jobs from display
-    const jobs = allJobs.filter((job) => !job.isCompleted);
+    // Filter out jobs that are past their event date (completed based on date)
+    // Note: COMPLETED and CANCELLED status agreements are already filtered at the database level
+    const jobs = allJobs.filter((job) => {
+      // If status is COMPLETED or CANCELLED, exclude it (shouldn't happen due to DB filter, but double-check)
+      if (job.status === 'COMPLETED' || job.status === 'CANCELLED') {
+        return false;
+      }
+      // Exclude jobs that are past their event date + 24 hours
+      return !job.isCompleted;
+    });
 
     // Sort by event date (upcoming first, then by date ascending)
     jobs.sort((a, b) => {
@@ -172,11 +178,11 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
       return 0;
     });
 
-    // Calculate metrics (include completed in counts but don't show them)
+    // Calculate metrics (only count jobs that are displayed)
     const metrics: Metrics = {
-      totalJobs: allJobsCount,
-      upcomingEvents: upcomingCount,
-      completedEvents: completedCount,
+      totalJobs: jobs.length,
+      upcomingEvents: jobs.filter((job) => job.isUpcoming).length,
+      completedEvents: 0, // Completed jobs are filtered out and not shown
     };
 
     return { jobs, metrics };
