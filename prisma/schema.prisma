@@ -87,6 +87,7 @@ model Agreement {
   stripePaymentLink  String?
   stripeReceiptLink  String?
   galleryLink        String?
+  galleryEmailSentAt DateTime?
   nextAction         String?
   backdropLinkId     String?
   backdropLink       BackdropLink?         @relation(fields: [backdropLinkId], references: [id], onDelete: SetNull)

@@ -261,6 +261,12 @@ export async function POST(request: NextRequest) {
 
       console.log('Gallery ready email sent successfully:', info);
 
+      // Update the agreement to track that the gallery email was sent
+      await prisma.agreement.update({
+        where: { id: agreement.id },
+        data: { galleryEmailSentAt: new Date() }
+      });
+
       return NextResponse.json({
         success: true,
         message: 'Gallery ready email sent successfully',

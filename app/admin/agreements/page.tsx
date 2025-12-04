@@ -95,6 +95,7 @@ export default function AgreementsPage() {
   const [stripePaymentLink, setStripePaymentLink] = useState('');
   const [stripeReceiptLink, setStripeReceiptLink] = useState('');
   const [galleryLink, setGalleryLink] = useState('');
+  const [galleryEmailSentAt, setGalleryEmailSentAt] = useState<Date | null>(null);
   const [sendingGalleryEmail, setSendingGalleryEmail] = useState(false);
   const [nextAction, setNextAction] = useState('');
   const [backdropLinks, setBackdropLinks] = useState<any[]>([]);
@@ -727,6 +728,7 @@ export default function AgreementsPage() {
     setStripePaymentLink((agreement as any).stripePaymentLink || '');
     setStripeReceiptLink((agreement as any).stripeReceiptLink || '');
     setGalleryLink((agreement as any).galleryLink || '');
+    setGalleryEmailSentAt((agreement as any).galleryEmailSentAt ? new Date((agreement as any).galleryEmailSentAt) : null);
     setNextAction((agreement as any).nextAction || '');
     setSelectedBackdropLinkId((agreement as any).backdropLinkId || '');
     setSelectedBackdropName((agreement as any).selectedBackdropName || '');
@@ -929,6 +931,22 @@ export default function AgreementsPage() {
 
       if (response.ok) {
         showToast(`Gallery ready email sent to ${selectedAgreement.client.email}!`);
+        // Update the galleryEmailSentAt timestamp
+        setGalleryEmailSentAt(new Date());
+        // Refresh the agreements list to get updated data
+        const refreshResponse = await fetch('/api/agreements');
+        if (refreshResponse.ok) {
+          const refreshedAgreements = await refreshResponse.json();
+          setAgreements(refreshedAgreements);
+          // Update selected agreement if it's still selected
+          if (selectedAgreement) {
+            const updatedAgreement = refreshedAgreements.find((a: Agreement) => a.id === selectedAgreement.id);
+            if (updatedAgreement) {
+              setSelectedAgreement(updatedAgreement);
+              setGalleryEmailSentAt(updatedAgreement.galleryEmailSentAt ? new Date(updatedAgreement.galleryEmailSentAt) : null);
+            }
+          }
+        }
       } else {
         showToast(`Error: ${data.error || 'Failed to send gallery ready email'}`, 'error');
       }
@@ -2811,44 +2829,73 @@ export default function AgreementsPage() {
                     }}
                   />
                   {galleryLink && (
-                    <button
-                      type="button"
-                      onClick={handleSendGalleryReadyEmail}
-                      disabled={sendingGalleryEmail || !galleryLink}
-                      style={{
-                        marginTop: '8px',
-                        padding: '8px 16px',
-                        backgroundColor: sendingGalleryEmail ? '#9ca3af' : '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      {sendingGalleryEmail ? (
-                        <>
-                          <span style={{ 
-                            display: 'inline-block', 
-                            width: '14px', 
-                            height: '14px', 
-                            border: '2px solid white', 
-                            borderTopColor: 'transparent', 
-                            borderRadius: '50%', 
-                            animation: 'spin 1s linear infinite' 
-                          }} />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          📧 Send Gallery Ready Email
-                        </>
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleSendGalleryReadyEmail}
+                        disabled={sendingGalleryEmail || !galleryLink}
+                        style={{
+                          marginTop: '8px',
+                          padding: '8px 16px',
+                          backgroundColor: sendingGalleryEmail ? '#9ca3af' : '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        {sendingGalleryEmail ? (
+                          <>
+                            <span style={{ 
+                              display: 'inline-block', 
+                              width: '14px', 
+                              height: '14px', 
+                              border: '2px solid white', 
+                              borderTopColor: 'transparent', 
+                              borderRadius: '50%', 
+                              animation: 'spin 1s linear infinite' 
+                            }} />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            📧 Send Gallery Ready Email
+                          </>
+                        )}
+                      </button>
+                      {galleryEmailSentAt && (
+                        <div
+                          style={{
+                            marginTop: '8px',
+                            padding: '10px 12px',
+                            backgroundColor: '#dbeafe',
+                            border: '1px solid #93c5fd',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            color: '#1e40af',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}
+                        >
+                          <span style={{ fontSize: '16px' }}>✓</span>
+                          <span>
+                            <strong>Email sent to client</strong> on {galleryEmailSentAt.toLocaleDateString('en-CA', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
                       )}
-                    </button>
+                    </>
                   )}
                 </div>
 
