@@ -19,7 +19,8 @@ export default async function TestPage({ params }: TestPageProps) {
   
   let id: string;
   try {
-    id = await params;
+    const resolvedParams = await params;
+    id = resolvedParams.id;
     console.log('[TestPage] Params resolved, id:', id);
   } catch (error) {
     console.error('[TestPage] Error resolving params:', error);
