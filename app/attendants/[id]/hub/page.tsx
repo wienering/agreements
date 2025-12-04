@@ -527,59 +527,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   {metrics.upcomingEvents}
                 </p>
               </div>
-
-              {/* Completed Events */}
-              <div
-                className="metric-card"
-                style={{
-                  backgroundColor: '#1e293b',
-                  padding: '32px',
-                  borderRadius: '16px',
-                  border: '1px solid #334155',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <h3
-                    style={{
-                      margin: '0',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#94a3b8',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    Completed Events
-                  </h3>
-                  <div
-                    style={{
-                      width: '48px',
-                      height: '48px',
-                      backgroundColor: '#059669',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.2)',
-                    }}
-                  >
-                    ✅
-                  </div>
-                </div>
-                <p
-                  style={{
-                    margin: '0',
-                    fontSize: '36px',
-                    fontWeight: '700',
-                    color: '#f1f5f9',
-                    lineHeight: '1.2',
-                  }}
-                >
-                  {metrics.completedEvents}
-                </p>
-              </div>
             </div>
 
             {/* Featured Upcoming Event & All Jobs Section */}
