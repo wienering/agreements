@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 interface AttendantHubPageProps {
-  params: Promise<{ attendantId: string }>;
+  params: Promise<{ id: string }>;
 }
 
 // Force dynamic rendering
@@ -11,10 +11,10 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function generateMetadata({ params }: AttendantHubPageProps): Promise<Metadata> {
-  const { attendantId } = await params;
+  const { id } = await params;
   
   return {
-    title: `Attendant Hub - ${attendantId}`,
+    title: `Attendant Hub - ${id}`,
   };
 }
 
@@ -39,16 +39,16 @@ interface Metrics {
   completedEvents: number;
 }
 
-async function fetchAttendantJobs(attendantId: string): Promise<{ jobs: Job[]; metrics: Metrics }> {
+async function fetchAttendantJobs(id: string): Promise<{ jobs: Job[]; metrics: Metrics }> {
   try {
-    // Find all BackdropLinks where URL contains the attendantId
+    // Find all BackdropLinks where URL contains the id
     const backdropLinks = await prisma.backdropLink.findMany({
       where: {
         OR: [
-          { url: { contains: `/select/${attendantId}` } },
-          { url: { contains: `attendantId=${attendantId}` } },
-          { url: { contains: encodeURIComponent(`/select/${attendantId}`) } },
-          { url: { contains: encodeURIComponent(`attendantId=${attendantId}`) } },
+          { url: { contains: `/select/${id}` } },
+          { url: { contains: `attendantId=${id}` } },
+          { url: { contains: encodeURIComponent(`/select/${id}`) } },
+          { url: { contains: encodeURIComponent(`attendantId=${id}`) } },
         ],
       },
       select: {
@@ -197,8 +197,8 @@ function formatEventDate(dateString: string | null): string {
 }
 
 export default async function AttendantHubPage({ params }: AttendantHubPageProps) {
-  const { attendantId } = await params;
-  const { jobs, metrics } = await fetchAttendantJobs(attendantId);
+  const { id } = await params;
+  const { jobs, metrics } = await fetchAttendantJobs(id);
 
   return (
     <>
@@ -306,7 +306,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     fontWeight: '500',
                   }}
                 >
-                  {attendantId}
+                  {id}
                 </p>
               </div>
             </div>
