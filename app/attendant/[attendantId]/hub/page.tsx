@@ -557,7 +557,11 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   <Link
                     key={job.id}
                     href={`/attendant/${job.id}`}
-                    style={{ textDecoration: 'none' }}
+                    style={{ 
+                      textDecoration: 'none',
+                      display: 'block',
+                      width: '100%',
+                    }}
                   >
                     <div
                       className="job-card"
