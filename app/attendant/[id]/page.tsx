@@ -67,20 +67,9 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
 }
 
 export default async function AttendantPage({ params }: AttendantPageProps) {
-  console.log('[AttendantPage] Starting page render');
-  
-  let id: string;
-  try {
-    const resolvedParams = await params;
-    id = resolvedParams.id;
-    console.log('[AttendantPage] Params resolved, id:', id);
-  } catch (error) {
-    console.error('[AttendantPage] Error resolving params:', error);
-    return <NotFoundError />;
-  }
+  const { id } = await params;
 
   try {
-    console.log('[AttendantPage] Fetching agreement from database...');
     // Fetch agreement with client, event, and backdropLink relations
     // Only select fields we need - don't fetch sensitive data
     const agreement = await prisma.agreement.findUnique({
@@ -126,20 +115,11 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       },
     });
 
-    console.log('[AttendantPage] Agreement fetched:', {
-      found: !!agreement,
-      hasClient: !!agreement?.client,
-      hasEvent: !!agreement?.event,
-      hasBackdropLink: !!agreement?.backdropLink,
-    });
-
     // If agreement not found, show custom error page
     if (!agreement || !agreement.client) {
-      console.log('[AttendantPage] Agreement not found or missing client, returning NotFoundError');
       return <NotFoundError />;
     }
 
-    console.log('[AttendantPage] Processing agreement data...');
     const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways, forceVirtualGreenScreen } = agreement;
     
     // Extract attendantId from backdropLink URL for navigation back to hub
@@ -173,11 +153,8 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       }
     };
     
-    console.log('[AttendantPage] Extracting attendantId from backdropLink URL...');
     const attendantId = backdropLink?.url ? extractAttendantIdFromUrl(backdropLink.url) : null;
-    console.log('[AttendantPage] Extracted attendantId:', attendantId);
     
-    console.log('[AttendantPage] Processing event data...');
     // Use event data when available, otherwise fall back to client data
     const eventDate = event ? event.eventDate : client.eventDate;
     const eventLocation = event ? event.eventLocation : client.eventLocation;
@@ -193,13 +170,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
 
     // Helper function to calculate event datetime
     const getEventDateTime = () => {
-      if (!eventDate) {
-        console.log('[AttendantPage] No eventDate provided');
-        return null;
-      }
+      if (!eventDate) return null;
       
       try {
-        console.log('[AttendantPage] Parsing eventDate:', eventDate);
         // Parse event date - handle timezone correctly by extracting UTC date components
         // Dates from Prisma are stored as UTC midnight, so we need to extract the UTC
         // year/month/day to get the intended calendar date, then create a local date
@@ -251,130 +224,79 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
           }
         }
         
-        console.log('[AttendantPage] Event datetime parsed successfully:', eventDateTime);
         return eventDateTime;
       } catch (error) {
-        console.error('[AttendantPage] Error parsing event datetime:', error);
+        console.error('Error parsing event datetime:', error);
         return null;
       }
     };
 
     // Check if event has passed and is more than 24 hours ago
     const isEventExpired = (() => {
-      try {
-        const eventDateTime = getEventDateTime();
-        if (!eventDateTime) {
-          console.log('[AttendantPage] No eventDateTime, event not expired');
-          return false;
-        }
-        
-        // Calculate 24 hours after event date/time
-        const expirationTime = new Date(eventDateTime);
-        expirationTime.setHours(expirationTime.getHours() + 24);
-        
-        // Check if current time is past expiration
-        const expired = new Date() > expirationTime;
-        console.log('[AttendantPage] Event expiration check:', { expired, expirationTime, now: new Date() });
-        return expired;
-      } catch (error) {
-        console.error('[AttendantPage] Error checking event expiration:', error);
-        return false; // Default to not expired if check fails
-      }
+      const eventDateTime = getEventDateTime();
+      if (!eventDateTime) return false;
+      
+      // Calculate 24 hours after event date/time
+      const expirationTime = new Date(eventDateTime);
+      expirationTime.setHours(expirationTime.getHours() + 24);
+      
+      // Check if current time is past expiration
+      return new Date() > expirationTime;
     })();
 
     // Check if event is within 24 hours (before or after) to show phone number
     const isEventWithin24Hours = (() => {
-      try {
-        const eventDateTime = getEventDateTime();
-        if (!eventDateTime) {
-          console.log('[AttendantPage] No eventDateTime, phone not within 24 hours');
-          return false;
-        }
-        
-        const now = new Date();
-        const hoursUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-        
-        // Show phone if event is within 24 hours before OR up to 24 hours after
-        // (Page is accessible until 24 hours after, so phone should be visible in that window too)
-        const within24Hours = hoursUntilEvent >= -24 && hoursUntilEvent <= 24;
-        console.log('[AttendantPage] Phone visibility check:', { within24Hours, hoursUntilEvent });
-        return within24Hours;
-      } catch (error) {
-        console.error('[AttendantPage] Error checking 24-hour window:', error);
-        return false; // Default to not showing phone if check fails
-      }
+      const eventDateTime = getEventDateTime();
+      if (!eventDateTime) return false;
+      
+      const now = new Date();
+      const hoursUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      // Show phone if event is within 24 hours before OR up to 24 hours after
+      // (Page is accessible until 24 hours after, so phone should be visible in that window too)
+      return hoursUntilEvent >= -24 && hoursUntilEvent <= 24;
     })();
 
-    console.log('[AttendantPage] Checking event expiration...');
     // If event has expired (more than 24 hours after), show expired message
     if (isEventExpired) {
-      console.log('[AttendantPage] Event expired, returning EventExpiredError');
       return <EventExpiredError />;
     }
-    
-    console.log('[AttendantPage] Formatting event data for display...');
 
     // Format event date for display (e.g., "November 2, 2025")
-    let formattedEventDate: string | null = null;
-    try {
-      if (eventDate) {
-        const date = new Date(eventDate);
-        if (!isNaN(date.getTime())) {
-          formattedEventDate = date.toLocaleDateString('en-US', {
-            timeZone: 'America/Toronto',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          });
-        } else {
-          console.warn('[AttendantPage] Invalid eventDate:', eventDate);
-        }
-      }
-    } catch (error) {
-      console.error('[AttendantPage] Error formatting event date:', error);
-    }
+    const formattedEventDate = eventDate
+      ? new Date(eventDate).toLocaleDateString('en-US', {
+          timeZone: 'America/Toronto',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : null;
 
     // Format time with duration (e.g., "8:00 pm - 6 hours")
     const formattedTimeWithDuration = (() => {
-      try {
-        if (!eventStartTime && !eventDuration) return null;
-        const time = eventStartTime || '';
-        const duration = eventDuration || '';
-        if (!time && !duration) return null;
-        if (time && duration) return `${time} - ${duration}`;
-        return time || duration;
-      } catch (error) {
-        console.error('[AttendantPage] Error formatting time with duration:', error);
-        return null;
-      }
+      if (!eventStartTime && !eventDuration) return null;
+      const time = eventStartTime || '';
+      const duration = eventDuration || '';
+      if (!time && !duration) return null;
+      if (time && duration) return `${time} - ${duration}`;
+      return time || duration;
     })();
 
     // Generate Google Maps URL for address
     const getGoogleMapsUrl = (address: string | null) => {
-      try {
-        if (!address) return null;
-        const encoded = encodeURIComponent(address);
-        return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
-      } catch (error) {
-        console.error('[AttendantPage] Error generating Google Maps URL:', error);
-        return null;
-      }
+      if (!address) return null;
+      const encoded = encodeURIComponent(address);
+      return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
     };
 
     // Generate tel: link for phone number
     const getTelLink = (phone: string | null) => {
-      try {
-        if (!phone) return null;
-        // Remove all non-digit characters except + for international numbers
-        const cleaned = phone.replace(/[^\d+]/g, '');
-        return `tel:${cleaned}`;
-      } catch (error) {
-        console.error('[AttendantPage] Error generating tel link:', error);
-        return null;
-      }
+      if (!phone) return null;
+      // Remove all non-digit characters except + for international numbers
+      const cleaned = phone.replace(/[^\d+]/g, '');
+      return `tel:${cleaned}`;
     };
 
-    console.log('[AttendantPage] All data processed, rendering page...');
     return (
       <>
         <style dangerouslySetInnerHTML={{__html: `
@@ -1245,8 +1167,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
             </div>
 
             {/* Files Section */}
-            {/* Temporarily disabled to test if this component causes the blank page issue */}
-            {/* <AttendantFilesSection agreementId={agreement.id} /> */}
+            <AttendantFilesSection agreementId={agreement.id} />
           </main>
 
           {/* Footer */}
@@ -1311,12 +1232,7 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
       </>
     );
   } catch (error) {
-    console.error('[AttendantPage] Error in component:', error);
-    console.error('[AttendantPage] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    console.error('[AttendantPage] Error details:', {
-      message: error instanceof Error ? error.message : String(error),
-      name: error instanceof Error ? error.name : 'Unknown',
-    });
+    console.error('Error fetching agreement:', error);
     return <NotFoundError />;
   }
 }
