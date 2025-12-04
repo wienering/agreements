@@ -268,154 +268,6 @@ function getEventTypeBgColor(eventType: string | null): string {
   return '#1e293b';
 }
 
-function getDatesWithEvents(jobs: Job[]): Set<string> {
-  const dates = new Set<string>();
-  jobs.forEach((job) => {
-    if (job.eventDate) {
-      // Convert to Toronto timezone for consistent date matching
-      const date = new Date(job.eventDate);
-      const torontoDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Toronto' }));
-      const dateStr = `${torontoDate.getFullYear()}-${String(torontoDate.getMonth() + 1).padStart(2, '0')}-${String(torontoDate.getDate()).padStart(2, '0')}`;
-      dates.add(dateStr);
-    }
-  });
-  return dates;
-}
-
-function CalendarComponent({ jobs }: { jobs: Job[] }) {
-  // Use Toronto timezone for consistent date calculations
-  const now = new Date();
-  const torontoNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Toronto' }));
-  const currentMonth = torontoNow.getMonth();
-  const currentYear = torontoNow.getFullYear();
-  const datesWithEvents = getDatesWithEvents(jobs);
-  
-  // Get first day of month and number of days
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  
-  // Day names
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
-  // Generate calendar days
-  const days: (number | null)[] = [];
-  // Add empty cells for days before the first day of the month
-  for (let i = 0; i < firstDay; i++) {
-    days.push(null);
-  }
-  // Add all days of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push(day);
-  }
-  
-  const monthName = torontoNow.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'America/Toronto' });
-  
-  return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h3
-          style={{
-            margin: '0',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#94a3b8',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-          }}
-        >
-          {monthName}
-        </h3>
-        <div
-          style={{
-            width: '48px',
-            height: '48px',
-            backgroundColor: '#8b5cf6',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
-            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
-          }}
-        >
-          📅
-        </div>
-      </div>
-      
-      {/* Day headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
-        {dayNames.map((day) => (
-          <div
-            key={day}
-            style={{
-              textAlign: 'center',
-              fontSize: '11px',
-              fontWeight: '600',
-              color: '#64748b',
-              padding: '4px 0',
-            }}
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-      
-      {/* Calendar grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-        {days.map((day, index) => {
-          if (day === null) {
-            return <div key={`empty-${index}`} style={{ padding: '4px', minHeight: '32px' }} />;
-          }
-          
-          const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const hasEvent = datesWithEvents.has(dateStr);
-          const isToday = day === torontoNow.getDate() && currentMonth === torontoNow.getMonth() && currentYear === torontoNow.getFullYear();
-          
-          return (
-            <div
-              key={day}
-              style={{
-                minHeight: '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4px',
-                borderRadius: '6px',
-                backgroundColor: isToday ? '#3b82f620' : 'transparent',
-                border: isToday ? '1px solid #3b82f6' : '1px solid transparent',
-                position: 'relative',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: isToday ? '700' : '500',
-                  color: isToday ? '#60a5fa' : '#f1f5f9',
-                }}
-              >
-                {day}
-              </span>
-              {hasEvent && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '2px',
-                    width: '4px',
-                    height: '4px',
-                    borderRadius: '50%',
-                    backgroundColor: '#10b981',
-                    boxShadow: '0 0 4px rgba(16, 185, 129, 0.6)',
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default async function AttendantHubPage({ params }: AttendantHubPageProps) {
   try {
@@ -677,7 +529,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 </p>
               </div>
 
-              {/* Calendar */}
+              {/* Backdrop Selection Progress */}
               <div
                 className="metric-card"
                 style={{
@@ -688,7 +540,93 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
-                <CalendarComponent jobs={jobs} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <h3
+                    style={{
+                      margin: '0',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#94a3b8',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    Backdrop Selection
+                  </h3>
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      backgroundColor: '#8b5cf6',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
+                    }}
+                  >
+                    🖼️
+                  </div>
+                </div>
+                {jobs.length > 0 ? (
+                  <>
+                    <p
+                      style={{
+                        margin: '0 0 16px 0',
+                        fontSize: '36px',
+                        fontWeight: '700',
+                        color: '#f1f5f9',
+                        lineHeight: '1.2',
+                      }}
+                    >
+                      {jobs.filter(j => j.backdropSelected).length} / {jobs.length}
+                    </p>
+                    {/* Progress Bar */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '8px',
+                        backgroundColor: '#334155',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${jobs.length > 0 ? (jobs.filter(j => j.backdropSelected).length / jobs.length) * 100 : 0}%`,
+                          height: '100%',
+                          backgroundColor: '#8b5cf6',
+                          borderRadius: '4px',
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
+                    <p
+                      style={{
+                        margin: '0',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#94a3b8',
+                      }}
+                    >
+                      {Math.round((jobs.filter(j => j.backdropSelected).length / jobs.length) * 100)}% Complete
+                    </p>
+                  </>
+                ) : (
+                  <p
+                    style={{
+                      margin: '0',
+                      fontSize: '36px',
+                      fontWeight: '700',
+                      color: '#f1f5f9',
+                      lineHeight: '1.2',
+                    }}
+                  >
+                    0
+                  </p>
+                )}
               </div>
             </div>
 
