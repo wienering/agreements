@@ -158,8 +158,12 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
     // Check if attendantId belongs to a group, and if so, use the group slug for navigation
     let hubLink: string | null = null;
     if (attendantId) {
+      // Default to individual attendant ID - group lookup is optional
+      hubLink = `/attendants/${attendantId}/hub`;
+      
       try {
-        // Find a group that contains this attendantId
+        // Try to find a group that contains this attendantId
+        // Don't block page rendering if this fails
         const group = await prisma.attendantGroup.findFirst({
           where: {
             attendantIds: {
@@ -169,19 +173,15 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
           select: {
             slug: true,
           },
-        });
+        }).catch(() => null);
         
-        if (group) {
+        if (group?.slug) {
           // Use group slug for navigation
           hubLink = `/attendants/${group.slug}/hub`;
-        } else {
-          // Use individual attendant ID
-          hubLink = `/attendants/${attendantId}/hub`;
         }
       } catch (error) {
+        // Silently fail - use individual attendant ID as fallback
         console.error('Error checking for attendant group:', error);
-        // Fallback to individual attendant ID
-        hubLink = `/attendants/${attendantId}/hub`;
       }
     }
     
