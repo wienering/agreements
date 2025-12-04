@@ -158,6 +158,13 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     
     const attendantId = backdropLink?.url ? extractAttendantIdFromUrl(backdropLink.url) : null;
     
+    // Determine the hub link - use group slug if fromGroup parameter is present, otherwise use individual attendant ID
+    const hubLink = fromGroup 
+      ? `/attendants/${fromGroup}/hub`
+      : attendantId 
+        ? `/attendants/${attendantId}/hub`
+        : null;
+    
     // Use event data when available, otherwise fall back to client data
     const eventDate = event ? event.eventDate : client.eventDate;
     const eventLocation = event ? event.eventLocation : client.eventLocation;
