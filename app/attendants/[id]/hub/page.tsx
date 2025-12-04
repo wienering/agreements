@@ -586,10 +586,12 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   <Link
                     key={job.id}
                     href={`/attendant/${job.id}`}
+                    prefetch={true}
                     style={{ 
                       textDecoration: 'none',
                       display: 'block',
                       width: '100%',
+                      color: 'inherit',
                     }}
                   >
                     <div
