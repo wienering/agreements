@@ -5,6 +5,7 @@ import AttendantFilesSection from './AttendantFilesSection';
 
 interface AttendantPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 // Force dynamic rendering to ensure backdrop selections update immediately
@@ -66,8 +67,10 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
   }
 }
 
-export default async function AttendantPage({ params }: AttendantPageProps) {
+export default async function AttendantPage({ params, searchParams }: AttendantPageProps) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const fromGroup = resolvedSearchParams.fromGroup as string | undefined;
 
   try {
     // Fetch agreement with client, event, and backdropLink relations
@@ -466,9 +469,9 @@ export default async function AttendantPage({ params }: AttendantPageProps) {
                   </p>
                 </div>
               </div>
-              {attendantId && (
+              {hubLink && (
                 <Link
-                  href={`/attendants/${attendantId}/hub`}
+                  href={hubLink}
                   className="back-to-hub-link"
                   style={{
                     display: 'inline-flex',

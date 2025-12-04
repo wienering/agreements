@@ -585,7 +585,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 {jobs.map((job) => (
                   <Link
                     key={job.id}
-                    href={`/attendant/${job.id}`}
+                    href={`/attendant/${job.id}${groupName ? `?fromGroup=${attendantIdOrSlug}` : ''}`}
                     prefetch={true}
                     style={{ 
                       textDecoration: 'none',
