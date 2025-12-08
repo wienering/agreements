@@ -15,7 +15,7 @@ interface AttendantGroup {
 
 export default function AttendantGroupsPage() {
   useEffect(() => {
-    document.title = 'Attendant Groups | Admin | Photobooth Guys';
+    document.title = 'Attendant Hubs | Admin | Photobooth Guys';
   }, []);
 
   const [groups, setGroups] = useState<AttendantGroup[]>([]);
@@ -188,14 +188,14 @@ export default function AttendantGroupsPage() {
               fontWeight: '700',
               color: textColor 
             }}>
-              Attendant Groups
+              Attendant Hubs
             </h1>
             <p style={{ 
               margin: '0', 
               fontSize: '16px', 
               color: mutedText 
             }}>
-              Manage groups of attendants who share a single hub
+              Manage groups of attendants and their hub links
             </p>
           </div>
           <button
@@ -245,10 +245,10 @@ export default function AttendantGroupsPage() {
             }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
               <p style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: textColor }}>
-                No attendant groups yet
+                No attendant hubs yet
               </p>
               <p style={{ margin: '0' }}>
-                Click &quot;Add Attendant Group&quot; to create your first group
+                Click &quot;Add Attendant Group&quot; to create your first hub
               </p>
             </div>
           ) : (
@@ -292,7 +292,16 @@ export default function AttendantGroupsPage() {
                     fontWeight: '600',
                     color: mutedText
                   }}>
-                    Hub Link
+                    Group Hub Link
+                  </th>
+                  <th style={{ 
+                    padding: '16px', 
+                    textAlign: 'left', 
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: mutedText
+                  }}>
+                    Individual Hub Links
                   </th>
                   <th style={{ 
                     padding: '16px', 
@@ -370,7 +379,7 @@ export default function AttendantGroupsPage() {
                             fontWeight: '500'
                           }}
                         >
-                          View Hub →
+                          View Group Hub →
                         </a>
                         <button
                           onClick={() => copyHubLink(group.slug, group.id)}
@@ -398,8 +407,74 @@ export default function AttendantGroupsPage() {
                             }
                           }}
                         >
-                          {copiedId === group.id ? '✓ Copied' : 'Copy Hub Link'}
+                          {copiedId === group.id ? '✓ Copied' : 'Copy Group Hub Link'}
                         </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '300px' }}>
+                        {group.attendantIds.length > 0 ? (
+                          group.attendantIds.map((attendantId, idx) => {
+                            const individualHubLink = `${window.location.origin}/attendants/${attendantId}/hub`;
+                            return (
+                              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <a
+                                  href={`/attendants/${attendantId}/hub`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    color: '#3b82f6',
+                                    fontSize: '12px',
+                                    textDecoration: 'none',
+                                    fontWeight: '500',
+                                    flex: '1',
+                                    minWidth: '120px'
+                                  }}
+                                >
+                                  {attendantId} →
+                                </a>
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText(individualHubLink);
+                                      setCopiedId(`${group.id}-${attendantId}`);
+                                      setTimeout(() => setCopiedId(null), 2000);
+                                    } catch (error) {
+                                      console.error('Failed to copy hub link:', error);
+                                      alert('Failed to copy hub link to clipboard');
+                                    }
+                                  }}
+                                  style={{
+                                    backgroundColor: copiedId === `${group.id}-${attendantId}` ? '#10b981' : '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '11px',
+                                    fontWeight: '500',
+                                    transition: 'background-color 0.2s',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (copiedId !== `${group.id}-${attendantId}`) {
+                                      e.currentTarget.style.backgroundColor = '#2563eb';
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (copiedId !== `${group.id}-${attendantId}`) {
+                                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                                    }
+                                  }}
+                                >
+                                  {copiedId === `${group.id}-${attendantId}` ? '✓' : 'Copy'}
+                                </button>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <span style={{ fontSize: '12px', color: mutedText }}>No attendant IDs</span>
+                        )}
                       </div>
                     </td>
                     <td style={{ padding: '16px' }}>
@@ -491,7 +566,7 @@ export default function AttendantGroupsPage() {
                 fontWeight: '700',
                 color: textColor
               }}>
-                {editingGroup ? 'Edit Attendant Group' : 'Add Attendant Group'}
+                {editingGroup ? 'Edit Attendant Hub' : 'Add Attendant Hub'}
               </h2>
 
               <div style={{ marginBottom: '20px' }}>

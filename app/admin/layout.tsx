@@ -40,7 +40,7 @@ export default function AdminLayout({
     { id: 'quotes', label: 'Quotes', icon: '💰', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
     { id: 'agreements', label: 'Agreements', icon: '📝', href: '/admin/agreements', tooltip: 'Manage client agreements' },
     { id: 'backdrop-links', label: 'Backdrop Links', icon: '🖼️', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
-    { id: 'attendant-groups', label: 'Attendant Groups', icon: '👥', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants who share a hub' },
+    { id: 'attendant-groups', label: 'Attendant Hubs', icon: '👥', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
   ];
 
   // Show loading state
