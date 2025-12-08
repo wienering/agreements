@@ -2984,6 +2984,7 @@ export default function AgreementsPage() {
                           }}
                         >
                           <option value="">-- Select a backdrop --</option>
+                          <option value="No Backdrop">No Backdrop</option>
                           {backdropOptions.map(backdrop => (
                             <option key={backdrop.id} value={backdrop.name}>
                               {backdrop.name}

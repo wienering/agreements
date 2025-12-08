@@ -145,7 +145,7 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
         eventStartTime,
         eventType,
         clientName,
-        backdropSelected: !!agreement.selectedBackdropName,
+        backdropSelected: !!agreement.selectedBackdropName && agreement.selectedBackdropName !== 'No Backdrop',
         backdropName: agreement.selectedBackdropName || null,
         backdropLinkName: agreement.backdropLink?.name || null,
         isUpcoming,
