@@ -2001,21 +2001,6 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }}>
                       Created {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </span>
-                    {agreement.lastEmailedAt && (
-                      <span style={{ 
-                        fontSize: '12px', 
-                        color: '#059669',
-                        backgroundColor: '#f0fdf4',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        alignSelf: isMobile ? 'flex-start' : 'auto',
-                        border: '1px solid #bbf7d0'
-                      }}
-                      title={`Email sent ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''}`}
-                      >
-                        Emailed {new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
-                      </span>
-                    )}
                     {(agreement.event?.eventDate || agreement.client.eventDate) && (
                       <span style={{ 
                         fontSize: '12px', 
