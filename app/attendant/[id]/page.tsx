@@ -883,7 +883,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Backdrop Choice
+                        Attendant
                       </p>
                       <p
                         style={{
@@ -1091,7 +1091,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Backdrop:
+                        Attendant:
                       </p>
                       <p
                         style={{

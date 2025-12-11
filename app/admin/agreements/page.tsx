@@ -2930,7 +2930,7 @@ export default function AgreementsPage() {
                 {/* Backdrop Link Selection */}
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
-                    Backdrop Selection Link
+                    Attendant
                   </label>
                   <select
                     value={selectedBackdropLinkId}
