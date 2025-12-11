@@ -1268,7 +1268,10 @@ const normalizePaymentStatus = (value?: string | null) => {
     setShowInvoiceModal(true);
     setInvoiceResult(null);
     setInvoiceError(null);
-    setInvoiceType('default');
+    // If deposit is already marked as paid, default to invoicing remaining balance
+    const normalizedStatus = normalizePaymentStatus((agreement as any).paymentStatus);
+    const depositPaid = normalizedStatus?.toLowerCase().includes('deposit');
+    setInvoiceType(depositPaid ? 'total-minus-deposit' : 'default');
     setCustomInvoiceAmount('');
     setDisableOnlinePayment(false);
   };
