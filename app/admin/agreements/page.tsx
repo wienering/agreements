@@ -146,6 +146,17 @@ export default function AgreementsPage() {
   // Copy link modal state
   const [showCopyLinkModal, setShowCopyLinkModal] = useState(false);
   const [copyLinkAgreement, setCopyLinkAgreement] = useState<Agreement | null>(null);
+
+// Normalize legacy/case-variant payment status values so the select always matches
+const normalizePaymentStatus = (value?: string | null) => {
+  if (!value) return '';
+  const v = value.trim().toLowerCase();
+  if (v === 'fully paid' || v === 'paid in full' || v === 'paid') return 'Fully paid';
+  if (v === 'balance due') return 'Balance due';
+  if (v === 'deposit paid' || v === 'deposit') return 'Deposit paid';
+  if (v === 'not paid' || v === 'unpaid') return 'Not paid';
+  return value; // fall back to original to avoid losing data
+};
   
   // Calculate 2 weeks from today for default expiration
   const getDefaultExpirationDate = () => {
@@ -723,8 +734,8 @@ export default function AgreementsPage() {
     setSelectedAgreement(agreement);
     // Use customHtmlContent if available, otherwise fall back to template.htmlContent
     setEditingContent((agreement as any).customHtmlContent || agreement.template.htmlContent);
-    // Load portal enhancement fields
-    setPaymentStatus((agreement as any).paymentStatus || '');
+  // Load portal enhancement fields
+  setPaymentStatus(normalizePaymentStatus((agreement as any).paymentStatus));
     setStripePaymentLink((agreement as any).stripePaymentLink || '');
     setStripeReceiptLink((agreement as any).stripeReceiptLink || '');
     setGalleryLink((agreement as any).galleryLink || '');
