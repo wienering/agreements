@@ -2593,6 +2593,25 @@ const normalizePaymentStatus = (value?: string | null) => {
                           >
                             Edit Details
                           </button>
+                          {!reviewRequestSent[agreement.id] && (
+                            <button
+                              onClick={() => openReviewRequestModal(agreement)}
+                              disabled={sendingReviewRequest[agreement.id] || !agreement.client.email}
+                              style={{
+                                backgroundColor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? '#9ca3af' : '#16a34a',
+                                color: 'white',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '4px',
+                                cursor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? 'not-allowed' : 'pointer',
+                                fontSize: '14px',
+                                fontWeight: '500'
+                              }}
+                              title={!agreement.client.email ? 'Client email is required' : 'Send client an email to request a Google review'}
+                            >
+                              {sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
+                            </button>
+                          )}
                           <button
                             onClick={() => handleArchiveAgreement(agreement.id)}
                             disabled={archivingAgreement[agreement.id]}
