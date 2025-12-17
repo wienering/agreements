@@ -77,6 +77,7 @@ export default function AgreementsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sendingToClient, setSendingToClient] = useState<Record<string, boolean>>({});
+  const [sendingReviewRequest, setSendingReviewRequest] = useState<Record<string, boolean>>({});
   const [deletingAgreement, setDeletingAgreement] = useState<Record<string, boolean>>({});
   const [archivingAgreement, setArchivingAgreement] = useState<Record<string, boolean>>({});
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
@@ -125,6 +126,11 @@ export default function AgreementsPage() {
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [previewAgreement, setPreviewAgreement] = useState<Agreement | null>(null);
   
+  // Review request email state
+  const [showReviewRequestModal, setShowReviewRequestModal] = useState(false);
+  const [reviewRequestAgreement, setReviewRequestAgreement] = useState<Agreement | null>(null);
+  const [reviewRequestSent, setReviewRequestSent] = useState<Record<string, boolean>>({});
+
   // Invoice creation state
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceAgreement, setInvoiceAgreement] = useState<Agreement | null>(null);
@@ -232,6 +238,9 @@ const normalizePaymentStatus = (value?: string | null) => {
         if (showAttendantModal) {
           setShowAttendantModal(false);
           setAttendantModalAgreement(null);
+        } else if (showReviewRequestModal) {
+          setShowReviewRequestModal(false);
+          setReviewRequestAgreement(null);
         } else if (showCopyLinkModal) {
           setShowCopyLinkModal(false);
           setCopyLinkAgreement(null);
@@ -272,6 +281,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     return () => window.removeEventListener('keydown', handleEscKey);
   }, [
     showAttendantModal,
+    showReviewRequestModal,
     showCopyLinkModal,
     showEmailPreview,
     showInvoiceModal,
@@ -914,6 +924,72 @@ const normalizePaymentStatus = (value?: string | null) => {
       showToast('Failed to send agreement. Please try again later.', 'error');
     } finally {
       setSendingToClient(prev => ({ ...prev, [agreement.id]: false }));
+    }
+  };
+
+  const handleSendReviewRequest = async (agreement: Agreement) => {
+    if (agreement.status !== 'COMPLETED') {
+      showToast('Review requests can only be sent for completed agreements', 'error');
+      return false;
+    }
+    if (!agreement.client?.email) {
+      showToast('Client email is required to send a review request', 'error');
+      return false;
+    }
+
+    try {
+      setSendingReviewRequest(prev => ({ ...prev, [agreement.id]: true }));
+      const response = await fetch('/api/agreements/send-review-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agreementId: agreement.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(`Review request sent to ${agreement.client.email}!`);
+        return true;
+      } else {
+        if (data.fallback?.reviewLink) {
+          showToast(`Email failed: ${data.error}. ${data.fallback.message}`, 'error');
+          try {
+            await navigator.clipboard.writeText(data.fallback.reviewLink);
+            showToast('Fallback review link copied to clipboard!', 'info');
+          } catch (clipboardError) {
+            console.log('Could not copy review link to clipboard:', clipboardError);
+          }
+        } else {
+          showToast(`Error: ${data.error || 'Failed to send review request'}`, 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Error sending review request:', error);
+      showToast('Failed to send review request. Please try again later.', 'error');
+    } finally {
+      setSendingReviewRequest(prev => ({ ...prev, [agreement.id]: false }));
+    }
+    return false;
+  };
+
+  const openReviewRequestModal = (agreement: Agreement) => {
+    setReviewRequestAgreement(agreement);
+    setShowReviewRequestModal(true);
+  };
+
+  const closeReviewRequestModal = () => {
+    setShowReviewRequestModal(false);
+    setReviewRequestAgreement(null);
+  };
+
+  const handleConfirmSendReviewRequest = async () => {
+    if (!reviewRequestAgreement) return;
+    const ok = await handleSendReviewRequest(reviewRequestAgreement);
+    if (ok) {
+      setReviewRequestSent(prev => ({ ...prev, [reviewRequestAgreement.id]: true }));
+      closeReviewRequestModal();
     }
   };
 
@@ -2192,6 +2268,36 @@ const normalizePaymentStatus = (value?: string | null) => {
                       title={`Resend email to client (Previously sent ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''})`}
                     >
                       {sendingToClient[agreement.id] ? 'Sending...' : 'Resend Email'}
+                    </button>
+                  )}
+                  {agreement.status === 'COMPLETED' && !reviewRequestSent[agreement.id] && (
+                    <button
+                      onClick={() => openReviewRequestModal(agreement)}
+                      disabled={sendingReviewRequest[agreement.id] || !agreement.client.email}
+                      style={{
+                        backgroundColor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? '#9ca3af' : '#16a34a',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!sendingReviewRequest[agreement.id] && agreement.client.email) {
+                          e.currentTarget.style.backgroundColor = '#15803d';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!sendingReviewRequest[agreement.id] && agreement.client.email) {
+                          e.currentTarget.style.backgroundColor = '#16a34a';
+                        }
+                      }}
+                      title={!agreement.client.email ? 'Client email is required' : 'Send client an email to request a Google review'}
+                    >
+                      {sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
                     </button>
                   )}
                   {agreement.status === 'DRAFT' && (
@@ -3893,6 +3999,122 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                 >
                   {saving ? 'Completing...' : 'Yes, Complete Anyway'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Review Request Confirmation Modal */}
+        {showReviewRequestModal && reviewRequestAgreement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '520px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px'
+              }}>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  color: textColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>⭐</span>
+                  Request Google Review
+                </h3>
+                <button
+                  onClick={closeReviewRequestModal}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: textColor,
+                    padding: '4px'
+                  }}
+                  title="Close modal"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ margin: '0 0 12px 0', color: textColor, fontSize: '14px', lineHeight: '1.6' }}>
+                  This will send an email to the client asking them to leave a Google review.
+                </p>
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: isDark ? '#0b1220' : '#f8fafc',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ margin: '0 0 6px 0', color: textColor, fontSize: '13px' }}>
+                    <strong>Client:</strong> {reviewRequestAgreement.client.firstName} {reviewRequestAgreement.client.lastName}
+                  </p>
+                  <p style={{ margin: 0, color: textColor, fontSize: '13px' }}>
+                    <strong>Email:</strong> {reviewRequestAgreement.client.email || 'Not set'}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={closeReviewRequestModal}
+                  disabled={sendingReviewRequest[reviewRequestAgreement.id]}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: mutedText,
+                    border: `1px solid ${borderColor}`,
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    cursor: sendingReviewRequest[reviewRequestAgreement.id] ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmSendReviewRequest}
+                  disabled={sendingReviewRequest[reviewRequestAgreement.id] || !reviewRequestAgreement.client.email}
+                  style={{
+                    backgroundColor: (sendingReviewRequest[reviewRequestAgreement.id] || !reviewRequestAgreement.client.email) ? '#9ca3af' : '#16a34a',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    cursor: (sendingReviewRequest[reviewRequestAgreement.id] || !reviewRequestAgreement.client.email) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600'
+                  }}
+                >
+                  {sendingReviewRequest[reviewRequestAgreement.id] ? 'Sending...' : 'Send Review Request'}
                 </button>
               </div>
             </div>
