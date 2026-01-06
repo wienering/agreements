@@ -375,6 +375,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             .featured-section {
               flex-direction: column !important;
             }
+            .calendar-card {
+              width: 100% !important;
+              max-width: 280px !important;
+            }
           }
           @media (max-width: 768px) {
             .hub-header {
@@ -385,6 +389,16 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             }
             .job-card {
               padding: 20px !important;
+            }
+            .calendar-card {
+              width: 100% !important;
+              max-width: 260px !important;
+              margin: 0 auto !important;
+            }
+            .calendar-cell {
+              width: 32px !important;
+              height: 32px !important;
+              font-size: 11px !important;
             }
           }
           .job-card {
@@ -828,38 +842,38 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
 
               {/* Calendar Card */}
               <div
+                className="calendar-card"
                 style={{
-                  flex: '1',
-                  minWidth: '300px',
+                  flex: '0 0 auto',
+                  width: '220px',
                   backgroundColor: '#1e293b',
-                  borderRadius: '16px',
+                  borderRadius: '12px',
                   border: '1px solid #334155',
-                  padding: '16px',
+                  padding: '12px',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h3
                   style={{
-                    margin: '0 0 12px 0',
-                    fontSize: '16px',
+                    margin: '0 0 8px 0',
+                    fontSize: '13px',
                     fontWeight: '700',
                     color: '#f1f5f9',
+                    textAlign: 'center',
                   }}
                 >
                   {getMonthYearString()}
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '6px' }}>
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
                     <div
-                      key={day}
+                      key={i}
                       style={{
                         textAlign: 'center',
-                        fontSize: '10px',
+                        fontSize: '9px',
                         fontWeight: '600',
-                        color: '#94a3b8',
+                        color: '#64748b',
                         padding: '2px 0',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
                       }}
                     >
                       {day}
@@ -876,13 +890,15 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     return (
                       <div
                         key={index}
+                        className="calendar-cell"
                         style={{
-                          aspectRatio: '1',
+                          width: '26px',
+                          height: '26px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '11px',
-                          fontWeight: calendarDay.hasJob ? '700' : '500',
+                          fontSize: '10px',
+                          fontWeight: calendarDay.hasJob ? '700' : '400',
                           color: calendarDay.isCurrentMonth 
                             ? (calendarDay.hasJob ? '#ffffff' : '#f1f5f9')
                             : '#475569',
