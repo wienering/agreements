@@ -834,30 +834,30 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   backgroundColor: '#1e293b',
                   borderRadius: '16px',
                   border: '1px solid #334155',
-                  padding: '24px',
+                  padding: '16px',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h3
                   style={{
-                    margin: '0 0 20px 0',
-                    fontSize: '18px',
+                    margin: '0 0 12px 0',
+                    fontSize: '16px',
                     fontWeight: '700',
                     color: '#f1f5f9',
                   }}
                 >
                   {getMonthYearString()}
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '6px' }}>
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                     <div
                       key={day}
                       style={{
                         textAlign: 'center',
-                        fontSize: '11px',
+                        fontSize: '10px',
                         fontWeight: '600',
                         color: '#94a3b8',
-                        padding: '4px 0',
+                        padding: '2px 0',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -866,7 +866,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
                   {getCalendarDays(jobs).map((calendarDay, index) => {
                     const today = new Date();
                     const todayStr = today.toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
@@ -881,7 +881,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '13px',
+                          fontSize: '11px',
                           fontWeight: calendarDay.hasJob ? '700' : '500',
                           color: calendarDay.isCurrentMonth 
                             ? (calendarDay.hasJob ? '#ffffff' : '#f1f5f9')
@@ -891,7 +891,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                             : isToday
                             ? '#334155'
                             : 'transparent',
-                          borderRadius: '6px',
+                          borderRadius: '4px',
                           border: isToday && !calendarDay.hasJob ? '1px solid #3b82f6' : 'none',
                         }}
                       >
