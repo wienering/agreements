@@ -377,7 +377,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             }
             .calendar-card {
               width: 100% !important;
-              max-width: 280px !important;
+              max-width: 260px !important;
             }
           }
           @media (max-width: 768px) {
@@ -845,18 +845,18 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 className="calendar-card"
                 style={{
                   flex: '0 0 auto',
-                  width: '220px',
+                  width: '260px',
                   backgroundColor: '#1e293b',
                   borderRadius: '12px',
                   border: '1px solid #334155',
-                  padding: '12px',
+                  padding: '14px',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h3
                   style={{
-                    margin: '0 0 8px 0',
-                    fontSize: '13px',
+                    margin: '0 0 10px 0',
+                    fontSize: '14px',
                     fontWeight: '700',
                     color: '#f1f5f9',
                     textAlign: 'center',
@@ -870,7 +870,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       key={i}
                       style={{
                         textAlign: 'center',
-                        fontSize: '9px',
+                        fontSize: '10px',
                         fontWeight: '600',
                         color: '#64748b',
                         padding: '2px 0',
@@ -880,7 +880,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
                   {getCalendarDays(jobs).map((calendarDay, index) => {
                     const today = new Date();
                     const todayStr = today.toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
@@ -892,12 +892,12 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         key={index}
                         className="calendar-cell"
                         style={{
-                          width: '26px',
-                          height: '26px',
+                          width: '30px',
+                          height: '30px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '10px',
+                          fontSize: '11px',
                           fontWeight: calendarDay.hasJob ? '700' : '400',
                           color: calendarDay.isCurrentMonth 
                             ? (calendarDay.hasJob ? '#ffffff' : '#f1f5f9')
