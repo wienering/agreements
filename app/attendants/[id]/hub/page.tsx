@@ -268,6 +268,81 @@ function getEventTypeBgColor(eventType: string | null): string {
   return '#1e293b';
 }
 
+interface CalendarDay {
+  date: Date;
+  day: number;
+  isCurrentMonth: boolean;
+  hasJob: boolean;
+}
+
+function getCalendarDays(jobs: Job[]): CalendarDay[] {
+  const timeZone = 'America/Toronto';
+  const now = new Date();
+  
+  // Get current date in Toronto timezone as YYYY-MM-DD
+  const nowStr = now.toLocaleDateString('en-CA', { timeZone });
+  const [currentYear, currentMonth, currentDay] = nowStr.split('-').map(Number);
+  
+  // Create first day of current month
+  const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
+  
+  // Get day of week for first day (0 = Sunday, 6 = Saturday)
+  const firstDayOfWeek = firstDayOfMonth.getDay();
+  
+  // Calculate start date (Sunday of the week containing the first day)
+  const startDate = new Date(firstDayOfMonth);
+  startDate.setDate(startDate.getDate() - firstDayOfWeek);
+  
+  // Extract job dates (normalize to YYYY-MM-DD format in Toronto timezone)
+  const jobDates = new Set<string>();
+  jobs.forEach(job => {
+    if (job.eventDate) {
+      try {
+        const date = new Date(job.eventDate);
+        const dateStr = date.toLocaleDateString('en-CA', { timeZone });
+        jobDates.add(dateStr);
+      } catch {
+        // Skip invalid dates
+      }
+    }
+  });
+  
+  // Generate 42 days (6 weeks)
+  const calendarDays: CalendarDay[] = [];
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    
+    // Get date components in Toronto timezone
+    const dateStr = date.toLocaleDateString('en-CA', { timeZone });
+    const [dateYear, dateMonth, day] = dateStr.split('-').map(Number);
+    
+    // Check if this date is in the current month
+    const isCurrentMonth = dateYear === currentYear && dateMonth === currentMonth;
+    
+    // Check if this date has a job
+    const hasJob = jobDates.has(dateStr);
+    
+    calendarDays.push({
+      date,
+      day,
+      isCurrentMonth,
+      hasJob,
+    });
+  }
+  
+  return calendarDays;
+}
+
+function getMonthYearString(): string {
+  const now = new Date();
+  return now.toLocaleDateString('en-US', {
+    timeZone: 'America/Toronto',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 
 export default async function AttendantHubPage({ params }: AttendantHubPageProps) {
   try {
@@ -751,7 +826,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 </div>
               )}
 
-              {/* Quick Stats Card */}
+              {/* Calendar Card */}
               <div
                 style={{
                   flex: '1',
@@ -771,27 +846,59 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     color: '#f1f5f9',
                   }}
                 >
-                  Quick Stats
+                  {getMonthYearString()}
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div>
-                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8', fontWeight: '500' }}>
-                      Backdrop Selection Rate
-                    </p>
-                    <p style={{ margin: '0', fontSize: '20px', fontWeight: '700', color: '#f1f5f9' }}>
-                      {jobs.length > 0 
-                        ? Math.round((jobs.filter(j => j.backdropSelected).length / jobs.length) * 100)
-                        : 0}%
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#94a3b8', fontWeight: '500' }}>
-                      Jobs with Backdrop Selected
-                    </p>
-                    <p style={{ margin: '0', fontSize: '20px', fontWeight: '700', color: '#10b981' }}>
-                      {jobs.filter(j => j.backdropSelected).length} / {jobs.length}
-                    </p>
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <div
+                      key={day}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#94a3b8',
+                        padding: '4px 0',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                  {getCalendarDays(jobs).map((calendarDay, index) => {
+                    const today = new Date();
+                    const todayStr = today.toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+                    const dayStr = calendarDay.date.toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+                    const isToday = dayStr === todayStr;
+                    
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          aspectRatio: '1',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '13px',
+                          fontWeight: calendarDay.hasJob ? '700' : '500',
+                          color: calendarDay.isCurrentMonth 
+                            ? (calendarDay.hasJob ? '#ffffff' : '#f1f5f9')
+                            : '#475569',
+                          backgroundColor: calendarDay.hasJob
+                            ? '#3b82f6'
+                            : isToday
+                            ? '#334155'
+                            : 'transparent',
+                          borderRadius: '6px',
+                          border: isToday && !calendarDay.hasJob ? '1px solid #3b82f6' : 'none',
+                        }}
+                      >
+                        {calendarDay.day}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
