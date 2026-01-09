@@ -22,6 +22,15 @@ interface Addons {
   waitingHours: number;
 }
 
+interface Discount {
+  note: string;
+  amount: number;
+}
+
+interface PackageOverrides {
+  [key: number]: number | null;
+}
+
 const PRICING = {
   packages: {
     2: 550,
@@ -59,6 +68,11 @@ export default function QuotesPage() {
     waitingTime: false,
     waitingHours: 0
   });
+  const [discount, setDiscount] = useState<Discount>({
+    note: '',
+    amount: 0
+  });
+  const [packageOverrides, setPackageOverrides] = useState<PackageOverrides>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [phoneValue, setPhoneValue] = useState('');
@@ -122,8 +136,24 @@ export default function QuotesPage() {
     }
   };
 
-  const selectPackage = (hours: number, price: number) => {
-    setSelectedPackage({ hours, price });
+  const selectPackage = (hours: number) => {
+    const defaultPrice = PRICING.packages[hours as keyof typeof PRICING.packages];
+    const overridePrice = packageOverrides[hours];
+    const finalPrice = overridePrice !== null && overridePrice !== undefined && overridePrice > 0 
+      ? overridePrice 
+      : defaultPrice;
+    setSelectedPackage({ hours, price: finalPrice });
+  };
+
+  const updatePackageOverride = (hours: number, value: string) => {
+    const numValue = value === '' ? null : parseFloat(value);
+    setPackageOverrides({ ...packageOverrides, [hours]: numValue });
+    // If this package is currently selected, update its price
+    if (selectedPackage?.hours === hours) {
+      const defaultPrice = PRICING.packages[hours as keyof typeof PRICING.packages];
+      const finalPrice = numValue !== null && numValue > 0 ? numValue : defaultPrice;
+      setSelectedPackage({ hours, price: finalPrice });
+    }
   };
 
   const toggleAddon = (addonName: keyof Addons, value: boolean | number) => {
@@ -153,13 +183,19 @@ export default function QuotesPage() {
     return PRICING.waitingTime * addons.waitingHours;
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     if (!selectedPackage) return 0;
-    let total = selectedPackage.price;
-    total += calculateUnlimitedPrintsPrice();
-    if (addons.glamBooth) total += PRICING.glamBooth;
-    total += calculateWaitingTimePrice();
-    return total;
+    let subtotal = selectedPackage.price;
+    subtotal += calculateUnlimitedPrintsPrice();
+    if (addons.glamBooth) subtotal += PRICING.glamBooth;
+    subtotal += calculateWaitingTimePrice();
+    return subtotal;
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const discountAmount = discount.amount > 0 ? discount.amount : 0;
+    return Math.max(0, subtotal - discountAmount);
   };
 
   const downloadPDF = async () => {
@@ -172,6 +208,8 @@ export default function QuotesPage() {
         },
         package: selectedPackage,
         addons: addons,
+        discount: discount.amount > 0 ? discount : null,
+        subtotal: calculateSubtotal(),
         total: calculateTotal()
       };
 
@@ -218,6 +256,11 @@ export default function QuotesPage() {
       waitingTime: false,
       waitingHours: 0
     });
+    setDiscount({
+      note: '',
+      amount: 0
+    });
+    setPackageOverrides({});
     setErrors({});
     setPhoneValue('');
     setCurrentStep(1);
@@ -495,30 +538,59 @@ export default function QuotesPage() {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: '16px'
               }}>
-                {[2, 3, 4, 5, 6].map((hours) => (
-                  <div
-                    key={hours}
-                    onClick={() => selectPackage(hours, PRICING.packages[hours as keyof typeof PRICING.packages])}
-                    style={{
-                      padding: '20px',
-                      borderRadius: '8px',
-                      border: `2px solid ${selectedPackage?.hours === hours ? accentColor : borderColor}`,
-                      backgroundColor: selectedPackage?.hours === hours 
-                        ? (isDark ? '#1e3a8a' : '#eff6ff') 
-                        : (isDark ? '#0f172a' : '#ffffff'),
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      textAlign: 'center'
-                    }}
-                  >
-                    <div style={{ fontSize: '20px', fontWeight: '700', color: textColor, marginBottom: '4px' }}>
-                      {hours} Hours
+                {[2, 3, 4, 5, 6].map((hours) => {
+                  const defaultPrice = PRICING.packages[hours as keyof typeof PRICING.packages];
+                  const overridePrice = packageOverrides[hours];
+                  const hasOverride = overridePrice !== null && overridePrice !== undefined && overridePrice > 0;
+                  const displayPrice = hasOverride ? overridePrice : defaultPrice;
+                  
+                  return (
+                    <div key={hours} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div
+                        onClick={() => selectPackage(hours)}
+                        style={{
+                          padding: '20px',
+                          borderRadius: '8px',
+                          border: `2px solid ${selectedPackage?.hours === hours ? accentColor : borderColor}`,
+                          backgroundColor: selectedPackage?.hours === hours 
+                            ? (isDark ? '#1e3a8a' : '#eff6ff') 
+                            : (isDark ? '#0f172a' : '#ffffff'),
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          textAlign: 'center'
+                        }}
+                      >
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: textColor, marginBottom: '4px' }}>
+                          {hours} Hours
+                        </div>
+                        <div style={{ fontSize: '24px', fontWeight: '700', color: accentColor }}>
+                          ${displayPrice.toLocaleString()}
+                        </div>
+                        {hasOverride && (
+                          <div style={{ fontSize: '12px', color: mutedText, textDecoration: 'line-through', marginTop: '4px' }}>
+                            ${defaultPrice.toLocaleString()} (default)
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        type="number"
+                        placeholder={`Override $${defaultPrice}`}
+                        value={packageOverrides[hours] ?? ''}
+                        onChange={(e) => updatePackageOverride(hours, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: `1px solid ${borderColor}`,
+                          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                          color: textColor,
+                          fontSize: '14px',
+                          textAlign: 'center'
+                        }}
+                      />
                     </div>
-                    <div style={{ fontSize: '24px', fontWeight: '700', color: accentColor }}>
-                      ${PRICING.packages[hours as keyof typeof PRICING.packages].toLocaleString()}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -626,6 +698,76 @@ export default function QuotesPage() {
               </div>
             </div>
 
+            {/* Discount Section */}
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+                Discount
+              </h3>
+              <div style={{
+                padding: '16px',
+                borderRadius: '8px',
+                border: `1px solid ${borderColor}`,
+                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: textColor
+                  }}>
+                    Discount Note (appears on quote)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Returning customer discount, Referral discount..."
+                    value={discount.note}
+                    onChange={(e) => setDiscount({ ...discount, note: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: textColor
+                  }}>
+                    Discount Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Enter discount amount"
+                    value={discount.amount || ''}
+                    onChange={(e) => setDiscount({ ...discount, amount: parseFloat(e.target.value) || 0 })}
+                    min="0"
+                    style={{
+                      width: '200px',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Quote Summary */}
             <div style={{
               padding: '20px',
@@ -665,6 +807,30 @@ export default function QuotesPage() {
                       ${calculateWaitingTimePrice()}
                     </span>
                   </div>
+                )}
+                {discount.amount > 0 && (
+                  <>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      paddingTop: '12px',
+                      borderTop: `1px solid ${borderColor}`,
+                      marginTop: '8px'
+                    }}>
+                      <span style={{ color: mutedText }}>Subtotal:</span>
+                      <span style={{ color: textColor, fontWeight: '600' }}>
+                        ${calculateSubtotal().toLocaleString()}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#ef4444' }}>
+                        Discount{discount.note ? ` (${discount.note})` : ''}:
+                      </span>
+                      <span style={{ color: '#ef4444', fontWeight: '600' }}>
+                        -${discount.amount.toLocaleString()}
+                      </span>
+                    </div>
+                  </>
                 )}
                 <div style={{
                   display: 'flex',
@@ -795,6 +961,30 @@ export default function QuotesPage() {
                         ${calculateWaitingTimePrice()}
                       </span>
                     </div>
+                  )}
+                  {discount.amount > 0 && (
+                    <>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        paddingTop: '12px',
+                        borderTop: `1px solid ${borderColor}`,
+                        marginTop: '8px'
+                      }}>
+                        <span style={{ color: textColor }}><strong>Subtotal</strong></span>
+                        <span style={{ color: textColor, fontWeight: '600' }}>
+                          ${calculateSubtotal().toLocaleString()}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#ef4444' }}>
+                          <strong>Discount{discount.note ? ` (${discount.note})` : ''}</strong>
+                        </span>
+                        <span style={{ color: '#ef4444', fontWeight: '600' }}>
+                          -${discount.amount.toLocaleString()}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

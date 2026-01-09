@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { contactInfo, package: packageInfo, addons, total } = quoteData;
+    const { contactInfo, package: packageInfo, addons, discount, subtotal, total } = quoteData;
 
     // Create PDF using jsPDF
     const doc = new jsPDF('p', 'mm', 'a4');
@@ -237,6 +237,28 @@ export async function POST(request: NextRequest) {
       doc.text(`$${waitingTimePrice.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
       doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
       doc.text(`$${waitingTimePrice.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      
+      doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
+      yPosition += rowHeight + 2;
+    }
+
+    // Discount row (if applicable)
+    if (discount && discount.amount > 0) {
+      // Show subtotal first
+      yPosition += 5;
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Subtotal', margin + 5, yPosition + 5);
+      doc.text(`$${subtotal.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+      yPosition += rowHeight + 2;
+
+      // Discount row in red
+      const red = [220, 38, 38]; // #dc2626
+      doc.setTextColor(red[0], red[1], red[2]);
+      doc.setFont('helvetica', 'normal');
+      const discountLabel = discount.note ? `Discount (${discount.note})` : 'Discount';
+      doc.text(discountLabel, margin + 5, yPosition + 5);
+      doc.text(`-$${discount.amount.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
       
       doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
       yPosition += rowHeight + 2;

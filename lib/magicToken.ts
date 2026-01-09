@@ -118,3 +118,5 @@ export function generateMagicLoginUrl(
   return `${baseUrl}/portal/login?token=${encodeURIComponent(token)}`;
 }
 
+
+
