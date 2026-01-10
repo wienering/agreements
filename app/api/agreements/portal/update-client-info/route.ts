@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = session.client;
+
     const body = await request.json();
     const validatedData = updateClientInfoSchema.parse(body);
 
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
     const errors: string[] = [];
 
     if (validatedData.phone !== undefined) {
-      if (session.client.phone && session.client.phoneAddedAt) {
+      if (sessionClient.phone && sessionClient.phoneAddedAt) {
         errors.push('Phone number has already been set and cannot be changed');
       } else {
         updateData.phone = validatedData.phone;
@@ -70,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (validatedData.address !== undefined) {
-      if (session.client.address && session.client.addressAddedAt) {
+      if (sessionClient.address && sessionClient.addressAddedAt) {
         errors.push('Address has already been set and cannot be changed');
       } else {
         updateData.address = validatedData.address;
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // Update client record
     const updatedClient = await prisma.client.update({
-      where: { id: session.client.id },
+      where: { id: sessionClient.id },
       data: updateData
     });
 

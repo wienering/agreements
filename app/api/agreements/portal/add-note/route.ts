@@ -208,6 +208,9 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = session.client;
+
     const body = await request.json();
     const validatedData = addNoteSchema.parse(body);
 
@@ -218,7 +221,7 @@ export async function POST(request: NextRequest) {
         where: {
           id: validatedData.agreementId,
           client: {
-            email: session.client.email.toLowerCase(),
+            email: sessionClient.email.toLowerCase(),
           }
         },
         include: {
@@ -236,7 +239,7 @@ export async function POST(request: NextRequest) {
     // Create the note
     const note = await prisma.clientNote.create({
       data: {
-        clientId: session.client.id,
+        clientId: sessionClient.id,
         agreementId: validatedData.agreementId || null,
         content: validatedData.content,
       }

@@ -45,6 +45,9 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = session.client;
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const agreementId = searchParams.get('agreementId');
@@ -52,7 +55,7 @@ export async function GET(request: NextRequest) {
     // Find all client IDs with the same email to match notes from all client records
     const matchingClients = await prisma.client.findMany({
       where: {
-        email: session.client.email.toLowerCase(),
+        email: sessionClient.email.toLowerCase(),
       },
       select: {
         id: true,
@@ -74,7 +77,7 @@ export async function GET(request: NextRequest) {
         where: {
           id: agreementId,
           client: {
-            email: session.client.email.toLowerCase(),
+            email: sessionClient.email.toLowerCase(),
           }
         }
       });

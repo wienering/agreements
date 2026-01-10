@@ -59,6 +59,9 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = session.client;
+
     // Auto-refresh session if it expires within 15 minutes
     const now = new Date();
     const timeUntilExpiry = session.expiresAt.getTime() - now.getTime();
@@ -96,15 +99,15 @@ export async function GET(request: NextRequest) {
       success: true,
       session: sessionInfo,
       client: {
-        id: session.client.id,
-        firstName: session.client.firstName,
-        lastName: session.client.lastName,
-        email: session.client.email,
-        phone: session.client.phone,
-        address: session.client.address,
-        phoneAddedAt: session.client.phoneAddedAt,
-        addressAddedAt: session.client.addressAddedAt,
-        agreementsCount: session.client.agreements.length,
+        id: sessionClient.id,
+        firstName: sessionClient.firstName,
+        lastName: sessionClient.lastName,
+        email: sessionClient.email,
+        phone: sessionClient.phone,
+        address: sessionClient.address,
+        phoneAddedAt: sessionClient.phoneAddedAt,
+        addressAddedAt: sessionClient.addressAddedAt,
+        agreementsCount: sessionClient.agreements.length,
         // Add client preferences for frontend
         preferences: {
           autoRefresh: true,

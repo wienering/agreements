@@ -101,6 +101,7 @@ export async function GET(
     }
 
     const session = authResult.session;
+    const sessionClient = session.client;
     const { id: agreementId } = await params;
 
     // Get agreement details - verify ownership
@@ -108,7 +109,7 @@ export async function GET(
       where: {
         id: agreementId,
         client: {
-          email: session.client.email.toLowerCase(),
+          email: sessionClient.email.toLowerCase(),
         }
       },
       include: {

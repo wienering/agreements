@@ -49,6 +49,9 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = session.client;
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') || 'json'; // json, csv, pdf
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest) {
         where: {
           id: agreementId,
           client: {
-            email: session.client.email.toLowerCase(),
+            email: sessionClient.email.toLowerCase(),
           },
           archived: false
         },
@@ -86,7 +89,7 @@ export async function GET(request: NextRequest) {
       agreements = await prisma.agreement.findMany({
         where: {
           client: {
-            email: session.client.email.toLowerCase(),
+            email: sessionClient.email.toLowerCase(),
           },
           archived: false
         },
@@ -111,18 +114,18 @@ export async function GET(request: NextRequest) {
         templateTitle: agreement.template.title,
         templateVersion: agreement.template.version,
         clientInfo: {
-          firstName: session.client.firstName,
-          lastName: session.client.lastName,
-          email: session.client.email,
-          phone: session.client.phone,
-          address: session.client.address,
-          eventDate: session.client.eventDate,
-          eventType: session.client.eventType,
-          eventLocation: session.client.eventLocation,
-          eventStartTime: session.client.eventStartTime,
-          eventDuration: session.client.eventDuration,
-          eventPackage: session.client.eventPackage,
-          packagePrice: session.client.packagePrice ? Number(session.client.packagePrice) : null
+          firstName: sessionClient.firstName,
+          lastName: sessionClient.lastName,
+          email: sessionClient.email,
+          phone: sessionClient.phone,
+          address: sessionClient.address,
+          eventDate: sessionClient.eventDate,
+          eventType: sessionClient.eventType,
+          eventLocation: sessionClient.eventLocation,
+          eventStartTime: sessionClient.eventStartTime,
+          eventDuration: sessionClient.eventDuration,
+          eventPackage: sessionClient.eventPackage,
+          packagePrice: sessionClient.packagePrice ? Number(sessionClient.packagePrice) : null
         }
       };
 
@@ -135,7 +138,7 @@ export async function GET(request: NextRequest) {
         
         let processedHtml = agreement.status === 'SIGNED' && agreement.mergedHtml 
           ? agreement.mergedHtml 
-          : processHtmlContent(htmlToProcess, session.client, agreement.id);
+          : processHtmlContent(htmlToProcess, sessionClient, agreement.id);
         
         return {
           ...baseData,
@@ -157,7 +160,7 @@ export async function GET(request: NextRequest) {
     if (format === 'csv') {
       return generateCSVResponse(exportData);
     } else if (format === 'pdf') {
-      return await generatePDFResponse(exportData, session.client);
+      return await generatePDFResponse(exportData, sessionClient);
     } else {
       // Default JSON response
       return NextResponse.json({
@@ -165,8 +168,8 @@ export async function GET(request: NextRequest) {
         exportData,
         metadata: {
           exportedAt: new Date().toISOString(),
-          clientId: session.client.id,
-          clientName: `${session.client.firstName} ${session.client.lastName}`,
+          clientId: sessionClient.id,
+          clientName: `${sessionClient.firstName} ${sessionClient.lastName}`,
           totalAgreements: exportData.length,
           format: 'json'
         }

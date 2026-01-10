@@ -65,13 +65,16 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = session.client;
+
     const notifications = [];
 
     // Check for agreements expiring soon (within 7 days)
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
 
-    const expiringAgreements = session.client.agreements.filter(agreement => 
+    const expiringAgreements = sessionClient.agreements.filter(agreement => 
       agreement.expiresAt && 
       agreement.expiresAt <= sevenDaysFromNow &&
       agreement.status !== 'SIGNED' &&
@@ -92,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check for unsigned agreements
-    const unsignedAgreements = session.client.agreements.filter(agreement => 
+    const unsignedAgreements = sessionClient.agreements.filter(agreement => 
       agreement.status === 'DRAFT' || agreement.status === 'SENT'
     );
 
@@ -111,8 +114,8 @@ export async function GET(request: NextRequest) {
 
     // Check for missing client information
     const missingInfo = [];
-    if (!session.client.phone) missingInfo.push('phone number');
-    if (!session.client.address) missingInfo.push('address');
+    if (!sessionClient.phone) missingInfo.push('phone number');
+    if (!sessionClient.address) missingInfo.push('address');
 
     if (missingInfo.length > 0) {
       notifications.push({
