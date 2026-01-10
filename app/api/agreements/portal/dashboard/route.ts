@@ -42,13 +42,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if client is loaded
-    if (!session.client) {
+    if (!sessionClient) {
       console.error('Session client not loaded:', sessionToken);
       return NextResponse.json({ 
         error: 'Client data not found',
         code: 'CLIENT_NOT_FOUND'
       }, { status: 500 });
     }
+
+    // Extract client to preserve TypeScript type narrowing
+    const sessionClient = sessionClient;
 
     // Get query parameters for filtering and search
     const { searchParams } = new URL(request.url);
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Build where clause - use email to match all client records with same email
     const whereClause: any = {
       client: {
-        email: session.client.email.toLowerCase(),
+        email: sessionClient.email.toLowerCase(),
       },
       archived: false
     };
@@ -110,7 +113,7 @@ export async function GET(request: NextRequest) {
       where: whereClause
     });
 
-    console.log(`[Dashboard] Client Email: ${session.client.email}, Total agreements: ${totalCount}`);
+    console.log(`[Dashboard] Client Email: ${sessionClient.email}, Total agreements: ${totalCount}`);
 
     // Get agreements with pagination
     const agreements = await prisma.agreement.findMany({
@@ -167,7 +170,7 @@ export async function GET(request: NextRequest) {
       return processedHtml;
     };
 
-    console.log(`[Dashboard] Found ${agreements.length} agreements for client email ${session.client.email}`);
+    console.log(`[Dashboard] Found ${agreements.length} agreements for client email ${sessionClient.email}`);
 
     // Process agreements with HTML content
     const processedAgreements = agreements.map(agreement => {
@@ -181,12 +184,12 @@ export async function GET(request: NextRequest) {
       if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {
-        processedHtml = processHtmlContent(htmlToProcess, session.client, agreement.id, agreement.event);
+        processedHtml = processHtmlContent(htmlToProcess, sessionClient, agreement.id, agreement.event);
       }
 
       const client = {
-        ...session.client,
-        packagePrice: session.client.packagePrice ? Number(session.client.packagePrice) : null
+        ...sessionClient,
+        packagePrice: sessionClient.packagePrice ? Number(sessionClient.packagePrice) : null
       };
 
       const { internalTitle, ...publicTemplate } = agreement.template;
@@ -241,7 +244,7 @@ export async function GET(request: NextRequest) {
       by: ['status'],
       where: {
         client: {
-          email: session.client.email.toLowerCase(),
+          email: sessionClient.email.toLowerCase(),
         },
         archived: false
       },
@@ -277,20 +280,20 @@ export async function GET(request: NextRequest) {
         availableStatuses: ['DRAFT', 'SENT', 'SIGNED', 'VOID', 'LIVE', 'COMPLETED', 'CANCELLED']
       },
       client: {
-        id: session.client.id,
-        firstName: session.client.firstName,
-        lastName: session.client.lastName,
-        email: session.client.email,
-        phone: session.client.phone,
-        address: session.client.address,
-        phoneAddedAt: session.client.phoneAddedAt,
-        addressAddedAt: session.client.addressAddedAt,
-        eventDate: session.client.eventDate,
-        eventType: session.client.eventType,
-        eventLocation: session.client.eventLocation,
-        eventPackage: session.client.eventPackage,
-        packagePrice: session.client.packagePrice ? Number(session.client.packagePrice) : null,
-        isWhitelabelClient: session.client.isWhitelabelClient || false,
+        id: sessionClient.id,
+        firstName: sessionClient.firstName,
+        lastName: sessionClient.lastName,
+        email: sessionClient.email,
+        phone: sessionClient.phone,
+        address: sessionClient.address,
+        phoneAddedAt: sessionClient.phoneAddedAt,
+        addressAddedAt: sessionClient.addressAddedAt,
+        eventDate: sessionClient.eventDate,
+        eventType: sessionClient.eventType,
+        eventLocation: sessionClient.eventLocation,
+        eventPackage: sessionClient.eventPackage,
+        packagePrice: sessionClient.packagePrice ? Number(sessionClient.packagePrice) : null,
+        isWhitelabelClient: sessionClient.isWhitelabelClient || false,
       }
     });
 
