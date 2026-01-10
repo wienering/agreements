@@ -201,6 +201,13 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Check if session has a valid client
+    if (!session.client) {
+      return NextResponse.json({ 
+        error: 'Invalid session - no client associated' 
+      }, { status: 401 });
+    }
+
     const body = await request.json();
     const validatedData = addNoteSchema.parse(body);
 
