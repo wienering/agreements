@@ -38,6 +38,13 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Check if client is loaded
+    if (!session.client) {
+      return NextResponse.json({ 
+        error: 'Invalid session - no client associated' 
+      }, { status: 401 });
+    }
+
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const agreementId = searchParams.get('agreementId');

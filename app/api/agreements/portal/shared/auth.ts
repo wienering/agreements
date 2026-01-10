@@ -87,6 +87,20 @@ export async function authenticateSession(
       };
     }
 
+    // Check if client is loaded
+    if (!session.client) {
+      return {
+        session: null,
+        error: NextResponse.json(
+          {
+            error: 'Invalid session - no client associated',
+            code: 'CLIENT_NOT_FOUND',
+          },
+          { status: 401 }
+        ),
+      };
+    }
+
     // Update last activity
     await prisma.clientSession.update({
       where: { sessionToken },

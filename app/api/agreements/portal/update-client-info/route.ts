@@ -46,6 +46,13 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Check if client is loaded
+    if (!session.client) {
+      return NextResponse.json({ 
+        error: 'Invalid session - no client associated' 
+      }, { status: 401 });
+    }
+
     const body = await request.json();
     const validatedData = updateClientInfoSchema.parse(body);
 

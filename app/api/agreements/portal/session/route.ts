@@ -51,6 +51,14 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Check if client is loaded
+    if (!session.client) {
+      return NextResponse.json({ 
+        error: 'Invalid session - no client associated',
+        code: 'CLIENT_NOT_FOUND'
+      }, { status: 401 });
+    }
+
     // Auto-refresh session if it expires within 15 minutes
     const now = new Date();
     const timeUntilExpiry = session.expiresAt.getTime() - now.getTime();
