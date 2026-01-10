@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if client is loaded
-    if (!sessionClient) {
+    if (!session.client) {
       console.error('Session client not loaded:', sessionToken);
       return NextResponse.json({ 
         error: 'Client data not found',
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Extract client to preserve TypeScript type narrowing
-    const sessionClient = sessionClient;
+    const sessionClient = session.client;
 
     // Get query parameters for filtering and search
     const { searchParams } = new URL(request.url);
