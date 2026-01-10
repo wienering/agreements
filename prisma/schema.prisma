@@ -154,12 +154,12 @@ model AuditLog {
 
 model ClientSession {
   id             String   @id @default(cuid())
-  clientEmail    String
+  clientEmail    String?
   sessionToken   String   @unique
   expiresAt      DateTime
   createdAt      DateTime @default(now())
   lastActivityAt DateTime @default(now())
-  client         Client   @relation(fields: [clientEmail], references: [email])
+  client         Client?  @relation(fields: [clientEmail], references: [email])
 
   @@index([clientEmail])
 }
@@ -245,6 +245,13 @@ model ClientFile {
 
   @@index([clientId])
   @@index([eventId])
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
 }
 
 enum AgreementStatus {

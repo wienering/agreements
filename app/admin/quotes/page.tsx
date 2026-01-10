@@ -31,7 +31,19 @@ interface PackageOverrides {
   [key: number]: number | null;
 }
 
-const PRICING = {
+interface PricingConfig {
+  packages: {
+    [key: number]: number;
+  };
+  unlimitedPrints: {
+    short: number;
+    long: number;
+  };
+  glamBooth: number;
+  waitingTime: number;
+}
+
+const DEFAULT_PRICING: PricingConfig = {
   packages: {
     2: 550,
     3: 750,
@@ -76,6 +88,30 @@ export default function QuotesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [phoneValue, setPhoneValue] = useState('');
+  
+  // Admin mode state
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING);
+  const [editablePricing, setEditablePricing] = useState<PricingConfig>(DEFAULT_PRICING);
+  const [savingPricing, setSavingPricing] = useState(false);
+  const [pricingMessage, setPricingMessage] = useState('');
+
+  // Fetch pricing from database on mount
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const response = await fetch('/api/quotes/pricing');
+        if (response.ok) {
+          const data = await response.json();
+          setPricing(data);
+          setEditablePricing(data);
+        }
+      } catch (error) {
+        console.error('Error fetching pricing:', error);
+      }
+    };
+    fetchPricing();
+  }, []);
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
@@ -137,7 +173,7 @@ export default function QuotesPage() {
   };
 
   const selectPackage = (hours: number) => {
-    const defaultPrice = PRICING.packages[hours as keyof typeof PRICING.packages];
+    const defaultPrice = pricing.packages[hours] || DEFAULT_PRICING.packages[hours];
     const overridePrice = packageOverrides[hours];
     const finalPrice = overridePrice !== null && overridePrice !== undefined && overridePrice > 0 
       ? overridePrice 
@@ -150,10 +186,39 @@ export default function QuotesPage() {
     setPackageOverrides({ ...packageOverrides, [hours]: numValue });
     // If this package is currently selected, update its price
     if (selectedPackage?.hours === hours) {
-      const defaultPrice = PRICING.packages[hours as keyof typeof PRICING.packages];
+      const defaultPrice = pricing.packages[hours] || DEFAULT_PRICING.packages[hours];
       const finalPrice = numValue !== null && numValue > 0 ? numValue : defaultPrice;
       setSelectedPackage({ hours, price: finalPrice });
     }
+  };
+
+  const savePricing = async () => {
+    setSavingPricing(true);
+    setPricingMessage('');
+    try {
+      const response = await fetch('/api/quotes/pricing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editablePricing)
+      });
+      if (response.ok) {
+        setPricing(editablePricing);
+        setPricingMessage('Pricing saved successfully!');
+        setTimeout(() => setPricingMessage(''), 3000);
+      } else {
+        setPricingMessage('Failed to save pricing');
+      }
+    } catch (error) {
+      console.error('Error saving pricing:', error);
+      setPricingMessage('Error saving pricing');
+    } finally {
+      setSavingPricing(false);
+    }
+  };
+
+  const cancelPricingEdit = () => {
+    setEditablePricing(pricing);
+    setIsAdminMode(false);
   };
 
   const toggleAddon = (addonName: keyof Addons, value: boolean | number) => {
@@ -174,20 +239,20 @@ export default function QuotesPage() {
   const calculateUnlimitedPrintsPrice = () => {
     if (!selectedPackage || !addons.unlimitedPrints) return 0;
     const isShortPackage = selectedPackage.hours <= 3;
-    const ratePerHour = isShortPackage ? PRICING.unlimitedPrints.short : PRICING.unlimitedPrints.long;
+    const ratePerHour = isShortPackage ? pricing.unlimitedPrints.short : pricing.unlimitedPrints.long;
     return ratePerHour * selectedPackage.hours;
   };
 
   const calculateWaitingTimePrice = () => {
     if (!addons.waitingTime || addons.waitingHours === 0) return 0;
-    return PRICING.waitingTime * addons.waitingHours;
+    return pricing.waitingTime * addons.waitingHours;
   };
 
   const calculateSubtotal = () => {
     if (!selectedPackage) return 0;
     let subtotal = selectedPackage.price;
     subtotal += calculateUnlimitedPrintsPrice();
-    if (addons.glamBooth) subtotal += PRICING.glamBooth;
+    if (addons.glamBooth) subtotal += pricing.glamBooth;
     subtotal += calculateWaitingTimePrice();
     return subtotal;
   };
@@ -275,23 +340,229 @@ export default function QuotesPage() {
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ 
-            margin: '0 0 8px 0', 
-            fontSize: '32px', 
-            fontWeight: '700', 
-            color: textColor 
-          }}>
-            Generate Quote
-          </h1>
-          <p style={{ 
-            margin: '0', 
-            color: mutedText, 
-            fontSize: '16px' 
-          }}>
-            Create a quote for a potential client
-          </p>
+        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ 
+              margin: '0 0 8px 0', 
+              fontSize: '32px', 
+              fontWeight: '700', 
+              color: textColor 
+            }}>
+              Generate Quote
+            </h1>
+            <p style={{ 
+              margin: '0', 
+              color: mutedText, 
+              fontSize: '16px' 
+            }}>
+              Create a quote for a potential client
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (isAdminMode) {
+                cancelPricingEdit();
+              } else {
+                setIsAdminMode(true);
+              }
+            }}
+            style={{
+              padding: '10px 16px',
+              backgroundColor: isAdminMode ? '#ef4444' : (isDark ? '#334155' : '#e2e8f0'),
+              color: isAdminMode ? 'white' : textColor,
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            {isAdminMode ? '✕ Exit Admin Mode' : '⚙ Admin Mode'}
+          </button>
         </div>
+
+        {/* Admin Mode Panel */}
+        {isAdminMode && (
+          <div style={{
+            backgroundColor: isDark ? '#1e3a8a' : '#dbeafe',
+            borderRadius: '12px',
+            padding: '24px',
+            marginBottom: '32px',
+            border: `2px solid ${accentColor}`
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', color: textColor }}>
+                ⚙ Edit Default Pricing
+              </h2>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                {pricingMessage && (
+                  <span style={{ 
+                    color: pricingMessage.includes('success') ? '#10b981' : '#ef4444',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    {pricingMessage}
+                  </span>
+                )}
+                <button
+                  onClick={savePricing}
+                  disabled={savingPricing}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: savingPricing ? 'not-allowed' : 'pointer',
+                    opacity: savingPricing ? 0.7 : 1
+                  }}
+                >
+                  {savingPricing ? 'Saving...' : 'Save Pricing'}
+                </button>
+              </div>
+            </div>
+
+            {/* Package Prices */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: textColor }}>Package Prices</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {[2, 3, 4, 5, 6].map((hours) => (
+                  <div key={hours} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', color: mutedText }}>{hours} Hours</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: textColor }}>$</span>
+                      <input
+                        type="number"
+                        value={editablePricing.packages[hours] || ''}
+                        onChange={(e) => setEditablePricing({
+                          ...editablePricing,
+                          packages: { ...editablePricing.packages, [hours]: parseFloat(e.target.value) || 0 }
+                        })}
+                        style={{
+                          width: '80px',
+                          padding: '8px',
+                          borderRadius: '6px',
+                          border: `1px solid ${borderColor}`,
+                          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Add-on Prices */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: textColor }}>Unlimited Prints (per hour)</h3>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', color: mutedText }}>Short (2-3 hrs)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: textColor }}>$</span>
+                      <input
+                        type="number"
+                        value={editablePricing.unlimitedPrints.short || ''}
+                        onChange={(e) => setEditablePricing({
+                          ...editablePricing,
+                          unlimitedPrints: { ...editablePricing.unlimitedPrints, short: parseFloat(e.target.value) || 0 }
+                        })}
+                        style={{
+                          width: '70px',
+                          padding: '8px',
+                          borderRadius: '6px',
+                          border: `1px solid ${borderColor}`,
+                          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', color: mutedText }}>Long (4+ hrs)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: textColor }}>$</span>
+                      <input
+                        type="number"
+                        value={editablePricing.unlimitedPrints.long || ''}
+                        onChange={(e) => setEditablePricing({
+                          ...editablePricing,
+                          unlimitedPrints: { ...editablePricing.unlimitedPrints, long: parseFloat(e.target.value) || 0 }
+                        })}
+                        style={{
+                          width: '70px',
+                          padding: '8px',
+                          borderRadius: '6px',
+                          border: `1px solid ${borderColor}`,
+                          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: mutedText }}>Glam Booth</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ color: textColor }}>$</span>
+                  <input
+                    type="number"
+                    value={editablePricing.glamBooth || ''}
+                    onChange={(e) => setEditablePricing({
+                      ...editablePricing,
+                      glamBooth: parseFloat(e.target.value) || 0
+                    })}
+                    style={{
+                      width: '70px',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '12px', color: mutedText }}>Waiting Time (per hour)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ color: textColor }}>$</span>
+                  <input
+                    type="number"
+                    value={editablePricing.waitingTime || ''}
+                    onChange={(e) => setEditablePricing({
+                      ...editablePricing,
+                      waitingTime: parseFloat(e.target.value) || 0
+                    })}
+                    style={{
+                      width: '70px',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Progress Bar */}
         <div style={{
@@ -539,7 +810,7 @@ export default function QuotesPage() {
                 gap: '16px'
               }}>
                 {[2, 3, 4, 5, 6].map((hours) => {
-                  const defaultPrice = PRICING.packages[hours as keyof typeof PRICING.packages];
+                  const defaultPrice = pricing.packages[hours] || DEFAULT_PRICING.packages[hours];
                   const overridePrice = packageOverrides[hours];
                   const hasOverride = overridePrice !== null && overridePrice !== undefined && overridePrice > 0;
                   const displayPrice = hasOverride ? overridePrice : defaultPrice;
@@ -642,7 +913,7 @@ export default function QuotesPage() {
                     />
                     <span style={{ color: textColor, fontWeight: '500' }}>Glam Booth</span>
                   </div>
-                  <span style={{ color: accentColor, fontWeight: '600' }}>$75</span>
+                  <span style={{ color: accentColor, fontWeight: '600' }}>${pricing.glamBooth}</span>
                 </label>
 
                 <div style={{
@@ -797,7 +1068,7 @@ export default function QuotesPage() {
                 {addons.glamBooth && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: mutedText }}>Glam Booth:</span>
-                    <span style={{ color: textColor, fontWeight: '600' }}>$75</span>
+                    <span style={{ color: textColor, fontWeight: '600' }}>${pricing.glamBooth}</span>
                   </div>
                 )}
                 {addons.waitingTime && addons.waitingHours > 0 && (
@@ -949,7 +1220,7 @@ export default function QuotesPage() {
                   {addons.glamBooth && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: textColor }}><strong>Glam Booth</strong></span>
-                      <span style={{ color: textColor, fontWeight: '600' }}>$75</span>
+                      <span style={{ color: textColor, fontWeight: '600' }}>${pricing.glamBooth}</span>
                     </div>
                   )}
                   {addons.waitingTime && addons.waitingHours > 0 && (
