@@ -17,6 +17,7 @@ export default function AdminLayout({
   const { isDark, toggleDarkMode } = useDarkMode();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMobileHeaderPressed, setIsMobileHeaderPressed] = useState(false);
 
   // Check if device is mobile
   useEffect(() => {
@@ -259,7 +260,6 @@ export default function AdminLayout({
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
             padding: '16px 20px',
             backgroundColor: cardBg,
             borderBottom: `1px solid ${borderColor}`,
@@ -269,42 +269,71 @@ export default function AdminLayout({
           }}>
             <button
               onClick={() => setIsMobileMenuOpen(true)}
+              onPointerDown={() => setIsMobileHeaderPressed(true)}
+              onPointerUp={() => setIsMobileHeaderPressed(false)}
+              onPointerLeave={() => setIsMobileHeaderPressed(false)}
               style={{
+                width: '48px',
+                height: '48px',
+                minWidth: '48px',
                 backgroundColor: 'transparent',
                 border: 'none',
                 color: textColor,
-                fontSize: '24px',
                 cursor: 'pointer',
-                padding: '8px',
-                borderRadius: '4px',
+                padding: '12px',
+                borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                opacity: isMobileHeaderPressed ? 0.7 : 1,
+                transition: 'opacity 0.15s ease',
               }}
               title="Open menu"
             >
-              ☰
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ 
-                width: '32px', 
-                height: '32px', 
-                backgroundColor: '#fbbf24', 
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: '#1e293b'
-              }}>
-                PG
-              </div>
-              <span style={{ fontSize: '16px', fontWeight: '600', color: textColor }}>
-                Photobooth Guys
-              </span>
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+            }}>
+              <Link
+                href="/admin"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  backgroundColor: '#fbbf24',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  color: '#1e293b',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                }}>
+                  PG
+                </div>
+                <span style={{ fontSize: '16px', fontWeight: '600', color: textColor }}>
+                  Photobooth Guys
+                </span>
+              </Link>
             </div>
-            <div style={{ width: '40px' }} /> {/* Spacer for centering */}
+            <div style={{ width: '48px', minWidth: '48px' }} />
           </div>
         )}
         <motion.div
