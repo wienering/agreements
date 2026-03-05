@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { getBackdropThumbnailUrl } from '@/lib/backdropThumbnail';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import AttendantFilesSection from './AttendantFilesSection';
@@ -157,7 +158,18 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     };
     
     const attendantId = backdropLink?.url ? extractAttendantIdFromUrl(backdropLink.url) : null;
-    
+
+    // Fetch backdrop thumbnail when we have a catalog backdrop (not Virtual Green Screen or No Backdrop)
+    let backdropThumbnailUrl: string | null = null;
+    if (
+      attendantId &&
+      selectedBackdropName &&
+      selectedBackdropName !== 'No Backdrop' &&
+      !forceVirtualGreenScreen
+    ) {
+      backdropThumbnailUrl = await getBackdropThumbnailUrl(attendantId, selectedBackdropName);
+    }
+
     // Determine the hub link - use group slug if fromGroup parameter is present, otherwise use individual attendant ID
     const hubLink = fromGroup 
       ? `/attendants/${fromGroup}/hub`
@@ -1121,16 +1133,38 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                       >
                         Selected Backdrop:
                       </p>
-                      <p
+                      <div
                         style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: '#10b981',
-                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          marginTop: '4px',
                         }}
                       >
-                        {forceVirtualGreenScreen ? 'Virtual Green Screen' : selectedBackdropName}
-                      </p>
+                        {backdropThumbnailUrl && (
+                          <img
+                            src={backdropThumbnailUrl}
+                            alt=""
+                            style={{
+                              width: '64px',
+                              height: '64px',
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                              border: '1px solid #334155',
+                            }}
+                          />
+                        )}
+                        <p
+                          style={{
+                            margin: '0',
+                            fontSize: '16px',
+                            color: '#10b981',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {forceVirtualGreenScreen ? 'Virtual Green Screen' : selectedBackdropName}
+                        </p>
+                      </div>
                     </div>
                   )}
 
