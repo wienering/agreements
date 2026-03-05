@@ -197,6 +197,13 @@ export async function GET(request: NextRequest) {
         stripePaymentLink: agreement.stripePaymentLink,
         stripeReceiptLink: agreement.stripeReceiptLink,
         galleryLink: agreement.galleryLink,
+        galleryLinks: (() => {
+          const gl = agreement.galleryLinks as Array<{ title: string; url: string }> | null;
+          if (Array.isArray(gl) && gl.length > 0) {
+            return gl.filter((g: any) => g?.url?.trim());
+          }
+          return agreement.galleryLink ? [{ title: 'Photo Gallery', url: agreement.galleryLink }] : [];
+        })(),
         nextAction: agreement.nextAction,
         backdropLink: agreement.backdropLink ? {
           id: agreement.backdropLink.id,

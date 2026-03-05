@@ -17,6 +17,7 @@ interface Agreement {
   stripePaymentLink: string | null;
   stripeReceiptLink: string | null;
   galleryLink: string | null;
+  galleryLinks?: Array<{ title: string; url: string }>;
   nextAction: string | null;
   backdropLink: {
     id: string;
@@ -486,7 +487,7 @@ function PortalAdminPreviewContent() {
                         )}
 
                         {/* Gallery Link */}
-                        {agreement.galleryLink && (
+                        {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
                           <div className="mb-2">
                             <span className="inline-flex items-center text-sm text-emerald-600 dark:text-emerald-400">
                               📸 Gallery Available

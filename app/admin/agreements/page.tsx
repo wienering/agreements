@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
@@ -95,7 +95,7 @@ export default function AgreementsPage() {
   const [paymentStatus, setPaymentStatus] = useState('');
   const [stripePaymentLink, setStripePaymentLink] = useState('');
   const [stripeReceiptLink, setStripeReceiptLink] = useState('');
-  const [galleryLink, setGalleryLink] = useState('');
+  const [galleryLinks, setGalleryLinks] = useState<Array<{ title: string; url: string }>>([]);
   const [galleryEmailSentAt, setGalleryEmailSentAt] = useState<Date | null>(null);
   const [sendingGalleryEmail, setSendingGalleryEmail] = useState(false);
   const [nextAction, setNextAction] = useState('');
@@ -748,7 +748,17 @@ const normalizePaymentStatus = (value?: string | null) => {
   setPaymentStatus(normalizePaymentStatus((agreement as any).paymentStatus));
     setStripePaymentLink((agreement as any).stripePaymentLink || '');
     setStripeReceiptLink((agreement as any).stripeReceiptLink || '');
-    setGalleryLink((agreement as any).galleryLink || '');
+    const gl = (agreement as any).galleryLinks;
+    if (Array.isArray(gl) && gl.length > 0) {
+      setGalleryLinks(gl.map((g: any) => ({
+        title: typeof g?.title === 'string' ? g.title : 'Photo Gallery',
+        url: typeof g?.url === 'string' ? g.url : ''
+      })));
+    } else if ((agreement as any).galleryLink) {
+      setGalleryLinks([{ title: 'Photo Gallery', url: (agreement as any).galleryLink }]);
+    } else {
+      setGalleryLinks([{ title: '', url: '' }]);
+    }
     setGalleryEmailSentAt((agreement as any).galleryEmailSentAt ? new Date((agreement as any).galleryEmailSentAt) : null);
     setNextAction((agreement as any).nextAction || '');
     setSelectedBackdropLinkId((agreement as any).backdropLinkId || '');
@@ -838,13 +848,13 @@ const normalizePaymentStatus = (value?: string | null) => {
         }),
       });
 
-      // Update gallery link
+      // Update gallery links
       await fetch(`/api/agreements/update-gallery-link`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agreementId: selectedAgreement.id,
-          galleryLink: galleryLink || ''
+          galleryLinks: galleryLinks.filter(g => g.url.trim())
         }),
       });
 
@@ -994,13 +1004,14 @@ const normalizePaymentStatus = (value?: string | null) => {
   };
 
   const handleSendGalleryReadyEmail = async () => {
-    if (!selectedAgreement || !galleryLink) return;
+    const validLinks = galleryLinks.filter(g => g.url.trim());
+    if (!selectedAgreement || validLinks.length === 0) return;
     
-    // Validate URL format
+    // Validate URL format for each
     try {
-      new URL(galleryLink);
+      validLinks.forEach(g => new URL(g.url));
     } catch {
-      showToast('Please enter a valid gallery link URL first', 'error');
+      showToast('Please enter valid gallery link URLs first', 'error');
       return;
     }
     
@@ -2937,32 +2948,103 @@ const normalizePaymentStatus = (value?: string | null) => {
                   />
                 </div>
 
-                {/* Gallery Link */}
+                {/* Gallery Links */}
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
-                    Event Gallery Link
+                    Event Gallery Links
                   </label>
-                  <input
-                    type="url"
-                    value={galleryLink}
-                    onChange={(e) => setGalleryLink(e.target.value)}
-                    placeholder="https://gallery.example.com/event..."
+                  {galleryLinks.map((g, i) => (
+                    <div key={i} style={{ marginBottom: '12px', padding: '12px', border: `1px solid ${borderColor}`, borderRadius: '6px', backgroundColor: isDark ? '#0f172a' : '#ffffff' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '12px', color: mutedText }}>Gallery {i + 1}</span>
+                        {galleryLinks.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = galleryLinks.filter((_, j) => j !== i);
+                              setGalleryLinks(next.length ? next : [{ title: '', url: '' }]);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              padding: '2px 6px'
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={g.title}
+                        onChange={(e) => {
+                          const next = [...galleryLinks];
+                          if (next[i]) next[i] = { ...next[i], title: e.target.value };
+                          else next.push({ title: e.target.value, url: '' });
+                          setGalleryLinks(next.length ? next : [{ title: '', url: '' }]);
+                        }}
+                        placeholder="e.g., Photo Gallery or 360 Gallery"
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px',
+                          marginBottom: '8px'
+                        }}
+                      />
+                      <input
+                        type="url"
+                        value={g.url}
+                        onChange={(e) => {
+                          const next = [...galleryLinks];
+                          if (next[i]) next[i] = { ...next[i], url: e.target.value };
+                          else next.push({ title: '', url: e.target.value });
+                          setGalleryLinks(next.length ? next : [{ title: '', url: '' }]);
+                        }}
+                        placeholder="https://gallery.example.com/event..."
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setGalleryLinks([...galleryLinks, { title: '', url: '' }])}
                     style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: `1px solid ${borderColor}`,
+                      marginTop: '4px',
+                      padding: '6px 12px',
+                      backgroundColor: 'transparent',
+                      border: `1px dashed ${borderColor}`,
                       borderRadius: '4px',
-                      backgroundColor: cardBg,
                       color: textColor,
-                      fontSize: '14px'
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
                     }}
-                  />
-                  {galleryLink && (
+                  >
+                    + Add another gallery
+                  </button>
+                  {galleryLinks.some(g => g.url.trim()) && (
                     <>
                       <button
                         type="button"
                         onClick={handleSendGalleryReadyEmail}
-                        disabled={sendingGalleryEmail || !galleryLink}
+                        disabled={sendingGalleryEmail || !galleryLinks.some(g => g.url && g.url.trim())}
                         style={{
                           marginTop: '8px',
                           padding: '8px 16px',

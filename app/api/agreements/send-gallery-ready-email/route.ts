@@ -28,8 +28,15 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Check if gallery link exists
-    if (!agreement.galleryLink) {
+    // Get gallery links - prefer galleryLinks array, fallback to galleryLink
+    const galleryLinksRaw = agreement.galleryLinks as Array<{ title: string; url: string }> | null;
+    const galleryLinks = Array.isArray(galleryLinksRaw) && galleryLinksRaw.length > 0
+      ? galleryLinksRaw.filter((g: any) => g?.url?.trim())
+      : agreement.galleryLink
+        ? [{ title: 'Photo Gallery', url: agreement.galleryLink }]
+        : [];
+
+    if (galleryLinks.length === 0) {
       return NextResponse.json({ 
         error: 'No gallery link has been set for this agreement. Please add a gallery link first.' 
       }, { status: 400 });
@@ -187,16 +194,22 @@ export async function POST(request: NextRequest) {
             </div>
             
             <div class="instructions">
-              <h3 style="margin: 0 0 15px 0; color: #92400e;">📋 How to Access Your Gallery</h3>
-              <ol style="margin: 0; padding-left: 20px; color: #78350f;">
-                <li style="margin-bottom: 8px;">Click the button below - you'll be <strong>automatically logged in</strong></li>
-                <li style="margin-bottom: 8px;">Find your photo gallery link in your dashboard</li>
-                <li style="margin-bottom: 0;">Browse, download, and share your amazing photos!</li>
-              </ol>
+              <h3 style="margin: 0 0 15px 0; color: #92400e;">📋 Your Gallery Links</h3>
+              <p style="margin: 0 0 12px 0; color: #78350f;">${galleryLinks.length === 1 
+                ? `Here is the link for your ${(galleryLinks[0].title || 'photo gallery').trim()}:`
+                : 'Here are the links for your galleries:'}</p>
+              <ul style="margin: 0; padding-left: 20px; color: #78350f;">
+                ${galleryLinks.map((g, i) => 
+                  `<li style="margin-bottom: 8px;">
+                    <strong>${(g.title || 'Photo Gallery').trim() || 'Gallery ' + (i + 1)}:</strong> 
+                    <a href="${g.url}" style="color: #2563eb;">${g.url}</a>
+                  </li>`
+                ).join('')}
+              </ul>
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${portalLink}" class="button">View My Gallery</a>
+              <a href="${portalLink}" class="button">Open Client Portal</a>
             </div>
             
             <p style="text-align: center; font-size: 12px; color: #6b7280;">

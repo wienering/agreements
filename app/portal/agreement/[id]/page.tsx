@@ -21,6 +21,7 @@ interface Agreement {
   stripePaymentLink: string | null;
   stripeReceiptLink: string | null;
   galleryLink: string | null;
+  galleryLinks?: Array<{ title: string; url: string }>;
   nextAction: string | null;
   backdropLink: {
     id: string;
@@ -514,27 +515,35 @@ function AgreementDetailContent() {
       </div>
 
       {/* Gallery Delivery Section */}
-      {agreement.galleryLink && (
+      {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
         <div className="mb-8 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-900/10">
           <div className="flex items-center gap-3 mb-4">
             <div className="text-3xl">📸</div>
             <div>
               <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">
-                Your Event Gallery is Ready!
+                Your Event {agreement.galleryLinks && agreement.galleryLinks.length > 1 ? 'Galleries Are' : 'Gallery is'} Ready!
               </h2>
               <p className="text-sm text-emerald-700 dark:text-emerald-300">
                 View and download your event photos
               </p>
             </div>
           </div>
-          <a
-            href={agreement.galleryLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-700"
-          >
-            View Your Event Gallery →
-          </a>
+          <div className="flex flex-wrap gap-3">
+            {(agreement.galleryLinks && agreement.galleryLinks.length > 0
+              ? agreement.galleryLinks
+              : [{ title: 'Photo Gallery', url: agreement.galleryLink! }]
+            ).map((g, i) => (
+              <a
+                key={i}
+                href={g.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-700"
+              >
+                View {g.title || 'Gallery'} →
+              </a>
+            ))}
+          </div>
         </div>
       )}
 
