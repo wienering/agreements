@@ -48,6 +48,21 @@ export default function LeadsPage() {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [nextFollowUp, setNextFollowUp] = useState('');
   const [createAgreementLead, setCreateAgreementLead] = useState<Lead | null>(null);
+  const [showAddLead, setShowAddLead] = useState(false);
+  const [addLeadError, setAddLeadError] = useState('');
+  const [addLeadSaving, setAddLeadSaving] = useState(false);
+  const [newLead, setNewLead] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    eventDate: '',
+    eventType: '',
+    eventLocation: '',
+    quotePackageHours: '',
+    quoteTotal: '',
+    notes: '',
+  });
 
   const mainBg = isDark ? '#0f172a' : '#f8fafc';
   const cardBg = isDark ? '#1e293b' : '#ffffff';
@@ -142,6 +157,51 @@ export default function LeadsPage() {
     }
   };
 
+  const handleAddLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddLeadError('');
+    if (!newLead.firstName.trim() || !newLead.lastName.trim() || !newLead.email.trim()) {
+      setAddLeadError('First name, last name, and email are required.');
+      return;
+    }
+    setAddLeadSaving(true);
+    try {
+      const payload: Record<string, unknown> = {
+        source: 'MANUAL',
+        firstName: newLead.firstName.trim(),
+        lastName: newLead.lastName.trim(),
+        email: newLead.email.trim(),
+      };
+      if (newLead.phone.trim()) payload.phone = newLead.phone.trim();
+      if (newLead.eventDate) payload.eventDate = newLead.eventDate;
+      if (newLead.eventType.trim()) payload.eventType = newLead.eventType.trim();
+      if (newLead.eventLocation.trim()) payload.eventLocation = newLead.eventLocation.trim();
+      if (newLead.quotePackageHours) payload.quotePackageHours = parseInt(newLead.quotePackageHours, 10) || undefined;
+      if (newLead.quoteTotal) payload.quoteTotal = parseFloat(newLead.quoteTotal) || undefined;
+      if (newLead.notes.trim()) payload.notes = newLead.notes.trim();
+
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowAddLead(false);
+        setNewLead({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', quotePackageHours: '', quoteTotal: '', notes: '' });
+        fetchLeads();
+        fetchFollowUp();
+      } else {
+        setAddLeadError(data.error || data.details?.[0]?.message || 'Failed to add lead');
+      }
+    } catch (err) {
+      console.error(err);
+      setAddLeadError('Failed to add lead');
+    } finally {
+      setAddLeadSaving(false);
+    }
+  };
+
   const formatDate = (d: string | undefined) =>
     d ? new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '-';
 
@@ -158,6 +218,21 @@ export default function LeadsPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={() => setShowAddLead(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+              }}
+            >
+              + Add Lead
+            </button>
             <select
               value={filterStage}
               onChange={(e) => setFilterStage(e.target.value)}
@@ -379,6 +454,168 @@ export default function LeadsPage() {
               <button onClick={() => setCreateAgreementLead(null)} style={{ padding: '8px 16px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>
                 Cancel
               </button>
+            </div>
+          </div>
+        )}
+
+        {showAddLead && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+            onClick={() => { setShowAddLead(false); setAddLeadError(''); }}
+          >
+            <div
+              style={{
+                backgroundColor: cardBg,
+                padding: '24px',
+                borderRadius: '12px',
+                border: `1px solid ${borderColor}`,
+                width: '100%',
+                maxWidth: '480px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ margin: '0 0 20px 0', color: textColor }}>Add Lead</h3>
+              <form onSubmit={handleAddLead}>
+                {addLeadError && (
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '8px', fontSize: '14px' }}>
+                    {addLeadError}
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>First name *</label>
+                    <input
+                      type="text"
+                      value={newLead.firstName}
+                      onChange={(e) => setNewLead({ ...newLead, firstName: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Last name *</label>
+                    <input
+                      type="text"
+                      value={newLead.lastName}
+                      onChange={(e) => setNewLead({ ...newLead, lastName: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Email *</label>
+                  <input
+                    type="email"
+                    value={newLead.email}
+                    onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                    required
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                  />
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Phone</label>
+                  <input
+                    type="tel"
+                    value={newLead.phone}
+                    onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event date</label>
+                    <input
+                      type="date"
+                      value={newLead.eventDate}
+                      onChange={(e) => setNewLead({ ...newLead, eventDate: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event type</label>
+                    <input
+                      type="text"
+                      value={newLead.eventType}
+                      onChange={(e) => setNewLead({ ...newLead, eventType: e.target.value })}
+                      placeholder="e.g. Wedding, Corporate"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event location</label>
+                  <input
+                    type="text"
+                    value={newLead.eventLocation}
+                    onChange={(e) => setNewLead({ ...newLead, eventLocation: e.target.value })}
+                    placeholder="Venue or address"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote hours</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newLead.quotePackageHours}
+                      onChange={(e) => setNewLead({ ...newLead, quotePackageHours: e.target.value })}
+                      placeholder="e.g. 4"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote total ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newLead.quoteTotal}
+                      onChange={(e) => setNewLead({ ...newLead, quoteTotal: e.target.value })}
+                      placeholder="e.g. 950"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Notes</label>
+                  <textarea
+                    value={newLead.notes}
+                    onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
+                    rows={3}
+                    placeholder="Any notes about this lead..."
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, resize: 'vertical' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddLead(false); setAddLeadError(''); }}
+                    style={{ padding: '10px 20px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addLeadSaving}
+                    style={{ padding: '10px 20px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: addLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: addLeadSaving ? 0.7 : 1 }}
+                  >
+                    {addLeadSaving ? 'Adding...' : 'Add Lead'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
