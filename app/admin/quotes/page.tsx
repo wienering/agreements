@@ -278,6 +278,29 @@ export default function QuotesPage() {
         total: calculateTotal()
       };
 
+      // Save as lead for pipeline follow-up (don't block PDF on failure)
+      const nameParts = contactInfo.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || contactInfo.name;
+      const lastName = nameParts.slice(1).join(' ') || '';
+      try {
+        await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source: 'QUOTE',
+            firstName,
+            lastName,
+            email: contactInfo.email,
+            phone: contactInfo.phone || undefined,
+            eventDate: contactInfo.eventDate || undefined,
+            quotePackageHours: selectedPackage?.hours,
+            quoteTotal: calculateTotal(),
+          }),
+        });
+      } catch (leadErr) {
+        console.warn('Could not save quote as lead:', leadErr);
+      }
+
       const response = await fetch('/api/quotes/generate-pdf', {
         method: 'POST',
         headers: {

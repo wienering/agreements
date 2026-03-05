@@ -128,9 +128,18 @@ export async function POST(request: NextRequest) {
       },
       include: {
         client: true,
-        template: true
+        template: true,
+        lead: true
       }
     });
+
+    // Update linked lead stage when agreement is signed
+    if (updatedAgreement.leadId) {
+      await prisma.lead.update({
+        where: { id: updatedAgreement.leadId },
+        data: { stage: 'SIGNED' },
+      }).catch((err) => console.warn('Could not update lead stage:', err));
+    }
 
     // Send automatic notification email to info@photoboothguys.ca
     try {

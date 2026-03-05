@@ -39,6 +39,7 @@ export default function AdminLayout({
     { id: 'import-events', label: 'Import Events', icon: '📥', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
     { id: 'templates', label: 'Templates', icon: '📄', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
     { id: 'quotes', label: 'Quotes', icon: '💰', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
+    { id: 'leads', label: 'Leads', icon: '🎯', href: '/admin/leads', tooltip: 'Lead pipeline and follow-up tracking' },
     { id: 'agreements', label: 'Agreements', icon: '📝', href: '/admin/agreements', tooltip: 'Manage client agreements' },
     { id: 'backdrop-links', label: 'Backdrop Links', icon: '🖼️', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
     { id: 'attendant-groups', label: 'Attendant Hubs', icon: '👥', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
