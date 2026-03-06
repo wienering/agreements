@@ -304,6 +304,15 @@ export default function LeadsPage() {
   const formatDate = (d: string | undefined) =>
     d ? new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '-';
 
+  const getQuoteUrl = (lead: Lead) => {
+    const params = new URLSearchParams();
+    params.set('name', `${lead.firstName} ${lead.lastName}`.trim());
+    params.set('email', lead.email);
+    if (lead.phone) params.set('phone', lead.phone);
+    if (lead.eventDate) params.set('eventDate', new Date(lead.eventDate).toISOString().split('T')[0]);
+    return `/admin/quotes?${params.toString()}`;
+  };
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: mainBg, padding: '24px' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -398,6 +407,12 @@ export default function LeadsPage() {
                     </div>
                   ) : (
                     <>
+                      <Link
+                        href={getQuoteUrl(lead)}
+                        style={{ padding: '4px 10px', backgroundColor: '#8b5cf6', color: 'white', textDecoration: 'none', borderRadius: '6px', fontSize: '12px', display: 'inline-block' }}
+                      >
+                        Create quote
+                      </Link>
                       <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
                         Mark contacted
                       </button>
@@ -495,6 +510,12 @@ export default function LeadsPage() {
                                 View agreement
                               </Link>
                             )}
+                            <Link
+                              href={getQuoteUrl(lead)}
+                              style={{ padding: '6px 12px', backgroundColor: '#8b5cf6', color: 'white', textDecoration: 'none', borderRadius: '6px', fontSize: '13px', display: 'inline-block' }}
+                            >
+                              Create quote
+                            </Link>
                             <button onClick={() => openEditLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                               Edit
                             </button>

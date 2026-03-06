@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 
 interface ContactInfo {
@@ -60,6 +61,8 @@ const DEFAULT_PRICING: PricingConfig = {
 };
 
 export default function QuotesPage() {
+  const searchParams = useSearchParams();
+
   // Set page title
   useEffect(() => {
     document.title = 'Quotes | Admin | Photobooth Guys';
@@ -136,6 +139,25 @@ export default function QuotesPage() {
     }
     return '';
   };
+
+  // Pre-fill contact info from URL params (e.g. when navigated from Leads page)
+  useEffect(() => {
+    const name = searchParams.get('name');
+    const email = searchParams.get('email');
+    const phone = searchParams.get('phone');
+    const eventDate = searchParams.get('eventDate');
+    if (name || email || phone || eventDate) {
+      const formattedPhone = phone ? formatPhoneNumber(phone) : '';
+      setContactInfo((prev) => ({
+        ...prev,
+        name: name || prev.name,
+        email: email || prev.email,
+        phone: formattedPhone || prev.phone,
+        eventDate: eventDate || prev.eventDate,
+      }));
+      if (phone) setPhoneValue(formatPhoneNumber(phone));
+    }
+  }, [searchParams]);
 
   const formatEventDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(num => parseInt(num, 10));
