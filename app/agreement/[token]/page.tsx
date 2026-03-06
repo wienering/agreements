@@ -203,9 +203,13 @@ export default function ClientAgreementPage() {
         };
         setAgreement(processedAgreement);
         
-        // Track the agreement view
+        // Track the agreement view (await so we log any failures)
         devLog('🔍 Client: About to call trackAgreementView()');
-        trackAgreementView();
+        try {
+          await trackAgreementView();
+        } catch (err) {
+          console.error('❌ Failed to track agreement view:', err);
+        }
       } else {
         setVerificationError(data.error || 'Email verification failed');
       }

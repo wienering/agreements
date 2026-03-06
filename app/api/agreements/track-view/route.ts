@@ -37,20 +37,12 @@ function createTransporter() {
   });
 }
 
-// Helper function to send view alert email
-async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: string) {
+// Helper function to send view alert email (returns true if sent, false if failed)
+async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: string): Promise<boolean> {
   try {
     devLog('📧 Creating email transporter...');
     const transporter = createTransporter();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    
-    devLog('📧 SMTP Config:', {
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.SMTP_USER,
-      from: process.env.SMTP_FROM,
-      adminEmail: process.env.ADMIN_EMAIL
-    });
     
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -90,19 +82,23 @@ async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: s
       </div>
     `;
 
-    devLog('📧 Sending email to:', process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca');
+    // Use VIEW_ALERT_EMAIL if set (e.g. info@), otherwise ADMIN_EMAIL, else default
+    const viewAlertTo = process.env.VIEW_ALERT_EMAIL || process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca';
+    devLog('📧 Sending view alert email to:', viewAlertTo);
     devLog('📧 Email subject:', `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`);
     
     const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@photoboothguys.ca',
-      to: process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca',
+      to: viewAlertTo,
       subject: `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`,
       html: emailContent,
     });
     
     devLog('📧 Email sent successfully:', result.messageId);
+    return true;
   } catch (error) {
     console.error('❌ Error sending view alert email:', error);
+    return false;
   }
 }
 
@@ -172,10 +168,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email alert (only for first view to avoid spam)
+    let emailSent = false;
     if (isFirstView) {
       devLog('📧 Sending view alert email for first view...');
-      await sendViewAlertEmail(agreement, clientIP, userAgent);
-      devLog('✅ View alert email sent successfully');
+      emailSent = await sendViewAlertEmail(agreement, clientIP, userAgent);
+      devLog(emailSent ? '✅ View alert email sent successfully' : '⚠️ View alert email failed to send');
     } else {
       devLog('📧 Skipping email alert - not first view');
     }
@@ -183,7 +180,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       viewCount: agreement.viewCount + 1,
-      isFirstView 
+      isFirstView,
+      emailSent: isFirstView ? emailSent : undefined
     });
 
   } catch (error) {
