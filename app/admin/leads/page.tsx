@@ -23,6 +23,9 @@ interface Lead {
   email: string;
   phone?: string;
   eventDate?: string;
+  eventType?: string;
+  eventLocation?: string;
+  quotePackageHours?: number;
   quoteTotal?: number;
   lastContactedAt?: string;
   nextFollowUpAt?: string;
@@ -51,6 +54,21 @@ export default function LeadsPage() {
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadError, setAddLeadError] = useState('');
   const [addLeadSaving, setAddLeadSaving] = useState(false);
+  const [editLead, setEditLead] = useState<Lead | null>(null);
+  const [editLeadForm, setEditLeadForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    eventDate: '',
+    eventType: '',
+    eventLocation: '',
+    quotePackageHours: '',
+    quoteTotal: '',
+    notes: '',
+  });
+  const [editLeadError, setEditLeadError] = useState('');
+  const [editLeadSaving, setEditLeadSaving] = useState(false);
   const [newLead, setNewLead] = useState({
     firstName: '',
     lastName: '',
@@ -171,6 +189,70 @@ export default function LeadsPage() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const openEditLead = (lead: Lead) => {
+    setEditLead(lead);
+    setEditLeadForm({
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+      email: lead.email,
+      phone: lead.phone || '',
+      eventDate: lead.eventDate ? new Date(lead.eventDate).toISOString().split('T')[0] : '',
+      eventType: lead.eventType || '',
+      eventLocation: lead.eventLocation || '',
+      quotePackageHours: lead.quotePackageHours != null ? String(lead.quotePackageHours) : '',
+      quoteTotal: lead.quoteTotal != null ? String(lead.quoteTotal) : '',
+      notes: lead.notes || '',
+    });
+    setEditLeadError('');
+  };
+
+  const handleUpdateLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editLead) return;
+    setEditLeadError('');
+    if (!editLeadForm.firstName.trim() || !editLeadForm.lastName.trim() || !editLeadForm.email.trim()) {
+      setEditLeadError('First name, last name, and email are required.');
+      return;
+    }
+    setEditLeadSaving(true);
+    try {
+      const payload: Record<string, unknown> = {
+        firstName: editLeadForm.firstName.trim(),
+        lastName: editLeadForm.lastName.trim(),
+        email: editLeadForm.email.trim(),
+      };
+      if (editLeadForm.phone !== undefined) payload.phone = editLeadForm.phone.trim() || null;
+      if (editLeadForm.eventDate) payload.eventDate = editLeadForm.eventDate;
+      else payload.eventDate = null;
+      if (editLeadForm.eventType !== undefined) payload.eventType = editLeadForm.eventType.trim() || null;
+      if (editLeadForm.eventLocation !== undefined) payload.eventLocation = editLeadForm.eventLocation.trim() || null;
+      if (editLeadForm.quotePackageHours) payload.quotePackageHours = parseInt(editLeadForm.quotePackageHours, 10) || null;
+      else payload.quotePackageHours = null;
+      if (editLeadForm.quoteTotal) payload.quoteTotal = parseFloat(editLeadForm.quoteTotal) || null;
+      else payload.quoteTotal = null;
+      if (editLeadForm.notes !== undefined) payload.notes = editLeadForm.notes.trim() || null;
+
+      const res = await fetch(`/api/leads/${editLead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditLead(null);
+        fetchLeads();
+        fetchFollowUp();
+      } else {
+        setEditLeadError(data.error || data.details?.[0]?.message || 'Failed to update lead');
+      }
+    } catch (err) {
+      console.error(err);
+      setEditLeadError('Failed to update lead');
+    } finally {
+      setEditLeadSaving(false);
     }
   };
 
@@ -315,9 +397,14 @@ export default function LeadsPage() {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-                      Mark contacted
-                    </button>
+                    <>
+                      <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                        Mark contacted
+                      </button>
+                      <button onClick={() => openEditLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                        Edit
+                      </button>
+                    </>
                   )}
                 </div>
               ))}
@@ -408,6 +495,9 @@ export default function LeadsPage() {
                                 View agreement
                               </Link>
                             )}
+                            <button onClick={() => openEditLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                              Edit
+                            </button>
                             <button onClick={() => handleDeleteLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                               Delete
                             </button>
@@ -633,6 +723,168 @@ export default function LeadsPage() {
                     style={{ padding: '10px 20px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: addLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: addLeadSaving ? 0.7 : 1 }}
                   >
                     {addLeadSaving ? 'Adding...' : 'Add Lead'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {editLead && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px',
+            }}
+            onClick={() => { setEditLead(null); setEditLeadError(''); }}
+          >
+            <div
+              style={{
+                backgroundColor: cardBg,
+                padding: '24px',
+                borderRadius: '12px',
+                border: `1px solid ${borderColor}`,
+                width: '100%',
+                maxWidth: '480px',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ margin: '0 0 20px 0', color: textColor }}>Edit Lead</h3>
+              <form onSubmit={handleUpdateLead}>
+                {editLeadError && (
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '8px', fontSize: '14px' }}>
+                    {editLeadError}
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>First name *</label>
+                    <input
+                      type="text"
+                      value={editLeadForm.firstName}
+                      onChange={(e) => setEditLeadForm({ ...editLeadForm, firstName: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Last name *</label>
+                    <input
+                      type="text"
+                      value={editLeadForm.lastName}
+                      onChange={(e) => setEditLeadForm({ ...editLeadForm, lastName: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Email *</label>
+                  <input
+                    type="email"
+                    value={editLeadForm.email}
+                    onChange={(e) => setEditLeadForm({ ...editLeadForm, email: e.target.value })}
+                    required
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                  />
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Phone</label>
+                  <input
+                    type="tel"
+                    value={editLeadForm.phone}
+                    onChange={(e) => setEditLeadForm({ ...editLeadForm, phone: e.target.value })}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event date</label>
+                    <input
+                      type="date"
+                      value={editLeadForm.eventDate}
+                      onChange={(e) => setEditLeadForm({ ...editLeadForm, eventDate: e.target.value })}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event type</label>
+                    <input
+                      type="text"
+                      value={editLeadForm.eventType}
+                      onChange={(e) => setEditLeadForm({ ...editLeadForm, eventType: e.target.value })}
+                      placeholder="e.g. Wedding, Corporate"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event location</label>
+                  <input
+                    type="text"
+                    value={editLeadForm.eventLocation}
+                    onChange={(e) => setEditLeadForm({ ...editLeadForm, eventLocation: e.target.value })}
+                    placeholder="Venue or address"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote hours</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editLeadForm.quotePackageHours}
+                      onChange={(e) => setEditLeadForm({ ...editLeadForm, quotePackageHours: e.target.value })}
+                      placeholder="e.g. 4"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote total ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editLeadForm.quoteTotal}
+                      onChange={(e) => setEditLeadForm({ ...editLeadForm, quoteTotal: e.target.value })}
+                      placeholder="e.g. 950"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Notes</label>
+                  <textarea
+                    value={editLeadForm.notes}
+                    onChange={(e) => setEditLeadForm({ ...editLeadForm, notes: e.target.value })}
+                    rows={3}
+                    placeholder="Any notes about this lead..."
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, resize: 'vertical' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setEditLead(null); setEditLeadError(''); }}
+                    style={{ padding: '10px 20px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editLeadSaving}
+                    style={{ padding: '10px 20px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', cursor: editLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: editLeadSaving ? 0.7 : 1 }}
+                  >
+                    {editLeadSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

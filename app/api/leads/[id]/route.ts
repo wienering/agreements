@@ -13,6 +13,8 @@ const updateLeadSchema = z.object({
   eventDate: z.string().optional().nullable(),
   eventType: z.string().optional().nullable(),
   eventLocation: z.string().optional().nullable(),
+  quotePackageHours: z.number().optional().nullable(),
+  quoteTotal: z.number().optional().nullable(),
   lastContactedAt: z.string().optional().nullable(),
   nextFollowUpAt: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
@@ -80,6 +82,8 @@ export async function PATCH(
     if (validated.eventDate !== undefined) updateData.eventDate = validated.eventDate ? new Date(validated.eventDate) : null;
     if (validated.eventType !== undefined) updateData.eventType = validated.eventType;
     if (validated.eventLocation !== undefined) updateData.eventLocation = validated.eventLocation;
+    if (validated.quotePackageHours !== undefined) updateData.quotePackageHours = validated.quotePackageHours;
+    if (validated.quoteTotal !== undefined) updateData.quoteTotal = validated.quoteTotal;
     if (validated.lastContactedAt !== undefined) updateData.lastContactedAt = validated.lastContactedAt ? new Date(validated.lastContactedAt) : null;
     if (validated.nextFollowUpAt !== undefined) updateData.nextFollowUpAt = validated.nextFollowUpAt ? new Date(validated.nextFollowUpAt) : null;
     if (validated.notes !== undefined) updateData.notes = validated.notes;
