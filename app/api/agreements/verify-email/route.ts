@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
+import { sendViewAlertEmail } from '@/lib/view-alert-email';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 
@@ -76,6 +77,31 @@ export async function POST(request: NextRequest) {
     const emailMatches = agreement.client.email.toLowerCase() === validatedData.email.toLowerCase();
     
     if (emailMatches) {
+      // Track view and send "Agreement Viewed" email server-side (reliable - not dependent on client)
+      const clientIP = getClientIP(request);
+      const userAgent = request.headers.get('user-agent') || 'Unknown';
+      const isFirstView = !agreement.firstViewedAt;
+
+      // Update view tracking in DB
+      await prisma.agreement.update({
+        where: { id: agreement.id },
+        data: {
+          firstViewedAt: agreement.firstViewedAt || new Date(),
+          lastViewedAt: new Date(),
+          viewCount: agreement.viewCount + 1,
+        },
+      });
+
+      // Send view alert email on first view only
+      if (isFirstView) {
+        const agreementForEmail = {
+          ...agreement,
+          viewCount: agreement.viewCount + 1,
+          firstViewedAt: agreement.firstViewedAt || new Date(),
+        };
+        await sendViewAlertEmail(agreementForEmail, clientIP, userAgent);
+      }
+
       // For signed agreements, use the saved snapshot to prevent changes
       // For unsigned agreements, process the template in real-time
       let processedHtml;
@@ -89,13 +115,17 @@ export async function POST(request: NextRequest) {
         processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
       }
       
-      // Email matches - allow access
+      // Email matches - allow access (serialize client for JSON - convert Decimal)
+      const client = {
+        ...agreement.client,
+        packagePrice: agreement.client.packagePrice != null ? Number(agreement.client.packagePrice) : null,
+      };
       return NextResponse.json({
         success: true,
         message: 'Email verified successfully',
         agreement: {
           id: agreement.id,
-          client: agreement.client,
+          client,
           template: {
             ...agreement.template,
             htmlContent: processedHtml
@@ -161,6 +191,34 @@ function getClientIP(request: NextRequest): string {
   return 'Unknown';
 }
 
+// Track agreement view and send "Agreement Viewed" email (server-side, reliable)
+async function trackAndNotifyAgreementView(
+  agreement: { id: string; firstViewedAt: Date | null; viewCount: number; client: any; template: any; status: string },
+  clientIP: string,
+  userAgent: string
+) {
+  const isFirstView = !agreement.firstViewedAt;
+  const now = new Date();
+
+  await prisma.agreement.update({
+    where: { id: agreement.id },
+    data: {
+      firstViewedAt: agreement.firstViewedAt || now,
+      lastViewedAt: now,
+      viewCount: agreement.viewCount + 1,
+    },
+  });
+
+  if (isFirstView) {
+    const agreementForEmail = {
+      ...agreement,
+      viewCount: agreement.viewCount + 1,
+      firstViewedAt: agreement.firstViewedAt || now,
+    };
+    await sendViewAlertEmail(agreementForEmail, clientIP, userAgent);
+  }
+}
+
 // Function to record unauthorized access attempts
 async function recordUnauthorizedAccess(data: {
   agreementId: string;
@@ -199,6 +257,7 @@ async function sendUnauthorizedAccessEmail(data: {
 }) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('[verify-email] SMTP not configured - cannot send unauthorized access alert. Set SMTP_HOST, SMTP_USER, SMTP_PASS.');
     devLog('SMTP not configured - cannot send unauthorized access email');
     return;
   }
@@ -272,16 +331,18 @@ async function sendUnauthorizedAccessEmail(data: {
       </html>
     `;
 
+    const alertTo = process.env.ADMIN_EMAIL || process.env.VIEW_ALERT_EMAIL || 'agreements@photoboothguys.ca';
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: 'agreements@photoboothguys.ca',
+      to: alertTo,
       subject: `🚨 Security Alert: Unauthorized Access Attempt - Agreement ${data.agreementId}`,
       html: emailHtml,
     };
 
     await transporter.sendMail(mailOptions);
     devLog('Unauthorized access email sent successfully');
+    console.info('[verify-email] Unauthorized access alert sent to', alertTo);
   } catch (error) {
-    console.error('Failed to send unauthorized access email:', error);
+    console.error('[verify-email] Failed to send unauthorized access email:', error);
   }
 }

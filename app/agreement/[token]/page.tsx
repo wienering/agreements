@@ -95,29 +95,6 @@ export default function ClientAgreementPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Function to track agreement view
-  const trackAgreementView = async () => {
-    try {
-      devLog('🔍 Client: Calling track-view API with token:', token);
-      const response = await fetch('/api/agreements/track-view', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token })
-      });
-      
-      const data = await response.json();
-      devLog('🔍 Client: Track-view API response:', data);
-      
-      if (!response.ok) {
-        console.error('❌ Client: Track-view API failed:', data);
-      }
-    } catch (error) {
-      console.error('❌ Client: Error tracking agreement view:', error);
-    }
-  };
-
   // Function to process smart fields in HTML content
   // Note: The API already processes the HTML, but we keep this for any client-side processing needs
   const processSmartFields = (html: string, client: any, agreementId: string, event: any = null) => {
@@ -203,13 +180,7 @@ export default function ClientAgreementPage() {
         };
         setAgreement(processedAgreement);
         
-        // Track the agreement view (await so we log any failures)
-        devLog('🔍 Client: About to call trackAgreementView()');
-        try {
-          await trackAgreementView();
-        } catch (err) {
-          console.error('❌ Failed to track agreement view:', err);
-        }
+        // View tracking + "Agreement Viewed" email are now done server-side in verify-email (reliable)
       } else {
         setVerificationError(data.error || 'Email verification failed');
       }
