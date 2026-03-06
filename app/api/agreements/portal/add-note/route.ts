@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
 
@@ -29,7 +30,7 @@ async function sendNoteNotificationEmail(
 ) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('SMTP not configured, skipping note notification email');
+    devLog('SMTP not configured, skipping note notification email');
     return;
   }
 
@@ -157,7 +158,7 @@ async function sendNoteNotificationEmail(
 
     await transporter.verify();
     const result = await transporter.sendMail(mailOptions);
-    console.log('Note notification email sent successfully:', result.messageId);
+    devLog('Note notification email sent successfully:', result.messageId);
   } catch (error) {
     // Log error but don't throw - we don't want email failures to block note creation
     console.error('Failed to send note notification email:', error);

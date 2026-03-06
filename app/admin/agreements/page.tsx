@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { devLog } from '@/lib/logger';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
@@ -552,7 +553,7 @@ const normalizePaymentStatus = (value?: string | null) => {
           setBackdropOptions(data.backdrops || []);
           if (data.backdrops.length === 0) {
             // Don't show error if no backdrops - just empty state
-            console.log('No backdrop options available for this attendant');
+            devLog('No backdrop options available for this attendant');
           }
         } else {
           setBackdropOptions([]);
@@ -923,7 +924,7 @@ const normalizePaymentStatus = (value?: string | null) => {
             await navigator.clipboard.writeText(data.fallback.clientLink);
             showToast('Fallback link copied to clipboard!', 'info');
           } catch (clipboardError) {
-            console.log('Could not copy to clipboard:', clipboardError);
+            devLog('Could not copy to clipboard:', clipboardError);
           }
         } else {
           showToast(`Error: ${data.error || 'Failed to send agreement'}`, 'error');
@@ -969,7 +970,7 @@ const normalizePaymentStatus = (value?: string | null) => {
             await navigator.clipboard.writeText(data.fallback.reviewLink);
             showToast('Fallback review link copied to clipboard!', 'info');
           } catch (clipboardError) {
-            console.log('Could not copy review link to clipboard:', clipboardError);
+            devLog('Could not copy review link to clipboard:', clipboardError);
           }
         } else {
           showToast(`Error: ${data.error || 'Failed to send review request'}`, 'error');
@@ -1088,7 +1089,7 @@ const normalizePaymentStatus = (value?: string | null) => {
             await navigator.clipboard.writeText(data.fallback.clientLink);
             showToast('Fallback link copied to clipboard!', 'info');
           } catch (clipboardError) {
-            console.log('Could not copy to clipboard:', clipboardError);
+            devLog('Could not copy to clipboard:', clipboardError);
           }
         } else {
           showToast(`Error: ${data.error || 'Failed to resend agreement'}`, 'error');

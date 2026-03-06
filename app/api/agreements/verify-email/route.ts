@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
@@ -174,7 +175,7 @@ async function recordUnauthorizedAccess(data: {
     await sendUnauthorizedAccessEmail(data);
     
     // Log to console for debugging
-    console.log('Unauthorized access attempt:', {
+    devLog('Unauthorized access attempt:', {
       agreementId: data.agreementId,
       clientEmail: data.clientEmail,
       attemptedEmail: data.attemptedEmail,
@@ -198,7 +199,7 @@ async function sendUnauthorizedAccessEmail(data: {
 }) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('SMTP not configured - cannot send unauthorized access email');
+    devLog('SMTP not configured - cannot send unauthorized access email');
     return;
   }
 
@@ -279,7 +280,7 @@ async function sendUnauthorizedAccessEmail(data: {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log('Unauthorized access email sent successfully');
+    devLog('Unauthorized access email sent successfully');
   } catch (error) {
     console.error('Failed to send unauthorized access email:', error);
   }

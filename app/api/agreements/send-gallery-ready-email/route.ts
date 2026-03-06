@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { generateMagicLoginUrl } from '@/lib/magicToken';
 
@@ -272,7 +273,7 @@ export async function POST(request: NextRequest) {
         )
       ]);
 
-      console.log('Gallery ready email sent successfully:', info);
+      devLog('Gallery ready email sent successfully:', info);
 
       // Update the agreement to track that the gallery email was sent
       await prisma.agreement.update({

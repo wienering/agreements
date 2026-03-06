@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import Stripe from 'stripe';
@@ -429,7 +430,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`Created ${invoiceResults.length} invoice(s) for agreement ${agreement.id}`);
+    devLog(`Created ${invoiceResults.length} invoice(s) for agreement ${agreement.id}`);
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import nodemailer from 'nodemailer';
 
 // Helper function to get client IP
@@ -39,11 +40,11 @@ function createTransporter() {
 // Helper function to send view alert email
 async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: string) {
   try {
-    console.log('📧 Creating email transporter...');
+    devLog('📧 Creating email transporter...');
     const transporter = createTransporter();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
-    console.log('📧 SMTP Config:', {
+    devLog('📧 SMTP Config:', {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       user: process.env.SMTP_USER,
@@ -89,8 +90,8 @@ async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: s
       </div>
     `;
 
-    console.log('📧 Sending email to:', process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca');
-    console.log('📧 Email subject:', `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`);
+    devLog('📧 Sending email to:', process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca');
+    devLog('📧 Email subject:', `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`);
     
     const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@photoboothguys.ca',
@@ -99,7 +100,7 @@ async function sendViewAlertEmail(agreement: any, clientIP: string, userAgent: s
       html: emailContent,
     });
     
-    console.log('📧 Email sent successfully:', result.messageId);
+    devLog('📧 Email sent successfully:', result.messageId);
   } catch (error) {
     console.error('❌ Error sending view alert email:', error);
   }
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
   try {
     const { token } = await request.json();
     
-    console.log('🔍 Track view API called with token:', token);
+    devLog('🔍 Track view API called with token:', token);
     
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Check if SMTP is configured (same check as working email system)
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.log('⚠️ SMTP not configured, skipping email alert');
+      devLog('⚠️ SMTP not configured, skipping email alert');
       return NextResponse.json({ 
         success: true, 
         viewCount: 1,
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
     // Check if this is the first view
     const isFirstView = !agreement.firstViewedAt;
     
-    console.log('📊 Agreement found:', {
+    devLog('📊 Agreement found:', {
       id: agreement.id,
       client: `${agreement.client.firstName} ${agreement.client.lastName}`,
       isFirstView,
@@ -172,11 +173,11 @@ export async function POST(request: NextRequest) {
 
     // Send email alert (only for first view to avoid spam)
     if (isFirstView) {
-      console.log('📧 Sending view alert email for first view...');
+      devLog('📧 Sending view alert email for first view...');
       await sendViewAlertEmail(agreement, clientIP, userAgent);
-      console.log('✅ View alert email sent successfully');
+      devLog('✅ View alert email sent successfully');
     } else {
-      console.log('📧 Skipping email alert - not first view');
+      devLog('📧 Skipping email alert - not first view');
     }
 
     return NextResponse.json({ 

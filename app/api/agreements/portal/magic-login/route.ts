@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    console.log(`Magic login successful for client: ${client.email} (purpose: ${payload.purpose})`);
+    devLog(`Magic login successful for client: ${client.email} (purpose: ${payload.purpose})`);
 
     // Return session info and client data
     return NextResponse.json({

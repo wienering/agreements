@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
@@ -260,7 +261,7 @@ export async function POST(request: NextRequest) {
         )
       ]);
 
-      console.log('Agreement email sent successfully:', info);
+      devLog('Agreement email sent successfully:', info);
 
       // Update agreement status to LIVE if it was DRAFT and track email send
       await prisma.agreement.update({

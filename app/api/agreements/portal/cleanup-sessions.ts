@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 
 /**
  * Clean up expired client sessions
@@ -7,7 +8,7 @@ import { prisma } from '@/lib/prisma';
  */
 export async function cleanupExpiredSessions() {
   try {
-    console.log('Starting cleanup of expired client sessions...');
+    devLog('Starting cleanup of expired client sessions...');
     
     const now = new Date();
     
@@ -26,11 +27,11 @@ export async function cleanupExpiredSessions() {
     });
 
     if (expiredSessions.length === 0) {
-      console.log('No expired sessions found.');
+      devLog('No expired sessions found.');
       return { deletedCount: 0 };
     }
 
-    console.log(`Found ${expiredSessions.length} expired sessions to clean up.`);
+    devLog(`Found ${expiredSessions.length} expired sessions to clean up.`);
 
     // Delete expired sessions
     const deleteResult = await prisma.clientSession.deleteMany({
@@ -41,7 +42,7 @@ export async function cleanupExpiredSessions() {
       }
     });
 
-    console.log(`Successfully deleted ${deleteResult.count} expired sessions.`);
+    devLog(`Successfully deleted ${deleteResult.count} expired sessions.`);
     
     return { 
       deletedCount: deleteResult.count,
@@ -62,7 +63,7 @@ export async function cleanupExpiredSessions() {
 if (require.main === module) {
   cleanupExpiredSessions()
     .then(result => {
-      console.log('Cleanup completed:', result);
+      devLog('Cleanup completed:', result);
       process.exit(0);
     })
     .catch(error => {

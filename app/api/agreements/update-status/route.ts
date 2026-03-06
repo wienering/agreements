@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 
 const updateStatusSchema = z.object({
@@ -12,10 +13,10 @@ const updateStatusSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Update status request body:', body);
+    devLog('Update status request body:', body);
     
     const validatedData = updateStatusSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
 
     // First check if the agreement exists and get its current status
     const existingAgreement = await prisma.agreement.findUnique({
@@ -47,7 +48,7 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    console.log('Updated agreement status:', updatedAgreement);
+    devLog('Updated agreement status:', updatedAgreement);
     return NextResponse.json(updatedAgreement);
   } catch (error: any) {
     console.error('Status update error details:', error);

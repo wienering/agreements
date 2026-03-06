@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 
 const updateExpirationSchema = z.object({
@@ -10,10 +11,10 @@ const updateExpirationSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Update expiration request body:', body);
+    devLog('Update expiration request body:', body);
     
     const validatedData = updateExpirationSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
 
     const updatedAgreement = await prisma.agreement.update({
       where: { id: validatedData.id },
@@ -22,7 +23,7 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    console.log('Updated agreement expiration:', updatedAgreement);
+    devLog('Updated agreement expiration:', updatedAgreement);
     return NextResponse.json(updatedAgreement);
   } catch (error: any) {
     console.error('Expiration update error details:', error);

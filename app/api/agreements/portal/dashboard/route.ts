@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
       where: whereClause
     });
 
-    console.log(`[Dashboard] Client Email: ${sessionClient.email}, Total agreements: ${totalCount}`);
+    devLog(`[Dashboard] Client Email: ${sessionClient.email}, Total agreements: ${totalCount}`);
 
     // Get agreements with pagination
     const agreements = await prisma.agreement.findMany({
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
       return processedHtml;
     };
 
-    console.log(`[Dashboard] Found ${agreements.length} agreements for client email ${sessionClient.email}`);
+    devLog(`[Dashboard] Found ${agreements.length} agreements for client email ${sessionClient.email}`);
 
     // Process agreements with HTML content
     const processedAgreements = agreements.map(agreement => {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -36,7 +37,7 @@ export async function PUT(request: NextRequest) {
       }
     });
 
-    console.log('Next action updated for agreement:', updatedAgreement.id);
+    devLog('Next action updated for agreement:', updatedAgreement.id);
     return NextResponse.json({
       success: true,
       agreement: updatedAgreement

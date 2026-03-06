@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { createHmac } from 'crypto';
@@ -303,7 +304,7 @@ export async function POST(request: NextRequest) {
     rawBody = await request.text();
     
     // Log incoming request for debugging
-    console.log('📥 Bookly webhook received - Headers:', {
+    devLog('📥 Bookly webhook received - Headers:', {
       'content-type': request.headers.get('content-type'),
       'user-agent': request.headers.get('user-agent'),
       'x-bookly-signature': request.headers.get('x-bookly-signature'),
@@ -314,7 +315,7 @@ export async function POST(request: NextRequest) {
     
     try {
       payload = JSON.parse(rawBody);
-      console.log('📥 Bookly webhook payload received:', {
+      devLog('📥 Bookly webhook payload received:', {
         hasEmail: !!payload.email,
         hasCustomer: !!payload.customer,
         keys: Object.keys(payload),
@@ -349,7 +350,7 @@ export async function POST(request: NextRequest) {
     // Validate payload
     const validatedData = booklyWebhookSchema.parse(payload);
 
-    console.log('📥 Bookly webhook received:', {
+    devLog('📥 Bookly webhook received:', {
       email: validatedData.email || validatedData.customer?.email,
       hasAppointment: !!validatedData.appointment,
       hasService: !!validatedData.service,
@@ -385,7 +386,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`✅ Client ${client.id} ${client.createdAt === client.updatedAt ? 'created' : 'updated'}:`, client.email);
+    devLog(`✅ Client ${client.id} ${client.createdAt === client.updatedAt ? 'created' : 'updated'}:`, client.email);
 
     // Create Event record for this booking
     // Only create if there's event data provided
@@ -406,7 +407,7 @@ export async function POST(request: NextRequest) {
           archived: false,
         },
       });
-      console.log(`✅ Event ${event.id} created for client ${client.email}`);
+      devLog(`✅ Event ${event.id} created for client ${client.email}`);
     }
 
     // Optional: Create agreement automatically
@@ -442,7 +443,7 @@ export async function POST(request: NextRequest) {
           });
 
           if (agreement) {
-            console.log(`✅ Agreement ${agreement.id} created for client ${client.email}`);
+            devLog(`✅ Agreement ${agreement.id} created for client ${client.email}`);
           }
         }
       } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 
 const templateUpdateSchema = z.object({
@@ -13,10 +14,10 @@ const templateUpdateSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Template update request body:', body);
+    devLog('Template update request body:', body);
     
     const validatedData = templateUpdateSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
 
     // Check if this template has any signed agreements
     const signedAgreements = await prisma.agreement.findMany({
@@ -44,7 +45,7 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    console.log('Updated template:', updatedTemplate);
+    devLog('Updated template:', updatedTemplate);
     return NextResponse.json(updatedTemplate);
   } catch (error: any) {
     console.error('Template update error details:', error);

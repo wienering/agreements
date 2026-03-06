@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { devLog } from './logger';
 import { OAuth2Client } from 'google-auth-library';
 import { Readable } from 'stream';
 
@@ -36,7 +37,7 @@ export function getGoogleDriveClient() {
   oauth2Client.on('tokens', (tokens) => {
     if (tokens.refresh_token) {
       // If we get a new refresh token, log it (user should update their env var)
-      console.log('New refresh token received. Update GOOGLE_DRIVE_REFRESH_TOKEN in Vercel.');
+      devLog('New refresh token received. Update GOOGLE_DRIVE_REFRESH_TOKEN in Vercel.');
     }
   });
 

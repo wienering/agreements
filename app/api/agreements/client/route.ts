@@ -1,15 +1,16 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
 
-    console.log('🔍 API: Looking for agreement with token:', token);
+    devLog('🔍 API: Looking for agreement with token:', token);
 
     if (!token) {
-      console.log('❌ API: No token provided');
+      devLog('❌ API: No token provided');
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
@@ -29,10 +30,10 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log('📊 API: Agreement found:', !!agreement);
+    devLog('📊 API: Agreement found:', !!agreement);
 
     if (!agreement) {
-      console.log('❌ API: Agreement not found or expired');
+      devLog('❌ API: Agreement not found or expired');
       return NextResponse.json({ error: 'Agreement not found or expired' }, { status: 404 });
     }
 
@@ -85,19 +86,19 @@ export async function GET(request: NextRequest) {
       ? agreement.mergedHtml
       : (agreement.customHtmlContent || agreement.template.htmlContent);
     
-    console.log('🔍 CLIENT API: Agreement status:', agreement.status);
-    console.log('🔍 CLIENT API: Has mergedHtml:', !!agreement.mergedHtml);
-    console.log('🔍 CLIENT API: Has customHtmlContent:', !!agreement.customHtmlContent);
-    console.log('🔍 CLIENT API: Using template fallback:', !agreement.customHtmlContent && !agreement.mergedHtml);
+    devLog('🔍 CLIENT API: Agreement status:', agreement.status);
+    devLog('🔍 CLIENT API: Has mergedHtml:', !!agreement.mergedHtml);
+    devLog('🔍 CLIENT API: Has customHtmlContent:', !!agreement.customHtmlContent);
+    devLog('🔍 CLIENT API: Using template fallback:', !agreement.customHtmlContent && !agreement.mergedHtml);
     
     if (agreement.status === 'SIGNED') {
       if (agreement.mergedHtml && agreement.mergedHtml.trim().length > 0) {
         // Use the saved snapshot for signed agreements
-        console.log('🔍 CLIENT API: Using saved snapshot for signed agreement');
+        devLog('🔍 CLIENT API: Using saved snapshot for signed agreement');
         processedHtml = agreement.mergedHtml;
       } else {
         // Fallback: create snapshot now if it's missing (shouldn't happen)
-        console.log('🔍 CLIENT API: WARNING - Signed agreement missing snapshot, creating one now');
+        devLog('🔍 CLIENT API: WARNING - Signed agreement missing snapshot, creating one now');
         processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
         
         // Save the snapshot for future use
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Process the content in real-time for unsigned agreements
-      console.log('🔍 CLIENT API: Processing content in real-time for unsigned agreement');
+      devLog('🔍 CLIENT API: Processing content in real-time for unsigned agreement');
       processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 

@@ -1,4 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -12,7 +13,7 @@ export async function DELETE(request: NextRequest) {
     console.log('Agreement delete request body:', body);
     
     const validatedData = agreementDeleteSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
 
     // First, check if the agreement exists and get its status
     const agreement = await prisma.agreement.findUnique({
@@ -36,7 +37,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: validatedData.id }
     });
 
-    console.log('Agreement deleted successfully:', validatedData.id);
+    devLog('Agreement deleted successfully:', validatedData.id);
     return NextResponse.json({ success: true, message: 'Agreement deleted successfully' });
   } catch (error: any) {
     console.error('Agreement delete error details:', error);

@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 
 const templateDeleteSchema = z.object({
@@ -9,10 +10,10 @@ const templateDeleteSchema = z.object({
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Template delete request body:', body);
+    devLog('Template delete request body:', body);
     
     const validatedData = templateDeleteSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
 
     // Check if template is being used by any agreements
     const agreementsUsingTemplate = await prisma.agreement.findMany({
@@ -32,7 +33,7 @@ export async function DELETE(request: NextRequest) {
       where: { id: validatedData.id }
     });
 
-    console.log('Template deleted successfully:', validatedData.id);
+    devLog('Template deleted successfully:', validatedData.id);
     return NextResponse.json({ success: true, message: 'Template deleted successfully' });
   } catch (error: any) {
     console.error('Template delete error details:', error);

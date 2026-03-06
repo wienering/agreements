@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,10 +22,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
 
-    console.log('🔍 Admin Preview API: Looking for agreement with token:', token);
+    devLog('🔍 Admin Preview API: Looking for agreement with token:', token);
 
     if (!token) {
-      console.log('❌ Admin Preview API: No token provided');
+      devLog('❌ Admin Preview API: No token provided');
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
@@ -40,13 +41,13 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log('📊 Admin Preview API: Agreement found:', !!agreement);
+    devLog('📊 Admin Preview API: Agreement found:', !!agreement);
     if (agreement) {
-      console.log('📊 Admin Preview API: Agreement details - ID:', agreement.id, 'Status:', agreement.status, 'Archived:', agreement.archived);
+      devLog('📊 Admin Preview API: Agreement details - ID:', agreement.id, 'Status:', agreement.status, 'Archived:', agreement.archived);
     }
 
     if (!agreement) {
-      console.log('❌ Admin Preview API: No agreement exists with token:', token);
+      devLog('❌ Admin Preview API: No agreement exists with token:', token);
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
@@ -95,26 +96,26 @@ export async function GET(request: NextRequest) {
 
     // For unsigned agreements, process the template in real-time
     let processedHtml;
-    console.log('🔍 Admin Preview API: Agreement status:', agreement.status);
-    console.log('🔍 Admin Preview API: Has mergedHtml:', !!agreement.mergedHtml);
-    console.log('🔍 Admin Preview API: mergedHtml length:', agreement.mergedHtml?.length || 0);
-    console.log('🔍 Admin Preview API: Template content length:', agreement.template.htmlContent?.length || 0);
+    devLog('🔍 Admin Preview API: Agreement status:', agreement.status);
+    devLog('🔍 Admin Preview API: Has mergedHtml:', !!agreement.mergedHtml);
+    devLog('🔍 Admin Preview API: mergedHtml length:', agreement.mergedHtml?.length || 0);
+    devLog('🔍 Admin Preview API: Template content length:', agreement.template.htmlContent?.length || 0);
     
     if (agreement.status === 'SIGNED') {
       if (agreement.mergedHtml && agreement.mergedHtml.trim().length > 0) {
         // Use the saved snapshot for signed agreements
-        console.log('🔍 Admin Preview API: Using saved snapshot for signed agreement');
+        devLog('🔍 Admin Preview API: Using saved snapshot for signed agreement');
         processedHtml = agreement.mergedHtml;
       } else {
         // Fallback: create snapshot now if it's missing
-        console.log('🔍 Admin Preview API: WARNING - Signed agreement missing snapshot, creating one now');
+        devLog('🔍 Admin Preview API: WARNING - Signed agreement missing snapshot, creating one now');
         const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
         processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
       }
     } else {
       // Process the content in real-time for unsigned agreements
       // Use customHtmlContent if available, otherwise fall back to template.htmlContent
-      console.log('🔍 Admin Preview API: Processing content in real-time for unsigned agreement');
+      devLog('🔍 Admin Preview API: Processing content in real-time for unsigned agreement');
       const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
       processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }

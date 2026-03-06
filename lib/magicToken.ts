@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { devLog } from '@/lib/logger';
 
 // Use a secret from environment or generate a fallback (for development only)
 const getSecret = () => {
@@ -64,7 +65,7 @@ export function verifyMagicToken(token: string): MagicTokenPayload | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 2) {
-      console.log('Magic token verification failed: Invalid token format');
+      devLog('Magic token verification failed: Invalid token format');
       return null;
     }
 
@@ -78,7 +79,7 @@ export function verifyMagicToken(token: string): MagicTokenPayload | null {
       .digest('base64url');
 
     if (providedSignature !== expectedSignature) {
-      console.log('Magic token verification failed: Invalid signature');
+      devLog('Magic token verification failed: Invalid signature');
       return null;
     }
 
@@ -89,7 +90,7 @@ export function verifyMagicToken(token: string): MagicTokenPayload | null {
 
     // Check expiration
     if (Date.now() > payload.exp) {
-      console.log('Magic token verification failed: Token expired');
+      devLog('Magic token verification failed: Token expired');
       return null;
     }
 

@@ -1,4 +1,5 @@
 import type { NextAuthOptions } from 'next-auth';
+import { devLog } from './logger';
 import EmailProvider from 'next-auth/providers/email';
 import nodemailer from 'nodemailer';
 import { memoryAdapter } from './memory-adapter';
@@ -38,9 +39,9 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log('SignIn callback:', { user, account, profile });
+      devLog('SignIn callback:', { user, account, profile });
       const isAdmin = user.email?.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase();
-      console.log('Is admin:', isAdmin);
+      devLog('Is admin:', isAdmin);
       return isAdmin;
     },
     async jwt({ token, user }) {
@@ -50,7 +51,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log('Session callback:', { session, token });
+      devLog('Session callback:', { session, token });
       if (token && session.user) {
         session.user.email = token.email;
       }

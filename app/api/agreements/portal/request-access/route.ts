@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
 import { verificationCodeStore } from '../shared/verification-codes';
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     // Check SMTP configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.log('SMTP not configured, verification code:', verificationCode);
+      devLog('SMTP not configured, verification code:', verificationCode);
       return NextResponse.json({ 
         success: true, 
         message: 'Email service is not configured. Please contact support.',

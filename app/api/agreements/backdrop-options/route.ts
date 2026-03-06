@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 
 // Get backdrop-selection-tool URL from environment variable or use default
 const BACKDROP_TOOL_URL = process.env.BACKDROP_SELECTION_TOOL_URL || process.env.NEXT_PUBLIC_BACKDROP_SELECTION_TOOL_URL || 'https://backdrops.photoboothguys.ca';
@@ -21,8 +22,8 @@ export async function GET(request: NextRequest) {
     // Fetch backdrops from backdrop-selection-tool API
     const backdropToolApiUrl = `${BACKDROP_TOOL_URL}/api/backdrops?attendantId=${encodedAttendantId}`;
     
-    console.log(`Fetching backdrop options from: ${backdropToolApiUrl}`);
-    console.log(`Backdrop tool URL: ${BACKDROP_TOOL_URL}`);
+    devLog(`Fetching backdrop options from: ${backdropToolApiUrl}`);
+    devLog(`Backdrop tool URL: ${BACKDROP_TOOL_URL}`);
     
     // Create abort controller for timeout (compatible with older Node versions)
     const controller = new AbortController();
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
         thumbnailUrl: backdrop.thumbnailUrl,
       }));
 
-    console.log(`Found ${publicBackdrops.length} public backdrops for attendant ${attendantId}`);
+    devLog(`Found ${publicBackdrops.length} public backdrops for attendant ${attendantId}`);
 
     return NextResponse.json({
       success: true,

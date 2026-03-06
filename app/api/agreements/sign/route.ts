@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
 
@@ -114,8 +115,8 @@ export async function POST(request: NextRequest) {
     // Use customHtmlContent if available, otherwise fall back to template.htmlContent
     const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
     const signedHtmlContent = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
-    console.log('🔍 SIGN API: Created snapshot length:', signedHtmlContent.length);
-    console.log('🔍 SIGN API: Snapshot preview:', signedHtmlContent.substring(0, 200) + '...');
+    devLog('🔍 SIGN API: Created snapshot length:', signedHtmlContent.length);
+    devLog('🔍 SIGN API: Snapshot preview:', signedHtmlContent.substring(0, 200) + '...');
 
     // Update agreement status to SIGNED and save the snapshot
     const updatedAgreement = await prisma.agreement.update({
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
 async function sendSignedAgreementNotification(agreement: any, clientIP: string, request: NextRequest) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('SMTP not configured, skipping notification email');
+    devLog('SMTP not configured, skipping notification email');
     return;
   }
 
@@ -320,7 +321,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
   try {
     await transporter.verify();
     await transporter.sendMail(mailOptions);
-    console.log('Signed agreement notification sent successfully');
+    devLog('Signed agreement notification sent successfully');
   } catch (error) {
     console.error('Failed to send notification email:', error);
     throw error;
@@ -331,7 +332,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
 async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('SMTP not configured, skipping client thank you email');
+    devLog('SMTP not configured, skipping client thank you email');
     return;
   }
 
@@ -498,7 +499,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   try {
     await transporter.verify();
     await transporter.sendMail(mailOptions);
-    console.log('Client thank you email sent successfully to:', agreement.client.email);
+    devLog('Client thank you email sent successfully to:', agreement.client.email);
   } catch (error) {
     console.error('Failed to send client thank you email:', error);
     throw error;

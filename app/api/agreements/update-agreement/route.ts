@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 
 const agreementUpdateSchema = z.object({
@@ -10,10 +11,10 @@ const agreementUpdateSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Agreement update request body:', body);
+    devLog('Agreement update request body:', body);
     
     const validatedData = agreementUpdateSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
     const id = validatedData.id;
 
     // First get the agreement to find the template ID and check status
@@ -35,7 +36,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 });
     }
 
-    console.log('Found agreement, updating customHtmlContent');
+    devLog('Found agreement, updating customHtmlContent');
 
     // Update the agreement's custom content (not the template)
     const updatedAgreement = await prisma.agreement.update({
@@ -49,14 +50,14 @@ export async function PUT(request: NextRequest) {
       }
     });
 
-    console.log('Agreement customHtmlContent updated successfully');
+    devLog('Agreement customHtmlContent updated successfully');
 
     if (!updatedAgreement) {
       console.error('Agreement not found after update:', id);
       return NextResponse.json({ error: 'Agreement not found after update' }, { status: 404 });
     }
 
-    console.log('Agreement updated successfully:', updatedAgreement.id);
+    devLog('Agreement updated successfully:', updatedAgreement.id);
     return NextResponse.json(updatedAgreement);
   } catch (error: any) {
     console.error('Agreement update error details:', error);

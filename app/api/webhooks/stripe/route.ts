@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { devLog } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Log the event type for debugging
-  console.log(`Received Stripe webhook event: ${event.type}`);
+  devLog(`Received Stripe webhook event: ${event.type}`);
 
   try {
     // Handle invoice payment events
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true, message: 'No agreementId in metadata' });
       }
 
-      console.log(`Processing payment for agreement ${agreementId}, invoice type: ${invoiceType}`);
+      devLog(`Processing payment for agreement ${agreementId}, invoice type: ${invoiceType}`);
 
       // Find the agreement
       const agreement = await prisma.agreement.findUnique({
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
         data: updateData,
       });
 
-      console.log(`Updated agreement ${agreementId}: paymentStatus = ${newPaymentStatus}`);
+      devLog(`Updated agreement ${agreementId}: paymentStatus = ${newPaymentStatus}`);
 
       return NextResponse.json({
         received: true,
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle other event types (log but don't process)
-    console.log(`Unhandled event type: ${event.type}`);
+    devLog(`Unhandled event type: ${event.type}`);
     return NextResponse.json({ received: true, message: `Unhandled event type: ${event.type}` });
 
   } catch (error: any) {

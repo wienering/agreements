@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { devLog } from '@/lib/logger';
 
 interface AgreementData {
   id: string;
@@ -97,7 +98,7 @@ export default function ClientAgreementPage() {
   // Function to track agreement view
   const trackAgreementView = async () => {
     try {
-      console.log('🔍 Client: Calling track-view API with token:', token);
+      devLog('🔍 Client: Calling track-view API with token:', token);
       const response = await fetch('/api/agreements/track-view', {
         method: 'POST',
         headers: {
@@ -107,7 +108,7 @@ export default function ClientAgreementPage() {
       });
       
       const data = await response.json();
-      console.log('🔍 Client: Track-view API response:', data);
+      devLog('🔍 Client: Track-view API response:', data);
       
       if (!response.ok) {
         console.error('❌ Client: Track-view API failed:', data);
@@ -203,7 +204,7 @@ export default function ClientAgreementPage() {
         setAgreement(processedAgreement);
         
         // Track the agreement view
-        console.log('🔍 Client: About to call trackAgreementView()');
+        devLog('🔍 Client: About to call trackAgreementView()');
         trackAgreementView();
       } else {
         setVerificationError(data.error || 'Email verification failed');
@@ -453,7 +454,7 @@ export default function ClientAgreementPage() {
   };
 
   if (loading && !showEmailVerification) {
-    console.log('🔄 Showing loading screen - loading:', loading, 'showEmailVerification:', showEmailVerification);
+    devLog('🔄 Showing loading screen - loading:', loading, 'showEmailVerification:', showEmailVerification);
     return (
       <div style={{ 
         minHeight: '100vh', 

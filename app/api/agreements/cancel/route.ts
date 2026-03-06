@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
 async function sendCancellationEmail(agreement: any, reason: string, adminName: string, request: NextRequest) {
   // Check if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('SMTP not configured, skipping cancellation email');
+    devLog('SMTP not configured, skipping cancellation email');
     return;
   }
 
@@ -203,7 +204,7 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
   try {
     await transporter.verify();
     await transporter.sendMail(mailOptions);
-    console.log('Cancellation email sent successfully');
+    devLog('Cancellation email sent successfully');
   } catch (error) {
     console.error('Failed to send cancellation email:', error);
     throw error;

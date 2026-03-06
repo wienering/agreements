@@ -108,8 +108,7 @@ export default function AdminPreviewPage() {
     
     setIsDownloading(true);
     try {
-      // Try PDFKit endpoint first (most reliable)
-      let response = await fetch('/api/agreements/pdf-pdfkit', {
+      const response = await fetch('/api/agreements/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,34 +117,6 @@ export default function AdminPreviewPage() {
           token,
         }),
       });
-
-      // If PDFKit fails, try the manual PDF endpoint
-      if (!response.ok) {
-        console.log('PDFKit endpoint failed, trying manual PDF...');
-        response = await fetch('/api/agreements/pdf-js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token,
-          }),
-        });
-      }
-
-      // If manual PDF fails, try the original Puppeteer endpoint
-      if (!response.ok) {
-        console.log('Manual PDF endpoint failed, trying Puppeteer...');
-        response = await fetch('/api/agreements/pdf', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token,
-          }),
-        });
-      }
 
       if (response.ok) {
         const blob = await response.blob();

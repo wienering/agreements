@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
+import { devLog } from '@/lib/logger';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest) {
         )
       ]);
 
-      console.log('Email sent successfully:', info);
+      devLog('Email sent successfully:', info);
 
       return NextResponse.json({
         message: 'Agreement sent successfully',

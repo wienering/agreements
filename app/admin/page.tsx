@@ -239,38 +239,6 @@ export default function AdminHome() {
               alignItems: 'flex-start'
             }}>
               <div 
-                onClick={() => router.push('/admin/dashboard')}
-                style={{
-                  backgroundColor: cardBg,
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  backgroundColor: '#3b82f6',
-                  borderRadius: '6px'
-                }}></div>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Analytics</span>
-              </div>
-
-              <div 
                 onClick={() => router.push('/admin/clients')}
                 style={{
                   backgroundColor: cardBg,

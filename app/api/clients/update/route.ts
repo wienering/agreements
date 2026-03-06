@@ -1,6 +1,7 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { devLog } from '@/lib/logger';
 
 const clientUpdateSchema = z.object({
   id: z.string().min(1, 'Client ID is required'),
@@ -22,10 +23,10 @@ const clientUpdateSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Client update request body:', body);
+    devLog('Client update request body:', body);
     
     const validatedData = clientUpdateSchema.parse(body);
-    console.log('Validated data:', validatedData);
+    devLog('Validated data:', validatedData);
 
     // Check if this client has any signed agreements
     const signedAgreements = await prisma.agreement.findMany({
@@ -63,7 +64,7 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    console.log('Updated client:', updatedClient);
+    devLog('Updated client:', updatedClient);
     return NextResponse.json(updatedClient);
   } catch (error: any) {
     console.error('Client update error details:', error);

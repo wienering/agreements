@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { processHtmlContent } from '../portal/shared/agreement-utils';
 
 export async function POST(request: NextRequest) {
@@ -7,8 +8,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { regenerateAll = false, onlyWithEvents = false } = body;
 
-    console.log('🔍 Starting snapshot backfill...');
-    console.log(`Options: regenerateAll=${regenerateAll}, onlyWithEvents=${onlyWithEvents}`);
+    devLog('🔍 Starting snapshot backfill...');
+    devLog(`Options: regenerateAll=${regenerateAll}, onlyWithEvents=${onlyWithEvents}`);
 
     // Find all signed agreements
     const signedAgreements = await prisma.agreement.findMany({
@@ -22,24 +23,24 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    console.log(`📋 Found ${signedAgreements.length} signed agreements`);
+    devLog(`📋 Found ${signedAgreements.length} signed agreements`);
 
     // Filter agreements that need snapshots
     let agreementsNeedingSnapshots;
     if (regenerateAll) {
       // Regenerate all signed agreements
       agreementsNeedingSnapshots = signedAgreements;
-      console.log(`🔄 Regenerating all ${agreementsNeedingSnapshots.length} signed agreements`);
+      devLog(`🔄 Regenerating all ${agreementsNeedingSnapshots.length} signed agreements`);
     } else if (onlyWithEvents) {
       // Only regenerate agreements that have events linked
       agreementsNeedingSnapshots = signedAgreements.filter(a => a.eventId && a.event);
-      console.log(`🔄 Regenerating ${agreementsNeedingSnapshots.length} agreements with events`);
+      devLog(`🔄 Regenerating ${agreementsNeedingSnapshots.length} agreements with events`);
     } else {
       // Only those without snapshots (original behavior)
       agreementsNeedingSnapshots = signedAgreements.filter(
         a => !a.mergedHtml || a.mergedHtml.trim().length === 0
       );
-      console.log(`⚠️ ${agreementsNeedingSnapshots.length} need snapshots`);
+      devLog(`⚠️ ${agreementsNeedingSnapshots.length} need snapshots`);
     }
 
     if (agreementsNeedingSnapshots.length === 0) {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     for (const agreement of agreementsNeedingSnapshots) {
       try {
         const hasEvent = agreement.eventId && agreement.event;
-        console.log(`Processing agreement ${agreement.id}... ${hasEvent ? '(has event)' : '(no event)'}`);
+        devLog(`Processing agreement ${agreement.id}... ${hasEvent ? '(has event)' : '(no event)'}`);
         
         // Create the snapshot using the updated logic with event data
         const snapshot = processHtmlContent(
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
           success: true
         });
         
-        console.log(`✅ Saved snapshot for ${agreement.id}`);
+        devLog(`✅ Saved snapshot for ${agreement.id}`);
       } catch (error: any) {
         console.error(`❌ Error processing ${agreement.id}:`, error);
         results.push({

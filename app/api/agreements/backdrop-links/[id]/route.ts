@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 
 const updateBackdropLinkSchema = z.object({
@@ -52,7 +53,7 @@ export async function PUT(
       data: updateData
     });
 
-    console.log('Updated backdrop link:', updatedLink.id);
+    devLog('Updated backdrop link:', updatedLink.id);
     return NextResponse.json({
       success: true,
       backdropLink: updatedLink
@@ -108,7 +109,7 @@ export async function DELETE(
       where: { id }
     });
 
-    console.log('Deleted backdrop link:', id);
+    devLog('Deleted backdrop link:', id);
     return NextResponse.json({
       success: true,
       message: 'Backdrop link deleted successfully'
