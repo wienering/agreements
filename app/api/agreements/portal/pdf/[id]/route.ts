@@ -115,7 +115,8 @@ export async function GET(
       include: {
         client: true,
         template: true,
-        signature: true
+        signature: true,
+        event: true
       }
     });
 
@@ -126,24 +127,33 @@ export async function GET(
       );
     }
 
-    // Process HTML content
-    const processHtmlContent = (html: string, client: any, agreementId: string) => {
+    // Process HTML content (use event when available, else client deprecated fields)
+    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
       let processedHtml = html;
-      
+      const eventDate = event ? event.eventDate : client.eventDate;
+      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
+      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
+      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
+      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
+      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
+      const packagePrice = event ? event.packagePrice : client.packagePrice;
+      const address = event ? (event.eventLocation ?? '') : (client.address || '');
+      const notes = event ? (event.notes ?? '') : (client.notes || '');
+
       processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
       processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
       processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
       processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, client.address || '');
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
+      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
+      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
+      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
       
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${Number(client.packagePrice).toFixed(2)}` : '');
+      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
+      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
       
       processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
       processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
@@ -161,7 +171,7 @@ export async function GET(
     if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
       processedHtml = agreement.mergedHtml;
     } else {
-      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id);
+      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
     }
 
     // Generate PDF

@@ -130,7 +130,8 @@ export async function POST(request: NextRequest) {
       include: {
         client: true,
         template: true,
-        lead: true
+        lead: true,
+        event: true
       }
     });
 
@@ -427,10 +428,10 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
           
           <div class="agreement-details">
             <h3>Your Agreement Details:</h3>
-            <p><strong>Event Type:</strong> ${agreement.client.eventType || 'To be confirmed'}</p>
-            <p><strong>Event Date:</strong> ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'To be confirmed'}</p>
-            <p><strong>Package:</strong> ${agreement.client.eventPackage || 'Standard Package'}</p>
-            ${agreement.client.packagePrice ? `<p><strong>Investment:</strong> $${Number(agreement.client.packagePrice).toFixed(2)}</p>` : ''}
+            <p><strong>Event Type:</strong> ${(agreement.event?.eventType ?? agreement.client.eventType) || 'To be confirmed'}</p>
+            <p><strong>Event Date:</strong> ${(agreement.event?.eventDate ?? agreement.client.eventDate) ? new Date(agreement.event?.eventDate ?? agreement.client.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'To be confirmed'}</p>
+            <p><strong>Package:</strong> ${(agreement.event?.eventPackage ?? agreement.client.eventPackage) || 'Standard Package'}</p>
+            ${(agreement.event?.packagePrice ?? agreement.client.packagePrice) ? `<p><strong>Investment:</strong> $${Number(agreement.event?.packagePrice ?? agreement.client.packagePrice).toFixed(2)}</p>` : ''}
             <p><strong>Agreement ID:</strong> ${agreement.id}</p>
             <p><strong>Signed On:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
           </div>

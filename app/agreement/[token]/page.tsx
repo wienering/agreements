@@ -1011,7 +1011,7 @@ export default function ClientAgreementPage() {
             </div>
             
             {/* Event Information */}
-            {(agreement.client.eventDate || agreement.client.eventType || agreement.client.eventLocation) && (
+            {((agreement.event?.eventDate ?? agreement.client.eventDate) || (agreement.event?.eventType ?? agreement.client.eventType) || (agreement.event?.eventLocation ?? agreement.client.eventLocation)) && (
               <div style={{
                 padding: '12px 16px',
                 backgroundColor: isDark ? '#0f172a' : '#f8fafc',
@@ -1029,14 +1029,14 @@ export default function ClientAgreementPage() {
                 }}>
                   EVENT
                 </p>
-                {agreement.client.eventDate && (
+                {(agreement.event?.eventDate ?? agreement.client.eventDate) && (
                   <p style={{
                     margin: '0 0 4px 0',
                     fontSize: '14px',
                     color: isDark ? '#f1f5f9' : '#1e293b',
                     fontWeight: '600'
                   }}>
-                    📅 {new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { 
+                    📅 {new Date(agreement.event?.eventDate ?? agreement.client.eventDate!).toLocaleDateString('en-CA', { 
                       timeZone: 'America/Toronto',
                       weekday: 'short',
                       year: 'numeric',
@@ -1045,51 +1045,51 @@ export default function ClientAgreementPage() {
                     })}
                   </p>
                 )}
-                {agreement.client.eventType && (
+                {(agreement.event?.eventType ?? agreement.client.eventType) && (
                   <p style={{
                     margin: '0 0 4px 0',
                     fontSize: '12px',
                     color: isDark ? '#94a3b8' : '#64748b',
                     fontWeight: '500'
                   }}>
-                    🎉 {agreement.client.eventType}
+                    🎉 {agreement.event?.eventType ?? agreement.client.eventType}
                   </p>
                 )}
-                {agreement.client.eventLocation && (
+                {(agreement.event?.eventLocation ?? agreement.client.eventLocation) && (
                   <p style={{
                     margin: '0 0 4px 0',
                     fontSize: '12px',
                     color: isDark ? '#94a3b8' : '#64748b',
                     fontWeight: '500'
                   }}>
-                    📍 {agreement.client.eventLocation}
+                    📍 {agreement.event?.eventLocation ?? agreement.client.eventLocation}
                   </p>
                 )}
-                {agreement.client.eventStartTime && (
+                {(agreement.event?.eventStartTime ?? agreement.client.eventStartTime) && (
                   <p style={{
                     margin: '0 0 4px 0',
                     fontSize: '12px',
                     color: isDark ? '#94a3b8' : '#64748b',
                     fontWeight: '500'
                   }}>
-                    ⏰ {agreement.client.eventStartTime}
+                    ⏰ {agreement.event?.eventStartTime ?? agreement.client.eventStartTime}
                   </p>
                 )}
-                {agreement.client.eventDuration && (
+                {(agreement.event?.eventDuration ?? agreement.client.eventDuration) && (
                   <p style={{
                     margin: '0',
                     fontSize: '12px',
                     color: isDark ? '#94a3b8' : '#64748b',
                     fontWeight: '500'
                   }}>
-                    ⏱️ {agreement.client.eventDuration}
+                    ⏱️ {agreement.event?.eventDuration ?? agreement.client.eventDuration}
                   </p>
                 )}
               </div>
             )}
             
             {/* Package Information */}
-            {agreement.client.eventPackage && (
+            {(agreement.event?.eventPackage ?? agreement.client.eventPackage) && (
               <div style={{
                 padding: '12px 16px',
                 backgroundColor: isDark ? '#0f172a' : '#f8fafc',
@@ -1113,7 +1113,7 @@ export default function ClientAgreementPage() {
                   color: isDark ? '#f1f5f9' : '#1e293b',
                   fontWeight: '600'
                 }}>
-                  📦 {agreement.client.eventPackage}
+                  📦 {agreement.event?.eventPackage ?? agreement.client.eventPackage}
                 </p>
               </div>
             )}

@@ -19,6 +19,13 @@ interface AgreementData {
     packagePrice: number | null;
     notes: string | null;
   };
+  event?: {
+    eventDate?: string | null;
+    eventType?: string | null;
+    eventLocation?: string | null;
+    eventPackage?: string | null;
+    packagePrice?: number | string | null;
+  } | null;
   template: {
     title: string;
     htmlContent: string;
@@ -418,14 +425,23 @@ export default function ThankYouPage() {
                   color: isDark ? '#f1f5f9' : '#1e293b',
                   fontWeight: '500'
                 }}>
-                  {agreement.client.eventType || 'Not specified'}
+                  {(agreement.event?.eventType ?? agreement.client.eventType) || 'Not specified'}
                 </p>
+                {((agreement.event?.eventDate ?? agreement.client.eventDate)) && (
+                  <p style={{
+                    margin: '0 0 4px 0',
+                    fontSize: '14px',
+                    color: isDark ? '#94a3b8' : '#64748b'
+                  }}>
+                    {new Date(agreement.event?.eventDate ?? agreement.client.eventDate!).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                  </p>
+                )}
                 <p style={{
                   margin: '0',
                   fontSize: '14px',
                   color: isDark ? '#94a3b8' : '#64748b'
                 }}>
-                  {agreement.client.eventLocation || 'Location TBD'}
+                  {(agreement.event?.eventLocation ?? agreement.client.eventLocation) || 'Location TBD'}
                 </p>
               </div>
               
@@ -446,15 +462,17 @@ export default function ThankYouPage() {
                   color: isDark ? '#f1f5f9' : '#1e293b',
                   fontWeight: '500'
                 }}>
-                  {agreement.client.eventPackage || 'Standard Package'}
+                  {(agreement.event?.eventPackage ?? agreement.client.eventPackage) || 'Standard Package'}
                 </p>
-                {agreement.client.packagePrice && (
+                {(agreement.event?.packagePrice ?? agreement.client.packagePrice) && (
                   <p style={{
                     margin: '0',
                     fontSize: '14px',
                     color: isDark ? '#94a3b8' : '#64748b'
                   }}>
-                    ${typeof agreement.client.packagePrice === 'number' ? agreement.client.packagePrice.toFixed(2) : agreement.client.packagePrice}
+                    ${typeof (agreement.event?.packagePrice ?? agreement.client.packagePrice) === 'number' 
+                      ? Number(agreement.event?.packagePrice ?? agreement.client.packagePrice).toFixed(2) 
+                      : String(agreement.event?.packagePrice ?? agreement.client.packagePrice)}
                   </p>
                 )}
               </div>
