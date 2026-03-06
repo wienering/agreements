@@ -199,7 +199,7 @@ export default function LeadsPage() {
       lastName: lead.lastName,
       email: lead.email,
       phone: lead.phone || '',
-      eventDate: lead.eventDate ? new Date(lead.eventDate).toISOString().split('T')[0] : '',
+      eventDate: lead.eventDate ? toDateOnly(lead.eventDate) : '',
       eventType: lead.eventType || '',
       eventLocation: lead.eventLocation || '',
       quotePackageHours: lead.quotePackageHours != null ? String(lead.quotePackageHours) : '',
@@ -304,12 +304,15 @@ export default function LeadsPage() {
   const formatDate = (d: string | undefined) =>
     d ? new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '-';
 
+  const toDateOnly = (d: string) =>
+    new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+
   const getQuoteUrl = (lead: Lead) => {
     const params = new URLSearchParams();
     params.set('name', `${lead.firstName} ${lead.lastName}`.trim());
     params.set('email', lead.email);
     if (lead.phone) params.set('phone', lead.phone);
-    if (lead.eventDate) params.set('eventDate', new Date(lead.eventDate).toISOString().split('T')[0]);
+    if (lead.eventDate) params.set('eventDate', toDateOnly(lead.eventDate));
     return `/admin/quotes?${params.toString()}`;
   };
 
