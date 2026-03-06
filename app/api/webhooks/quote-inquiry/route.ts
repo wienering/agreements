@@ -32,10 +32,13 @@ export async function POST(request: NextRequest) {
     const lastName = nameParts.slice(1).join(' ') || '';
 
     // Parse eventDate - may be "December 25, 2025" or "2025-12-25"
+    // Use noon UTC so the calendar date displays correctly in America/Toronto and other timezones
     let parsedEventDate: Date | null = null;
     if (eventDate) {
       const d = new Date(eventDate);
-      if (!isNaN(d.getTime())) parsedEventDate = d;
+      if (!isNaN(d.getTime())) {
+        parsedEventDate = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0));
+      }
     }
 
     // Upsert client by email
