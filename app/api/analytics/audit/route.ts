@@ -115,7 +115,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch audit data' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

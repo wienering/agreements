@@ -205,7 +205,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch warning data' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -60,7 +60,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch retention data' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
