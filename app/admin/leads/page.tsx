@@ -399,7 +399,7 @@ export default function LeadsPage() {
                         type="date"
                         value={nextFollowUp}
                         onChange={(e) => setNextFollowUp(e.target.value)}
-                        style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}` }}
+                        style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                       />
                       <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                         Save
@@ -486,7 +486,7 @@ export default function LeadsPage() {
                               type="date"
                               value={nextFollowUp}
                               onChange={(e) => setNextFollowUp(e.target.value)}
-                              style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}` }}
+                              style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                             />
                             <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                               Save
@@ -674,7 +674,7 @@ export default function LeadsPage() {
                       type="date"
                       value={newLead.eventDate}
                       onChange={(e) => setNewLead({ ...newLead, eventDate: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                     />
                   </div>
                   <div>
@@ -836,7 +836,7 @@ export default function LeadsPage() {
                       type="date"
                       value={editLeadForm.eventDate}
                       onChange={(e) => setEditLeadForm({ ...editLeadForm, eventDate: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                     />
                   </div>
                   <div>
