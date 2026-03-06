@@ -140,6 +140,23 @@ export default function LeadsPage() {
     }
   };
 
+  const handleDeleteLead = async (lead: Lead) => {
+    if (!confirm(`Delete lead ${lead.firstName} ${lead.lastName}? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/leads/${lead.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchLeads();
+        fetchFollowUp();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete lead');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to delete lead');
+    }
+  };
+
   const handleCreateAgreement = async (lead: Lead, templateId: string) => {
     try {
       const res = await fetch(`/api/leads/${lead.id}/create-agreement`, {
@@ -391,6 +408,9 @@ export default function LeadsPage() {
                                 View agreement
                               </Link>
                             )}
+                            <button onClick={() => handleDeleteLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                              Delete
+                            </button>
                           </>
                         )}
                       </td>

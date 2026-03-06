@@ -105,3 +105,34 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const lead = await prisma.lead.findUnique({
+      where: { id },
+    });
+
+    if (!lead) {
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    }
+
+    await prisma.lead.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: 'Lead deleted' });
+  } catch (error) {
+    console.error('Error deleting lead:', error);
+    return NextResponse.json({ error: 'Failed to delete lead' }, { status: 500 });
+  }
+}
