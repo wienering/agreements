@@ -1,19 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jsPDF from 'jspdf';
 
+type NormalizedPackage =
+  | { kind: 'standard'; hours: number; price: number }
+  | { kind: 'custom'; title: string; description: string; price: number };
+
+function normalizePackage(raw: unknown): NormalizedPackage | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const p = raw as Record<string, unknown>;
+  const price = typeof p.price === 'number' ? p.price : parseFloat(String(p.price));
+  if (Number.isNaN(price)) return null;
+
+  if (p.kind === 'custom') {
+    const title = typeof p.title === 'string' ? p.title.trim() : '';
+    if (!title) return null;
+    const description = typeof p.description === 'string' ? p.description : '';
+    return { kind: 'custom', title, description: description.trim(), price };
+  }
+
+  const hours = typeof p.hours === 'number' ? p.hours : parseInt(String(p.hours), 10);
+  if (!Number.isFinite(hours) || hours <= 0) return null;
+  return { kind: 'standard', hours, price };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const quoteData = await request.json();
 
+    const packageInfo: NormalizedPackage | null = normalizePackage(quoteData.package);
+
     // Validate required fields
-    if (!quoteData.contactInfo || !quoteData.package || !quoteData.total) {
+    if (!quoteData.contactInfo || !packageInfo || quoteData.total === undefined || quoteData.total === null) {
       return NextResponse.json(
         { error: 'Missing required quote data' },
         { status: 400 }
       );
     }
 
-    const { contactInfo, package: packageInfo, addons, discount, subtotal, total } = quoteData;
+    const { contactInfo, addons, discount, subtotal, total } = quoteData;
 
     // Create PDF using jsPDF
     const doc = new jsPDF('p', 'mm', 'a4');
@@ -185,21 +209,51 @@ export async function POST(request: NextRequest) {
     doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.2);
 
-    // Base package row
+    // Base package row (variable height for custom description)
+    const descMaxW = descColWidth - 10;
+    const lineGap = 4.5;
     const rowHeight = 8;
-    
-    // Draw text (all on white background)
+    let baseRowHeight = rowHeight;
+
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.text(`${packageInfo.hours} Hour Photo Booth Package`, margin + 5, yPosition + 5);
-    doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, yPosition + 5, { align: 'center' });
-    doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, yPosition + 5, { align: 'center' });
-    doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, yPosition + 5, { align: 'center' });
+    let priceY = yPosition + 5;
+
+    if (packageInfo.kind === 'standard') {
+      doc.text(`${packageInfo.hours} Hour Photo Booth Package`, margin + 5, yPosition + 5);
+    } else {
+      let lineY = yPosition + 5;
+      let lineCount = 0;
+      doc.setFont('helvetica', 'bold');
+      const titleLines = doc.splitTextToSize(packageInfo.title, descMaxW);
+      titleLines.forEach((line: string) => {
+        doc.text(line, margin + 5, lineY);
+        lineY += lineGap;
+        lineCount += 1;
+      });
+      doc.setFont('helvetica', 'normal');
+      if (packageInfo.description?.trim()) {
+        doc.setFontSize(8);
+        const bodyLines = doc.splitTextToSize(packageInfo.description.trim(), descMaxW);
+        bodyLines.forEach((line: string) => {
+          doc.text(line, margin + 5, lineY);
+          lineY += lineGap - 0.5;
+          lineCount += 1;
+        });
+        doc.setFontSize(9);
+      }
+      baseRowHeight = Math.max(rowHeight, 4 + lineCount * lineGap);
+      priceY = yPosition + Math.min(5, baseRowHeight / 2);
+    }
+
+    doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth / 2, priceY, { align: 'center' });
+    doc.text('1', margin + descColWidth + priceColWidth + qtyColWidth / 2, priceY, { align: 'center' });
+    doc.text(`$${packageInfo.price.toFixed(2)}`, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth / 2, priceY, { align: 'center' });
     
-    doc.line(margin, yPosition + rowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + rowHeight);
-    yPosition += rowHeight + 2;
+    doc.line(margin, yPosition + baseRowHeight, margin + descColWidth + priceColWidth + qtyColWidth + totalColWidth, yPosition + baseRowHeight);
+    yPosition += baseRowHeight + 2;
 
     // Add-ons rows
-    if (addons?.unlimitedPrints) {
+    if (addons?.unlimitedPrints && packageInfo.kind === 'standard') {
       const isShortPackage = packageInfo.hours <= 3;
       const ratePerHour = isShortPackage ? 60 : 50;
       const unlimitedPrintsPrice = ratePerHour * packageInfo.hours;

@@ -11,10 +11,18 @@ interface ContactInfo {
   eventDate: string;
 }
 
-interface Package {
-  hours: number;
+/** Hour-based packages from pricing table */
+type StandardPackage = { kind: 'standard'; hours: number; price: number };
+
+/** Free-form package (multi-day, custom duration text, etc.) — no fixed hours */
+type CustomPackage = {
+  kind: 'custom';
+  title: string;
+  description: string;
   price: number;
-}
+};
+
+type SelectedPackage = StandardPackage | CustomPackage;
 
 interface Addons {
   unlimitedPrints: boolean;
@@ -76,7 +84,12 @@ export default function QuotesPage() {
     phone: '',
     eventDate: ''
   });
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<SelectedPackage | null>(null);
+  const [customPackageDraft, setCustomPackageDraft] = useState({
+    title: '',
+    description: '',
+    price: ''
+  });
   const [addons, setAddons] = useState<Addons>({
     unlimitedPrints: false,
     glamBooth: false,
@@ -200,17 +213,31 @@ export default function QuotesPage() {
     const finalPrice = overridePrice !== null && overridePrice !== undefined && overridePrice > 0 
       ? overridePrice 
       : defaultPrice;
-    setSelectedPackage({ hours, price: finalPrice });
+    setSelectedPackage({ kind: 'standard', hours, price: finalPrice });
+  };
+
+  const applyCustomPackage = () => {
+    const title = customPackageDraft.title.trim();
+    const price = parseFloat(customPackageDraft.price);
+    if (!title) return;
+    if (Number.isNaN(price) || price <= 0) return;
+    setSelectedPackage({
+      kind: 'custom',
+      title,
+      description: customPackageDraft.description.trim(),
+      price
+    });
+    setAddons((prev) => ({ ...prev, unlimitedPrints: false }));
   };
 
   const updatePackageOverride = (hours: number, value: string) => {
     const numValue = value === '' ? null : parseFloat(value);
     setPackageOverrides({ ...packageOverrides, [hours]: numValue });
     // If this package is currently selected, update its price
-    if (selectedPackage?.hours === hours) {
+    if (selectedPackage?.kind === 'standard' && selectedPackage.hours === hours) {
       const defaultPrice = pricing.packages[hours] || DEFAULT_PRICING.packages[hours];
       const finalPrice = numValue !== null && numValue > 0 ? numValue : defaultPrice;
-      setSelectedPackage({ hours, price: finalPrice });
+      setSelectedPackage({ kind: 'standard', hours, price: finalPrice });
     }
   };
 
@@ -244,6 +271,9 @@ export default function QuotesPage() {
   };
 
   const toggleAddon = (addonName: keyof Addons, value: boolean | number) => {
+    if (addonName === 'unlimitedPrints' && selectedPackage?.kind === 'custom') {
+      return;
+    }
     if (addonName === 'waitingTime') {
       setAddons({
         ...addons,
@@ -259,7 +289,7 @@ export default function QuotesPage() {
   };
 
   const calculateUnlimitedPrintsPrice = () => {
-    if (!selectedPackage || !addons.unlimitedPrints) return 0;
+    if (!selectedPackage || selectedPackage.kind !== 'standard' || !addons.unlimitedPrints) return 0;
     const isShortPackage = selectedPackage.hours <= 3;
     const ratePerHour = isShortPackage ? pricing.unlimitedPrints.short : pricing.unlimitedPrints.long;
     return ratePerHour * selectedPackage.hours;
@@ -315,7 +345,7 @@ export default function QuotesPage() {
             email: contactInfo.email,
             phone: contactInfo.phone || undefined,
             eventDate: contactInfo.eventDate || undefined,
-            quotePackageHours: selectedPackage?.hours,
+            quotePackageHours: selectedPackage?.kind === 'standard' ? selectedPackage.hours : undefined,
             quoteTotal: calculateTotal(),
           }),
         });
@@ -360,6 +390,7 @@ export default function QuotesPage() {
       eventDate: ''
     });
     setSelectedPackage(null);
+    setCustomPackageDraft({ title: '', description: '', price: '' });
     setAddons({
       unlimitedPrints: false,
       glamBooth: false,
@@ -867,8 +898,8 @@ export default function QuotesPage() {
                         style={{
                           padding: '20px',
                           borderRadius: '8px',
-                          border: `2px solid ${selectedPackage?.hours === hours ? accentColor : borderColor}`,
-                          backgroundColor: selectedPackage?.hours === hours 
+                          border: `2px solid ${selectedPackage?.kind === 'standard' && selectedPackage.hours === hours ? accentColor : borderColor}`,
+                          backgroundColor: selectedPackage?.kind === 'standard' && selectedPackage.hours === hours
                             ? (isDark ? '#1e3a8a' : '#eff6ff') 
                             : (isDark ? '#0f172a' : '#ffffff'),
                           cursor: 'pointer',
@@ -912,6 +943,140 @@ export default function QuotesPage() {
 
             <div style={{ marginBottom: '32px' }}>
               <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+                Custom package
+              </h3>
+              <p style={{ margin: '0 0 16px 0', color: mutedText, fontSize: '14px' }}>
+                Set your own title, optional description, and price (e.g. multi-day or custom duration). No fixed hours.
+              </p>
+              <div
+                style={{
+                  padding: '20px',
+                  borderRadius: '8px',
+                  border: `2px solid ${selectedPackage?.kind === 'custom' ? accentColor : borderColor}`,
+                  backgroundColor:
+                    selectedPackage?.kind === 'custom'
+                      ? isDark
+                        ? '#1e3a8a'
+                        : '#eff6ff'
+                      : isDark
+                        ? '#0f172a'
+                        : '#ffffff',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px'
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: textColor
+                    }}
+                  >
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2-day wedding package"
+                    value={customPackageDraft.title}
+                    onChange={(e) => setCustomPackageDraft({ ...customPackageDraft, title: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                      color: textColor,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: textColor
+                    }}
+                  >
+                    Description (optional)
+                  </label>
+                  <textarea
+                    placeholder="What is included, schedule, or duration details..."
+                    value={customPackageDraft.description}
+                    onChange={(e) => setCustomPackageDraft({ ...customPackageDraft, description: e.target.value })}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                      color: textColor,
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: '1', minWidth: '140px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        marginBottom: '6px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: textColor
+                      }}
+                    >
+                      Price ($)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={customPackageDraft.price}
+                      onChange={(e) => setCustomPackageDraft({ ...customPackageDraft, price: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: `1px solid ${borderColor}`,
+                        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                        color: textColor,
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={applyCustomPackage}
+                    style={{
+                      padding: '12px 20px',
+                      backgroundColor: accentColor,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Use custom package
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
                 Add-ons
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -923,19 +1088,28 @@ export default function QuotesPage() {
                   borderRadius: '8px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-                  cursor: 'pointer'
+                  cursor: selectedPackage?.kind === 'custom' ? 'not-allowed' : 'pointer',
+                  opacity: selectedPackage?.kind === 'custom' ? 0.65 : 1
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <input
-                      type="checkbox"
-                      checked={addons.unlimitedPrints}
-                      onChange={(e) => toggleAddon('unlimitedPrints', e.target.checked)}
-                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                    />
-                    <span style={{ color: textColor, fontWeight: '500' }}>Unlimited Prints</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <input
+                        type="checkbox"
+                        checked={addons.unlimitedPrints && selectedPackage?.kind !== 'custom'}
+                        disabled={selectedPackage?.kind === 'custom'}
+                        onChange={(e) => toggleAddon('unlimitedPrints', e.target.checked)}
+                        style={{ width: '20px', height: '20px', cursor: selectedPackage?.kind === 'custom' ? 'not-allowed' : 'pointer' }}
+                      />
+                      <span style={{ color: textColor, fontWeight: '500' }}>Unlimited Prints</span>
+                    </div>
+                    {selectedPackage?.kind === 'custom' && (
+                      <span style={{ color: mutedText, fontSize: '12px', marginLeft: '32px' }}>
+                        Uses package hours for pricing — choose a base package above, or skip this add-on for custom packages.
+                      </span>
+                    )}
                   </div>
                   <span style={{ color: accentColor, fontWeight: '600' }}>
-                    ${selectedPackage ? calculateUnlimitedPrintsPrice() : 0}
+                    ${selectedPackage && selectedPackage.kind === 'standard' ? calculateUnlimitedPrintsPrice() : 0}
                   </span>
                 </label>
 
@@ -1102,7 +1276,7 @@ export default function QuotesPage() {
                     ${selectedPackage ? selectedPackage.price.toLocaleString() : '0'}
                   </span>
                 </div>
-                {addons.unlimitedPrints && selectedPackage && (
+                {addons.unlimitedPrints && selectedPackage && selectedPackage.kind === 'standard' && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: mutedText }}>Unlimited Prints:</span>
                     <span style={{ color: textColor, fontWeight: '600' }}>
@@ -1245,16 +1419,27 @@ export default function QuotesPage() {
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {selectedPackage && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
                       <span style={{ color: textColor }}>
-                        <strong>{selectedPackage.hours} Hour Photo Booth Package</strong>
+                        {selectedPackage.kind === 'standard' ? (
+                          <strong>{selectedPackage.hours} Hour Photo Booth Package</strong>
+                        ) : (
+                          <>
+                            <strong>{selectedPackage.title}</strong>
+                            {selectedPackage.description && (
+                              <div style={{ marginTop: '8px', color: mutedText, fontSize: '14px', fontWeight: '400', whiteSpace: 'pre-wrap' }}>
+                                {selectedPackage.description}
+                              </div>
+                            )}
+                          </>
+                        )}
                       </span>
-                      <span style={{ color: textColor, fontWeight: '600' }}>
+                      <span style={{ color: textColor, fontWeight: '600', flexShrink: 0 }}>
                         ${selectedPackage.price.toLocaleString()}
                       </span>
                     </div>
                   )}
-                  {addons.unlimitedPrints && selectedPackage && (
+                  {addons.unlimitedPrints && selectedPackage && selectedPackage.kind === 'standard' && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: textColor }}><strong>Unlimited Prints</strong></span>
                       <span style={{ color: textColor, fontWeight: '600' }}>
