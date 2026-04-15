@@ -27,3 +27,9 @@ export const adminTheme = {
     accentOn: '#0a0f0c',
   },
 } as const;
+
+/** Page header only: "+ New …" / "+ Add …" (not inline row actions like + Add Event) */
+export const adminHeaderAddButton = {
+  bg: '#343f34',
+  hover: '#404c40',
+} as const;

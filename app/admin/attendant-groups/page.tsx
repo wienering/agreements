@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
+import { adminHeaderAddButton } from '../../lib/adminTheme';
 
 interface AttendantGroup {
   id: string;
@@ -201,7 +202,7 @@ export default function AttendantGroupsPage() {
           <button
             onClick={handleAdd}
             style={{
-              backgroundColor: '#4a9e72',
+              backgroundColor: adminHeaderAddButton.bg,
               color: 'white',
               border: 'none',
               padding: '12px 24px',
@@ -212,10 +213,10 @@ export default function AttendantGroupsPage() {
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#3d8560';
+              e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#4a9e72';
+              e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
             }}
           >
             + Add Attendant Group

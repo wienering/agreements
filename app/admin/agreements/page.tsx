@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import SearchableSelect from '../../components/SearchableSelect';
+import { adminHeaderAddButton } from '../../lib/adminTheme';
 
 interface Agreement {
   id: string;
@@ -1531,7 +1532,7 @@ const normalizePaymentStatus = (value?: string | null) => {
           <button
             onClick={() => setShowCreateForm(true)}
             style={{
-              backgroundColor: '#4a9e72',
+              backgroundColor: adminHeaderAddButton.bg,
               color: 'white',
               border: 'none',
               padding: isMobile ? '12px 20px' : '10px 20px',
@@ -1539,7 +1540,14 @@ const normalizePaymentStatus = (value?: string | null) => {
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: '500',
-              width: isMobile ? '100%' : 'auto'
+              width: isMobile ? '100%' : 'auto',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
             }}
             title="Create a new agreement"
           >

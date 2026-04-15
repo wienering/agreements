@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { adminHeaderAddButton } from '../../lib/adminTheme';
 
 const STAGES: { key: string; label: string }[] = [
   { key: 'QUOTE_REQUESTED', label: 'Quote Requested' },
@@ -333,13 +334,20 @@ export default function LeadsPage() {
               onClick={() => setShowAddLead(true)}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#4a9e72',
+                backgroundColor: adminHeaderAddButton.bg,
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontWeight: '600',
                 cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
               }}
             >
               + Add Lead
