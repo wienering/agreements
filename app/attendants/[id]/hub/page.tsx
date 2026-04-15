@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { UIcon } from '../../../components/UIcon';
 
 interface AttendantHubPageProps {
   params: Promise<{ id: string }>;
@@ -463,7 +464,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
                     }}
                   >
-                    📸
+                    <UIcon name="camera" style={{ fontSize: '24px', color: 'white' }} />
                   </div>
                   <div>
                     <h1
@@ -549,7 +550,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
                     }}
                   >
-                    📋
+                    <UIcon name="clipboard" style={{ fontSize: '24px', color: 'white' }} />
                   </div>
                 </div>
                 <p
@@ -602,7 +603,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
                     }}
                   >
-                    📅
+                    <UIcon name="calendar" style={{ fontSize: '24px', color: 'white' }} />
                   </div>
                 </div>
                 <p
@@ -655,7 +656,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
                     }}
                   >
-                    🖼️
+                    <UIcon name="camera" style={{ fontSize: '24px', color: 'white' }} />
                   </div>
                 </div>
                 {jobs.length > 0 ? (
@@ -775,7 +776,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           color: '#ffffff',
                         }}
                       >
-                        ✓ Backdrop Selected
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <UIcon name="check" style={{ fontSize: '12px' }} />
+                          Backdrop Selected
+                        </span>
                       </span>
                     )}
                   </div>
@@ -796,14 +800,14 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     
                     {nextUpcomingJob.eventLocation && (
                       <p style={{ margin: '0 0 8px 0', color: '#8f9a8f', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>📍</span>
+                        <UIcon name="marker" style={{ fontSize: '14px' }} />
                         <span>{nextUpcomingJob.eventLocation}</span>
                       </p>
                     )}
                     
                     {nextUpcomingJob.eventDate && (
                       <p style={{ margin: '0 0 16px 0', color: '#8f9a8f', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>📅</span>
+                        <UIcon name="calendar" style={{ fontSize: '14px' }} />
                         <span>{formatEventDate(nextUpcomingJob.eventDate)}</span>
                         {nextUpcomingJob.eventStartTime && <span style={{ marginLeft: '8px' }}>• {nextUpcomingJob.eventStartTime}</span>}
                       </p>
@@ -812,7 +816,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     {nextUpcomingJob.backdropName && (
                       <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #2d3530' }}>
                         <p style={{ margin: '0', color: '#60a5fa', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>🖼️</span>
+                          <UIcon name="camera" style={{ fontSize: '14px' }} />
                           <span>{nextUpcomingJob.backdropName}</span>
                         </p>
                       </div>
@@ -955,11 +959,13 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 >
                   <div
                     style={{
-                      fontSize: '64px',
                       marginBottom: '20px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      color: '#8f9a8f',
                     }}
                   >
-                    📭
+                    <UIcon name="inbox" style={{ fontSize: '64px' }} />
                   </div>
                   <h3
                     style={{
@@ -1059,7 +1065,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                                 color: '#ffffff',
                               }}
                             >
-                              ✓
+                              <UIcon name="check" style={{ fontSize: '10px', color: '#ffffff' }} />
                             </span>
                           )}
                         </div>
@@ -1081,7 +1087,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                             {job.eventLocation && (
                               <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <span style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }}>📍</span>
+                                <UIcon name="marker" style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }} />
                                 <span style={{ color: '#ffffff', fontSize: '13px', lineHeight: '1.4' }}>
                                   {job.eventLocation}
                                 </span>
@@ -1090,7 +1096,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
 
                             {job.eventDate && (
                               <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <span style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }}>📅</span>
+                                <UIcon name="calendar" style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }} />
                                 <span style={{ color: '#ffffff', fontSize: '13px', fontWeight: '500' }}>
                                   {formatEventDateShort(job.eventDate)}
                                   {job.eventStartTime && <span style={{ marginLeft: '6px', color: '#8f9a8f' }}>• {job.eventStartTime}</span>}
@@ -1100,7 +1106,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
 
                             {job.backdropName && (
                               <div style={{ display: 'flex', alignItems: 'start', gap: '8px', marginTop: '4px' }}>
-                                <span style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }}>🖼️</span>
+                                <UIcon name="camera" style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }} />
                                 <span style={{ color: '#60a5fa', fontSize: '13px', fontWeight: '500' }}>
                                   {job.backdropName}
                                 </span>
@@ -1166,7 +1172,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   fontWeight: '600',
                 }}
               >
-                📸
+                <UIcon name="camera" style={{ fontSize: '16px', color: 'white' }} />
               </div>
               <h3
                 style={{
@@ -1230,7 +1236,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               fontSize: '28px',
             }}
           >
-            ⚠️
+            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: '#ffffff' }} title="Error" />
           </div>
           <h1
             style={{

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Providers } from './providers'
+import '@flaticon/flaticon-uicons/css/regular/rounded.css'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })

@@ -1,5 +1,7 @@
 'use client';
 
+import { UIcon } from '../../components/UIcon';
+
 export default function Error({
   error,
   reset,
@@ -43,7 +45,7 @@ export default function Error({
             fontSize: '28px',
           }}
         >
-          ⚠️
+          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: '#ffffff' }} title="Error" />
         </div>
         <h1
           style={{

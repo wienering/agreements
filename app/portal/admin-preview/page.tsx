@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { UIcon } from '../../components/UIcon';
 
 interface Agreement {
   id: string;
@@ -232,7 +233,10 @@ function PortalAdminPreviewContent() {
       <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-200">🔍 Admin Preview Mode</h2>
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200">
+              <UIcon name="search" className="text-xl" />
+              Admin Preview Mode
+            </h2>
             <p className="text-sm text-amber-700 dark:text-amber-300">
               Viewing portal as: {data?.client?.email || 'N/A'}
             </p>
@@ -265,7 +269,9 @@ function PortalAdminPreviewContent() {
               className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="text-2xl">👤</div>
+                <div className="text-2xl text-slate-600 dark:text-slate-300">
+                  <UIcon name="user" className="text-2xl" />
+                </div>
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                     Event Overview
@@ -292,7 +298,10 @@ function PortalAdminPreviewContent() {
                   {/* Package Booked */}
                   {data.client.eventPackage && (
                     <div>
-                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📦 Package Booked</h3>
+                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <UIcon name="box" className="text-base" />
+                        Package Booked
+                      </h3>
                       <p className="text-lg font-semibold text-slate-900 dark:text-white">{data.client.eventPackage}</p>
                       {data.client.packagePrice && (
                         <p className="text-sm text-slate-600 dark:text-slate-400">${data.client.packagePrice.toFixed(2)}</p>
@@ -303,7 +312,10 @@ function PortalAdminPreviewContent() {
                   {/* Payment Status */}
                   {relevantAgreement?.paymentStatus && (
                     <div>
-                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">💳 Payment Status</h3>
+                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <UIcon name="credit-card" className="text-base" />
+                        Payment Status
+                      </h3>
                       <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
                         {relevantAgreement.paymentStatus}
                       </span>
@@ -322,11 +334,20 @@ function PortalAdminPreviewContent() {
 
                   {/* Contact Method */}
                   <div>
-                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📞 Contact Method</h3>
+                    <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <UIcon name="phone-call" className="text-base" />
+                      Contact Method
+                    </h3>
                     <div className="space-y-1">
-                      <p className="text-sm text-slate-900 dark:text-white">✉️ {data.client.email}</p>
+                      <p className="flex items-center gap-2 text-sm text-slate-900 dark:text-white">
+                        <UIcon name="envelope" className="text-sm shrink-0" />
+                        {data.client.email}
+                      </p>
                       {data.client.phone && (
-                        <p className="text-sm text-slate-900 dark:text-white">📱 {data.client.phone}</p>
+                        <p className="flex items-center gap-2 text-sm text-slate-900 dark:text-white">
+                          <UIcon name="smartphone" className="text-sm shrink-0" />
+                          {data.client.phone}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -334,7 +355,10 @@ function PortalAdminPreviewContent() {
                   {/* Event Location */}
                   {data.client.eventLocation && (
                     <div>
-                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">📍 Event Location</h3>
+                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <UIcon name="marker" className="text-base" />
+                        Event Location
+                      </h3>
                       <p className="text-sm text-slate-900 dark:text-white">{data.client.eventLocation}</p>
                       {data.client.eventType && (
                         <p className="text-xs text-slate-600 dark:text-slate-400">{data.client.eventType}</p>
@@ -346,7 +370,10 @@ function PortalAdminPreviewContent() {
                   {relevantAgreement?.nextAction && (
                     <div className="md:col-span-2 lg:col-span-3">
                       <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
-                        <h3 className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-2">⚡ Next Action</h3>
+                        <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-amber-900 dark:text-amber-200">
+                          <UIcon name="bolt" className="text-base" />
+                          Next Action
+                        </h3>
                         <p className="text-base font-semibold text-amber-900 dark:text-amber-100">{relevantAgreement.nextAction}</p>
                       </div>
                     </div>
@@ -406,7 +433,9 @@ function PortalAdminPreviewContent() {
           {/* Agreements List */}
           {data.agreements.length === 0 ? (
             <div className="rounded-lg border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-4xl mb-4">📋</div>
+              <div className="mb-4 flex justify-center text-4xl text-slate-400">
+                <UIcon name="clipboard" className="text-4xl" />
+              </div>
               <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
                 No Agreements Found
               </h3>
@@ -450,8 +479,9 @@ function PortalAdminPreviewContent() {
                           {/* Event Date - Prominently displayed right below title */}
                           {(agreement.event?.eventDate || data.client.eventDate) && (
                             <div className="flex items-center gap-2">
-                              <span className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
-                                📅 {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                              <span className="inline-flex items-center gap-2 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                                <UIcon name="calendar" className="text-base" />
+                                {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                               </span>
                             </div>
                           )}
@@ -460,28 +490,39 @@ function PortalAdminPreviewContent() {
                         {/* Event Name */}
                         {agreement.event?.eventName && (
                           <div className="mb-2">
-                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                              🎉 {agreement.event.eventName}
+                            <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                              <UIcon name="star" className="text-sm" />
+                              {agreement.event.eventName}
                             </span>
                           </div>
                         )}
 
                         {/* Activity Timeline */}
                         <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 mb-3">
-                          <span>📤 Sent: {formatDate(agreement.createdAt)}</span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <UIcon name="paper-plane" className="text-sm" />
+                            Sent: {formatDate(agreement.createdAt)}
+                          </span>
                           {agreement.firstViewedAt && (
-                            <span>• 👁️ Viewed: {formatDate(agreement.firstViewedAt)}</span>
+                            <span className="inline-flex items-center gap-1.5">
+                              • <UIcon name="eye" className="text-sm" />
+                              Viewed: {formatDate(agreement.firstViewedAt)}
+                            </span>
                           )}
                           {agreement.summary.signedAt && (
-                            <span>• ✅ Signed: {formatDate(agreement.summary.signedAt)}</span>
+                            <span className="inline-flex items-center gap-1.5">
+                              • <UIcon name="check" className="text-sm" />
+                              Signed: {formatDate(agreement.summary.signedAt)}
+                            </span>
                           )}
                         </div>
 
                         {/* Payment Status Badge */}
                         {agreement.paymentStatus && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
-                              💳 {agreement.paymentStatus}
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                              <UIcon name="credit-card" className="text-xs" />
+                              {agreement.paymentStatus}
                             </span>
                           </div>
                         )}
@@ -489,8 +530,9 @@ function PortalAdminPreviewContent() {
                         {/* Gallery Link */}
                         {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center text-sm text-emerald-600 dark:text-emerald-400">
-                              📸 Gallery Available
+                            <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
+                              <UIcon name="camera" className="text-sm" />
+                              Gallery Available
                             </span>
                           </div>
                         )}
@@ -522,7 +564,8 @@ function PortalAdminPreviewContent() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
                       >
-                        📄 View Agreement
+                        <UIcon name="file" className="text-xs" />
+                        View Agreement
                       </a>
                       
                       {agreement.summary.isSigned && (
@@ -532,7 +575,8 @@ function PortalAdminPreviewContent() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
-                          ✅ View Signed Version
+                          <UIcon name="check" className="text-xs" />
+                          View Signed Version
                         </a>
                       )}
 
@@ -543,7 +587,8 @@ function PortalAdminPreviewContent() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200 dark:hover:bg-blue-900/30"
                         >
-                          💳 Make Payment
+                          <UIcon name="credit-card" className="text-xs" />
+                          Make Payment
                         </a>
                       )}
 
@@ -554,7 +599,8 @@ function PortalAdminPreviewContent() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
-                          🧾 View Receipt
+                          <UIcon name="receipt" className="text-xs" />
+                          View Receipt
                         </a>
                       )}
 
@@ -564,7 +610,8 @@ function PortalAdminPreviewContent() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       >
-                        🎨 Choose Template
+                        <UIcon name="palette" className="text-xs" />
+                        Choose Template
                       </a>
                     </div>
                   </div>

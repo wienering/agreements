@@ -4,6 +4,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { UIcon } from '../../components/UIcon';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('agreements@photoboothguys.ca');
@@ -260,12 +261,16 @@ export default function AdminLogin() {
           {/* Features */}
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-2xl mb-2">🔐</div>
+              <div className="mb-2 flex justify-center text-slate-600 dark:text-admin-muted">
+                <UIcon name="lock" className="text-2xl" />
+              </div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Secure Access</h3>
               <p className="text-xs text-slate-600 dark:text-slate-300">Passwordless authentication</p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-2xl mb-2">⚡</div>
+              <div className="mb-2 flex justify-center text-slate-600 dark:text-admin-muted">
+                <UIcon name="bolt" className="text-2xl" />
+              </div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Quick Login</h3>
               <p className="text-xs text-slate-600 dark:text-slate-300">No passwords to remember</p>
             </div>

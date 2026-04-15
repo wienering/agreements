@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
+import { UIcon } from './UIcon';
 
 interface FileUploadProps {
   clientId: string;
@@ -177,10 +178,10 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const getFileIcon = (fileType: string): string => {
-    if (fileType.includes('zip')) return '📦';
-    if (fileType.includes('image')) return '🖼️';
-    return '📄';
+  const getFileIconName = (fileType: string): string => {
+    if (fileType.includes('zip')) return 'box';
+    if (fileType.includes('image')) return 'image';
+    return 'file';
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -283,7 +284,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
           style={{ display: 'none' }}
           disabled={isUploading}
         />
-                <div style={{ fontSize: isMobile ? '36px' : '48px', marginBottom: '12px' }}>📤</div>
+                <UIcon name="upload" style={{ fontSize: isMobile ? '36px' : '48px', marginBottom: '12px', color: '#64748b' }} />
         <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
           {isUploading ? 'Uploading...' : 'Drag and drop files here'}
         </div>
@@ -348,7 +349,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   borderRadius: '6px',
                 }}
               >
-                <div style={{ fontSize: '24px' }}>{getFileIcon(file.fileType)}</div>
+                <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '24px', color: '#1e293b' }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '14px', fontWeight: '500', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {file.fileName}

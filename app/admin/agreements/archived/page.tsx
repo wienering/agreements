@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../components/Toast';
+import { UIcon } from '../../../components/UIcon';
 
 interface Agreement {
   id: string;
@@ -239,7 +240,9 @@ export default function ArchivedAgreementsPage() {
             padding: '48px 24px',
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
+            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+              <UIcon name="spinner" className="animate-spin" style={{ fontSize: '24px', color: textColor }} />
+            </div>
             <p style={{ margin: '0', color: textColor }}>Loading archived agreements...</p>
           </div>
         ) : agreements.length === 0 ? (

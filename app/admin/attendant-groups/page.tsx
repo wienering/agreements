@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { UIcon } from '../../components/UIcon';
 
 interface AttendantGroup {
   id: string;
@@ -244,7 +245,9 @@ export default function AttendantGroupsPage() {
               textAlign: 'center', 
               color: mutedText 
             }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
+              <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center', color: mutedText }}>
+                <UIcon name="users" style={{ fontSize: '48px' }} />
+              </div>
               <p style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: textColor }}>
                 No attendant hubs yet
               </p>

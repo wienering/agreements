@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { UIcon } from '../../../components/UIcon';
 
 interface AgreementData {
   id: string;
@@ -213,10 +214,12 @@ export default function ThankYouPage() {
           maxWidth: '500px'
         }}>
           <div style={{
-            fontSize: '48px',
-            marginBottom: '16px'
+            marginBottom: '16px',
+            display: 'flex',
+            justifyContent: 'center',
+            color: '#f59e0b',
           }}>
-            ⚠️
+            <UIcon name="circle-exclamation" style={{ fontSize: '48px' }} title="Warning" />
           </div>
           <h1 style={{ 
             color: isDark ? '#ffffff' : '#1e293b', 
@@ -311,7 +314,7 @@ export default function ThankYouPage() {
               animation: 'checkmarkPulse 1s ease-in-out',
               boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)'
             }}>
-              ✓
+              <UIcon name="check" style={{ fontSize: '48px', color: 'white' }} title="Success" />
             </div>
             
             <h1 style={{
@@ -345,7 +348,7 @@ export default function ThankYouPage() {
               color: isDark ? '#ffffff' : '#1e293b',
               fontWeight: '600'
             }}>
-              <span>📧</span>
+              <UIcon name="envelope" style={{ flexShrink: 0 }} />
               A copy has been emailed to {agreement.client.email}
             </div>
           </div>
@@ -552,7 +555,12 @@ export default function ThankYouPage() {
                 }
               }}
             >
-              {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
+              {isDownloading ? (
+                <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
+              ) : (
+                <UIcon name="file-pdf" style={{ fontSize: '18px' }} />
+              )}{' '}
+              {isDownloading ? 'Downloading...' : 'Download PDF'}
             </button>
             
             <button
@@ -591,7 +599,12 @@ export default function ThankYouPage() {
                 }
               }}
             >
-              {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
+              {isEmailing ? (
+                <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
+              ) : (
+                <UIcon name="envelope" style={{ fontSize: '18px' }} />
+              )}{' '}
+              {isEmailing ? 'Sending...' : 'Email Copy'}
             </button>
           </div>
 
@@ -630,7 +643,10 @@ export default function ThankYouPage() {
                   fontWeight: '600',
                   color: isDark ? '#ffffff' : '#1e293b'
                 }}>
-                  🔗 Access Your Client Portal
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <UIcon name="link" />
+                    Access Your Client Portal
+                  </span>
                 </h3>
                 <p style={{
                   margin: '0 0 16px 0',
@@ -682,7 +698,10 @@ export default function ThankYouPage() {
                   fontWeight: '600',
                   color: isDark ? '#ffffff' : '#1e293b'
                 }}>
-                  📸 Choose Your Print Template
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <UIcon name="camera" />
+                    Choose Your Print Template
+                  </span>
                 </h3>
                 <p style={{
                   margin: '0 0 16px 0',
@@ -734,7 +753,10 @@ export default function ThankYouPage() {
                   fontWeight: '600',
                   color: isDark ? '#ffffff' : '#1e293b'
                 }}>
-                  📞 Contact Us
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <UIcon name="phone-call" />
+                    Contact Us
+                  </span>
                 </h3>
                 <p style={{
                   margin: '0 0 16px 0',
@@ -751,8 +773,14 @@ export default function ThankYouPage() {
                   fontSize: '14px',
                   color: isDark ? '#ffffff' : '#1e293b'
                 }}>
-                  <div>📧 info@photoboothguys.ca</div>
-                  <div>📞 647-378-5332</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <UIcon name="envelope" style={{ flexShrink: 0, opacity: 0.85 }} />
+                    info@photoboothguys.ca
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <UIcon name="phone-call" style={{ flexShrink: 0, opacity: 0.85 }} />
+                    647-378-5332
+                  </div>
                 </div>
               </div>
             </div>

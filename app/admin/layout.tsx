@@ -7,6 +7,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { adminTheme } from '../lib/adminTheme';
+import { UIcon } from '../components/UIcon';
 
 export default function AdminLayout({
   children,
@@ -35,15 +36,15 @@ export default function AdminLayout({
   }, []);
 
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: '📊', href: '/admin', tooltip: 'Dashboard overview and statistics' },
-    { id: 'clients', label: 'Clients', icon: '👥', href: '/admin/clients', tooltip: 'Manage client information' },
-    { id: 'import-events', label: 'Import Events', icon: '📥', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
-    { id: 'templates', label: 'Templates', icon: '📄', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
-    { id: 'quotes', label: 'Quotes', icon: '💰', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
-    { id: 'leads', label: 'Leads', icon: '🎯', href: '/admin/leads', tooltip: 'Lead pipeline and follow-up tracking' },
-    { id: 'agreements', label: 'Agreements', icon: '📝', href: '/admin/agreements', tooltip: 'Manage client agreements' },
-    { id: 'backdrop-links', label: 'Backdrop Links', icon: '🖼️', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
-    { id: 'attendant-groups', label: 'Attendant Hubs', icon: '👥', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
+    { id: 'overview', label: 'Overview', iconName: 'chart-line-up', href: '/admin', tooltip: 'Dashboard overview and statistics' },
+    { id: 'clients', label: 'Clients', iconName: 'users', href: '/admin/clients', tooltip: 'Manage client information' },
+    { id: 'import-events', label: 'Import Events', iconName: 'file-import', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
+    { id: 'templates', label: 'Templates', iconName: 'document', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
+    { id: 'quotes', label: 'Quotes', iconName: 'dollar', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
+    { id: 'leads', label: 'Leads', iconName: 'target', href: '/admin/leads', tooltip: 'Lead pipeline and follow-up tracking' },
+    { id: 'agreements', label: 'Agreements', iconName: 'file-signature', href: '/admin/agreements', tooltip: 'Manage client agreements' },
+    { id: 'backdrop-links', label: 'Backdrop Links', iconName: 'picture', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
+    { id: 'attendant-groups', label: 'Attendant Hubs', iconName: 'users-alt', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
   ];
 
   // Show loading state
@@ -58,7 +59,7 @@ export default function AdminLayout({
         color: isDark ? adminTheme.dark.text : '#0f172a'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
+          <UIcon name="spinner" className="animate-spin text-2xl text-[#8f9a8f]" style={{ marginBottom: '16px', display: 'inline-flex' }} />
           <p style={{ fontSize: '16px' }}>Loading...</p>
         </div>
       </div>
@@ -174,7 +175,7 @@ export default function AdminLayout({
                   }
                 }}
               >
-                <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                <UIcon name={item.iconName} style={{ fontSize: '20px', width: '1.25em', flexShrink: 0 }} />
                 {item.label}
               </Link>
             );
@@ -215,7 +216,7 @@ export default function AdminLayout({
                 e.currentTarget.style.backgroundColor = navHoverBg;
               }}
             >
-              <span>{isDark ? '☀️' : '🌙'}</span>
+              <UIcon name={isDark ? 'sun' : 'moon'} style={{ fontSize: '16px' }} />
               {isDark ? 'Light Mode' : 'Dark Mode'}
             </button>
           </div>
@@ -247,10 +248,20 @@ export default function AdminLayout({
                 e.currentTarget.style.backgroundColor = '#dc2626';
               }}
             >
-              <span>🚪</span>
+              <UIcon name="sign-out" style={{ fontSize: '16px' }} />
               Logout
             </button>
           </div>
+          <p style={{ margin: '12px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.35 }}>
+            <a
+              href="https://www.flaticon.com/uicons"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'underline' }}
+            >
+              UIcons by Flaticon
+            </a>
+          </p>
         </div>
       </div>
 

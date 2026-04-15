@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { UIcon } from '../../../components/UIcon';
 
 interface Agreement {
   id: string;
@@ -398,7 +399,10 @@ function AgreementDetailContent() {
         <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-200">🔍 Admin Preview Mode</h2>
+              <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200">
+                <UIcon name="search" className="text-xl" />
+                Admin Preview Mode
+              </h2>
               <p className="text-sm text-amber-700 dark:text-amber-300">
                 Viewing agreement as admin
               </p>
@@ -456,7 +460,8 @@ function AgreementDetailContent() {
             download
             className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
           >
-            📥 Download PDF
+            <UIcon name="file-download" className="text-base" />
+            Download PDF
           </a>
 
           {agreement.status === 'SIGNED' && (
@@ -466,7 +471,8 @@ function AgreementDetailContent() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              ✅ View Signed Version
+              <UIcon name="check" className="text-base" />
+              View Signed Version
             </a>
           )}
 
@@ -477,7 +483,8 @@ function AgreementDetailContent() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
             >
-              💳 Make Payment
+              <UIcon name="credit-card" className="text-base" />
+              Make Payment
             </a>
           )}
 
@@ -488,7 +495,8 @@ function AgreementDetailContent() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              🧾 View Receipt
+              <UIcon name="receipt" className="text-base" />
+              View Receipt
             </a>
           )}
 
@@ -498,7 +506,8 @@ function AgreementDetailContent() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
-            🎨 Choose Template
+            <UIcon name="palette" className="text-base" />
+            Choose Template
           </a>
 
           {agreement.backdropLink && (
@@ -508,7 +517,8 @@ function AgreementDetailContent() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              🖼️ Choose Your Backdrop
+              <UIcon name="camera" className="text-base" />
+              Choose Your Backdrop
             </a>
           )}
         </div>
@@ -518,7 +528,9 @@ function AgreementDetailContent() {
       {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
         <div className="mb-8 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-900/10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="text-3xl">📸</div>
+            <div className="text-3xl text-emerald-700 dark:text-emerald-300">
+              <UIcon name="camera" className="text-3xl" />
+            </div>
             <div>
               <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">
                 Your Event {agreement.galleryLinks && agreement.galleryLinks.length > 1 ? 'Galleries Are' : 'Gallery is'} Ready!
@@ -553,7 +565,7 @@ function AgreementDetailContent() {
         <div className="space-y-4">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-              <span className="text-lg">📤</span>
+              <UIcon name="paper-plane" className="text-lg" />
             </div>
             <div className="flex-1">
               <p className="font-medium text-slate-900 dark:text-white">Agreement Sent</p>
@@ -564,7 +576,7 @@ function AgreementDetailContent() {
           {agreement.firstViewedAt && (
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                <span className="text-lg">👁️</span>
+                <UIcon name="eye" className="text-lg" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">First Viewed</p>
@@ -579,7 +591,7 @@ function AgreementDetailContent() {
           {agreement.signedAt && (
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
-                <span className="text-lg">✅</span>
+                <UIcon name="check" className="text-lg" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">Agreement Signed</p>
@@ -592,7 +604,7 @@ function AgreementDetailContent() {
           {agreement.paymentStatus && (
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                <span className="text-lg">💳</span>
+                <UIcon name="credit-card" className="text-lg" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white mb-2">Payment Status</p>
@@ -601,11 +613,13 @@ function AgreementDetailContent() {
                     color: '#d97706',
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)'
                   }}>
-                    💳 {agreement.paymentStatus}
+                    <UIcon name="credit-card" className="text-sm" />
+                    {agreement.paymentStatus}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
-                    💳 {agreement.paymentStatus}
+                    <UIcon name="credit-card" className="text-sm" />
+                    {agreement.paymentStatus}
                   </span>
                 )}
               </div>
@@ -763,7 +777,10 @@ function AgreementDetailContent() {
 
       {/* Resource Center Section */}
       <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">📚 Resources & Links</h2>
+        <h2 className="mb-4 inline-flex items-center gap-2 text-xl font-semibold text-slate-900 dark:text-white">
+          <UIcon name="books" className="text-xl" />
+          Resources & Links
+        </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
           Helpful resources for your photobooth event
         </p>
@@ -774,7 +791,9 @@ function AgreementDetailContent() {
             rel="noopener noreferrer"
             className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
           >
-            <div className="text-2xl">🎨</div>
+            <div className="text-2xl text-slate-600 dark:text-slate-300">
+              <UIcon name="palette" className="text-2xl" />
+            </div>
             <div>
               <h3 className="font-semibold text-slate-900 dark:text-white">Template Chooser</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">Browse and select your print template design</p>
@@ -783,7 +802,9 @@ function AgreementDetailContent() {
 
           {agreement.selectedBackdropName ? (
             <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-emerald-500 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-900/20">
-              <div className="text-2xl">✅</div>
+              <div className="text-2xl text-emerald-700 dark:text-emerald-300">
+                <UIcon name="check" className="text-2xl" />
+              </div>
               <div>
                 <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">Selected Backdrop</h3>
                 <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mt-1">{agreement.selectedBackdropName}</p>
@@ -797,7 +818,9 @@ function AgreementDetailContent() {
               rel="noopener noreferrer"
               className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
             >
-              <div className="text-2xl">🖼️</div>
+              <div className="text-2xl text-slate-600 dark:text-slate-300">
+                <UIcon name="camera" className="text-2xl" />
+              </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white">Choose Your Backdrop For Your Event</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Browse our backdrop options and make your selection</p>
@@ -805,7 +828,9 @@ function AgreementDetailContent() {
             </a>
           ) : (
             <div className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-              <div className="text-2xl">🖼️</div>
+              <div className="text-2xl text-slate-500 dark:text-slate-400">
+                <UIcon name="camera" className="text-2xl" />
+              </div>
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white">Choose Your Backdrop</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Contact us for backdrop selection options</p>
@@ -819,7 +844,9 @@ function AgreementDetailContent() {
             rel="noopener noreferrer"
             className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
           >
-            <div className="text-2xl">❓</div>
+            <div className="text-2xl text-slate-600 dark:text-slate-300">
+              <UIcon name="question" className="text-2xl" />
+            </div>
             <div>
               <h3 className="font-semibold text-slate-900 dark:text-white">FAQ</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">Frequently asked questions about our service</p>
@@ -827,7 +854,9 @@ function AgreementDetailContent() {
           </a>
 
           <div className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-            <div className="text-2xl">📋</div>
+            <div className="text-2xl text-slate-600 dark:text-slate-300">
+              <UIcon name="clipboard" className="text-2xl" />
+            </div>
             <div>
               <h3 className="font-semibold text-slate-900 dark:text-white">Photo Booth Tips</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">Tips for getting the best photos at your event</p>
@@ -843,7 +872,10 @@ function AgreementDetailContent() {
         {/* Privacy Notice - Notes are personal and not sent to Photobooth Guys */}
         <div className="mb-6 rounded-md bg-slate-50 border border-slate-200 p-3 dark:bg-slate-800/50 dark:border-slate-700">
           <p className="text-xs text-slate-600 dark:text-slate-400">
-            💡 <strong>Note:</strong> Your notes are personal and are not sent to Photobooth Guys.
+            <span className="inline-flex items-center gap-1.5">
+              <UIcon name="bulb" className="text-sm" />
+              <strong>Note:</strong> Your notes are personal and are not sent to Photobooth Guys.
+            </span>
           </p>
         </div>
         

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
+import { UIcon } from '../../components/UIcon';
 import FileUpload from '../../components/FileUpload';
 import { adminHeaderAddButton } from '../../lib/adminTheme';
 
@@ -1433,7 +1434,10 @@ export default function ClientsPage() {
                             )}
                             {event.eventDate && (
                               <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px', fontWeight: '500' }}>
-                                📅 {new Date(event.eventDate).toLocaleDateString()}
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                  <UIcon name="calendar" style={{ fontSize: '14px' }} />
+                                  {new Date(event.eventDate).toLocaleDateString()}
+                                </span>
                               </p>
                             )}
                             {event.eventType && (

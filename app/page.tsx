@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { UIcon } from './components/UIcon';
 
 export const metadata: Metadata = {
   title: 'Photobooth Guys - Agreement Management System',
@@ -95,22 +96,30 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-3 text-2xl">🧩</div>
+              <div className="mb-3 text-2xl text-slate-700 dark:text-slate-200">
+                <UIcon name="layer-plus" className="text-2xl" />
+              </div>
               <h3 className="mb-2 font-semibold text-slate-900 dark:text-white">Smart Templates</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300">Use smart fields like {'{{client.firstName}}'} to personalize instantly.</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-3 text-2xl">✉️</div>
+              <div className="mb-3 text-2xl text-slate-700 dark:text-slate-200">
+                <UIcon name="envelope" className="text-2xl" />
+              </div>
               <h3 className="mb-2 font-semibold text-slate-900 dark:text-white">Send & Track</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300">Generate unique links, email clients, and monitor status.</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-3 text-2xl">✍️</div>
+              <div className="mb-3 text-2xl text-slate-700 dark:text-slate-200">
+                <UIcon name="stamp" className="text-2xl" />
+              </div>
               <h3 className="mb-2 font-semibold text-slate-900 dark:text-white">E‑Signature</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300">Type or draw signatures with a full audit trail.</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-3 text-2xl">🌙</div>
+              <div className="mb-3 text-2xl text-slate-700 dark:text-slate-200">
+                <UIcon name="moon" className="text-2xl" />
+              </div>
               <h3 className="mb-2 font-semibold text-slate-900 dark:text-white">Dark Mode</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300">Beautiful by default and easy on the eyes.</p>
             </div>

@@ -3,6 +3,7 @@ import { getBackdropThumbnailUrl } from '@/lib/backdropThumbnail';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import AttendantFilesSection from './AttendantFilesSection';
+import { UIcon } from '../../components/UIcon';
 
 interface AttendantPageProps {
   params: Promise<{ id: string }>;
@@ -462,7 +463,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     fontWeight: '600',
                   }}
                 >
-                  📸
+                  <UIcon name="camera" style={{ fontSize: '24px', color: 'white' }} />
                 </div>
                 <div>
                   <h1
@@ -1249,7 +1250,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     fontWeight: '600',
                   }}
                 >
-                  📸
+                  <UIcon name="camera" style={{ fontSize: '24px', color: 'white' }} />
                 </div>
                 <h3
                   style={{
@@ -1319,7 +1320,7 @@ function EventExpiredError() {
             fontSize: '28px',
           }}
         >
-          ⏰
+          <UIcon name="clock" style={{ fontSize: '28px', color: '#ffffff' }} />
         </div>
         <h1
           style={{
@@ -1389,7 +1390,7 @@ function EventExpiredError() {
                 fontWeight: '600',
               }}
             >
-              📸
+              <UIcon name="camera" style={{ fontSize: '16px', color: 'white' }} />
             </div>
             <h3
               style={{
@@ -1446,7 +1447,7 @@ function NotFoundError() {
             fontSize: '28px',
           }}
         >
-          ⚠️
+          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: '#ffffff' }} title="Warning" />
         </div>
         <h1
           style={{
@@ -1518,7 +1519,7 @@ function NotFoundError() {
                 fontWeight: '600',
               }}
             >
-              📸
+              <UIcon name="camera" style={{ fontSize: '16px', color: 'white' }} />
             </div>
             <h3
               style={{

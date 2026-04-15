@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { UIcon } from '../../../components/UIcon';
 
 interface AgreementData {
   id: string;
@@ -289,7 +290,7 @@ export default function AdminPreviewPage() {
             margin: '0 auto 24px auto',
             fontSize: '24px'
           }}>
-            ⚠️
+            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: isDark ? '#fca5a5' : '#dc2626' }} title="Warning" />
           </div>
           <h1 style={{ 
             color: isDark ? '#ffffff' : '#1e293b', 
@@ -374,7 +375,7 @@ export default function AdminPreviewPage() {
             justifyContent: 'center',
             gap: '12px'
           }}>
-            <span style={{ fontSize: '18px' }}>👁️</span>
+            <UIcon name="eye" style={{ fontSize: '18px' }} />
             <span style={{ fontSize: '16px', fontWeight: '600' }}>
               ADMIN PREVIEW MODE - This is how the client will see the agreement
             </span>
@@ -418,7 +419,7 @@ export default function AdminPreviewPage() {
                     fontSize: '18px',
                     fontWeight: '700'
                   }}>
-                    📸
+                    <UIcon name="camera" style={{ fontSize: '18px', color: 'white' }} />
                   </div>
                   <div>
                     <h1 style={{
@@ -476,7 +477,10 @@ export default function AdminPreviewPage() {
                         color: isDark ? '#8f9a8f' : '#64748b',
                         fontWeight: '500'
                       }}>
-                        📞 {agreement.client.phone}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <UIcon name="phone-call" style={{ fontSize: '12px' }} />
+                          {agreement.client.phone}
+                        </span>
                       </p>
                     )}
                     <p style={{
@@ -485,7 +489,10 @@ export default function AdminPreviewPage() {
                       color: isDark ? '#8f9a8f' : '#64748b',
                       fontWeight: '500'
                     }}>
-                      ✉️ {agreement.client.email}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <UIcon name="envelope" style={{ fontSize: '12px' }} />
+                        {agreement.client.email}
+                      </span>
                     </p>
                   </div>
                   
@@ -515,13 +522,16 @@ export default function AdminPreviewPage() {
                           color: isDark ? '#ffffff' : '#1e293b',
                           fontWeight: '600'
                         }}>
-                          📅 {new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { 
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <UIcon name="calendar" style={{ fontSize: '14px' }} />
+                            {new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { 
                             timeZone: 'America/Toronto',
                             weekday: 'short',
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric'
                           })}
+                          </span>
                         </p>
                       )}
                       {agreement.client.eventType && (
@@ -531,7 +541,10 @@ export default function AdminPreviewPage() {
                           color: isDark ? '#8f9a8f' : '#64748b',
                           fontWeight: '500'
                         }}>
-                          🎉 {agreement.client.eventType}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <UIcon name="star" style={{ fontSize: '12px' }} />
+                            {agreement.client.eventType}
+                          </span>
                         </p>
                       )}
                       {agreement.client.eventLocation && (
@@ -541,7 +554,10 @@ export default function AdminPreviewPage() {
                           color: isDark ? '#8f9a8f' : '#64748b',
                           fontWeight: '500'
                         }}>
-                          📍 {agreement.client.eventLocation}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <UIcon name="marker" style={{ fontSize: '12px' }} />
+                            {agreement.client.eventLocation}
+                          </span>
                         </p>
                       )}
                       {agreement.client.eventStartTime && (
@@ -551,7 +567,10 @@ export default function AdminPreviewPage() {
                           color: isDark ? '#8f9a8f' : '#64748b',
                           fontWeight: '500'
                         }}>
-                          ⏰ {agreement.client.eventStartTime}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <UIcon name="clock" style={{ fontSize: '12px' }} />
+                            {agreement.client.eventStartTime}
+                          </span>
                         </p>
                       )}
                       {agreement.client.eventDuration && (
@@ -561,7 +580,10 @@ export default function AdminPreviewPage() {
                           color: isDark ? '#8f9a8f' : '#64748b',
                           fontWeight: '500'
                         }}>
-                          ⏱️ {agreement.client.eventDuration}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <UIcon name="hourglass" style={{ fontSize: '12px' }} />
+                            {agreement.client.eventDuration}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -592,7 +614,10 @@ export default function AdminPreviewPage() {
                         color: isDark ? '#ffffff' : '#1e293b',
                         fontWeight: '600'
                       }}>
-                        📦 {agreement.client.eventPackage}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <UIcon name="box" style={{ fontSize: '14px' }} />
+                          {agreement.client.eventPackage}
+                        </span>
                       </p>
                     </div>
                   )}
@@ -606,7 +631,7 @@ export default function AdminPreviewPage() {
                       alignItems: 'center',
                       gap: '8px'
                     }}>
-                      <span style={{ fontSize: '16px' }}>✅</span>
+                      <UIcon name="check" style={{ fontSize: '16px', color: '#6ee7b7' }} />
                       <span style={{
                         color: '#6ee7b7',
                         fontSize: '14px',
@@ -664,7 +689,7 @@ export default function AdminPreviewPage() {
                     gap: '12px',
                     marginBottom: '8px'
                   }}>
-                    <span style={{ fontSize: '20px' }}>✅</span>
+                    <UIcon name="check" style={{ fontSize: '20px', color: '#6ee7b7' }} />
                     <span style={{ 
                       color: '#6ee7b7',
                       fontSize: '16px',
@@ -732,7 +757,7 @@ export default function AdminPreviewPage() {
                     justifyContent: 'center',
                     fontSize: '18px'
                   }}>
-                    ✍️
+                    <UIcon name="signature" style={{ fontSize: '18px', color: '#a7f3d0' }} />
                   </div>
                   <h3 style={{ 
                     margin: '0', 
@@ -864,7 +889,12 @@ export default function AdminPreviewPage() {
                   }
                 }}
               >
-                {isDownloading ? '⏳' : '📄'} {isDownloading ? 'Downloading...' : 'Download PDF'}
+                {isDownloading ? (
+                  <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
+                ) : (
+                  <UIcon name="file-pdf" style={{ fontSize: '18px' }} />
+                )}{' '}
+                {isDownloading ? 'Downloading...' : 'Download PDF'}
               </button>
               
               <button
@@ -904,7 +934,12 @@ export default function AdminPreviewPage() {
                   }
                 }}
               >
-                {isEmailing ? '⏳' : '📧'} {isEmailing ? 'Sending...' : 'Email Copy'}
+                {isEmailing ? (
+                  <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
+                ) : (
+                  <UIcon name="envelope" style={{ fontSize: '18px' }} />
+                )}{' '}
+                {isEmailing ? 'Sending...' : 'Email Copy'}
                 {showEmailSentToast && (
                   <span style={{
                     position: 'absolute',
@@ -1073,7 +1108,7 @@ export default function AdminPreviewPage() {
                     fontSize: '14px',
                     fontWeight: '700'
                   }}>
-                    📸
+                    <UIcon name="camera" style={{ fontSize: '14px', color: 'white' }} />
                   </div>
                   <h3 style={{
                     margin: '0',
@@ -1100,9 +1135,18 @@ export default function AdminPreviewPage() {
                   fontSize: '12px',
                   color: isDark ? '#64748b' : '#94a3b8'
                 }}>
-                  <span>📧 info@photoboothguys.ca</span>
-                  <span>📞 647-378-5332</span>
-                  <span>🌐 Toronto, Ontario</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <UIcon name="envelope" style={{ fontSize: '12px' }} />
+                    info@photoboothguys.ca
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <UIcon name="phone-call" style={{ fontSize: '12px' }} />
+                    647-378-5332
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <UIcon name="globe" style={{ fontSize: '12px' }} />
+                    Toronto, Ontario
+                  </span>
                 </div>
                 <div style={{
                   marginTop: '16px',

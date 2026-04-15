@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { UIcon } from '../../components/UIcon';
 
 interface File {
   id: string;
@@ -50,10 +51,10 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const getFileIcon = (fileType: string): string => {
-    if (fileType.includes('zip')) return '📦';
-    if (fileType.includes('image')) return '🖼️';
-    return '📄';
+  const getFileIconName = (fileType: string): string => {
+    if (fileType.includes('zip')) return 'box';
+    if (fileType.includes('image')) return 'image';
+    return 'file';
   };
 
   if (loading) {
@@ -174,7 +175,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                 e.currentTarget.style.backgroundColor = '#080c08';
               }}
             >
-              <div style={{ fontSize: '32px' }}>{getFileIcon(file.fileType)}</div>
+              <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '32px', color: '#8f9a8f' }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{

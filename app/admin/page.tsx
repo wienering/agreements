@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from 'recharts';
+import { UIcon } from '../components/UIcon';
 
 interface DashboardStats {
   totalClients: number;
@@ -622,9 +623,14 @@ export default function AdminHome() {
                         gap: '8px',
                         marginBottom: '4px'
                       }}>
-                        <span style={{ fontSize: '14px' }}>
-                          {warning.warningType === 'expiration' ? '⏰' : 
-                           warning.warningType === 'critical' ? '🚨' : '⚠️'}
+                        <span style={{ fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}>
+                          {warning.warningType === 'expiration' ? (
+                            <UIcon name="clock" style={{ color: '#f59e0b' }} />
+                          ) : warning.warningType === 'critical' ? (
+                            <UIcon name="siren" style={{ color: '#dc2626' }} />
+                          ) : (
+                            <UIcon name="circle-exclamation" style={{ color: '#f59e0b' }} />
+                          )}
                         </span>
                         <span style={{ 
                           fontSize: '14px', 
@@ -727,8 +733,9 @@ export default function AdminHome() {
                           </div>
                         )}
                         {event.eventLocation && (
-                          <div style={{ fontSize: '11px', color: mutedText, marginBottom: '4px' }}>
-                            📍 {event.eventLocation}
+                          <div style={{ fontSize: '11px', color: mutedText, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <UIcon name="marker" style={{ fontSize: '11px', flexShrink: 0 }} />
+                            {event.eventLocation}
                           </div>
                         )}
                         <div style={{ fontSize: '11px', color: '#4a9e72', fontWeight: '600' }}>

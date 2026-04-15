@@ -8,6 +8,7 @@ import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import SearchableSelect from '../../components/SearchableSelect';
 import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { UIcon } from '../../components/UIcon';
 
 interface Agreement {
   id: string;
@@ -1864,7 +1865,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     alignItems: 'center',
                     gap: '8px'
                   }}>
-                    📋 Active Agreements
+                    <UIcon name="clipboard" style={{ fontSize: '16px' }} />
+                    Active Agreements
                     <span style={{ 
                       fontSize: '13px', 
                       fontWeight: '400', 
@@ -1905,8 +1907,13 @@ const normalizePaymentStatus = (value?: string | null) => {
                     fontSize: '16px',
                     zIndex: 1
                   }}>
-                    {warningType === 'expiration' ? '⏰' : 
-                     warningType === 'critical' ? '🚨' : '⚠️'}
+                    {warningType === 'expiration' ? (
+                      <UIcon name="clock" style={{ color: '#f59e0b' }} />
+                    ) : warningType === 'critical' ? (
+                      <UIcon name="siren" style={{ color: '#dc2626' }} />
+                    ) : (
+                      <UIcon name="circle-exclamation" style={{ color: '#f59e0b' }} />
+                    )}
                   </div>
                 )}
 
@@ -1936,7 +1943,11 @@ const normalizePaymentStatus = (value?: string | null) => {
                         gap: '4px',
                         maxWidth: 'calc(100% - 16px)'
                       }}>
-                        {needsPersonalFollowUp ? '🚨' : '⚠️'}
+                        {needsPersonalFollowUp ? (
+                          <UIcon name="siren" style={{ fontSize: '14px' }} />
+                        ) : (
+                          <UIcon name="circle-exclamation" style={{ fontSize: '14px' }} />
+                        )}
                         {needsPersonalFollowUp ? 'Needs Personal Follow-up' : 'Might need personal follow-up'}
                       </div>
                     );
@@ -1999,22 +2010,22 @@ const normalizePaymentStatus = (value?: string | null) => {
                       
                       let followUpHtml = '';
                       if (needsFollowUp) {
-                        followUpHtml = '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px;">🔔</span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' + daysSinceEmailed + ' days since last email</div></div></div>';
+                        followUpHtml = '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px; display: flex; align-items: center;"><i class="fi fi-rr-bell" aria-hidden="true"></i></span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' + daysSinceEmailed + ' days since last email</div></div></div>';
                       }
                       
                       tooltip.innerHTML = '<div style="position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; background: ' + bgColor + '; border-left: 1px solid ' + borderCol + '; border-bottom: 1px solid ' + borderCol + '; transform: translateY(-50%) rotate(45deg);"></div>' +
                         '<div style="background: linear-gradient(135deg, ' + statusColor + '22 0%, ' + statusColor + '11 100%); border-bottom: 1px solid ' + borderCol + '; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">' +
-                          '<span style="font-size: 16px;">📊</span>' +
+                          '<span style="font-size: 16px; display: flex; align-items: center;"><i class="fi fi-rr-chart-line-up" aria-hidden="true"></i></span>' +
                           '<span style="font-weight: 700; font-size: 14px; color: ' + textCol + ';">Engagement</span>' +
                           '<span style="margin-left: auto; padding: 3px 8px; background: ' + statusColor + '; color: white; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + agreement.status + '</span>' +
                         '</div>' +
                         '<div style="padding: 14px 16px;">' +
                           '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">' +
-                            '<div style="width: 32px; height: 32px; background: ' + iconBg + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">📧</div>' +
+                            '<div style="width: 32px; height: 32px; background: ' + iconBg + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;"><i class="fi fi-rr-envelope" aria-hidden="true"></i></div>' +
                             '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' + textCol + ';">' + (agreement.emailSendCount || 0) + ' email' + (agreement.emailSendCount !== 1 ? 's' : '') + ' sent</div><div style="font-size: 11px; color: ' + mutedCol + ';">' + lastEmailText + '</div></div>' +
                           '</div>' +
                           '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: ' + (needsFollowUp || notViewed ? '12px' : '0') + ';">' +
-                            '<div style="width: 32px; height: 32px; background: ' + (notViewed ? '#fef3c7' : iconBg) + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">' + (notViewed ? '⚠️' : '👁️') + '</div>' +
+                            '<div style="width: 32px; height: 32px; background: ' + (notViewed ? '#fef3c7' : iconBg) + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">' + (notViewed ? '<i class="fi fi-rr-circle-exclamation" aria-hidden="true"></i>' : '<i class="fi fi-rr-eye" aria-hidden="true"></i>') + '</div>' +
                             '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' + (notViewed ? '#f59e0b' : textCol) + ';">' + viewCount + ' view' + (viewCount !== 1 ? 's' : '') + (notViewed ? ' - Not viewed!' : '') + '</div><div style="font-size: 11px; color: ' + mutedCol + ';">' + lastViewText + '</div></div>' +
                           '</div>' +
                           followUpHtml +
@@ -2040,12 +2051,18 @@ const normalizePaymentStatus = (value?: string | null) => {
                     </p>
                     {(agreement as any).backdropLink?.name && (
                       <p style={{ margin: '4px 0 0 0', color: '#4a9e72', fontSize: '14px', fontWeight: '500' }}>
-                        🔗 Backdrop Link: {(agreement as any).backdropLink.name}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <UIcon name="link" style={{ fontSize: '14px' }} />
+                          Backdrop Link: {(agreement as any).backdropLink.name}
+                        </span>
                       </p>
                     )}
                     {agreement.selectedBackdropName && (
                       <p style={{ margin: '4px 0 0 0', color: '#3d8560', fontSize: '14px', fontWeight: '500' }}>
-                        🖼️ Selected Backdrop: {agreement.selectedBackdropName}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <UIcon name="camera" style={{ fontSize: '14px' }} />
+                          Selected Backdrop: {agreement.selectedBackdropName}
+                        </span>
                       </p>
                     )}
                   </div>
@@ -2141,11 +2158,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                         padding: '4px 8px',
                         borderRadius: '4px',
                         alignSelf: isMobile ? 'flex-start' : 'auto',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
                       }}
                       title="Payment status"
                       >
-                        💳 {agreement.paymentStatus}
+                        <UIcon name="credit-card" style={{ fontSize: '12px' }} />
+                        {agreement.paymentStatus}
                       </span>
                     )}
                   </div>
@@ -2204,7 +2225,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }}
                     title={!agreement.client.email ? 'Client email is required to create invoice' : 'Create Stripe invoice for this agreement'}
                   >
-                    💳 Create Invoice
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <UIcon name="credit-card" style={{ fontSize: '14px' }} />
+                      Create Invoice
+                    </span>
                   </button>
                   <button
                     onClick={() => {
@@ -2456,7 +2480,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     alignItems: 'center',
                     gap: '8px'
                   }}>
-                    ✅ Completed Agreements
+                    <UIcon name="check" style={{ fontSize: '16px', color: '#7c3aed' }} />
+                    Completed Agreements
                     <span style={{ 
                       fontSize: '13px', 
                       fontWeight: '400', 
@@ -3084,7 +3109,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                           </>
                         ) : (
                           <>
-                            📧 Send Gallery Ready Email
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <UIcon name="envelope" style={{ fontSize: '14px' }} />
+                              Send Gallery Ready Email
+                            </span>
                           </>
                         )}
                       </button>
@@ -3103,7 +3131,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             gap: '8px'
                           }}
                         >
-                          <span style={{ fontSize: '16px' }}>✓</span>
+                          <UIcon name="check" style={{ fontSize: '16px', color: '#1e40af' }} />
                           <span>
                             <strong>Email sent to client</strong> on {galleryEmailSentAt.toLocaleDateString('en-CA', {
                               year: 'numeric',
@@ -3370,7 +3398,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                   title="View attendant page (event details for staff)"
                 >
-                  {(isMobile || isTablet) ? '👥 Attendant' : '👥 Attendant View'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                    <UIcon name="users" style={{ fontSize: '14px' }} />
+                    {(isMobile || isTablet) ? 'Attendant' : 'Attendant View'}
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -3398,7 +3429,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                   title="View client portal (admin preview)"
                   disabled={!selectedAgreement?.client?.email}
                 >
-                  {(isMobile || isTablet) ? '🔍 Portal' : '🔍 View Client Portal'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                    <UIcon name="search" style={{ fontSize: '14px' }} />
+                    {(isMobile || isTablet) ? 'Portal' : 'View Client Portal'}
+                  </span>
                 </button>
                 <button
                   onClick={() => handlePreviewEmail(selectedAgreement)}
@@ -3417,7 +3451,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                   title="Preview the email that will be sent to the client"
                 >
-                  {(isMobile || isTablet) ? '📧 Email' : '📧 Preview Email'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                    <UIcon name="envelope" style={{ fontSize: '14px' }} />
+                    {(isMobile || isTablet) ? 'Email' : 'Preview Email'}
+                  </span>
                 </button>
                 <button
                   onClick={() => handleSendToClient(selectedAgreement)}
@@ -3669,7 +3706,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <span style={{ color: '#dc2626' }}>⚠️</span>
+                <UIcon name="circle-exclamation" style={{ color: '#dc2626', fontSize: '20px' }} />
                 Cancel Agreement - Step {cancellationStep} of 4
               </h3>
 
@@ -3826,7 +3863,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     padding: '16px',
                     marginBottom: '16px'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626' }}>⚠️ Final Confirmation Required</h4>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UIcon name="circle-exclamation" style={{ fontSize: '18px' }} />
+                      Final Confirmation Required
+                    </h4>
                     <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
                       This action will permanently cancel the agreement, move it to the archived section, and notify the client via email. 
                       This cannot be undone.
@@ -3914,7 +3954,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     marginBottom: '16px',
                     textAlign: 'center'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px' }}>⚠️ FINAL WARNING</h4>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <UIcon name="siren" style={{ fontSize: '20px' }} />
+                      FINAL WARNING
+                    </h4>
                     <p style={{ margin: '0', color: '#991b1b', fontSize: '16px', fontWeight: '500' }}>
                       You are about to permanently cancel this signed agreement. It will be moved to the archived section.
                     </p>
@@ -4021,7 +4064,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <span style={{ color: '#f59e0b' }}>⚠️</span>
+                <UIcon name="circle-exclamation" style={{ color: '#f59e0b', fontSize: '20px' }} />
                 Payment Warning
               </h3>
 
@@ -4155,7 +4198,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  <span>⭐</span>
+                  <UIcon name="star" style={{ fontSize: '18px', color: '#f59e0b' }} />
                   Request Google Review
                 </h3>
                 <button
@@ -4170,7 +4213,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                   title="Close modal"
                 >
-                  ✕
+                  <UIcon name="x" style={{ fontSize: '20px' }} />
                 </button>
               </div>
 
@@ -4269,7 +4312,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                   fontWeight: '700',
                   color: textColor
                 }}>
-                  💳 Create Stripe Invoice
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                    <UIcon name="credit-card" style={{ fontSize: '24px' }} />
+                    Create Stripe Invoice
+                  </span>
                 </h2>
                 <button
                   onClick={closeInvoiceModal}
@@ -4282,7 +4328,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     padding: '4px'
                   }}
                 >
-                  ✕
+                  <UIcon name="x" style={{ fontSize: '22px' }} />
                 </button>
               </div>
 
@@ -4293,10 +4339,11 @@ const normalizePaymentStatus = (value?: string | null) => {
                   padding: '40px 20px'
                 }}>
                   <div style={{
-                    fontSize: '48px',
-                    marginBottom: '16px'
+                    marginBottom: '16px',
+                    display: 'flex',
+                    justifyContent: 'center'
                   }}>
-                    ⏳
+                    <UIcon name="spinner" className="animate-spin" style={{ fontSize: '48px', color: textColor }} />
                   </div>
                   <p style={{
                     margin: '0',
@@ -4318,8 +4365,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                     padding: '16px',
                     marginBottom: '24px'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#16a34a', fontSize: '18px' }}>
-                      ✅ Invoice Created Successfully!
+                    <h4 style={{ margin: '0 0 8px 0', color: '#16a34a', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UIcon name="check" style={{ fontSize: '20px' }} />
+                      Invoice Created Successfully!
                     </h4>
                     <p style={{ margin: '0', color: '#166534', fontSize: '14px' }}>
                       {invoiceResult.message || `Successfully created ${invoiceResult.invoices?.length || 1} invoice(s). The invoice(s) have been sent to the client via email.`}
@@ -4463,8 +4511,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                     padding: '16px',
                     marginBottom: '24px'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px' }}>
-                      ❌ Error Creating Invoice
+                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UIcon name="circle-xmark" style={{ fontSize: '20px' }} />
+                      Error Creating Invoice
                     </h4>
                     <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
                       {invoiceError}
@@ -4852,7 +4901,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                   fontWeight: '700',
                   color: textColor
                 }}>
-                  📧 Email Preview
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                    <UIcon name="envelope" style={{ fontSize: '24px' }} />
+                    Email Preview
+                  </span>
                 </h2>
                 <button
                   onClick={() => {
@@ -4868,7 +4920,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     padding: '4px'
                   }}
                 >
-                  ✕
+                  <UIcon name="x" style={{ fontSize: '22px' }} />
                 </button>
               </div>
 
@@ -5138,7 +5190,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                👥 Attendant View Options
+                <UIcon name="users" style={{ fontSize: '18px' }} />
+                Attendant View Options
               </h3>
               <p style={{ 
                 margin: '0 0 20px 0', 
@@ -5171,7 +5224,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     alignItems: 'center',
                     gap: '8px'
                   }}>
-                    📞 Always Show Phone Number
+                    <UIcon name="phone-call" style={{ fontSize: '14px' }} />
+                    Always Show Phone Number
                   </label>
                   <button
                     type="button"
@@ -5276,7 +5330,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     alignItems: 'center',
                     gap: '8px'
                   }}>
-                    🎬 Force Virtual Green Screen
+                    <UIcon name="video-camera" style={{ fontSize: '14px' }} />
+                    Force Virtual Green Screen
                   </label>
                   <button
                     type="button"
@@ -5389,7 +5444,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     width: '100%'
                   }}
                 >
-                  📋 Copy Link
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                    <UIcon name="clipboard" style={{ fontSize: '14px' }} />
+                    Copy Link
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -5413,7 +5471,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     width: '100%'
                   }}
                 >
-                  👁️ View Page
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                    <UIcon name="eye" style={{ fontSize: '14px' }} />
+                    View Page
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -5480,7 +5541,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                📄 View Agreement
+                <UIcon name="file" style={{ fontSize: '18px' }} />
+                View Agreement
               </h3>
               <p style={{ 
                 margin: '0 0 20px 0', 
@@ -5515,7 +5577,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     width: '100%'
                   }}
                 >
-                  🔐 Admin View
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                    <UIcon name="lock" style={{ fontSize: '14px' }} />
+                    Admin View
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -5538,7 +5603,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     width: '100%'
                   }}
                 >
-                  👁️ Client View
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                    <UIcon name="eye" style={{ fontSize: '14px' }} />
+                    Client View
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -5565,7 +5633,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                     width: '100%'
                   }}
                 >
-                  📋 Copy Client Link
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                    <UIcon name="clipboard" style={{ fontSize: '14px' }} />
+                    Copy Client Link
+                  </span>
                 </button>
                 <button
                   onClick={() => {

@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Flaticon UIcons — align with text / buttons */
+.fi {
+  font-size: 1em;
+  line-height: 1;
+  vertical-align: -0.15em;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

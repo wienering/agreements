@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDarkMode } from '../../contexts/DarkModeContext';
+import { UIcon } from '../../components/UIcon';
 
 interface ContactInfo {
   name: string;
@@ -456,7 +457,15 @@ export default function QuotesPage() {
               gap: '8px'
             }}
           >
-            {isAdminMode ? '✕ Exit Admin Mode' : '⚙ Admin Mode'}
+            {isAdminMode ? (
+              <>
+                <UIcon name="x" style={{ fontSize: '16px' }} /> Exit Admin Mode
+              </>
+            ) : (
+              <>
+                <UIcon name="settings" style={{ fontSize: '16px' }} /> Admin Mode
+              </>
+            )}
           </button>
         </div>
 
@@ -471,7 +480,10 @@ export default function QuotesPage() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ margin: 0, fontSize: '20px', color: textColor }}>
-                ⚙ Edit Default Pricing
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <UIcon name="settings" style={{ fontSize: '18px' }} />
+                  Edit Default Pricing
+                </span>
               </h2>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 {pricingMessage && (
