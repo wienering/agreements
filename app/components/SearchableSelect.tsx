@@ -151,7 +151,7 @@ export default function SearchableSelect({
                   }}
                   onMouseEnter={(e) => {
                     if (value !== option.value) {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.backgroundColor = '#3ef07d';
                       e.currentTarget.style.color = '#ffffff';
                     }
                   }}

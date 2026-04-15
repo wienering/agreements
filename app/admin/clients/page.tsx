@@ -496,11 +496,11 @@ export default function ClientsPage() {
     }
   };
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1e293b';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   // Helper function to check if an event has no agreements
   const hasNoAgreements = (event: Event): boolean => {
@@ -544,7 +544,7 @@ export default function ClientsPage() {
           <button
             onClick={() => setShowAddForm(true)}
             style={{
-              backgroundColor: '#3b82f6',
+              backgroundColor: '#3ef07d',
               color: 'white',
               border: 'none',
               padding: isMobile ? '12px 20px' : '10px 20px',
@@ -1294,7 +1294,7 @@ export default function ClientsPage() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                    backgroundColor: loading ? '#9ca3af' : '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1349,7 +1349,7 @@ export default function ClientsPage() {
                       </h3>
                       {client.isWhitelabelClient && (
                         <span style={{
-                          backgroundColor: '#3b82f6',
+                          backgroundColor: '#3ef07d',
                           color: 'white',
                           padding: '2px 8px',
                           borderRadius: '4px',
@@ -1384,7 +1384,7 @@ export default function ClientsPage() {
                         <button
                           onClick={() => handleAddNewEvent(client)}
                           style={{
-                            backgroundColor: '#3b82f6',
+                            backgroundColor: '#3ef07d',
                             color: 'white',
                             border: 'none',
                             padding: '4px 12px',
@@ -1395,10 +1395,10 @@ export default function ClientsPage() {
                             transition: 'background-color 0.2s'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#2563eb';
+                            e.currentTarget.style.backgroundColor = '#2dd869';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3b82f6';
+                            e.currentTarget.style.backgroundColor = '#3ef07d';
                           }}
                           title="Add a new event to this client"
                         >
@@ -1413,7 +1413,7 @@ export default function ClientsPage() {
                           <div key={event.id} style={{
                             marginBottom: '12px',
                             padding: '12px',
-                            backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                            backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
                             border: noAgreements ? '2px solid #f77f00' : `1px solid ${borderColor}`,
                             borderRadius: '6px',
                             boxShadow: noAgreements ? '0 0 8px rgba(247, 127, 0, 0.5), 0 0 16px rgba(247, 127, 0, 0.3)' : 'none'
@@ -1472,7 +1472,7 @@ export default function ClientsPage() {
                               <button
                                 onClick={() => handleCreateAgreement(client, event)}
                                 style={{
-                                  backgroundColor: '#3b82f6',
+                                  backgroundColor: '#3ef07d',
                                   color: 'white',
                                   border: 'none',
                                   padding: '6px 12px',
@@ -1483,10 +1483,10 @@ export default function ClientsPage() {
                                   transition: 'background-color 0.2s'
                                 }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#2563eb';
+                                  e.currentTarget.style.backgroundColor = '#2dd869';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                                  e.currentTarget.style.backgroundColor = '#3ef07d';
                                 }}
                                 title="Create agreement for this event"
                               >
@@ -1547,7 +1547,7 @@ export default function ClientsPage() {
                     </div>
                     {/* Fallback: show deprecated client event fields if no events exist */}
                     {(!client.events || client.events.length === 0) && client.eventDate && (
-                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: isDark ? '#1e293b' : '#f8fafc', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
+                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
                         <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
                           (Legacy event data - will be migrated)
                         </p>
@@ -1577,7 +1577,7 @@ export default function ClientsPage() {
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
-                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
@@ -1619,7 +1619,7 @@ export default function ClientsPage() {
                     <button
                       onClick={() => handleCreateAgreement(client)}
                       style={{
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#3ef07d',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
@@ -1630,10 +1630,10 @@ export default function ClientsPage() {
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.backgroundColor = '#2dd869';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                        e.currentTarget.style.backgroundColor = '#3ef07d';
                       }}
                       title="Create new agreement for this client"
                     >
@@ -1697,7 +1697,7 @@ export default function ClientsPage() {
                   <div style={{
                     marginTop: '16px',
                     padding: '16px',
-                    backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                    backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '8px'
                   }}>

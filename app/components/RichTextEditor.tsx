@@ -84,7 +84,7 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           width: '100%',
           minHeight: '200px',
           padding: '12px',
-          border: `1px solid ${isFocused ? '#3b82f6' : '#d1d5db'}`,
+          border: `1px solid ${isFocused ? '#3ef07d' : '#d1d5db'}`,
           borderRadius: '6px',
           backgroundColor: '#ffffff',
           color: '#1f2937',
@@ -184,11 +184,11 @@ export function RichTextPreview({
         padding: '12px',
         border: '1px solid #d1d5db',
         borderRadius: '6px',
-        backgroundColor: isDark ? '#1e293b' : '#f9fafb',
+        backgroundColor: isDark ? '#1a1d1a' : '#f9fafb',
         fontFamily: 'Georgia, serif',
         lineHeight: '1.6',
         fontSize: '16px',
-        color: isDark ? '#f1f5f9' : '#1f2937',
+        color: isDark ? '#ffffff' : '#1f2937',
         height: '200px', // Fixed height like the text input
         overflowY: 'auto', // Make it scrollable
         whiteSpace: 'pre-wrap', // Preserve line breaks

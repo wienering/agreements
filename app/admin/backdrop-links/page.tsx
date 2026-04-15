@@ -29,11 +29,11 @@ export default function BackdropLinksPage() {
   const { isDark } = useDarkMode();
   const router = useRouter();
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1e293b';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   useEffect(() => {
     fetchBackdropLinks();
@@ -318,7 +318,7 @@ export default function BackdropLinksPage() {
           <button
             onClick={handleAdd}
             style={{
-              backgroundColor: '#3b82f6',
+              backgroundColor: '#3ef07d',
               color: 'white',
               border: 'none',
               padding: '12px 24px',
@@ -329,10 +329,10 @@ export default function BackdropLinksPage() {
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#2563eb';
+              e.currentTarget.style.backgroundColor = '#2dd869';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.backgroundColor = '#3ef07d';
             }}
           >
             + Add Backdrop Link
@@ -372,7 +372,7 @@ export default function BackdropLinksPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ 
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  backgroundColor: isDark ? '#080c08' : '#f8fafc',
                   borderBottom: `1px solid ${borderColor}`
                 }}>
                   <th style={{ 
@@ -437,7 +437,7 @@ export default function BackdropLinksPage() {
                     transition: 'background-color 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f8fafc';
+                    e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -500,7 +500,7 @@ export default function BackdropLinksPage() {
                           target="_blank" 
                           rel="noopener noreferrer"
                           style={{ 
-                            color: '#3b82f6', 
+                            color: '#3ef07d', 
                             fontSize: '14px',
                             textDecoration: 'none',
                             display: 'inline-block',
@@ -705,7 +705,7 @@ export default function BackdropLinksPage() {
                     padding: '10px',
                     borderRadius: '6px',
                     border: `1px solid ${borderColor}`,
-                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    backgroundColor: isDark ? '#080c08' : '#ffffff',
                     color: textColor,
                     fontSize: '14px',
                     boxSizing: 'border-box'
@@ -733,7 +733,7 @@ export default function BackdropLinksPage() {
                     padding: '10px',
                     borderRadius: '6px',
                     border: `1px solid ${borderColor}`,
-                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    backgroundColor: isDark ? '#080c08' : '#ffffff',
                     color: textColor,
                     fontSize: '14px',
                     boxSizing: 'border-box'
@@ -761,7 +761,7 @@ export default function BackdropLinksPage() {
                     padding: '10px',
                     borderRadius: '6px',
                     border: `1px solid ${borderColor}`,
-                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    backgroundColor: isDark ? '#080c08' : '#ffffff',
                     color: textColor,
                     fontSize: '14px',
                     boxSizing: 'border-box'
@@ -794,7 +794,7 @@ export default function BackdropLinksPage() {
                   onClick={handleSave}
                   disabled={saving || !formData.name || !formData.url}
                   style={{
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '10px 20px',
@@ -807,11 +807,11 @@ export default function BackdropLinksPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!saving && formData.name && formData.url) {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
+                      e.currentTarget.style.backgroundColor = '#2dd869';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                    e.currentTarget.style.backgroundColor = '#3ef07d';
                   }}
                 >
                   {saving ? 'Saving...' : editingLink ? 'Update' : 'Add'}

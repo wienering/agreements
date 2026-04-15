@@ -419,7 +419,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
         <div
           style={{
             minHeight: '100vh',
-            backgroundColor: '#0f172a',
+            backgroundColor: '#080c08',
             fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
             color: '#f1f5f9',
             animation: 'fadeIn 0.3s ease-out',
@@ -429,8 +429,8 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
           <header
             className="attendant-header"
             style={{
-              backgroundColor: '#1e293b',
-              borderBottom: '1px solid #334155',
+              backgroundColor: '#1a1d1a',
+              borderBottom: '1px solid #2d3530',
               padding: '24px 0',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
@@ -452,7 +452,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   style={{
                     width: '44px',
                     height: '44px',
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
@@ -480,7 +480,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     style={{
                       margin: '4px 0 0 0',
                       fontSize: '14px',
-                      color: '#94a3b8',
+                      color: '#8f9a8f',
                       fontWeight: '500',
                     }}
                   >
@@ -497,7 +497,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     alignItems: 'center',
                     gap: '8px',
                     padding: '8px 16px',
-                    backgroundColor: '#334155',
+                    backgroundColor: '#2d3530',
                     color: '#f1f5f9',
                     borderRadius: '8px',
                     textDecoration: 'none',
@@ -534,10 +534,10 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               <div
                 className="attendant-card"
                 style={{
-                  backgroundColor: '#1e293b',
+                  backgroundColor: '#1a1d1a',
                   padding: '32px',
                   borderRadius: '12px',
-                  border: '1px solid #334155',
+                  border: '1px solid #2d3530',
                   marginBottom: '24px',
                   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
@@ -549,7 +549,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     fontWeight: '700',
                     color: '#ffffff',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid #334155',
+                    borderBottom: '1px solid #2d3530',
                   }}
                 >
                   Client Information
@@ -567,7 +567,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                       style={{
                         margin: '0 0 8px 0',
                         fontSize: '12px',
-                        color: '#94a3b8',
+                        color: '#8f9a8f',
                         fontWeight: '600',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
@@ -592,7 +592,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -624,10 +624,10 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               <div
                 className="attendant-card"
                 style={{
-                  backgroundColor: '#1e293b',
+                  backgroundColor: '#1a1d1a',
                   padding: '32px',
                   borderRadius: '12px',
-                  border: '1px solid #334155',
+                  border: '1px solid #2d3530',
                   marginBottom: '24px',
                   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
@@ -639,7 +639,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     fontWeight: '700',
                     color: '#ffffff',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid #334155',
+                    borderBottom: '1px solid #2d3530',
                   }}
                 >
                   Event Contact Information
@@ -657,7 +657,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                       style={{
                         margin: '0 0 8px 0',
                         fontSize: '12px',
-                        color: '#94a3b8',
+                        color: '#8f9a8f',
                         fontWeight: '600',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
@@ -682,7 +682,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -719,10 +719,10 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               <div
                 className="attendant-card"
                 style={{
-                  backgroundColor: '#1e293b',
+                  backgroundColor: '#1a1d1a',
                   padding: '32px',
                   borderRadius: '12px',
-                  border: '1px solid #334155',
+                  border: '1px solid #2d3530',
                   marginBottom: '24px',
                   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
@@ -734,7 +734,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     fontWeight: '700',
                     color: '#ffffff',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid #334155',
+                    borderBottom: '1px solid #2d3530',
                   }}
                 >
                   Event Details
@@ -753,7 +753,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -780,7 +780,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -807,7 +807,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -834,7 +834,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -862,7 +862,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -889,7 +889,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 8px 0',
                           fontSize: '12px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -925,10 +925,10 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               <div
                 className="attendant-card"
                 style={{
-                  backgroundColor: '#1e293b',
+                  backgroundColor: '#1a1d1a',
                   padding: '32px',
                   borderRadius: '12px',
-                  border: '1px solid #334155',
+                  border: '1px solid #2d3530',
                   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
               >
@@ -939,7 +939,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     fontWeight: '700',
                     color: '#ffffff',
                     paddingBottom: '16px',
-                    borderBottom: '1px solid #334155',
+                    borderBottom: '1px solid #2d3530',
                   }}
                 >
                   Event Summary
@@ -975,7 +975,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1003,7 +1003,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1031,7 +1031,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1062,7 +1062,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1097,7 +1097,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1150,7 +1150,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                               height: '64px',
                               objectFit: 'cover',
                               borderRadius: '8px',
-                              border: '1px solid #334155',
+                              border: '1px solid #2d3530',
                             }}
                           />
                         )}
@@ -1175,7 +1175,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#94a3b8',
+                          color: '#8f9a8f',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1223,7 +1223,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               padding: '48px 32px 0 32px',
               marginTop: '48px',
               paddingTop: '32px',
-              borderTop: '1px solid #334155',
+              borderTop: '1px solid #2d3530',
               textAlign: 'center',
             }}
           >
@@ -1239,7 +1239,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   style={{
                     width: '32px',
                     height: '32px',
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1266,7 +1266,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                 style={{
                   margin: '0',
                   fontSize: '14px',
-                  color: '#94a3b8',
+                  color: '#8f9a8f',
                 }}
               >
                 Professional photo booth services for your special events
@@ -1287,7 +1287,7 @@ function EventExpiredError() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
+        backgroundColor: '#080c08',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1297,10 +1297,10 @@ function EventExpiredError() {
     >
       <div
         style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: '#1a1d1a',
           padding: '48px',
           borderRadius: '12px',
-          border: '1px solid #334155',
+          border: '1px solid #2d3530',
           textAlign: 'center',
           maxWidth: '520px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -1333,7 +1333,7 @@ function EventExpiredError() {
         </h1>
         <p
           style={{
-            color: '#94a3b8',
+            color: '#8f9a8f',
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.6',
@@ -1344,9 +1344,9 @@ function EventExpiredError() {
         <div
           style={{
             padding: '16px',
-            backgroundColor: '#0f172a',
+            backgroundColor: '#080c08',
             borderRadius: '8px',
-            border: '1px solid #334155',
+            border: '1px solid #2d3530',
             marginBottom: '24px',
           }}
         >
@@ -1354,7 +1354,7 @@ function EventExpiredError() {
             style={{
               margin: '0',
               fontSize: '14px',
-              color: '#94a3b8',
+              color: '#8f9a8f',
               lineHeight: '1.6',
             }}
           >
@@ -1365,7 +1365,7 @@ function EventExpiredError() {
         <div
           style={{
             paddingTop: '24px',
-            borderTop: '1px solid #334155',
+            borderTop: '1px solid #2d3530',
           }}
         >
           <div
@@ -1379,7 +1379,7 @@ function EventExpiredError() {
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#3b82f6',
+                backgroundColor: '#3ef07d',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
@@ -1414,7 +1414,7 @@ function NotFoundError() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
+        backgroundColor: '#080c08',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1424,10 +1424,10 @@ function NotFoundError() {
     >
       <div
         style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: '#1a1d1a',
           padding: '48px',
           borderRadius: '12px',
-          border: '1px solid #334155',
+          border: '1px solid #2d3530',
           textAlign: 'center',
           maxWidth: '520px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -1460,7 +1460,7 @@ function NotFoundError() {
         </h1>
         <p
           style={{
-            color: '#94a3b8',
+            color: '#8f9a8f',
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.6',
@@ -1472,9 +1472,9 @@ function NotFoundError() {
         <div
           style={{
             padding: '16px',
-            backgroundColor: '#0f172a',
+            backgroundColor: '#080c08',
             borderRadius: '8px',
-            border: '1px solid #334155',
+            border: '1px solid #2d3530',
             marginBottom: '24px',
           }}
         >
@@ -1482,7 +1482,7 @@ function NotFoundError() {
             style={{
               margin: '0',
               fontSize: '14px',
-              color: '#94a3b8',
+              color: '#8f9a8f',
               lineHeight: '1.6',
             }}
           >
@@ -1494,7 +1494,7 @@ function NotFoundError() {
         <div
           style={{
             paddingTop: '24px',
-            borderTop: '1px solid #334155',
+            borderTop: '1px solid #2d3530',
           }}
         >
           <div
@@ -1508,7 +1508,7 @@ function NotFoundError() {
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#3b82f6',
+                backgroundColor: '#3ef07d',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',

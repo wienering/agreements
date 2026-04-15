@@ -11,8 +11,9 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    /* Charcoal with subtle green undertone (LinkGuard-style) */
+    --background-start-rgb: 8, 12, 8;
+    --background-end-rgb: 14, 17, 14;
   }
 }
 

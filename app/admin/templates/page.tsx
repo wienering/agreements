@@ -139,7 +139,7 @@ export default function TemplatesPage() {
         onClick={() => copyToClipboard(field)}
         style={{ 
           padding: '8px 12px', 
-          backgroundColor: isDark ? '#0f172a' : '#f8fafc', 
+          backgroundColor: isDark ? '#080c08' : '#f8fafc', 
           borderRadius: '4px',
           fontSize: '14px',
           fontFamily: 'monospace',
@@ -153,10 +153,10 @@ export default function TemplatesPage() {
           justifyContent: 'space-between'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+          e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isDark ? '#0f172a' : '#f8fafc';
+          e.currentTarget.style.backgroundColor = isDark ? '#080c08' : '#f8fafc';
         }}
         title="Click to copy to clipboard"
       >
@@ -249,7 +249,7 @@ export default function TemplatesPage() {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'grab',
-            color: isDark ? '#94a3b8' : '#64748b',
+            color: isDark ? '#8f9a8f' : '#64748b',
             backgroundColor: isDark ? '#374151' : '#f1f5f9',
             borderRadius: '4px',
             border: `1px solid ${borderColor}`,
@@ -260,11 +260,11 @@ export default function TemplatesPage() {
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = isDark ? '#4b5563' : '#e2e8f0';
-            e.currentTarget.style.color = isDark ? '#f1f5f9' : '#1e293b';
+            e.currentTarget.style.color = isDark ? '#ffffff' : '#1e293b';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f1f5f9';
-            e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b';
+            e.currentTarget.style.color = isDark ? '#8f9a8f' : '#64748b';
           }}
           title="Drag to reorder"
         >
@@ -299,7 +299,7 @@ export default function TemplatesPage() {
           <span style={{ 
             fontSize: '12px', 
             color: mutedText,
-            backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+            backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
             padding: '4px 8px',
             borderRadius: '4px',
             alignSelf: isMobile ? 'flex-start' : 'auto'
@@ -312,7 +312,7 @@ export default function TemplatesPage() {
         <div style={{ 
           marginBottom: '12px',
           padding: '12px',
-          backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+          backgroundColor: isDark ? '#080c08' : '#f8fafc',
           borderRadius: '6px',
           border: `1px solid ${borderColor}`
         }}>
@@ -340,7 +340,7 @@ export default function TemplatesPage() {
               onClick={() => onTogglePreview(template.id)}
               style={{
                 backgroundColor: 'transparent',
-                color: isDark ? '#60a5fa' : '#3b82f6',
+                color: isDark ? '#6ee7a8' : '#3ef07d',
                 border: 'none',
                 padding: '8px 0',
                 cursor: 'pointer',
@@ -353,10 +353,10 @@ export default function TemplatesPage() {
                 gap: '4px'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = isDark ? '#93c5fd' : '#2563eb';
+                e.currentTarget.style.color = isDark ? '#86efac' : '#2dd869';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = isDark ? '#60a5fa' : '#3b82f6';
+                e.currentTarget.style.color = isDark ? '#6ee7a8' : '#3ef07d';
               }}
             >
               {isExpanded ? (
@@ -410,7 +410,7 @@ export default function TemplatesPage() {
           <button
             onClick={() => handleUseTemplate(template.id)}
             style={{
-              backgroundColor: '#3b82f6',
+              backgroundColor: '#3ef07d',
               color: 'white',
               border: 'none',
               padding: isMobile ? '10px 16px' : '8px 16px',
@@ -422,10 +422,10 @@ export default function TemplatesPage() {
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#2563eb';
+              e.currentTarget.style.backgroundColor = '#2dd869';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.backgroundColor = '#3ef07d';
             }}
             title="Use this template to create an agreement"
           >
@@ -617,11 +617,11 @@ export default function TemplatesPage() {
     setViewingTemplate(null);
   };
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1e293b';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   return (
     <div style={{ 
@@ -690,7 +690,7 @@ export default function TemplatesPage() {
             <button
               onClick={() => setShowAddForm(true)}
               style={{
-                backgroundColor: '#3b82f6',
+                backgroundColor: '#3ef07d',
                 color: 'white',
                 border: 'none',
                 padding: isMobile ? '12px 20px' : '10px 20px',
@@ -855,7 +855,7 @@ export default function TemplatesPage() {
                   html={newTemplate.htmlContent || '<p>Enter content above to see preview...</p>'}
                   isDark={isDark}
                   style={{
-                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
                     borderColor: borderColor
                   }}
                 />
@@ -890,7 +890,7 @@ export default function TemplatesPage() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                    backgroundColor: loading ? '#9ca3af' : '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -901,12 +901,12 @@ export default function TemplatesPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
+                      e.currentTarget.style.backgroundColor = '#2dd869';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.backgroundColor = '#3ef07d';
                     }
                   }}
                 >
@@ -1033,7 +1033,7 @@ export default function TemplatesPage() {
               }}>
                 <div style={{
                   padding: '16px',
-                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  backgroundColor: isDark ? '#080c08' : '#f8fafc',
                   borderRadius: '6px',
                   border: `1px solid ${borderColor}`
                 }}>
@@ -1113,7 +1113,7 @@ export default function TemplatesPage() {
                     handleCloseViewModal();
                   }}
                   style={{
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1124,10 +1124,10 @@ export default function TemplatesPage() {
                     transition: 'background-color 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#2563eb';
+                    e.currentTarget.style.backgroundColor = '#2dd869';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                    e.currentTarget.style.backgroundColor = '#3ef07d';
                   }}
                 >
                   Use Template

@@ -61,10 +61,10 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
       <div
         className="attendant-card"
         style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: '#1a1d1a',
           padding: '32px',
           borderRadius: '12px',
-          border: '1px solid #334155',
+          border: '1px solid #2d3530',
           marginBottom: '24px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}
@@ -76,12 +76,12 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
             fontWeight: '700',
             color: '#ffffff',
             paddingBottom: '16px',
-            borderBottom: '1px solid #334155',
+            borderBottom: '1px solid #2d3530',
           }}
         >
           Event Files
         </h2>
-        <p style={{ margin: '0', color: '#94a3b8', fontSize: '14px' }}>Loading files...</p>
+        <p style={{ margin: '0', color: '#8f9a8f', fontSize: '14px' }}>Loading files...</p>
       </div>
     );
   }
@@ -91,10 +91,10 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
       <div
         className="attendant-card"
         style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: '#1a1d1a',
           padding: '32px',
           borderRadius: '12px',
-          border: '1px solid #334155',
+          border: '1px solid #2d3530',
           marginBottom: '24px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}
@@ -106,7 +106,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
             fontWeight: '700',
             color: '#ffffff',
             paddingBottom: '16px',
-            borderBottom: '1px solid #334155',
+            borderBottom: '1px solid #2d3530',
           }}
         >
           Event Files
@@ -120,10 +120,10 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
     <div
       className="attendant-card"
       style={{
-        backgroundColor: '#1e293b',
+        backgroundColor: '#1a1d1a',
         padding: '32px',
         borderRadius: '12px',
-        border: '1px solid #334155',
+        border: '1px solid #2d3530',
         marginBottom: '24px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       }}
@@ -135,13 +135,13 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
           fontWeight: '700',
           color: '#ffffff',
           paddingBottom: '16px',
-          borderBottom: '1px solid #334155',
+          borderBottom: '1px solid #2d3530',
         }}
       >
         Event Files
       </h2>
       {files.length === 0 ? (
-        <p style={{ margin: '0', color: '#94a3b8', fontSize: '14px' }}>
+        <p style={{ margin: '0', color: '#8f9a8f', fontSize: '14px' }}>
           No files have been uploaded for this event.
         </p>
       ) : (
@@ -160,18 +160,18 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                 alignItems: 'center',
                 gap: '12px',
                 padding: '16px',
-                backgroundColor: '#0f172a',
-                border: '1px solid #334155',
+                backgroundColor: '#080c08',
+                border: '1px solid #2d3530',
                 borderRadius: '8px',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#3b82f6';
-                e.currentTarget.style.backgroundColor = '#1e293b';
+                e.currentTarget.style.borderColor = '#3ef07d';
+                e.currentTarget.style.backgroundColor = '#1a1d1a';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#334155';
-                e.currentTarget.style.backgroundColor = '#0f172a';
+                e.currentTarget.style.borderColor = '#2d3530';
+                e.currentTarget.style.backgroundColor = '#080c08';
               }}
             >
               <div style={{ fontSize: '32px' }}>{getFileIcon(file.fileType)}</div>
@@ -189,7 +189,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                 >
                   {file.fileName}
                 </div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                <div style={{ fontSize: '12px', color: '#8f9a8f' }}>
                   {formatFileSize(file.fileSize)}
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                 rel="noopener noreferrer"
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: '#3ef07d',
                   color: 'white',
                   borderRadius: '6px',
                   fontSize: '14px',
@@ -209,10 +209,10 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2563eb';
+                  e.currentTarget.style.backgroundColor = '#2dd869';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                  e.currentTarget.style.backgroundColor = '#3ef07d';
                 }}
               >
                 Open in Drive

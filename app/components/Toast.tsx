@@ -45,7 +45,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
       case 'error':
         return { ...baseStyles, backgroundColor: '#ef4444' };
       case 'info':
-        return { ...baseStyles, backgroundColor: '#3b82f6' };
+        return { ...baseStyles, backgroundColor: '#3ef07d' };
       default:
         return { ...baseStyles, backgroundColor: '#10b981' };
     }

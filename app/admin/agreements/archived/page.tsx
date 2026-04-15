@@ -171,11 +171,11 @@ export default function ArchivedAgreementsPage() {
     }
   };
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1e293b';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   return (
     <div style={{ 
@@ -290,7 +290,7 @@ export default function ArchivedAgreementsPage() {
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
-                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
@@ -307,7 +307,7 @@ export default function ArchivedAgreementsPage() {
                   <button
                     onClick={() => window.open(`/agreement/${agreement.uniqueToken}`, '_blank')}
                     style={{
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: '#3ef07d',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -318,10 +318,10 @@ export default function ArchivedAgreementsPage() {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
+                      e.currentTarget.style.backgroundColor = '#2dd869';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.backgroundColor = '#3ef07d';
                     }}
                     title="View agreement"
                   >

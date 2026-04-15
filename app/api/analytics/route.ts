@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
     const statusDistribution = [
       { status: 'DRAFT', count: draftAgreements, color: '#dc2626' },
       { status: 'LIVE', count: liveAgreements, color: '#059669' },
-      { status: 'SIGNED', count: signedAgreements, color: '#2563eb' },
+      { status: 'SIGNED', count: signedAgreements, color: '#2dd869' },
       { status: 'COMPLETED', count: completedAgreements, color: '#7c3aed' }
     ];
 

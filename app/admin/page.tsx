@@ -153,11 +153,11 @@ export default function AdminHome() {
     }
   };
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1e293b';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -505,7 +505,7 @@ export default function AdminHome() {
                       borderRadius: '6px',
                       border: 'none',
                       backgroundColor: timePeriod === period 
-                        ? (isDark ? '#3b82f6' : '#2563eb')
+                        ? (isDark ? '#3ef07d' : '#2dd869')
                         : 'transparent',
                       color: timePeriod === period ? '#ffffff' : mutedText,
                       fontSize: '14px',
@@ -542,7 +542,7 @@ export default function AdminHome() {
                       color: textColor
                     }}
                   />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill="#3ef07d" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -605,15 +605,15 @@ export default function AdminHome() {
                         padding: '12px',
                         borderRadius: '8px',
                         border: `1px solid ${borderColor}`,
-                        backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                        backgroundColor: isDark ? '#080c08' : '#f8fafc',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+                        e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = isDark ? '#0f172a' : '#f8fafc';
+                        e.currentTarget.style.backgroundColor = isDark ? '#080c08' : '#f8fafc';
                       }}
                     >
                       <div style={{ 
@@ -704,15 +704,15 @@ export default function AdminHome() {
                           padding: '12px',
                           borderRadius: '8px',
                           border: `1px solid ${borderColor}`,
-                          backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                          backgroundColor: isDark ? '#080c08' : '#f8fafc',
                           cursor: 'pointer',
                           transition: 'all 0.2s'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+                          e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = isDark ? '#0f172a' : '#f8fafc';
+                          e.currentTarget.style.backgroundColor = isDark ? '#080c08' : '#f8fafc';
                         }}
                       >
                         <div style={{ fontSize: '14px', fontWeight: '600', color: textColor, marginBottom: '4px' }}>
@@ -731,7 +731,7 @@ export default function AdminHome() {
                             📍 {event.eventLocation}
                           </div>
                         )}
-                        <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600' }}>
+                        <div style={{ fontSize: '11px', color: '#3ef07d', fontWeight: '600' }}>
                           {event.daysUntil === 0 ? 'Today' : `${event.daysUntil} day${event.daysUntil === 1 ? '' : 's'} away`}
                         </div>
                       </div>
@@ -782,7 +782,7 @@ export default function AdminHome() {
                         transition: 'all 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f8fafc';
+                        e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
@@ -942,7 +942,7 @@ export default function AdminHome() {
                 <Bar 
                   yAxisId="left"
                   dataKey="eventCount" 
-                  fill="#3b82f6" 
+                  fill="#3ef07d" 
                   radius={[4, 4, 0, 0]}
                   name="eventCount"
                 />

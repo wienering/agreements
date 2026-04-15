@@ -82,11 +82,11 @@ export default function LeadsPage() {
     notes: '',
   });
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
   const textColor = isDark ? '#f8fafc' : '#0f172a';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   useEffect(() => {
     fetchLeads();
@@ -365,7 +365,7 @@ export default function LeadsPage() {
         </div>
 
         {followUpLeads.length > 0 && (
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: isDark ? '#1e3a5f' : '#dbeafe', borderRadius: '12px', border: `1px solid ${isDark ? '#3b82f6' : '#93c5fd'}` }}>
+          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: isDark ? '#164a2e' : '#ecfdf5', borderRadius: '12px', border: `1px solid ${isDark ? '#3ef07d' : '#86efac'}` }}>
             <h2 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
               Needs Follow-up ({followUpLeads.length})
             </h2>
@@ -389,7 +389,7 @@ export default function LeadsPage() {
                   <span style={{ fontSize: '12px', color: mutedText }}>Last: {formatDate(lead.lastContactedAt)}</span>
                   <Link
                     href={`/admin/agreements`}
-                    style={{ fontSize: '13px', color: '#3b82f6', textDecoration: 'none' }}
+                    style={{ fontSize: '13px', color: '#3ef07d', textDecoration: 'none' }}
                   >
                     View
                   </Link>
@@ -416,7 +416,7 @@ export default function LeadsPage() {
                       >
                         Create quote
                       </Link>
-                      <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                      <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#3ef07d', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
                         Mark contacted
                       </button>
                       <button onClick={() => openEditLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
@@ -437,7 +437,7 @@ export default function LeadsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: isDark ? '#334155' : '#f1f5f9' }}>
+                  <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: isDark ? '#2d3530' : '#f1f5f9' }}>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Contact</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Event Date</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Stage</th>
@@ -497,7 +497,7 @@ export default function LeadsPage() {
                           </div>
                         ) : (
                           <>
-                            <button onClick={() => setEditingLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            <button onClick={() => setEditingLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#3ef07d', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                               Mark contacted
                             </button>
                             {!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' && (

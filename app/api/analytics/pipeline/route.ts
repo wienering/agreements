@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         stage: 'Sent',
         count: liveCount,
         percentage: totalAgreements > 0 ? (liveCount / totalAgreements) * 100 : 0,
-        color: '#3b82f6',
+        color: '#3ef07d',
         description: 'Sent to clients for review',
         conversionRate: draftToLiveRate
       },

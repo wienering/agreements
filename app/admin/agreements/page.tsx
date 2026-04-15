@@ -471,7 +471,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     if (!paymentStatus) {
       return {
         color: mutedText,
-        backgroundColor: isDark ? '#1e293b' : '#f1f5f9'
+        backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9'
       };
     }
     
@@ -498,7 +498,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     
     return {
       color: mutedText,
-      backgroundColor: isDark ? '#1e293b' : '#f1f5f9'
+      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9'
     };
   };
 
@@ -1459,11 +1459,11 @@ const normalizePaymentStatus = (value?: string | null) => {
     }
   };
 
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const textColor = isDark ? '#f1f5f9' : '#1e293b';
-  const mutedText = isDark ? '#94a3b8' : '#64748b';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const mainBg = isDark ? '#080c08' : '#f8fafc';
+  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? '#8f9a8f' : '#64748b';
+  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
 
   return (
     <div style={{ 
@@ -1531,7 +1531,7 @@ const normalizePaymentStatus = (value?: string | null) => {
           <button
             onClick={() => setShowCreateForm(true)}
             style={{
-              backgroundColor: '#3b82f6',
+              backgroundColor: '#3ef07d',
               color: 'white',
               border: 'none',
               padding: isMobile ? '12px 20px' : '10px 20px',
@@ -1600,7 +1600,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   outline: 'none'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6';
+                  e.currentTarget.style.borderColor = '#3ef07d';
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = borderColor;
@@ -1636,8 +1636,8 @@ const normalizePaymentStatus = (value?: string | null) => {
               switch (s) {
                 case 'DRAFT': return '#dc2626';
                 case 'LIVE': return '#059669';
-                case 'SENT': return '#3b82f6';
-                case 'SIGNED': return '#2563eb';
+                case 'SENT': return '#3ef07d';
+                case 'SIGNED': return '#2dd869';
                 case 'COMPLETED': return '#7c3aed';
                 case 'CANCELLED': return '#dc2626';
                 default: return '#6b7280';
@@ -1651,7 +1651,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 case 'SIGNED': return '#eff6ff';
                 case 'COMPLETED': return '#faf5ff';
                 case 'CANCELLED': return '#fef2f2';
-                default: return isDark ? '#1e293b' : '#f1f5f9';
+                default: return isDark ? '#1a1d1a' : '#f1f5f9';
               }
             };
             
@@ -1663,7 +1663,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   padding: '6px 12px',
                   borderRadius: '6px',
                   border: `1px solid ${isActive ? getStatusColor(status) : borderColor}`,
-                  backgroundColor: isActive ? getStatusBgColor(status) : (isDark ? '#1e293b' : '#f1f5f9'),
+                  backgroundColor: isActive ? getStatusBgColor(status) : (isDark ? '#1a1d1a' : '#f1f5f9'),
                   color: isActive ? getStatusColor(status) : textColor,
                   fontSize: '13px',
                   fontWeight: isActive ? '600' : '500',
@@ -1673,12 +1673,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.backgroundColor = isDark ? '#334155' : '#e2e8f0';
+                    e.currentTarget.style.backgroundColor = isDark ? '#2d3530' : '#e2e8f0';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#f1f5f9';
+                    e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
                   }
                 }}
               >
@@ -1810,7 +1810,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                    backgroundColor: loading ? '#9ca3af' : '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1971,18 +1971,18 @@ const normalizePaymentStatus = (value?: string | null) => {
                       
                       // Status colors
                       const statusColor = agreement.status === 'SIGNED' ? '#10b981' : 
-                                         agreement.status === 'LIVE' ? '#3b82f6' : 
+                                         agreement.status === 'LIVE' ? '#3ef07d' : 
                                          agreement.status === 'DRAFT' ? '#f59e0b' : 
                                          agreement.status === 'COMPLETED' ? '#8b5cf6' :
                                          agreement.status === 'CANCELLED' ? '#ef4444' : '#6b7280';
                       
                       const needsFollowUp = agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3;
                       const notViewed = viewCount === 0;
-                      const bgColor = isDark ? '#1e293b' : '#ffffff';
-                      const borderCol = isDark ? '#334155' : '#e2e8f0';
-                      const textCol = isDark ? '#f1f5f9' : '#1e293b';
-                      const mutedCol = isDark ? '#94a3b8' : '#64748b';
-                      const iconBg = isDark ? '#334155' : '#e2e8f0';
+                      const bgColor = isDark ? '#1a1d1a' : '#ffffff';
+                      const borderCol = isDark ? '#2d3530' : '#e2e8f0';
+                      const textCol = isDark ? '#ffffff' : '#1e293b';
+                      const mutedCol = isDark ? '#8f9a8f' : '#64748b';
+                      const iconBg = isDark ? '#2d3530' : '#e2e8f0';
                       
                       tooltip.style.cssText = 'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' + bgColor + '; border: 1px solid ' + borderCol + '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 240px; font-size: 13px; color: ' + textCol + '; overflow: hidden;';
                       
@@ -2031,7 +2031,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       {agreement.client.email}
                     </p>
                     {(agreement as any).backdropLink?.name && (
-                      <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '14px', fontWeight: '500' }}>
+                      <p style={{ margin: '4px 0 0 0', color: '#3ef07d', fontSize: '14px', fontWeight: '500' }}>
                         🔗 Backdrop Link: {(agreement as any).backdropLink.name}
                       </p>
                     )}
@@ -2050,7 +2050,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       fontSize: '12px', 
                       color: agreement.status === 'DRAFT' ? '#dc2626' : 
                              agreement.status === 'LIVE' ? '#059669' :
-                             agreement.status === 'SIGNED' ? '#2563eb' :
+                             agreement.status === 'SIGNED' ? '#2dd869' :
                              agreement.status === 'COMPLETED' ? '#7c3aed' :
                              agreement.status === 'CANCELLED' ? '#dc2626' : mutedText,
                       backgroundColor: agreement.status === 'DRAFT' ? '#fef2f2' :
@@ -2058,7 +2058,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                                       agreement.status === 'SIGNED' ? '#eff6ff' :
                                       agreement.status === 'COMPLETED' ? '#faf5ff' :
                                       agreement.status === 'CANCELLED' ? '#fef2f2' :
-                                      isDark ? '#1e293b' : '#f1f5f9',
+                                      isDark ? '#1a1d1a' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto',
@@ -2073,7 +2073,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setNewStatus(agreement.status);
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#3b82f6';
+                      e.currentTarget.style.borderColor = '#3ef07d';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'transparent';
@@ -2085,7 +2085,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
-                      backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
@@ -2110,7 +2110,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       <span style={{ 
                         fontSize: '12px', 
                         color: mutedText,
-                        backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                        backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         alignSelf: isMobile ? 'flex-start' : 'auto',
@@ -2204,7 +2204,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setShowCopyLinkModal(true);
                     }}
                     style={{
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: '#3ef07d',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2215,10 +2215,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
+                      e.currentTarget.style.backgroundColor = '#2dd869';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.backgroundColor = '#3ef07d';
                     }}
                     title="View agreement options"
                   >
@@ -2578,7 +2578,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               setShowCopyLinkModal(true);
                             }}
                             style={{
-                              backgroundColor: '#3b82f6',
+                              backgroundColor: '#3ef07d',
                               color: 'white',
                               border: 'none',
                               padding: '8px 16px',
@@ -2729,7 +2729,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onChange={setEditingContent}
                   placeholder="Enter agreement content here..."
                   style={{
-                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
                     color: textColor,
                     borderColor: borderColor
                   }}
@@ -2807,7 +2807,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                         border: '1px solid ' + borderColor,
 
-                        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                        backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
 
                         color: textColor,
 
@@ -2819,13 +2819,13 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                       onMouseEnter={(e) => {
 
-                        e.currentTarget.style.backgroundColor = isDark ? '#334155' : '#f1f5f9';
+                        e.currentTarget.style.backgroundColor = isDark ? '#2d3530' : '#f1f5f9';
 
                       }}
 
                       onMouseLeave={(e) => {
 
-                        e.currentTarget.style.backgroundColor = isDark ? '#1e293b' : '#ffffff';
+                        e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#ffffff';
 
                       }}
 
@@ -2861,7 +2861,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   eventData={selectedAgreement?.event}
                   isDark={isDark}
                   style={{
-                    backgroundColor: isDark ? '#0f172a' : '#fafafa',
+                    backgroundColor: isDark ? '#080c08' : '#fafafa',
                     borderColor: borderColor
                   }}
                 />
@@ -2871,7 +2871,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <div style={{ 
                 marginTop: '24px', 
                 padding: '16px', 
-                backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
                 borderRadius: '8px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -2955,7 +2955,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     Event Gallery Links
                   </label>
                   {galleryLinks.map((g, i) => (
-                    <div key={i} style={{ marginBottom: '12px', padding: '12px', border: `1px solid ${borderColor}`, borderRadius: '6px', backgroundColor: isDark ? '#0f172a' : '#ffffff' }}>
+                    <div key={i} style={{ marginBottom: '12px', padding: '12px', border: `1px solid ${borderColor}`, borderRadius: '6px', backgroundColor: isDark ? '#080c08' : '#ffffff' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <span style={{ fontSize: '12px', color: mutedText }}>Gallery {i + 1}</span>
                         {galleryLinks.length > 1 && (
@@ -3233,7 +3233,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         marginTop: '8px',
                         padding: '8px 12px',
                         backgroundColor: isDark ? '#1e3a5f' : '#dbeafe',
-                        border: `1px solid ${isDark ? '#3b82f6' : '#3b82f6'}`,
+                        border: `1px solid ${isDark ? '#3ef07d' : '#3ef07d'}`,
                         borderRadius: '4px',
                         fontSize: '13px',
                         color: isDark ? '#93c5fd' : '#1e40af',
@@ -3271,7 +3271,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   disabled={saving}
                   style={{
                     width: '100%',
-                    backgroundColor: saving ? '#9ca3af' : '#3b82f6',
+                    backgroundColor: saving ? '#9ca3af' : '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: isMobile ? '8px' : '10px',
@@ -3323,7 +3323,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     window.open(clientLink, '_blank');
                   }}
                   style={{
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -3518,7 +3518,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={() => handleUpdateStatus(editingStatusAgreementId || '')}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#3b82f6',
+                    backgroundColor: saving ? '#9ca3af' : '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -3612,7 +3612,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={() => handleUpdateExpiration(editingAgreementId || '')}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#3b82f6',
+                    backgroundColor: saving ? '#9ca3af' : '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -4024,8 +4024,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                 
                 <div style={{
                   padding: '12px',
-                  backgroundColor: isDark ? '#1e293b' : '#fef3c7',
-                  border: `1px solid ${isDark ? '#334155' : '#fde68a'}`,
+                  backgroundColor: isDark ? '#1a1d1a' : '#fef3c7',
+                  border: `1px solid ${isDark ? '#2d3530' : '#fde68a'}`,
                   borderRadius: '6px',
                   marginBottom: '16px'
                 }}>
@@ -4320,7 +4320,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                   {invoiceResult.invoices && invoiceResult.invoices.length > 0 && (
                     <div style={{
-                      backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
                       border: `1px solid ${borderColor}`,
                       borderRadius: '8px',
                       padding: '20px',
@@ -4386,7 +4386,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               rel="noopener noreferrer"
                               style={{
                                 display: 'inline-block',
-                                backgroundColor: '#3b82f6',
+                                backgroundColor: '#3ef07d',
                                 color: 'white',
                                 padding: '8px 16px',
                                 borderRadius: '4px',
@@ -4396,10 +4396,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 marginTop: '8px'
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#2563eb';
+                                e.currentTarget.style.backgroundColor = '#2dd869';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#3b82f6';
+                                e.currentTarget.style.backgroundColor = '#3ef07d';
                               }}
                             >
                               View Invoice →
@@ -4429,7 +4429,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <button
                       onClick={closeInvoiceModal}
                       style={{
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: '#3ef07d',
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
@@ -4491,7 +4491,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               {!creatingInvoice && !invoiceResult && !invoiceError && (
                 <div>
                   <div style={{
-                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '8px',
                     padding: '20px',
@@ -4515,7 +4515,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#94a3b8' : '#64748b',
+                          color: isDark ? '#8f9a8f' : '#64748b',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -4536,7 +4536,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#94a3b8' : '#64748b',
+                          color: isDark ? '#8f9a8f' : '#64748b',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -4557,7 +4557,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#94a3b8' : '#64748b',
+                          color: isDark ? '#8f9a8f' : '#64748b',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -4578,7 +4578,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#94a3b8' : '#64748b',
+                          color: isDark ? '#8f9a8f' : '#64748b',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -4606,7 +4606,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#94a3b8' : '#64748b',
+                      color: isDark ? '#8f9a8f' : '#64748b',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '8px'
@@ -4684,7 +4684,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         display: 'block',
                         fontSize: '12px',
                         fontWeight: '600',
-                        color: isDark ? '#94a3b8' : '#64748b',
+                        color: isDark ? '#8f9a8f' : '#64748b',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         marginBottom: '8px'
@@ -4865,7 +4865,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               <div style={{
-                backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                backgroundColor: isDark ? '#080c08' : '#f8fafc',
                 border: `1px solid ${borderColor}`,
                 borderRadius: '8px',
                 padding: '24px',
@@ -4890,7 +4890,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#94a3b8' : '#64748b',
+                      color: isDark ? '#8f9a8f' : '#64748b',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -4911,7 +4911,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#94a3b8' : '#64748b',
+                      color: isDark ? '#8f9a8f' : '#64748b',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -4932,7 +4932,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#94a3b8' : '#64748b',
+                      color: isDark ? '#8f9a8f' : '#64748b',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -4958,7 +4958,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#94a3b8' : '#64748b',
+                      color: isDark ? '#8f9a8f' : '#64748b',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -4978,7 +4978,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               <div style={{
-                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                backgroundColor: isDark ? '#080c08' : '#ffffff',
                 border: `1px solid ${borderColor}`,
                 borderRadius: '8px',
                 padding: '24px',
@@ -4993,7 +4993,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   Email Content Preview
                 </h3>
                 <div style={{
-                  backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+                  backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
                   border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   padding: '20px',
@@ -5020,7 +5020,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       Your photo booth agreement is ready for review and signature. Please click the link below to view and sign your agreement.
                     </p>
                     <div style={{
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: '#3ef07d',
                       color: 'white',
                       padding: '12px 24px',
                       borderRadius: '6px',
@@ -5031,7 +5031,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }}>
                       View & Sign Agreement →
                     </div>
-                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: isDark ? '#94a3b8' : '#64748b' }}>
+                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: isDark ? '#8f9a8f' : '#64748b' }}>
                       This agreement expires on {new Date(previewAgreement.expiresAt).toLocaleDateString('en-CA', {
                         timeZone: 'America/Toronto',
                         year: 'numeric',
@@ -5144,7 +5144,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <div style={{
                 marginBottom: '20px',
                 padding: '16px',
-                backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
                 borderRadius: '6px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -5249,7 +5249,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <div style={{
                 marginBottom: '20px',
                 padding: '16px',
-                backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
                 borderRadius: '6px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -5370,7 +5370,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -5546,7 +5546,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#3ef07d',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',

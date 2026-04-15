@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { adminTheme } from '../lib/adminTheme';
 
 export default function AdminLayout({
   children,
@@ -53,8 +54,8 @@ export default function AdminLayout({
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: isDark ? '#0f172a' : '#f8fafc',
-        color: isDark ? '#f8fafc' : '#0f172a'
+        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        color: isDark ? adminTheme.dark.text : '#0f172a'
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>⏳</div>
@@ -69,11 +70,13 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-  const sidebarBg = isDark ? '#1e293b' : '#1e293b';
-  const mainBg = isDark ? '#0f172a' : '#f8fafc';
-  const textColor = isDark ? '#f8fafc' : '#0f172a';
-  const cardBg = isDark ? '#1e293b' : '#ffffff';
-  const borderColor = isDark ? '#334155' : '#e2e8f0';
+  const sidebarBg = isDark ? adminTheme.dark.sidebar : '#1e293b';
+  const mainBg = isDark ? adminTheme.dark.bg : adminTheme.light.bg;
+  const textColor = isDark ? adminTheme.dark.text : '#0f172a';
+  const cardBg = isDark ? adminTheme.dark.card : '#ffffff';
+  const borderColor = isDark ? adminTheme.dark.border : '#e2e8f0';
+  const navActiveBg = 'rgba(62, 240, 125, 0.12)';
+  const navHoverBg = adminTheme.dark.surfaceHover;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: mainBg }}>
@@ -116,20 +119,21 @@ export default function AdminLayout({
             <div style={{ 
               width: '40px', 
               height: '40px', 
-              backgroundColor: '#fbbf24', 
+              backgroundColor: 'rgba(62, 240, 125, 0.12)', 
               borderRadius: '8px',
+              border: `1px solid ${adminTheme.dark.accent}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '18px',
               fontWeight: 'bold',
-              color: '#1e293b'
+              color: adminTheme.dark.accent
             }}>
               PG
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>Photobooth Guys</h1>
-              <p style={{ margin: 0, color: '#94a3b8', fontSize: '12px' }}>Agreements Admin</p>
+              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: adminTheme.dark.accent }}>Photobooth Guys</h1>
+              <p style={{ margin: 0, color: adminTheme.dark.muted, fontSize: '12px' }}>Agreements Admin</p>
             </div>
           </div>
         </div>
@@ -150,17 +154,18 @@ export default function AdminLayout({
                 style={{
                   display: 'flex',
                   padding: '12px 24px',
-                  backgroundColor: isActive ? '#334155' : 'transparent',
-                  color: 'white',
+                  backgroundColor: isActive ? navActiveBg : 'transparent',
+                  color: isActive ? adminTheme.dark.accent : 'rgba(255, 255, 255, 0.88)',
                   textDecoration: 'none',
                   alignItems: 'center',
                   gap: '12px',
                   fontSize: '16px',
-                  transition: 'background-color 0.2s',
+                  transition: 'background-color 0.2s, color 0.2s',
+                  fontWeight: isActive ? 600 : 400,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.backgroundColor = '#334155';
+                    e.currentTarget.style.backgroundColor = navHoverBg;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -190,8 +195,8 @@ export default function AdminLayout({
               style={{
                 width: '100%',
                 padding: '10px 20px',
-                backgroundColor: '#374151',
-                color: 'white',
+                backgroundColor: navHoverBg,
+                color: 'rgba(255, 255, 255, 0.92)',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
@@ -204,10 +209,10 @@ export default function AdminLayout({
               }}
               title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#4b5563';
+                e.currentTarget.style.backgroundColor = adminTheme.dark.border;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#374151';
+                e.currentTarget.style.backgroundColor = navHoverBg;
               }}
             >
               <span>{isDark ? '☀️' : '🌙'}</span>
@@ -317,19 +322,20 @@ export default function AdminLayout({
                 <div style={{
                   width: '32px',
                   height: '32px',
-                  backgroundColor: '#fbbf24',
+                  backgroundColor: 'rgba(62, 240, 125, 0.12)',
                   borderRadius: '6px',
+                  border: `1px solid ${adminTheme.dark.accent}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  color: '#1e293b',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                  color: adminTheme.dark.accent,
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
                 }}>
                   PG
                 </div>
-                <span style={{ fontSize: '16px', fontWeight: '600', color: textColor }}>
+                <span style={{ fontSize: '16px', fontWeight: '600', color: adminTheme.dark.accent }}>
                   Photobooth Guys
                 </span>
               </Link>

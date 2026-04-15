@@ -11,7 +11,7 @@ export default function Error({
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
+        backgroundColor: '#080c08',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -21,10 +21,10 @@ export default function Error({
     >
       <div
         style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: '#1a1d1a',
           padding: '48px',
           borderRadius: '12px',
-          border: '1px solid #334155',
+          border: '1px solid #2d3530',
           textAlign: 'center',
           maxWidth: '600px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -57,7 +57,7 @@ export default function Error({
         </h1>
         <p
           style={{
-            color: '#94a3b8',
+            color: '#8f9a8f',
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.6',
@@ -70,15 +70,15 @@ export default function Error({
             style={{
               marginBottom: '24px',
               textAlign: 'left',
-              backgroundColor: '#0f172a',
+              backgroundColor: '#080c08',
               padding: '16px',
               borderRadius: '8px',
-              border: '1px solid #334155',
+              border: '1px solid #2d3530',
             }}
           >
             <summary
               style={{
-                color: '#94a3b8',
+                color: '#8f9a8f',
                 cursor: 'pointer',
                 marginBottom: '8px',
               }}
@@ -102,7 +102,7 @@ export default function Error({
           onClick={reset}
           style={{
             padding: '12px 24px',
-            backgroundColor: '#3b82f6',
+            backgroundColor: '#3ef07d',
             color: '#ffffff',
             border: 'none',
             borderRadius: '8px',
@@ -112,10 +112,10 @@ export default function Error({
             transition: 'background-color 0.2s',
           }}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563eb';
+            e.currentTarget.style.backgroundColor = '#2dd869';
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#3b82f6';
+            e.currentTarget.style.backgroundColor = '#3ef07d';
           }}
         >
           Try Again
