@@ -401,7 +401,7 @@ export default function AdminHome() {
                   {activeTotal}
                 </div>
                 <div className="admin-overview-status-grid">
-                  {activeByStatus.map((row) => (
+                  {activeByStatus.filter((row) => row.count > 0).map((row) => (
                     <div
                       key={row.status}
                       style={{
