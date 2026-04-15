@@ -482,6 +482,15 @@ export default function TemplatesPage() {
     fetchTemplates();
   }, []);
 
+  useEffect(() => {
+    if (!showAddForm) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showAddForm]);
+
   const fetchTemplates = async () => {
     try {
       const response = await fetch('/api/templates');
@@ -757,15 +766,38 @@ export default function TemplatesPage() {
           </div>
         )}
 
-        {/* Add/Edit Form */}
+        {/* Add/Edit Form — viewport modal */}
         {showAddForm && (
-          <div style={{
-            backgroundColor: cardBg,
-            border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
-            padding: '24px',
-            marginBottom: '24px'
-          }}>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1000,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: isMobile ? '12px' : '20px',
+              overflowY: 'auto',
+            }}
+            onClick={handleCancelEdit}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '24px',
+                width: '100%',
+                maxWidth: '1200px',
+                maxHeight: 'min(90vh, 100%)',
+                overflowY: 'auto',
+                boxSizing: 'border-box',
+              }}
+            >
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
               {editingTemplate ? 'Edit Template' : 'Create New Template'}
             </h2>
@@ -922,6 +954,7 @@ export default function TemplatesPage() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
 

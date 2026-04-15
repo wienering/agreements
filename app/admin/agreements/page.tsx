@@ -419,6 +419,8 @@ const normalizePaymentStatus = (value?: string | null) => {
           setEditingExpiration(false);
           setEditingAgreementId(null);
           setNewExpirationDate('');
+        } else if (showCreateForm) {
+          setShowCreateForm(false);
         } else if (selectedAgreement) {
           setSelectedAgreement(null);
         }
@@ -437,8 +439,18 @@ const normalizePaymentStatus = (value?: string | null) => {
     showPaymentWarningModal,
     editingStatus,
     editingExpiration,
+    showCreateForm,
     selectedAgreement
   ]);
+
+  useEffect(() => {
+    if (!showCreateForm) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showCreateForm]);
 
   // Filter agreements based on search term and status
   useEffect(() => {
@@ -1842,15 +1854,38 @@ const normalizePaymentStatus = (value?: string | null) => {
           })}
         </div>
 
-        {/* Create Form */}
+        {/* Create Form — viewport modal */}
         {showCreateForm && (
-          <div style={{
-            backgroundColor: cardBg,
-            border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
-            padding: '24px',
-            marginBottom: '24px'
-          }}>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1000,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: isMobile ? '12px' : '20px',
+              overflowY: 'auto',
+            }}
+            onClick={() => setShowCreateForm(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px',
+                padding: '24px',
+                width: '100%',
+                maxWidth: '640px',
+                maxHeight: 'min(90vh, 100%)',
+                overflowY: 'auto',
+                boxSizing: 'border-box',
+              }}
+            >
             <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
               Create New Agreement
             </h2>
@@ -1977,6 +2012,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         )}
 
