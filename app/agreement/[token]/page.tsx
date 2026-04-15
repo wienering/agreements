@@ -445,7 +445,7 @@ export default function ClientAgreementPage() {
           width: '48px',
           height: '48px',
           border: `4px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
-          borderTop: '4px solid #3ef07d',
+          borderTop: '4px solid #4a9e72',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
@@ -619,7 +619,7 @@ export default function ClientAgreementPage() {
             <div style={{
               width: '80px',
               height: '80px',
-              backgroundColor: '#10b981',
+              backgroundColor: '#4a9e72',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -695,7 +695,7 @@ export default function ClientAgreementPage() {
               <div style={{
                 width: '60px',
                 height: '60px',
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
@@ -755,7 +755,7 @@ export default function ClientAgreementPage() {
                 }}
                 placeholder="Enter your email address"
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#3ef07d';
+                  e.target.style.borderColor = '#4a9e72';
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = isDark ? '#2d3530' : '#d1d5db';
@@ -805,7 +805,7 @@ export default function ClientAgreementPage() {
                 onClick={handleEmailVerification}
                 disabled={isVerifying || !verificationEmail.trim()}
                 style={{
-                  backgroundColor: isVerifying || !verificationEmail.trim() ? '#9ca3af' : '#3ef07d',
+                  backgroundColor: isVerifying || !verificationEmail.trim() ? '#9ca3af' : '#4a9e72',
                   color: 'white',
                   border: 'none',
                   padding: '12px 24px',
@@ -844,7 +844,7 @@ export default function ClientAgreementPage() {
               <div style={{
                 width: '40px',
                 height: '40px',
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
@@ -905,7 +905,7 @@ export default function ClientAgreementPage() {
             <div style={{
               width: '40px',
               height: '40px',
-              backgroundColor: '#3ef07d',
+              backgroundColor: '#4a9e72',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
@@ -1097,7 +1097,7 @@ export default function ClientAgreementPage() {
                 padding: '8px 16px',
                 backgroundColor: '#065f46',
                 borderRadius: '6px',
-                border: '1px solid #10b981',
+                border: '1px solid #4a9e72',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -1150,7 +1150,7 @@ export default function ClientAgreementPage() {
               padding: '20px',
               backgroundColor: '#065f46',
               borderRadius: '8px',
-              border: '1px solid #10b981',
+              border: '1px solid #4a9e72',
               display: 'inline-block'
             }}>
               <div style={{
@@ -1333,7 +1333,7 @@ export default function ClientAgreementPage() {
                 onClick={handleDownloadPDF}
                 disabled={isDownloading}
                 style={{
-                  backgroundColor: '#3ef07d',
+                  backgroundColor: '#4a9e72',
                   color: 'white',
                   border: 'none',
                   padding: '16px 32px',
@@ -1352,14 +1352,14 @@ export default function ClientAgreementPage() {
                 }}
                 onMouseEnter={(e) => {
                   if (!isDownloading) {
-                    e.currentTarget.style.backgroundColor = '#2dd869';
+                    e.currentTarget.style.backgroundColor = '#3d8560';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isDownloading) {
-                    e.currentTarget.style.backgroundColor = '#3ef07d';
+                    e.currentTarget.style.backgroundColor = '#4a9e72';
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
                   }
@@ -1372,7 +1372,7 @@ export default function ClientAgreementPage() {
                 onClick={handleEmailAgreement}
                 disabled={isEmailing}
                 style={{
-                  backgroundColor: '#10b981',
+                  backgroundColor: '#4a9e72',
                   color: 'white',
                   border: 'none',
                   padding: '16px 32px',
@@ -1392,14 +1392,14 @@ export default function ClientAgreementPage() {
                 }}
                 onMouseEnter={(e) => {
                   if (!isEmailing) {
-                    e.currentTarget.style.backgroundColor = '#059669';
+                    e.currentTarget.style.backgroundColor = '#3d8560';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isEmailing) {
-                    e.currentTarget.style.backgroundColor = '#10b981';
+                    e.currentTarget.style.backgroundColor = '#4a9e72';
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
                   }
@@ -1412,7 +1412,7 @@ export default function ClientAgreementPage() {
                     right: '-80px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    backgroundColor: '#10b981',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     padding: '6px 12px',
                     borderRadius: '6px',
@@ -1590,7 +1590,7 @@ export default function ClientAgreementPage() {
                   onChange={(e) => setClientName(e.target.value)}
                   onFocus={(e) => {
                     e.target.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
-                    e.target.style.borderColor = '#3ef07d';
+                    e.target.style.borderColor = '#4a9e72';
                     e.target.style.transform = 'scale(1.02)';
                   }}
                   onBlur={(e) => {
@@ -1629,7 +1629,7 @@ export default function ClientAgreementPage() {
                   onChange={(e) => setClientEmail(e.target.value)}
                   onFocus={(e) => {
                     e.target.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
-                    e.target.style.borderColor = '#3ef07d';
+                    e.target.style.borderColor = '#4a9e72';
                     e.target.style.transform = 'scale(1.02)';
                   }}
                   onBlur={(e) => {
@@ -1858,7 +1858,7 @@ export default function ClientAgreementPage() {
                   onClick={handleSendEmail}
                   disabled={isEmailing}
                   style={{
-                    backgroundColor: '#10b981',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -1899,7 +1899,7 @@ export default function ClientAgreementPage() {
               <div style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',

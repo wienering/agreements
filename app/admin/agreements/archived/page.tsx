@@ -307,7 +307,7 @@ export default function ArchivedAgreementsPage() {
                   <button
                     onClick={() => window.open(`/agreement/${agreement.uniqueToken}`, '_blank')}
                     style={{
-                      backgroundColor: '#3ef07d',
+                      backgroundColor: '#4a9e72',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -318,10 +318,10 @@ export default function ArchivedAgreementsPage() {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2dd869';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3ef07d';
+                      e.currentTarget.style.backgroundColor = '#4a9e72';
                     }}
                     title="View agreement"
                   >
@@ -331,7 +331,7 @@ export default function ArchivedAgreementsPage() {
                     onClick={() => handleUnarchiveAgreement(agreement.id)}
                     disabled={loading}
                     style={{
-                      backgroundColor: loading ? '#9ca3af' : '#059669',
+                      backgroundColor: loading ? '#9ca3af' : '#3d8560',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -348,7 +348,7 @@ export default function ArchivedAgreementsPage() {
                     }}
                     onMouseLeave={(e) => {
                       if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#059669';
+                        e.currentTarget.style.backgroundColor = '#3d8560';
                       }
                     }}
                     title="Unarchive this agreement"

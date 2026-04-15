@@ -478,7 +478,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     const statusLower = paymentStatus.toLowerCase();
     if (statusLower.includes('paid') && !statusLower.includes('deposit')) {
       return {
-        color: '#059669',
+        color: '#3d8560',
         backgroundColor: '#f0fdf4',
         border: '1px solid #bbf7d0'
       };
@@ -1531,7 +1531,7 @@ const normalizePaymentStatus = (value?: string | null) => {
           <button
             onClick={() => setShowCreateForm(true)}
             style={{
-              backgroundColor: '#3ef07d',
+              backgroundColor: '#4a9e72',
               color: 'white',
               border: 'none',
               padding: isMobile ? '12px 20px' : '10px 20px',
@@ -1600,7 +1600,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   outline: 'none'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#3ef07d';
+                  e.currentTarget.style.borderColor = '#4a9e72';
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = borderColor;
@@ -1635,9 +1635,9 @@ const normalizePaymentStatus = (value?: string | null) => {
             const getStatusColor = (s: string) => {
               switch (s) {
                 case 'DRAFT': return '#dc2626';
-                case 'LIVE': return '#059669';
-                case 'SENT': return '#3ef07d';
-                case 'SIGNED': return '#2dd869';
+                case 'LIVE': return '#3d8560';
+                case 'SENT': return '#4a9e72';
+                case 'SIGNED': return '#3d8560';
                 case 'COMPLETED': return '#7c3aed';
                 case 'CANCELLED': return '#dc2626';
                 default: return '#6b7280';
@@ -1810,7 +1810,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#3ef07d',
+                    backgroundColor: loading ? '#9ca3af' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1970,8 +1970,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                       const lastViewed = agreement.lastViewedAt ? new Date(agreement.lastViewedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : null;
                       
                       // Status colors
-                      const statusColor = agreement.status === 'SIGNED' ? '#10b981' : 
-                                         agreement.status === 'LIVE' ? '#3ef07d' : 
+                      const statusColor = agreement.status === 'SIGNED' ? '#4a9e72' : 
+                                         agreement.status === 'LIVE' ? '#4a9e72' : 
                                          agreement.status === 'DRAFT' ? '#f59e0b' : 
                                          agreement.status === 'COMPLETED' ? '#8b5cf6' :
                                          agreement.status === 'CANCELLED' ? '#ef4444' : '#6b7280';
@@ -2031,12 +2031,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                       {agreement.client.email}
                     </p>
                     {(agreement as any).backdropLink?.name && (
-                      <p style={{ margin: '4px 0 0 0', color: '#3ef07d', fontSize: '14px', fontWeight: '500' }}>
+                      <p style={{ margin: '4px 0 0 0', color: '#4a9e72', fontSize: '14px', fontWeight: '500' }}>
                         🔗 Backdrop Link: {(agreement as any).backdropLink.name}
                       </p>
                     )}
                     {agreement.selectedBackdropName && (
-                      <p style={{ margin: '4px 0 0 0', color: '#059669', fontSize: '14px', fontWeight: '500' }}>
+                      <p style={{ margin: '4px 0 0 0', color: '#3d8560', fontSize: '14px', fontWeight: '500' }}>
                         🖼️ Selected Backdrop: {agreement.selectedBackdropName}
                       </p>
                     )}
@@ -2049,8 +2049,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <span style={{ 
                       fontSize: '12px', 
                       color: agreement.status === 'DRAFT' ? '#dc2626' : 
-                             agreement.status === 'LIVE' ? '#059669' :
-                             agreement.status === 'SIGNED' ? '#2dd869' :
+                             agreement.status === 'LIVE' ? '#3d8560' :
+                             agreement.status === 'SIGNED' ? '#3d8560' :
                              agreement.status === 'COMPLETED' ? '#7c3aed' :
                              agreement.status === 'CANCELLED' ? '#dc2626' : mutedText,
                       backgroundColor: agreement.status === 'DRAFT' ? '#fef2f2' :
@@ -2073,7 +2073,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setNewStatus(agreement.status);
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#3ef07d';
+                      e.currentTarget.style.borderColor = '#4a9e72';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'transparent';
@@ -2150,7 +2150,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   <button
                     onClick={() => handleEditAgreement(agreement)}
                     style={{
-                      backgroundColor: '#059669',
+                      backgroundColor: '#3d8560',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2164,7 +2164,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       e.currentTarget.style.backgroundColor = '#047857';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#059669';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }}
                     title="Edit agreement content"
                   >
@@ -2204,7 +2204,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setShowCopyLinkModal(true);
                     }}
                     style={{
-                      backgroundColor: '#3ef07d',
+                      backgroundColor: '#4a9e72',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2215,10 +2215,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2dd869';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3ef07d';
+                      e.currentTarget.style.backgroundColor = '#4a9e72';
                     }}
                     title="View agreement options"
                   >
@@ -2232,7 +2232,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setShowAttendantModal(true);
                     }}
                     style={{
-                      backgroundColor: '#10b981',
+                      backgroundColor: '#4a9e72',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2243,10 +2243,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#059669';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#10b981';
+                      e.currentTarget.style.backgroundColor = '#4a9e72';
                     }}
                     title="View attendant page (event details for staff)"
                   >
@@ -2578,7 +2578,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               setShowCopyLinkModal(true);
                             }}
                             style={{
-                              backgroundColor: '#3ef07d',
+                              backgroundColor: '#4a9e72',
                               color: 'white',
                               border: 'none',
                               padding: '8px 16px',
@@ -3049,7 +3049,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         style={{
                           marginTop: '8px',
                           padding: '8px 16px',
-                          backgroundColor: sendingGalleryEmail ? '#9ca3af' : '#10b981',
+                          backgroundColor: sendingGalleryEmail ? '#9ca3af' : '#4a9e72',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -3204,7 +3204,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             disabled={saving}
                             style={{
                               width: '100%',
-                              backgroundColor: saving ? '#9ca3af' : '#059669',
+                              backgroundColor: saving ? '#9ca3af' : '#3d8560',
                               color: 'white',
                               border: 'none',
                               padding: '8px 12px',
@@ -3233,7 +3233,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         marginTop: '8px',
                         padding: '8px 12px',
                         backgroundColor: isDark ? '#1e3a5f' : '#dbeafe',
-                        border: `1px solid ${isDark ? '#3ef07d' : '#3ef07d'}`,
+                        border: `1px solid ${isDark ? '#4a9e72' : '#4a9e72'}`,
                         borderRadius: '4px',
                         fontSize: '13px',
                         color: isDark ? '#93c5fd' : '#1e40af',
@@ -3271,7 +3271,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   disabled={saving}
                   style={{
                     width: '100%',
-                    backgroundColor: saving ? '#9ca3af' : '#3ef07d',
+                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: isMobile ? '8px' : '10px',
@@ -3301,7 +3301,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={handleSaveAgreement}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#059669',
+                    backgroundColor: saving ? '#9ca3af' : '#3d8560',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -3323,7 +3323,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     window.open(clientLink, '_blank');
                   }}
                   style={{
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -3348,7 +3348,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#059669',
+                    backgroundColor: '#3d8560',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -3375,7 +3375,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#10b981',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -3518,7 +3518,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={() => handleUpdateStatus(editingStatusAgreementId || '')}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#3ef07d',
+                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -3612,7 +3612,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={() => handleUpdateExpiration(editingAgreementId || '')}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#3ef07d',
+                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -4305,7 +4305,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 <div>
                   <div style={{
                     backgroundColor: '#f0fdf4',
-                    border: '1px solid #86efac',
+                    border: '1px solid #9cb8aa',
                     borderRadius: '6px',
                     padding: '16px',
                     marginBottom: '24px'
@@ -4386,7 +4386,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               rel="noopener noreferrer"
                               style={{
                                 display: 'inline-block',
-                                backgroundColor: '#3ef07d',
+                                backgroundColor: '#4a9e72',
                                 color: 'white',
                                 padding: '8px 16px',
                                 borderRadius: '4px',
@@ -4396,10 +4396,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 marginTop: '8px'
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#2dd869';
+                                e.currentTarget.style.backgroundColor = '#3d8560';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#3ef07d';
+                                e.currentTarget.style.backgroundColor = '#4a9e72';
                               }}
                             >
                               View Invoice →
@@ -4429,7 +4429,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <button
                       onClick={closeInvoiceModal}
                       style={{
-                        backgroundColor: '#3ef07d',
+                        backgroundColor: '#4a9e72',
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
@@ -5020,7 +5020,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       Your photo booth agreement is ready for review and signature. Please click the link below to view and sign your agreement.
                     </p>
                     <div style={{
-                      backgroundColor: '#3ef07d',
+                      backgroundColor: '#4a9e72',
                       color: 'white',
                       padding: '12px 24px',
                       borderRadius: '6px',
@@ -5214,7 +5214,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: phoneVisibilityToggle ? '#059669' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: phoneVisibilityToggle ? '#3d8560' : (isDark ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: updatingPhoneVisibility ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -5319,7 +5319,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: virtualGreenScreenToggle ? '#059669' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: virtualGreenScreenToggle ? '#3d8560' : (isDark ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: updatingVirtualGreenScreen ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -5370,7 +5370,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -5394,7 +5394,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#059669',
+                    backgroundColor: '#3d8560',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -5519,7 +5519,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#059669',
+                    backgroundColor: '#3d8560',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -5546,7 +5546,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',

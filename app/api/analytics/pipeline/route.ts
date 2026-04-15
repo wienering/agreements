@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         stage: 'Sent',
         count: liveCount,
         percentage: totalAgreements > 0 ? (liveCount / totalAgreements) * 100 : 0,
-        color: '#3ef07d',
+        color: '#4a9e72',
         description: 'Sent to clients for review',
         conversionRate: draftToLiveRate
       },
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         stage: 'Signed',
         count: signedCount,
         percentage: totalAgreements > 0 ? (signedCount / totalAgreements) * 100 : 0,
-        color: '#10b981',
+        color: '#4a9e72',
         description: 'Digitally signed by clients',
         conversionRate: liveToSignedRate
       },

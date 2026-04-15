@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; color: #111827; background: #f3f4f6; }
             .container { max-width: 640px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-            .header { background: #22c55e; color: white; padding: 28px; text-align: center; }
+            .header { background: #3d8560; color: white; padding: 28px; text-align: center; }
             .content { padding: 28px; }
             .button-wrap { text-align: center; margin: 28px 0; }
             .button {

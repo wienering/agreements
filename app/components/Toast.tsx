@@ -41,13 +41,13 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
 
     switch (type) {
       case 'success':
-        return { ...baseStyles, backgroundColor: '#10b981' };
+        return { ...baseStyles, backgroundColor: '#4a9e72' };
       case 'error':
         return { ...baseStyles, backgroundColor: '#ef4444' };
       case 'info':
-        return { ...baseStyles, backgroundColor: '#3ef07d' };
+        return { ...baseStyles, backgroundColor: '#4a9e72' };
       default:
-        return { ...baseStyles, backgroundColor: '#10b981' };
+        return { ...baseStyles, backgroundColor: '#4a9e72' };
     }
   };
 

@@ -544,7 +544,7 @@ export default function ClientsPage() {
           <button
             onClick={() => setShowAddForm(true)}
             style={{
-              backgroundColor: '#3ef07d',
+              backgroundColor: '#4a9e72',
               color: 'white',
               border: 'none',
               padding: isMobile ? '12px 20px' : '10px 20px',
@@ -1294,7 +1294,7 @@ export default function ClientsPage() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#3ef07d',
+                    backgroundColor: loading ? '#9ca3af' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1349,7 +1349,7 @@ export default function ClientsPage() {
                       </h3>
                       {client.isWhitelabelClient && (
                         <span style={{
-                          backgroundColor: '#3ef07d',
+                          backgroundColor: '#4a9e72',
                           color: 'white',
                           padding: '2px 8px',
                           borderRadius: '4px',
@@ -1384,7 +1384,7 @@ export default function ClientsPage() {
                         <button
                           onClick={() => handleAddNewEvent(client)}
                           style={{
-                            backgroundColor: '#3ef07d',
+                            backgroundColor: '#4a9e72',
                             color: 'white',
                             border: 'none',
                             padding: '4px 12px',
@@ -1395,10 +1395,10 @@ export default function ClientsPage() {
                             transition: 'background-color 0.2s'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#2dd869';
+                            e.currentTarget.style.backgroundColor = '#3d8560';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3ef07d';
+                            e.currentTarget.style.backgroundColor = '#4a9e72';
                           }}
                           title="Add a new event to this client"
                         >
@@ -1472,7 +1472,7 @@ export default function ClientsPage() {
                               <button
                                 onClick={() => handleCreateAgreement(client, event)}
                                 style={{
-                                  backgroundColor: '#3ef07d',
+                                  backgroundColor: '#4a9e72',
                                   color: 'white',
                                   border: 'none',
                                   padding: '6px 12px',
@@ -1483,10 +1483,10 @@ export default function ClientsPage() {
                                   transition: 'background-color 0.2s'
                                 }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#2dd869';
+                                  e.currentTarget.style.backgroundColor = '#3d8560';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#3ef07d';
+                                  e.currentTarget.style.backgroundColor = '#4a9e72';
                                 }}
                                 title="Create agreement for this event"
                               >
@@ -1495,7 +1495,7 @@ export default function ClientsPage() {
                               <button
                                 onClick={() => handleEditEvent(event)}
                                 style={{
-                                  backgroundColor: '#059669',
+                                  backgroundColor: '#3d8560',
                                   color: 'white',
                                   border: 'none',
                                   padding: '6px 12px',
@@ -1509,7 +1509,7 @@ export default function ClientsPage() {
                                   e.currentTarget.style.backgroundColor = '#047857';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#059669';
+                                  e.currentTarget.style.backgroundColor = '#3d8560';
                                 }}
                                 title="Edit event details"
                               >
@@ -1594,7 +1594,7 @@ export default function ClientsPage() {
                   <button
                     onClick={() => handleEditClient(client)}
                     style={{
-                      backgroundColor: '#059669',
+                      backgroundColor: '#3d8560',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -1608,7 +1608,7 @@ export default function ClientsPage() {
                       e.currentTarget.style.backgroundColor = '#047857';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#059669';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }}
                     title="Edit client details"
                   >
@@ -1619,7 +1619,7 @@ export default function ClientsPage() {
                     <button
                       onClick={() => handleCreateAgreement(client)}
                       style={{
-                        backgroundColor: '#3ef07d',
+                        backgroundColor: '#4a9e72',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
@@ -1630,10 +1630,10 @@ export default function ClientsPage() {
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#2dd869';
+                        e.currentTarget.style.backgroundColor = '#3d8560';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#3ef07d';
+                        e.currentTarget.style.backgroundColor = '#4a9e72';
                       }}
                       title="Create new agreement for this client"
                     >

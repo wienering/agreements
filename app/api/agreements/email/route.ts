@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
               box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
             .header {
-              background: #22c55e;
+              background: #3d8560;
               color: white;
               padding: 30px;
               text-align: center;
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
               background: #f8fafc;
               padding: 20px;
               border-radius: 6px;
-              border-left: 4px solid #10b981;
+              border-left: 4px solid #4a9e72;
               margin: 20px 0;
             }
             .footer {
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
             }
             .button {
               display: inline-block;
-              background: #22c55e !important;
+              background: #3d8560 !important;
               color: white !important;
               padding: 18px 36px;
               text-decoration: none;
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
                 <p><strong>Email:</strong> ${agreement.client.email}</p>
                 <p><strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-                <p><strong>Status:</strong> <span style="color: #10b981; font-weight: bold;">✓ Already Signed</span></p>
+                <p><strong>Status:</strong> <span style="color: #4a9e72; font-weight: bold;">✓ Already Signed</span></p>
               </div>
               
               <div class="agreement-content">
@@ -210,8 +210,8 @@ export async function POST(request: NextRequest) {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${baseUrl}/agreement/${validatedData.token}" class="button" style="color: white !important; background-color: #22c55e !important;">View Online</a>
-                <a href="${baseUrl}/agreement/${validatedData.token}#download" class="button" style="color: white !important; background-color: #22c55e !important;">Download PDF</a>
+                <a href="${baseUrl}/agreement/${validatedData.token}" class="button" style="color: white !important; background-color: #3d8560 !important;">View Online</a>
+                <a href="${baseUrl}/agreement/${validatedData.token}#download" class="button" style="color: white !important; background-color: #3d8560 !important;">Download PDF</a>
               </div>
             </div>
             

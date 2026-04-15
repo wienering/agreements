@@ -452,7 +452,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   style={{
                     width: '44px',
                     height: '44px',
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1125,7 +1125,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#10b981',
+                          color: '#4a9e72',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -1158,7 +1158,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                           style={{
                             margin: '0',
                             fontSize: '16px',
-                            color: '#10b981',
+                            color: '#4a9e72',
                             fontWeight: '600',
                           }}
                         >
@@ -1239,7 +1239,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   style={{
                     width: '32px',
                     height: '32px',
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1379,7 +1379,7 @@ function EventExpiredError() {
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
@@ -1508,7 +1508,7 @@ function NotFoundError() {
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',

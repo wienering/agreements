@@ -264,7 +264,7 @@ export default function AdminHome() {
                 <div style={{
                   width: '24px',
                   height: '24px',
-                  backgroundColor: '#10b981',
+                  backgroundColor: '#4a9e72',
                   borderRadius: '6px'
                 }}></div>
                 <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Clients</span>
@@ -379,7 +379,7 @@ export default function AdminHome() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ 
                   fontSize: '14px', 
-                  color: (stats.trends?.agreements || 0) >= 0 ? '#10b981' : '#ef4444',
+                  color: (stats.trends?.agreements || 0) >= 0 ? '#4a9e72' : '#ef4444',
                   fontWeight: '600'
                 }}>
                   {(stats.trends?.agreements || 0) >= 0 ? '↑' : '↓'} {Math.abs(stats.trends?.agreements || 0)}%
@@ -403,7 +403,7 @@ export default function AdminHome() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ 
                   fontSize: '14px', 
-                  color: (stats.trends?.signed || 0) >= 0 ? '#10b981' : '#ef4444',
+                  color: (stats.trends?.signed || 0) >= 0 ? '#4a9e72' : '#ef4444',
                   fontWeight: '600'
                 }}>
                   {(stats.trends?.signed || 0) >= 0 ? '↑' : '↓'} {Math.abs(stats.trends?.signed || 0)}%
@@ -444,7 +444,7 @@ export default function AdminHome() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ 
                   fontSize: '14px', 
-                  color: (stats.trends?.clients || 0) >= 0 ? '#10b981' : '#ef4444',
+                  color: (stats.trends?.clients || 0) >= 0 ? '#4a9e72' : '#ef4444',
                   fontWeight: '600'
                 }}>
                   {(stats.trends?.clients || 0) >= 0 ? '↑' : '↓'} {Math.abs(stats.trends?.clients || 0)}%
@@ -505,7 +505,7 @@ export default function AdminHome() {
                       borderRadius: '6px',
                       border: 'none',
                       backgroundColor: timePeriod === period 
-                        ? (isDark ? '#3ef07d' : '#2dd869')
+                        ? (isDark ? '#4a9e72' : '#3d8560')
                         : 'transparent',
                       color: timePeriod === period ? '#ffffff' : mutedText,
                       fontSize: '14px',
@@ -542,7 +542,7 @@ export default function AdminHome() {
                       color: textColor
                     }}
                   />
-                  <Bar dataKey="count" fill="#3ef07d" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill="#4a9e72" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -731,7 +731,7 @@ export default function AdminHome() {
                             📍 {event.eventLocation}
                           </div>
                         )}
-                        <div style={{ fontSize: '11px', color: '#3ef07d', fontWeight: '600' }}>
+                        <div style={{ fontSize: '11px', color: '#4a9e72', fontWeight: '600' }}>
                           {event.daysUntil === 0 ? 'Today' : `${event.daysUntil} day${event.daysUntil === 1 ? '' : 's'} away`}
                         </div>
                       </div>
@@ -942,7 +942,7 @@ export default function AdminHome() {
                 <Bar 
                   yAxisId="left"
                   dataKey="eventCount" 
-                  fill="#3ef07d" 
+                  fill="#4a9e72" 
                   radius={[4, 4, 0, 0]}
                   name="eventCount"
                 />
@@ -950,9 +950,9 @@ export default function AdminHome() {
                   yAxisId="right"
                   type="monotone" 
                   dataKey="totalHours" 
-                  stroke="#10b981" 
+                  stroke="#4a9e72" 
                   strokeWidth={2}
-                  dot={{ fill: '#10b981', r: 4 }}
+                  dot={{ fill: '#4a9e72', r: 4 }}
                   name="totalHours"
                 />
               </ComposedChart>

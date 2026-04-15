@@ -201,7 +201,7 @@ export default function AttendantGroupsPage() {
           <button
             onClick={handleAdd}
             style={{
-              backgroundColor: '#3ef07d',
+              backgroundColor: '#4a9e72',
               color: 'white',
               border: 'none',
               padding: '12px 24px',
@@ -212,10 +212,10 @@ export default function AttendantGroupsPage() {
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#2dd869';
+              e.currentTarget.style.backgroundColor = '#3d8560';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3ef07d';
+              e.currentTarget.style.backgroundColor = '#4a9e72';
             }}
           >
             + Add Attendant Group
@@ -373,7 +373,7 @@ export default function AttendantGroupsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            color: '#10b981',
+                            color: '#4a9e72',
                             fontSize: '13px',
                             textDecoration: 'none',
                             fontWeight: '500'
@@ -384,7 +384,7 @@ export default function AttendantGroupsPage() {
                         <button
                           onClick={() => copyHubLink(group.slug, group.id)}
                           style={{
-                            backgroundColor: copiedId === group.id ? '#10b981' : '#059669',
+                            backgroundColor: copiedId === group.id ? '#4a9e72' : '#3d8560',
                             color: 'white',
                             border: 'none',
                             padding: '6px 10px',
@@ -403,7 +403,7 @@ export default function AttendantGroupsPage() {
                           }}
                           onMouseLeave={(e) => {
                             if (copiedId !== group.id) {
-                              e.currentTarget.style.backgroundColor = '#059669';
+                              e.currentTarget.style.backgroundColor = '#3d8560';
                             }
                           }}
                         >
@@ -423,7 +423,7 @@ export default function AttendantGroupsPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
-                                    color: '#3ef07d',
+                                    color: '#4a9e72',
                                     fontSize: '12px',
                                     textDecoration: 'none',
                                     fontWeight: '500',
@@ -445,7 +445,7 @@ export default function AttendantGroupsPage() {
                                     }
                                   }}
                                   style={{
-                                    backgroundColor: copiedId === `${group.id}-${attendantId}` ? '#10b981' : '#3ef07d',
+                                    backgroundColor: copiedId === `${group.id}-${attendantId}` ? '#4a9e72' : '#4a9e72',
                                     color: 'white',
                                     border: 'none',
                                     padding: '4px 8px',
@@ -458,12 +458,12 @@ export default function AttendantGroupsPage() {
                                   }}
                                   onMouseEnter={(e) => {
                                     if (copiedId !== `${group.id}-${attendantId}`) {
-                                      e.currentTarget.style.backgroundColor = '#2dd869';
+                                      e.currentTarget.style.backgroundColor = '#3d8560';
                                     }
                                   }}
                                   onMouseLeave={(e) => {
                                     if (copiedId !== `${group.id}-${attendantId}`) {
-                                      e.currentTarget.style.backgroundColor = '#3ef07d';
+                                      e.currentTarget.style.backgroundColor = '#4a9e72';
                                     }
                                   }}
                                 >
@@ -696,7 +696,7 @@ export default function AttendantGroupsPage() {
                   onClick={handleSave}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#6b7280' : '#3ef07d',
+                    backgroundColor: saving ? '#6b7280' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '10px 20px',
@@ -708,12 +708,12 @@ export default function AttendantGroupsPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!saving) {
-                      e.currentTarget.style.backgroundColor = '#2dd869';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!saving) {
-                      e.currentTarget.style.backgroundColor = '#3ef07d';
+                      e.currentTarget.style.backgroundColor = '#4a9e72';
                     }
                   }}
                 >

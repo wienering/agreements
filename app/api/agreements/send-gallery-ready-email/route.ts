@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { color: #3ef07d; margin: 0; }
+          .header h1 { color: #4a9e72; margin: 0; }
           .content { margin-bottom: 30px; }
           .gallery-ready { 
             background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%); 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           }
           .button { 
             display: inline-block; 
-            background-color: #10b981 !important; 
+            background-color: #4a9e72 !important; 
             color: white !important; 
             padding: 18px 36px; 
             text-decoration: none; 
@@ -131,10 +131,10 @@ export async function POST(request: NextRequest) {
             letter-spacing: 0.5px;
           }
           .button:hover { 
-            background-color: #059669; 
+            background-color: #3d8560; 
           }
           .button-secondary {
-            background-color: #22c55e !important;
+            background-color: #3d8560 !important;
           }
           .button-secondary:hover {
             background-color: #1d4ed8;
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
                 ${galleryLinks.map((g, i) => 
                   `<li style="margin-bottom: 8px;">
                     <strong>${(g.title || 'Photo Gallery').trim() || 'Gallery ' + (i + 1)}:</strong> 
-                    <a href="${g.url}" style="color: #22c55e;">${g.url}</a>
+                    <a href="${g.url}" style="color: #3d8560;">${g.url}</a>
                   </li>`
                 ).join('')}
               </ul>
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
               <p style="margin: 0;">Our team is here to help!</p>
               <p style="margin: 5px 0;"><strong>📧 Email:</strong> info@photoboothguys.ca</p>
               <p style="margin: 5px 0;"><strong>📞 Phone:</strong> 647-378-5332</p>
-              <p style="margin: 5px 0;"><strong>🌐 Website:</strong> <a href="https://photoboothguys.ca" style="color: #3ef07d;">photoboothguys.ca</a></p>
+              <p style="margin: 5px 0;"><strong>🌐 Website:</strong> <a href="https://photoboothguys.ca" style="color: #4a9e72;">photoboothguys.ca</a></p>
             </div>
             
             <p>Thank you again for choosing us. We look forward to capturing more memories for you in the future!</p>

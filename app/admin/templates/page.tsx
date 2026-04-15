@@ -147,7 +147,7 @@ export default function TemplatesPage() {
           cursor: 'pointer',
           position: 'relative',
           transition: 'all 0.2s ease',
-          border: isCopied ? '2px solid #10b981' : '2px solid transparent',
+          border: isCopied ? '2px solid #4a9e72' : '2px solid transparent',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -166,7 +166,7 @@ export default function TemplatesPage() {
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: '#10b981',
+            backgroundColor: '#4a9e72',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -340,7 +340,7 @@ export default function TemplatesPage() {
               onClick={() => onTogglePreview(template.id)}
               style={{
                 backgroundColor: 'transparent',
-                color: isDark ? '#6ee7a8' : '#3ef07d',
+                color: isDark ? '#82a894' : '#4a9e72',
                 border: 'none',
                 padding: '8px 0',
                 cursor: 'pointer',
@@ -353,10 +353,10 @@ export default function TemplatesPage() {
                 gap: '4px'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = isDark ? '#86efac' : '#2dd869';
+                e.currentTarget.style.color = isDark ? '#9cb8aa' : '#3d8560';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = isDark ? '#6ee7a8' : '#3ef07d';
+                e.currentTarget.style.color = isDark ? '#82a894' : '#4a9e72';
               }}
             >
               {isExpanded ? (
@@ -410,7 +410,7 @@ export default function TemplatesPage() {
           <button
             onClick={() => handleUseTemplate(template.id)}
             style={{
-              backgroundColor: '#3ef07d',
+              backgroundColor: '#4a9e72',
               color: 'white',
               border: 'none',
               padding: isMobile ? '10px 16px' : '8px 16px',
@@ -422,10 +422,10 @@ export default function TemplatesPage() {
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#2dd869';
+              e.currentTarget.style.backgroundColor = '#3d8560';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3ef07d';
+              e.currentTarget.style.backgroundColor = '#4a9e72';
             }}
             title="Use this template to create an agreement"
           >
@@ -673,7 +673,7 @@ export default function TemplatesPage() {
             <button
               onClick={() => setShowSmartFields(!showSmartFields)}
               style={{
-                backgroundColor: showSmartFields ? '#059669' : '#6b7280',
+                backgroundColor: showSmartFields ? '#3d8560' : '#6b7280',
                 color: 'white',
                 border: 'none',
                 padding: isMobile ? '12px 20px' : '10px 20px',
@@ -690,7 +690,7 @@ export default function TemplatesPage() {
             <button
               onClick={() => setShowAddForm(true)}
               style={{
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 color: 'white',
                 border: 'none',
                 padding: isMobile ? '12px 20px' : '10px 20px',
@@ -890,7 +890,7 @@ export default function TemplatesPage() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#3ef07d',
+                    backgroundColor: loading ? '#9ca3af' : '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -901,12 +901,12 @@ export default function TemplatesPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#2dd869';
+                      e.currentTarget.style.backgroundColor = '#3d8560';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#3ef07d';
+                      e.currentTarget.style.backgroundColor = '#4a9e72';
                     }
                   }}
                 >
@@ -1088,7 +1088,7 @@ export default function TemplatesPage() {
                     handleCloseViewModal();
                   }}
                   style={{
-                    backgroundColor: '#059669',
+                    backgroundColor: '#3d8560',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1102,7 +1102,7 @@ export default function TemplatesPage() {
                     e.currentTarget.style.backgroundColor = '#047857';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#059669';
+                    e.currentTarget.style.backgroundColor = '#3d8560';
                   }}
                 >
                   Edit Template
@@ -1113,7 +1113,7 @@ export default function TemplatesPage() {
                     handleCloseViewModal();
                   }}
                   style={{
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1124,10 +1124,10 @@ export default function TemplatesPage() {
                     transition: 'background-color 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#2dd869';
+                    e.currentTarget.style.backgroundColor = '#3d8560';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3ef07d';
+                    e.currentTarget.style.backgroundColor = '#4a9e72';
                   }}
                 >
                   Use Template

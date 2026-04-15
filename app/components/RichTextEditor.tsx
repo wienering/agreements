@@ -84,7 +84,7 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           width: '100%',
           minHeight: '200px',
           padding: '12px',
-          border: `1px solid ${isFocused ? '#3ef07d' : '#d1d5db'}`,
+          border: `1px solid ${isFocused ? '#4a9e72' : '#d1d5db'}`,
           borderRadius: '6px',
           backgroundColor: '#ffffff',
           color: '#1f2937',

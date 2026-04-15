@@ -253,7 +253,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          border: `2px dashed ${isDragging ? '#3ef07d' : '#cbd5e1'}`,
+          border: `2px dashed ${isDragging ? '#4a9e72' : '#cbd5e1'}`,
           borderRadius: '8px',
           padding: isMobile ? '24px 16px' : '32px',
           textAlign: 'center',
@@ -264,7 +264,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
-            e.currentTarget.style.borderColor = '#3ef07d';
+            e.currentTarget.style.borderColor = '#4a9e72';
             e.currentTarget.style.backgroundColor = '#eff6ff';
           }
         }}
@@ -305,7 +305,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
               <div style={{
                 width: `${uploadProgress}%`,
                 height: '100%',
-                backgroundColor: '#3ef07d',
+                backgroundColor: '#4a9e72',
                 transition: 'width 0.3s',
               }} />
             </div>
@@ -363,7 +363,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   rel="noopener noreferrer"
                   style={{
                     padding: isMobile ? '8px 12px' : '6px 12px',
-                    backgroundColor: '#3ef07d',
+                    backgroundColor: '#4a9e72',
                     color: 'white',
                     borderRadius: '6px',
                     fontSize: isMobile ? '13px' : '12px',
@@ -373,10 +373,10 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                     whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#2dd869';
+                    e.currentTarget.style.backgroundColor = '#3d8560';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3ef07d';
+                    e.currentTarget.style.backgroundColor = '#4a9e72';
                   }}
                 >
                   Open
