@@ -81,6 +81,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
       where: { id },
       select: {
         id: true,
+        clientId: true,
         selectedBackdropName: true,
         eventId: true,
         showPhoneNumberAlways: true,
@@ -93,9 +94,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
             eventLocation: true,
             eventStartTime: true,
             eventDuration: true,
-            eventType: true,
             notes: true,
-            address: true,
             isWhitelabelClient: true,
           },
         },
@@ -105,7 +104,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
             eventLocation: true,
             eventStartTime: true,
             eventDuration: true,
-            eventType: true,
             notes: true,
             eventName: true,
             eventPhone: true,
@@ -183,8 +181,16 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     const eventLocation = event ? event.eventLocation : client.eventLocation;
     const eventStartTime = event ? event.eventStartTime : client.eventStartTime;
     const eventDuration = event ? event.eventDuration : client.eventDuration;
-    const eventType = event ? event.eventType : client.eventType;
     const notes = event ? event.notes : client.notes;
+
+    const fileCount = await prisma.clientFile.count({
+      where: {
+        clientId: agreement.clientId,
+        ...(agreement.eventId
+          ? { OR: [{ eventId: agreement.eventId }, { eventId: null }] }
+          : {}),
+      },
+    });
     
     // For whitelabel clients, get event-specific contact info
     const isWhitelabelClient = client.isWhitelabelClient || false;
@@ -342,13 +348,13 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
             }
             .attendant-right-column {
               position: static !important;
-              order: -1 !important;
+              order: 1 !important;
               margin-bottom: 0 !important;
               width: 100% !important;
               max-width: 100% !important;
             }
             .attendant-left-column {
-              order: 1 !important;
+              order: 0 !important;
               width: 100% !important;
               max-width: 100% !important;
             }
@@ -515,414 +521,20 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
             </div>
           </header>
 
-          {/* Main Content */}
+          {/* Main Content — summary left; event files right only when files exist */}
           <main
             style={{
               maxWidth: '1400px',
               margin: '0 auto',
               padding: '48px 32px',
               display: 'grid',
-              gridTemplateColumns: '1fr 380px',
+              gridTemplateColumns: fileCount > 0 ? '1fr 380px' : 'minmax(0, 1fr)',
               gap: '32px',
               alignItems: 'start',
             }}
             className="attendant-main"
           >
-            {/* Left Column - Detailed Cards */}
             <div className="attendant-left-column">
-            {/* Client Information Card - Hidden for whitelabel events */}
-            {client.firstName && !isWhitelabelClient && (
-              <div
-                className="attendant-card"
-                style={{
-                  backgroundColor: '#1a1d1a',
-                  padding: '32px',
-                  borderRadius: '12px',
-                  border: '1px solid #2d3530',
-                  marginBottom: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <h2
-                  style={{
-                    margin: '0 0 24px 0',
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: '#ffffff',
-                    paddingBottom: '16px',
-                    borderBottom: '1px solid #2d3530',
-                  }}
-                >
-                  Client Information
-                </h2>
-                <div
-                  className="attendant-card-grid"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                    gap: '24px',
-                  }}
-                >
-                  <div>
-                    <p
-                      style={{
-                        margin: '0 0 8px 0',
-                        fontSize: '12px',
-                        color: '#8f9a8f',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      First Name
-                    </p>
-                    <p
-                      style={{
-                        margin: '0',
-                        fontSize: '18px',
-                        color: '#f1f5f9',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {client.firstName}
-                    </p>
-                  </div>
-                  {client.phone && (isEventWithin24Hours || showPhoneNumberAlways) && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Contact Number
-                      </p>
-                      <a
-                        href={getTelLink(client.phone) || '#'}
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#60a5fa',
-                          fontWeight: '600',
-                          textDecoration: 'none',
-                          display: 'block',
-                        }}
-                      >
-                        {client.phone}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Event Contact Information Card - Only for whitelabel clients */}
-            {isWhitelabelClient && (
-              <div
-                className="attendant-card"
-                style={{
-                  backgroundColor: '#1a1d1a',
-                  padding: '32px',
-                  borderRadius: '12px',
-                  border: '1px solid #2d3530',
-                  marginBottom: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <h2
-                  style={{
-                    margin: '0 0 24px 0',
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: '#ffffff',
-                    paddingBottom: '16px',
-                    borderBottom: '1px solid #2d3530',
-                  }}
-                >
-                  Event Contact Information
-                </h2>
-                <div
-                  className="attendant-card-grid"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                    gap: '24px',
-                  }}
-                >
-                  <div>
-                    <p
-                      style={{
-                        margin: '0 0 8px 0',
-                        fontSize: '12px',
-                        color: '#8f9a8f',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      Event Contact Name
-                    </p>
-                    <p
-                      style={{
-                        margin: '0',
-                        fontSize: '18px',
-                        color: '#f1f5f9',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {eventContactName}
-                    </p>
-                  </div>
-                  {eventContactPhone && (isEventWithin24Hours || showPhoneNumberAlways) && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Event Contact Number
-                      </p>
-                      <a
-                        href={getTelLink(eventContactPhone) || '#'}
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#60a5fa',
-                          fontWeight: '600',
-                          textDecoration: 'none',
-                          display: 'block',
-                        }}
-                      >
-                        {eventContactPhone}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Event Information Card */}
-            {(formattedEventDate ||
-              eventLocation ||
-              eventStartTime ||
-              eventDuration ||
-              eventType ||
-              backdropLink?.name) && (
-              <div
-                className="attendant-card"
-                style={{
-                  backgroundColor: '#1a1d1a',
-                  padding: '32px',
-                  borderRadius: '12px',
-                  border: '1px solid #2d3530',
-                  marginBottom: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <h2
-                  style={{
-                    margin: '0 0 24px 0',
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: '#ffffff',
-                    paddingBottom: '16px',
-                    borderBottom: '1px solid #2d3530',
-                  }}
-                >
-                  Event Details
-                </h2>
-                <div
-                  className="attendant-card-grid"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                    gap: '24px',
-                  }}
-                >
-                  {formattedEventDate && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Event Date
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#f1f5f9',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {formattedEventDate}
-                      </p>
-                    </div>
-                  )}
-
-                  {eventStartTime && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Start Time
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#f1f5f9',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {eventStartTime}
-                      </p>
-                    </div>
-                  )}
-
-                  {eventDuration && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Duration
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#f1f5f9',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {eventDuration}
-                      </p>
-                    </div>
-                  )}
-
-                  {eventLocation && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Address
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#f1f5f9',
-                          fontWeight: '600',
-                          lineHeight: '1.5',
-                        }}
-                      >
-                        {eventLocation}
-                      </p>
-                    </div>
-                  )}
-
-                  {eventType && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Event Type
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#f1f5f9',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {eventType}
-                      </p>
-                    </div>
-                  )}
-
-                  {backdropLink?.name && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 8px 0',
-                          fontSize: '12px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Attendant
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: '#f1f5f9',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {backdropLink.name}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            </div>
-
-            {/* Right Column - Event Summary */}
-            <div
-              className="attendant-right-column"
-              style={{
-                position: 'sticky',
-                top: '24px',
-              }}
-            >
               <div
                 className="attendant-card"
                 style={{
@@ -952,7 +564,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     gap: '20px',
                   }}
                 >
-                  {/* Date */}
                   {formattedEventDate && (
                     <div>
                       <p
@@ -969,7 +580,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {/* Start Time with Duration */}
                   {formattedTimeWithDuration && (
                     <div>
                       <p
@@ -997,7 +607,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {/* Client Name / Event Contact Name */}
                   {(isWhitelabelClient ? eventContactName : client.firstName) && (
                     <div>
                       <p
@@ -1025,38 +634,39 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {/* Contact Phone / Event Contact Phone */}
-                  {(isWhitelabelClient ? eventContactPhone : client.phone) && (isEventWithin24Hours || showPhoneNumberAlways) && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: '#8f9a8f',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        {isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}
-                      </p>
-                      <a
-                        href={getTelLink(isWhitelabelClient ? eventContactPhone : client.phone) || '#'}
-                        style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: '#60a5fa',
-                          fontWeight: '500',
-                          textDecoration: 'none',
-                          display: 'block',
-                        }}
-                      >
-                        {isWhitelabelClient ? eventContactPhone : client.phone}
-                      </a>
-                    </div>
-                  )}
+                  {(isWhitelabelClient ? eventContactPhone : client.phone) &&
+                    (isEventWithin24Hours || showPhoneNumberAlways) && (
+                      <div>
+                        <p
+                          style={{
+                            margin: '0 0 4px 0',
+                            fontSize: '14px',
+                            color: '#8f9a8f',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                          }}
+                        >
+                          {isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}
+                        </p>
+                        <a
+                          href={
+                            getTelLink(isWhitelabelClient ? eventContactPhone : client.phone) || '#'
+                          }
+                          style={{
+                            margin: '0',
+                            fontSize: '16px',
+                            color: '#60a5fa',
+                            fontWeight: '500',
+                            textDecoration: 'none',
+                            display: 'block',
+                          }}
+                        >
+                          {isWhitelabelClient ? eventContactPhone : client.phone}
+                        </a>
+                      </div>
+                    )}
 
-                  {/* Event Address with Google Maps Link */}
                   {eventLocation && (
                     <div>
                       <p
@@ -1091,7 +701,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {/* Backdrop */}
                   {backdropLink?.name && (
                     <div>
                       <p
@@ -1119,7 +728,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {/* Selected Backdrop */}
                   {(forceVirtualGreenScreen || selectedBackdropName) && (
                     <div>
                       <p
@@ -1169,7 +777,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {/* Additional Info (Notes) */}
                   {notes && (
                     <div>
                       <p
@@ -1211,8 +818,17 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               </div>
             </div>
 
-            {/* Files Section */}
-            <AttendantFilesSection agreementId={agreement.id} />
+            {fileCount > 0 && (
+              <div
+                className="attendant-right-column"
+                style={{
+                  position: 'sticky',
+                  top: '24px',
+                }}
+              >
+                <AttendantFilesSection agreementId={agreement.id} />
+              </div>
+            )}
           </main>
 
           {/* Footer */}
