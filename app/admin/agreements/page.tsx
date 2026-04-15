@@ -62,6 +62,151 @@ interface WarningData {
   }>;
 }
 
+function escapeHtml(s: string): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): string {
+  const daysSinceEmailed = agreement.lastEmailedAt
+    ? Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+  const viewCount = agreement.viewCount || 0;
+  const lastViewed = agreement.lastViewedAt
+    ? new Date(agreement.lastViewedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+    : null;
+
+  const statusColor =
+    agreement.status === 'SIGNED'
+      ? '#4a9e72'
+      : agreement.status === 'LIVE'
+        ? '#4a9e72'
+        : agreement.status === 'DRAFT'
+          ? '#f59e0b'
+          : agreement.status === 'COMPLETED'
+            ? '#8b5cf6'
+            : agreement.status === 'CANCELLED'
+              ? '#ef4444'
+              : '#6b7280';
+
+  const needsFollowUp = agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3;
+  const notViewed = viewCount === 0;
+  const bgColor = isDark ? '#1a1d1a' : '#ffffff';
+  const borderCol = isDark ? '#2d3530' : '#e2e8f0';
+  const textCol = isDark ? '#ffffff' : '#1e293b';
+  const mutedCol = isDark ? '#8f9a8f' : '#64748b';
+  const iconBg = isDark ? '#2d3530' : '#e2e8f0';
+
+  const lastEmailText = agreement.lastEmailedAt
+    ? 'Last: ' +
+      new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+    : 'Never emailed';
+  const lastViewText = lastViewed ? 'Last: ' + lastViewed : 'Never viewed';
+
+  let followUpHtml = '';
+  if (needsFollowUp) {
+    followUpHtml =
+      '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px; display: flex; align-items: center;"><i class="fi fi-rr-bell" aria-hidden="true"></i></span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' +
+      daysSinceEmailed +
+      ' days since last email</div></div></div>';
+  }
+
+  const agreementTitleSafe = escapeHtml(agreement.template.title);
+  const emailSafe = escapeHtml(agreement.client.email);
+
+  return (
+    '<div style="position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; background: ' +
+    bgColor +
+    '; border-left: 1px solid ' +
+    borderCol +
+    '; border-bottom: 1px solid ' +
+    borderCol +
+    '; transform: translateY(-50%) rotate(45deg);"></div>' +
+    '<div style="background: linear-gradient(135deg, ' +
+    statusColor +
+    '22 0%, ' +
+    statusColor +
+    '11 100%); border-bottom: 1px solid ' +
+    borderCol +
+    '; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">' +
+    '<span style="font-size: 16px; display: flex; align-items: center;"><i class="fi fi-rr-chart-line-up" aria-hidden="true"></i></span>' +
+    '<span style="font-weight: 700; font-size: 14px; color: ' +
+    textCol +
+    ';">Engagement</span>' +
+    '<span style="margin-left: auto; padding: 3px 8px; background: ' +
+    statusColor +
+    '; color: white; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' +
+    agreement.status +
+    '</span>' +
+    '</div>' +
+    '<div style="padding: 14px 16px;">' +
+    '<div style="margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid ' +
+    borderCol +
+    ';">' +
+    '<div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: ' +
+    mutedCol +
+    '; margin-bottom: 4px;">Agreement</div>' +
+    '<div style="font-weight: 600; font-size: 13px; color: ' +
+    textCol +
+    '; margin-bottom: 10px; line-height: 1.35;">' +
+    agreementTitleSafe +
+    '</div>' +
+    '<div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: ' +
+    mutedCol +
+    '; margin-bottom: 4px;">Email</div>' +
+    '<div style="font-size: 12px; color: ' +
+    textCol +
+    '; word-break: break-all;">' +
+    emailSafe +
+    '</div>' +
+    '</div>' +
+    '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">' +
+    '<div style="width: 32px; height: 32px; background: ' +
+    iconBg +
+    '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;"><i class="fi fi-rr-envelope" aria-hidden="true"></i></div>' +
+    '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' +
+    textCol +
+    ';">' +
+    (agreement.emailSendCount || 0) +
+    ' email' +
+    (agreement.emailSendCount !== 1 ? 's' : '') +
+    ' sent</div><div style="font-size: 11px; color: ' +
+    mutedCol +
+    ';">' +
+    lastEmailText +
+    '</div></div>' +
+    '</div>' +
+    '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: ' +
+    (needsFollowUp || notViewed ? '12px' : '0') +
+    ';">' +
+    '<div style="width: 32px; height: 32px; background: ' +
+    (notViewed ? '#fef3c7' : iconBg) +
+    '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">' +
+    (notViewed
+      ? '<i class="fi fi-rr-circle-exclamation" aria-hidden="true"></i>'
+      : '<i class="fi fi-rr-eye" aria-hidden="true"></i>') +
+    '</div>' +
+    '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' +
+    (notViewed ? '#f59e0b' : textCol) +
+    ';">' +
+    viewCount +
+    ' view' +
+    (viewCount !== 1 ? 's' : '') +
+    (notViewed ? ' - Not viewed!' : '') +
+    '</div><div style="font-size: 11px; color: ' +
+    mutedCol +
+    ';">' +
+    lastViewText +
+    '</div></div>' +
+    '</div>' +
+    followUpHtml +
+    '</div>'
+  );
+}
+
 export default function AgreementsPage() {
   // Set page title
   useEffect(() => {
@@ -1968,69 +2113,29 @@ const normalizePaymentStatus = (value?: string | null) => {
                 }}>
                   <div style={{ position: 'relative' }}>
                     <h3 style={{ 
-                      margin: '0 0 4px 0', 
+                      margin: '0', 
                       fontSize: '16px', 
                       color: textColor,
                       cursor: 'pointer',
                       position: 'relative'
                     }}
+                    title="Hover for agreement name, email, and engagement"
                     onMouseEnter={(e) => {
-                      // Remove any existing tooltips first (cleanup)
                       document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
-                      
-                      // Show engagement tooltip
                       const tooltip = document.createElement('div');
                       tooltip.className = 'engagement-tooltip';
-                      
-                      const daysSinceEmailed = agreement.lastEmailedAt ? 
-                        Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) : null;
-                      
-                      const viewCount = agreement.viewCount || 0;
-                      const lastViewed = agreement.lastViewedAt ? new Date(agreement.lastViewedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : null;
-                      
-                      // Status colors
-                      const statusColor = agreement.status === 'SIGNED' ? '#4a9e72' : 
-                                         agreement.status === 'LIVE' ? '#4a9e72' : 
-                                         agreement.status === 'DRAFT' ? '#f59e0b' : 
-                                         agreement.status === 'COMPLETED' ? '#8b5cf6' :
-                                         agreement.status === 'CANCELLED' ? '#ef4444' : '#6b7280';
-                      
-                      const needsFollowUp = agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3;
-                      const notViewed = viewCount === 0;
                       const bgColor = isDark ? '#1a1d1a' : '#ffffff';
                       const borderCol = isDark ? '#2d3530' : '#e2e8f0';
                       const textCol = isDark ? '#ffffff' : '#1e293b';
-                      const mutedCol = isDark ? '#8f9a8f' : '#64748b';
-                      const iconBg = isDark ? '#2d3530' : '#e2e8f0';
-                      
-                      tooltip.style.cssText = 'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' + bgColor + '; border: 1px solid ' + borderCol + '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 240px; font-size: 13px; color: ' + textCol + '; overflow: hidden;';
-                      
-                      const lastEmailText = agreement.lastEmailedAt ? 'Last: ' + new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'Never emailed';
-                      const lastViewText = lastViewed ? 'Last: ' + lastViewed : 'Never viewed';
-                      
-                      let followUpHtml = '';
-                      if (needsFollowUp) {
-                        followUpHtml = '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px; display: flex; align-items: center;"><i class="fi fi-rr-bell" aria-hidden="true"></i></span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' + daysSinceEmailed + ' days since last email</div></div></div>';
-                      }
-                      
-                      tooltip.innerHTML = '<div style="position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; background: ' + bgColor + '; border-left: 1px solid ' + borderCol + '; border-bottom: 1px solid ' + borderCol + '; transform: translateY(-50%) rotate(45deg);"></div>' +
-                        '<div style="background: linear-gradient(135deg, ' + statusColor + '22 0%, ' + statusColor + '11 100%); border-bottom: 1px solid ' + borderCol + '; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">' +
-                          '<span style="font-size: 16px; display: flex; align-items: center;"><i class="fi fi-rr-chart-line-up" aria-hidden="true"></i></span>' +
-                          '<span style="font-weight: 700; font-size: 14px; color: ' + textCol + ';">Engagement</span>' +
-                          '<span style="margin-left: auto; padding: 3px 8px; background: ' + statusColor + '; color: white; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' + agreement.status + '</span>' +
-                        '</div>' +
-                        '<div style="padding: 14px 16px;">' +
-                          '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">' +
-                            '<div style="width: 32px; height: 32px; background: ' + iconBg + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;"><i class="fi fi-rr-envelope" aria-hidden="true"></i></div>' +
-                            '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' + textCol + ';">' + (agreement.emailSendCount || 0) + ' email' + (agreement.emailSendCount !== 1 ? 's' : '') + ' sent</div><div style="font-size: 11px; color: ' + mutedCol + ';">' + lastEmailText + '</div></div>' +
-                          '</div>' +
-                          '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: ' + (needsFollowUp || notViewed ? '12px' : '0') + ';">' +
-                            '<div style="width: 32px; height: 32px; background: ' + (notViewed ? '#fef3c7' : iconBg) + '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">' + (notViewed ? '<i class="fi fi-rr-circle-exclamation" aria-hidden="true"></i>' : '<i class="fi fi-rr-eye" aria-hidden="true"></i>') + '</div>' +
-                            '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' + (notViewed ? '#f59e0b' : textCol) + ';">' + viewCount + ' view' + (viewCount !== 1 ? 's' : '') + (notViewed ? ' - Not viewed!' : '') + '</div><div style="font-size: 11px; color: ' + mutedCol + ';">' + lastViewText + '</div></div>' +
-                          '</div>' +
-                          followUpHtml +
-                        '</div>';
-                      
+                      tooltip.style.cssText =
+                        'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
+                        bgColor +
+                        '; border: 1px solid ' +
+                        borderCol +
+                        '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
+                        textCol +
+                        '; overflow: hidden;';
+                      tooltip.innerHTML = buildEngagementTooltipHtml(agreement, isDark);
                       e.currentTarget.appendChild(tooltip);
                     }}
                     onMouseLeave={(e) => {
@@ -2043,33 +2148,20 @@ const normalizePaymentStatus = (value?: string | null) => {
                     >
                       {agreement.client.firstName} {agreement.client.lastName}
                     </h3>
-                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                      {agreement.template.title}
-                    </p>
-                    <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                      {agreement.client.email}
-                    </p>
-                    {(agreement as any).backdropLink?.name && (
-                      <p style={{ margin: '4px 0 0 0', color: '#4a9e72', fontSize: '14px', fontWeight: '500' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <UIcon name="link" style={{ fontSize: '14px' }} />
-                          Backdrop Link: {(agreement as any).backdropLink.name}
-                        </span>
-                      </p>
-                    )}
-                    {agreement.selectedBackdropName && (
-                      <p style={{ margin: '4px 0 0 0', color: '#3d8560', fontSize: '14px', fontWeight: '500' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <UIcon name="camera" style={{ fontSize: '14px' }} />
-                          Selected Backdrop: {agreement.selectedBackdropName}
-                        </span>
-                      </p>
-                    )}
                   </div>
                   <div style={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: isMobile ? 'stretch' : 'flex-end',
+                    gap: '8px',
+                    maxWidth: isMobile ? '100%' : 'none'
+                  }}>
+                    <div style={{ 
                     display: 'flex', 
                     gap: '8px',
-                    flexDirection: isMobile ? 'column' : 'row'
+                    flexDirection: isMobile ? 'column' : 'row',
+                    flexWrap: 'wrap',
+                    justifyContent: isMobile ? 'flex-start' : 'flex-end'
                   }}>
                     <span style={{ 
                       fontSize: '12px', 
@@ -2120,12 +2212,13 @@ const normalizePaymentStatus = (value?: string | null) => {
                     {(agreement.event?.eventDate || agreement.client.eventDate) && (
                       <span style={{ 
                         fontSize: '12px', 
-                        color: '#7c3aed',
-                        backgroundColor: isDark ? '#3e1f5f' : '#f3e8ff',
+                        color: isDark ? '#f5f3ff' : '#5b21b6',
+                        backgroundColor: isDark ? '#4c1d95' : '#f3e8ff',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         alignSelf: isMobile ? 'flex-start' : 'auto',
-                        border: '1px solid #c4b5fd'
+                        border: isDark ? '1px solid #a78bfa' : '1px solid #c4b5fd',
+                        fontWeight: 500
                       }}
                       >
                         Event {new Date(agreement.event?.eventDate || agreement.client.eventDate!).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
@@ -2170,6 +2263,45 @@ const normalizePaymentStatus = (value?: string | null) => {
                       </span>
                     )}
                   </div>
+                    {((agreement as any).backdropLink?.name || agreement.selectedBackdropName) && (
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: isMobile ? 'flex-start' : 'flex-end',
+                        gap: '4px',
+                        width: '100%'
+                      }}>
+                        {(agreement as any).backdropLink?.name && (
+                          <span style={{
+                            color: '#4a9e72',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textAlign: isMobile ? 'left' : 'right'
+                          }}>
+                            <UIcon name="link" style={{ fontSize: '12px', flexShrink: 0 }} />
+                            Backdrop Link: {(agreement as any).backdropLink.name}
+                          </span>
+                        )}
+                        {agreement.selectedBackdropName && (
+                          <span style={{
+                            color: '#3d8560',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textAlign: isMobile ? 'left' : 'right'
+                          }}>
+                            <UIcon name="camera" style={{ fontSize: '12px', flexShrink: 0 }} />
+                            Selected Backdrop: {agreement.selectedBackdropName}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                </div>
                 </div>
                 <div style={{ 
                   display: 'flex', 
@@ -2539,13 +2671,35 @@ const normalizePaymentStatus = (value?: string | null) => {
                           flexWrap: 'wrap',
                           gap: '12px'
                         }}>
-                          <div>
-                            <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: textColor }}>
+                          <div style={{ position: 'relative' }}>
+                            <h3
+                              style={{ margin: '0', fontSize: '18px', color: textColor, cursor: 'pointer', position: 'relative' }}
+                              title="Hover for agreement name and email"
+                              onMouseEnter={(e) => {
+                                document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
+                                const tooltip = document.createElement('div');
+                                tooltip.className = 'engagement-tooltip';
+                                const bgColor = isDark ? '#1a1d1a' : '#ffffff';
+                                const borderCol = isDark ? '#2d3530' : '#e2e8f0';
+                                const textCol = isDark ? '#ffffff' : '#1e293b';
+                                tooltip.style.cssText =
+                                  'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
+                                  bgColor +
+                                  '; border: 1px solid ' +
+                                  borderCol +
+                                  '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
+                                  textCol +
+                                  '; overflow: hidden;';
+                                tooltip.innerHTML = buildEngagementTooltipHtml(agreement, isDark);
+                                e.currentTarget.appendChild(tooltip);
+                              }}
+                              onMouseLeave={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.engagement-tooltip');
+                                if (tooltip) tooltip.remove();
+                              }}
+                            >
                               {agreement.client.firstName} {agreement.client.lastName}
                             </h3>
-                            <p style={{ margin: '0', fontSize: '14px', color: mutedText }}>
-                              {agreement.client.email}
-                            </p>
                           </div>
                           <div style={{ 
                             display: 'flex', 
