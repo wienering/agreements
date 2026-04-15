@@ -273,9 +273,19 @@ export async function GET(request: NextRequest) {
       ? Math.round(((currentPeriodClients - previousPeriodClients) / previousPeriodClients) * 100)
       : currentPeriodClients > 0 ? 100 : 0;
 
-    // Get upcoming events from agreements with DRAFT, LIVE, or SIGNED status
+    // Get upcoming events (next 14 calendar days including today) from agreements with DRAFT, LIVE, or SIGNED status
     const now = new Date();
-    // Get more agreements to ensure we have enough events after filtering
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfRange = new Date(startOfToday);
+    endOfRange.setDate(endOfRange.getDate() + 13);
+    endOfRange.setHours(23, 59, 59, 999);
+
+    const eventDateInWindow = {
+      gte: startOfToday,
+      lte: endOfRange
+    };
+
     // We check both event.eventDate and client.eventDate to capture all possible events
     const upcomingAgreements = await prisma.agreement.findMany({
       where: {
@@ -284,32 +294,23 @@ export async function GET(request: NextRequest) {
         },
         archived: false,
         OR: [
-          // Agreement has an event with a future date
           {
             event: {
-              eventDate: {
-                gte: now
-              }
+              eventDate: eventDateInWindow
             }
           },
-          // Agreement has no event, but client has a future event date
           {
             event: null,
             client: {
-              eventDate: {
-                gte: now
-              }
+              eventDate: eventDateInWindow
             }
           },
-          // Agreement has an event but event date might be null, check client date
           {
             event: {
               eventDate: null
             },
             client: {
-              eventDate: {
-                gte: now
-              }
+              eventDate: eventDateInWindow
             }
           }
         ]
@@ -351,11 +352,15 @@ export async function GET(request: NextRequest) {
             : null;
         
         // Filter out past events and events without dates
-        if (!eventDate || eventDate < now) {
+        if (!eventDate || eventDate < startOfToday || eventDate > endOfRange) {
           return null;
         }
-        
-        const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+        const eventDay = new Date(eventDate);
+        eventDay.setHours(0, 0, 0, 0);
+        const daysUntil = Math.round(
+          (eventDay.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24)
+        );
         
         // Use event data if available, otherwise fall back to client data
         const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
@@ -376,11 +381,37 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => {
         // Sort by event date ascending (closest first)
         return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
-      })
-      .slice(0, 10); // Take top 10 closest events (increased from 5)
+      });
 
     // If days parameter is provided, return simplified overview for admin page with trends
     if (days) {
+      const activeStatusGroups = await prisma.agreement.groupBy({
+        by: ['status'],
+        where: { archived: false },
+        _count: { id: true }
+      });
+
+      const ALL_STATUSES = [
+        'DRAFT',
+        'SENT',
+        'LIVE',
+        'SIGNED',
+        'COMPLETED',
+        'CANCELLED',
+        'VOID'
+      ] as const;
+
+      const countByStatus = Object.fromEntries(
+        activeStatusGroups.map((g) => [g.status, g._count.id])
+      );
+
+      const byStatus = ALL_STATUSES.map((status) => ({
+        status,
+        count: countByStatus[status] ?? 0
+      }));
+
+      const activeAgreementsTotal = byStatus.reduce((sum, row) => sum + row.count, 0);
+
       return NextResponse.json({
         overview: {
           totalAgreements,
@@ -395,7 +426,11 @@ export async function GET(request: NextRequest) {
             signed: signedTrend,
             clients: clientsTrend
           },
-          monthlyStats // Include for chart
+          monthlyStats, // Include for chart
+          activeAgreements: {
+            total: activeAgreementsTotal,
+            byStatus
+          }
         },
         recentActivity: recentAgreements.slice(0, 5), // Include recent activity
         upcomingEvents // Include upcoming events
