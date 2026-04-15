@@ -98,21 +98,6 @@ interface WarningsData {
   };
 }
 
-interface RecentActivity {
-  id: string;
-  createdAt: string;
-  signedAt: string | null;
-  status: string;
-  client: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  template: {
-    title: string;
-  };
-}
-
 interface UpcomingEvent {
   id: string;
   clientName: string;
@@ -139,7 +124,6 @@ export default function AdminHome() {
   }, []);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [warnings, setWarnings] = useState<WarningsData | null>(null);
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [loadForecast, setLoadForecast] = useState<WeeklyLoadForecast[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,7 +140,6 @@ export default function AdminHome() {
       if (response.ok) {
         const data = await response.json();
         setStats(data.overview);
-        setRecentActivity(data.recentActivity || []);
         setUpcomingEvents(data.upcomingEvents || []);
       }
     } catch (error) {
@@ -206,23 +189,6 @@ export default function AdminHome() {
   const borderColor = isDark ? '#2d3530' : '#e2e8f0';
   const accentGreen = '#4a9e72';
   const donutTrack = isDark ? '#2a2f2a' : '#e2e8f0';
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
-
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    return formatDate(dateString);
-  };
 
   // Calculate total agreements and growth for display based on period
   const chartData = stats?.monthlyStats || [];
@@ -470,6 +436,161 @@ export default function AdminHome() {
                     </div>
                   ))}
                 </div>
+
+                <div style={{
+                  marginTop: '4px',
+                  paddingTop: '20px',
+                  borderTop: `1px solid ${borderColor}`
+                }}>
+                  <h3 style={{
+                    margin: '0 0 6px 0',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: textColor
+                  }}>
+                    Weekly load forecast
+                  </h3>
+                  <p style={{
+                    margin: '0 0 14px 0',
+                    fontSize: '13px',
+                    color: mutedText,
+                    lineHeight: 1.45
+                  }}>
+                    Track upcoming events and booth hours by week to spot capacity constraints early.
+                  </p>
+
+                  {loadingForecast ? (
+                    <div style={{
+                      height: '240px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: mutedText,
+                      fontSize: '14px'
+                    }}>
+                      Loading forecast…
+                    </div>
+                  ) : loadForecast && loadForecast.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <ComposedChart data={loadForecast}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
+                        <XAxis
+                          dataKey="weekLabel"
+                          stroke={mutedText}
+                          fontSize={10}
+                          angle={-40}
+                          textAnchor="end"
+                          height={72}
+                        />
+                        <YAxis
+                          yAxisId="left"
+                          stroke={mutedText}
+                          fontSize={11}
+                          width={36}
+                          label={{ value: 'Events', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: mutedText, fontSize: 10 } }}
+                        />
+                        <YAxis
+                          yAxisId="right"
+                          orientation="right"
+                          stroke={mutedText}
+                          fontSize={11}
+                          width={36}
+                          label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: mutedText, fontSize: 10 } }}
+                        />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (!active || !payload || payload.length === 0) return null;
+
+                            const data = payload[0]?.payload as WeeklyLoadForecast;
+                            const eventCount = data?.eventCount || 0;
+                            const totalHours = data?.totalHours || 0;
+                            const clientNames = data?.clientNames || [];
+
+                            return (
+                              <div style={{
+                                backgroundColor: cardBg,
+                                border: `1px solid ${borderColor}`,
+                                borderRadius: '6px',
+                                padding: '12px',
+                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                              }}>
+                                <div style={{
+                                  color: textColor,
+                                  fontWeight: '600',
+                                  marginBottom: '8px',
+                                  fontSize: '14px'
+                                }}>
+                                  {label}
+                                </div>
+                                <div style={{
+                                  color: textColor,
+                                  marginBottom: '4px',
+                                  fontSize: '13px'
+                                }}>
+                                  <strong>{eventCount}</strong> Event{eventCount !== 1 ? 's' : ''}
+                                </div>
+                                <div style={{
+                                  color: textColor,
+                                  marginBottom: clientNames.length > 0 ? '8px' : '0',
+                                  fontSize: '13px'
+                                }}>
+                                  <strong>{totalHours}</strong> Hours
+                                </div>
+                                {clientNames.length > 0 && (
+                                  <div style={{
+                                    fontSize: '12px',
+                                    color: mutedText,
+                                    marginTop: '8px',
+                                    paddingTop: '8px',
+                                    borderTop: `1px solid ${borderColor}`
+                                  }}>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px', color: textColor }}>Clients:</div>
+                                    <div>{clientNames.join(', ')}</div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }}
+                        />
+                        <Legend
+                          wrapperStyle={{ paddingTop: '12px' }}
+                          formatter={(value) => {
+                            if (value === 'eventCount') return 'Events';
+                            if (value === 'totalHours') return 'Hours';
+                            return value;
+                          }}
+                        />
+                        <Bar
+                          yAxisId="left"
+                          dataKey="eventCount"
+                          fill={accentGreen}
+                          radius={[4, 4, 0, 0]}
+                          name="eventCount"
+                        />
+                        <Line
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="totalHours"
+                          stroke={accentGreen}
+                          strokeWidth={2}
+                          dot={{ fill: accentGreen, r: 3 }}
+                          name="totalHours"
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div style={{
+                      height: '240px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: mutedText,
+                      fontSize: '14px'
+                    }}>
+                      No forecast data available
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={{
@@ -671,16 +792,8 @@ export default function AdminHome() {
           )}
         </div>
 
-        {/* Attention + recent */}
-        <div
-          className={warnings && warnings.summary.totalWarnings > 0 ? 'admin-bottom-pair' : ''}
-          style={
-            warnings && warnings.summary.totalWarnings > 0
-              ? undefined
-              : { marginBottom: '24px' }
-          }
-        >
-          {warnings && warnings.summary.totalWarnings > 0 && (
+        {warnings && warnings.summary.totalWarnings > 0 && (
+          <div style={{ marginBottom: '24px' }}>
             <div style={{
               backgroundColor: cardBg,
               borderRadius: '12px',
@@ -783,230 +896,8 @@ export default function AdminHome() {
                 ))}
               </div>
             </div>
-          )}
-
-          <div style={{
-            backgroundColor: cardBg,
-            borderRadius: '12px',
-            padding: '16px',
-            border: `1px solid ${borderColor}`,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '12px'
-            }}>
-              <h3 style={{
-                margin: '0',
-                fontSize: '16px',
-                fontWeight: '700',
-                color: textColor
-              }}>
-                Recent activity
-              </h3>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {recentActivity.length > 0 ? (
-                recentActivity.slice(0, 3).map((activity) => (
-                  <div
-                    key={activity.id}
-                    onClick={() => router.push('/admin/agreements')}
-                    style={{
-                      padding: '8px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: textColor, marginBottom: '2px' }}>
-                      {activity.client.firstName} {activity.client.lastName}
-                    </div>
-                    <div style={{ fontSize: '11px', color: mutedText }}>
-                      {formatRelativeTime(activity.signedAt || activity.createdAt)}
-                      {activity.status === 'SIGNED' && ' · Signed'}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ color: mutedText, fontSize: '12px', textAlign: 'center', padding: '12px' }}>
-                  No recent activity
-                </div>
-              )}
-            </div>
           </div>
-        </div>
-
-        {/* Weekly Load Forecast */}
-        <div style={{
-          backgroundColor: cardBg,
-          borderRadius: '12px',
-          padding: '24px',
-          border: `1px solid ${borderColor}`,
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          marginBottom: '32px'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '24px'
-          }}>
-            <div>
-              <h2 style={{ 
-                margin: '0 0 8px 0', 
-                fontSize: '24px', 
-                fontWeight: '700', 
-                color: textColor 
-              }}>
-                Weekly Load Forecast
-              </h2>
-              <p style={{ 
-                margin: '0', 
-                fontSize: '14px', 
-                color: mutedText 
-              }}>
-                Track upcoming events and booth hours to identify capacity constraints
-              </p>
-            </div>
-          </div>
-
-          {loadingForecast ? (
-            <div style={{ 
-              height: '300px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: mutedText
-            }}>
-              Loading forecast...
-            </div>
-          ) : loadForecast && loadForecast.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={loadForecast}>
-                <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
-                <XAxis 
-                  dataKey="weekLabel" 
-                  stroke={mutedText}
-                  fontSize={11}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis 
-                  yAxisId="left"
-                  stroke={mutedText}
-                  fontSize={12}
-                  label={{ value: 'Events', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: mutedText } }}
-                />
-                <YAxis 
-                  yAxisId="right"
-                  orientation="right"
-                  stroke={mutedText}
-                  fontSize={12}
-                  label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: mutedText } }}
-                />
-                <Tooltip 
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload || payload.length === 0) return null;
-                    
-                    const data = payload[0]?.payload as WeeklyLoadForecast;
-                    const eventCount = data?.eventCount || 0;
-                    const totalHours = data?.totalHours || 0;
-                    const clientNames = data?.clientNames || [];
-                    
-                    return (
-                      <div style={{
-                        backgroundColor: cardBg,
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: '6px',
-                        padding: '12px',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                      }}>
-                        <div style={{ 
-                          color: textColor, 
-                          fontWeight: '600', 
-                          marginBottom: '8px',
-                          fontSize: '14px'
-                        }}>
-                          {label}
-                        </div>
-                        <div style={{ 
-                          color: textColor, 
-                          marginBottom: '4px',
-                          fontSize: '13px'
-                        }}>
-                          <strong>{eventCount}</strong> Event{eventCount !== 1 ? 's' : ''}
-                        </div>
-                        <div style={{ 
-                          color: textColor, 
-                          marginBottom: clientNames.length > 0 ? '8px' : '0',
-                          fontSize: '13px'
-                        }}>
-                          <strong>{totalHours}</strong> Hours
-                        </div>
-                        {clientNames.length > 0 && (
-                          <div style={{ 
-                            fontSize: '12px', 
-                            color: mutedText,
-                            marginTop: '8px',
-                            paddingTop: '8px',
-                            borderTop: `1px solid ${borderColor}`
-                          }}>
-                            <div style={{ fontWeight: '600', marginBottom: '4px', color: textColor }}>Clients:</div>
-                            <div>{clientNames.join(', ')}</div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }}
-                />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '20px' }}
-                  formatter={(value) => {
-                    if (value === 'eventCount') return 'Events';
-                    if (value === 'totalHours') return 'Hours';
-                    return value;
-                  }}
-                />
-                <Bar 
-                  yAxisId="left"
-                  dataKey="eventCount" 
-                  fill="#4a9e72" 
-                  radius={[4, 4, 0, 0]}
-                  name="eventCount"
-                />
-                <Line 
-                  yAxisId="right"
-                  type="monotone" 
-                  dataKey="totalHours" 
-                  stroke="#4a9e72" 
-                  strokeWidth={2}
-                  dot={{ fill: '#4a9e72', r: 4 }}
-                  name="totalHours"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          ) : (
-            <div style={{ 
-              height: '300px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: mutedText
-            }}>
-              No forecast data available
-            </div>
-          )}
-        </div>
+        )}
 
       </div>
     </div>

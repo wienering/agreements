@@ -70,19 +70,6 @@ body {
   }
 }
 
-.admin-bottom-pair {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-@media (max-width: 1024px) {
-  .admin-bottom-pair {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Responsive layout for admin dashboard */
 @media (max-width: 1024px) {
   .admin-dashboard-layout {
