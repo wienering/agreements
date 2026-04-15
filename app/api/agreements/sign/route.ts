@@ -214,7 +214,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #3b82f6; margin: 0; }
+        .header h1 { color: #3ef07d; margin: 0; }
         .content { margin-bottom: 30px; }
         .agreement-details { 
           border: 1px solid #eee; 
@@ -225,7 +225,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
         }
         .button { 
           display: inline-block; 
-          background-color: #2563eb !important; 
+          background-color: #22c55e !important; 
           color: white !important; 
           padding: 18px 36px; 
           text-decoration: none; 
@@ -372,7 +372,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #3b82f6; margin: 0; }
+        .header h1 { color: #3ef07d; margin: 0; }
         .content { margin-bottom: 30px; }
         .agreement-details { 
           border: 1px solid #eee; 
@@ -383,7 +383,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
         }
         .button { 
           display: inline-block; 
-          background-color: #2563eb !important; 
+          background-color: #22c55e !important; 
           color: white !important; 
           padding: 18px 36px; 
           text-decoration: none; 
@@ -477,7 +477,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
             <p>Our team is here to help make your event perfect!</p>
             <p><strong>📧 Email:</strong> info@photoboothguys.ca</p>
             <p><strong>📞 Phone:</strong> 647-378-5332</p>
-            <p><strong>🌐 Website:</strong> <a href="https://photoboothguys.ca" style="color: #3b82f6;">photoboothguys.ca</a></p>
+            <p><strong>🌐 Website:</strong> <a href="https://photoboothguys.ca" style="color: #3ef07d;">photoboothguys.ca</a></p>
           </div>
           
           <p>Once again, thank you for choosing Photobooth Guys. We can't wait to make your event unforgettable!</p>

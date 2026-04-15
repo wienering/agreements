@@ -70,7 +70,7 @@ async function sendNoteNotificationEmail(
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { color: #3b82f6; margin: 0; }
+          .header h1 { color: #3ef07d; margin: 0; }
           .content { margin-bottom: 30px; }
           .note-content { 
             border: 1px solid #eee; 
@@ -89,7 +89,7 @@ async function sendNoteNotificationEmail(
           }
           .button { 
             display: inline-block; 
-            background-color: #2563eb !important; 
+            background-color: #22c55e !important; 
             color: white !important; 
             padding: 12px 24px; 
             text-decoration: none; 

@@ -193,16 +193,16 @@ async function generateVerificationEmail(client: any, code: string): Promise<str
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background: #f8fafc; }
           .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 40px 30px; text-align: center; }
+          .header { background: linear-gradient(135deg, #22c55e 0%, #166534 100%); color: white; padding: 40px 30px; text-align: center; }
           .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
           .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 16px; }
           .content { padding: 40px 30px; }
           .code-container { background: #f1f5f9; padding: 30px; border-radius: 12px; text-align: center; margin: 30px 0; border: 2px dashed #cbd5e1; }
-          .code { font-size: 36px; font-weight: 800; color: #2563eb; letter-spacing: 6px; margin: 15px 0; font-family: 'Courier New', monospace; }
+          .code { font-size: 36px; font-weight: 800; color: #22c55e; letter-spacing: 6px; margin: 15px 0; font-family: 'Courier New', monospace; }
           .expiry { color: #64748b; font-size: 14px; margin-top: 10px; }
           .security-note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0; }
           .footer { background: #f8fafc; padding: 30px; text-align: center; color: #64748b; font-size: 14px; }
-          .footer a { color: #2563eb; text-decoration: none; }
+          .footer a { color: #22c55e; text-decoration: none; }
           @media (max-width: 600px) {
             .container { margin: 10px; border-radius: 8px; }
             .header, .content, .footer { padding: 20px; }

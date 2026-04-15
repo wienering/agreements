@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
               box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
             .header {
-              background: #2563eb;
+              background: #22c55e;
               color: white;
               padding: 30px;
               text-align: center;
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
             }
             .button {
               display: inline-block;
-              background: #2563eb !important;
+              background: #22c55e !important;
               color: white !important;
               padding: 18px 36px;
               text-decoration: none;
@@ -210,8 +210,8 @@ export async function POST(request: NextRequest) {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${baseUrl}/agreement/${validatedData.token}" class="button" style="color: white !important; background-color: #2563eb !important;">View Online</a>
-                <a href="${baseUrl}/agreement/${validatedData.token}#download" class="button" style="color: white !important; background-color: #2563eb !important;">Download PDF</a>
+                <a href="${baseUrl}/agreement/${validatedData.token}" class="button" style="color: white !important; background-color: #22c55e !important;">View Online</a>
+                <a href="${baseUrl}/agreement/${validatedData.token}#download" class="button" style="color: white !important; background-color: #22c55e !important;">Download PDF</a>
               </div>
             </div>
             
