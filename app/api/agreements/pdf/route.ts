@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jsPDF from 'jspdf';
 import { z } from 'zod';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 // Generate PDF using jsPDF (serverless-friendly)
 const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolean = false) => {
@@ -224,13 +225,7 @@ export async function POST(request: NextRequest) {
 
     // Process smart fields in the HTML content
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = html;
-      
-      // Replace client fields
-      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
       
       // Use event relation if available, otherwise fall back to client fields
       const eventDate = event?.eventDate || client.eventDate;

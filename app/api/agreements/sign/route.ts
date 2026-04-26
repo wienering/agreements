@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -23,18 +24,13 @@ const getClientIP = (request: NextRequest): string => {
 };
 
 // Process and save the HTML content as a snapshot
-const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-  let processedHtml = html;
+const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null, agreement: any = null) => {
+  let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
 
   // Extract address and notes from event if available, otherwise use client data
   const address = event ? (event.eventLocation ?? '') : (client.address || '');
   const notes = event ? (event.notes ?? '') : (client.notes || '');
 
-  // Replace client fields
-  processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-  processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-  processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-  processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
   processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
   processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
 
@@ -230,7 +226,7 @@ export async function POST(request: NextRequest) {
     if (isFinalSignature) {
       // Build the merged snapshot from primary client's perspective and append signature blocks.
       const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-      const baseHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+      const baseHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event, agreement);
       const signatureBlock = requireBoth
         ? buildSignatureBlockHtml(
             allSignatures.map((s) => ({

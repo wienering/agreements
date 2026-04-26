@@ -3181,6 +3181,8 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                     { field: '{{client.lastName}}', label: 'Last Name' },
 
+                    { field: '{{client.fullName}}', label: 'Full Name' },
+
                     { field: '{{client.email}}', label: 'Email' },
 
                     { field: '{{client.phone}}', label: 'Phone' },
@@ -3188,6 +3190,22 @@ const normalizePaymentStatus = (value?: string | null) => {
                     { field: '{{client.eventDate}}', label: 'Event Date' },
 
                     { field: '{{client.notes}}', label: 'Notes' },
+
+                    { field: '{{clients.fullNames}}', label: 'Both: Full Names' },
+
+                    { field: '{{clients.firstNames}}', label: 'Both: First Names' },
+
+                    { field: '{{clients.lastNames}}', label: 'Both: Last Names' },
+
+                    { field: '{{secondSigner.firstName}}', label: '2nd: First Name' },
+
+                    { field: '{{secondSigner.lastName}}', label: '2nd: Last Name' },
+
+                    { field: '{{secondSigner.fullName}}', label: '2nd: Full Name' },
+
+                    { field: '{{secondSigner.email}}', label: '2nd: Email' },
+
+                    { field: '{{secondSigner.phone}}', label: '2nd: Phone' },
 
                     { field: '{{agreement.date}}', label: 'Agreement Date' },
 
@@ -3260,11 +3278,18 @@ const normalizePaymentStatus = (value?: string | null) => {
                 }}>
                   Preview
                 </label>
-                <RichTextPreview 
+                <RichTextPreview
                   html={editingContent || '<p>Enter content above to see preview...</p>'}
                   clientData={selectedAgreement?.client}
                   agreementId={selectedAgreement?.id}
                   eventData={selectedAgreement?.event}
+                  secondSigner={(selectedAgreement as any)?.secondSignerEnabled ? {
+                    enabled: true,
+                    firstName: (selectedAgreement as any)?.secondSignerFirstName || '',
+                    lastName: (selectedAgreement as any)?.secondSignerLastName || '',
+                    email: (selectedAgreement as any)?.secondSignerEmail || '',
+                    phone: (selectedAgreement as any)?.secondSignerPhone || '',
+                  } : null}
                   isDark={isDark}
                   style={{
                     backgroundColor: isDark ? '#080c08' : '#fafafa',

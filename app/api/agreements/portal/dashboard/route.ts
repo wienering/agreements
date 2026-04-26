@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 export async function GET(request: NextRequest) {
   try {
@@ -130,19 +131,17 @@ export async function GET(request: NextRequest) {
       take: limit
     });
 
-    // Process HTML content for each agreement
+    // Process HTML content for each agreement.
+    // The closure captures `currentAgreement` so signer smart-fields can
+    // pick up the active row's second signer config.
+    let currentAgreement: any = null;
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = html;
-      
+      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(currentAgreement));
+
       // Extract address and notes from event if available, otherwise use client data
       const address = event ? (event.eventLocation ?? '') : (client.address || '');
       const notes = event ? (event.notes ?? '') : (client.notes || '');
-      
-      // Replace client fields
-      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+
       processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
       
@@ -182,6 +181,7 @@ export async function GET(request: NextRequest) {
         ? agreement.mergedHtml
         : (agreement.customHtmlContent || agreement.template.htmlContent);
       
+      currentAgreement = agreement;
       if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {

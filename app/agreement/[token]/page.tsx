@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { devLog } from '@/lib/logger';
 import { UIcon } from '../../components/UIcon';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 interface SignatureRecord {
   signerName: string;
@@ -122,17 +123,11 @@ export default function ClientAgreementPage() {
 
   // Function to process smart fields in HTML content
   // Note: The API already processes the HTML, but we keep this for any client-side processing needs
-  const processSmartFields = (html: string, client: any, agreementId: string, event: any = null) => {
+  const processSmartFields = (html: string, client: any, agreementId: string, event: any = null, agreement: any = null) => {
     if (!html || !client) return html;
-    
-    let processedHtml = html;
-    
-    // Replace client fields
-    processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-    processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-    processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-    processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-    
+
+    let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
+
     // Use event data from event relation if available, otherwise fall back to client fields
     const eventDate = event?.eventDate || client.eventDate;
     const eventType = event?.eventType || client.eventType || '';
@@ -141,7 +136,7 @@ export default function ClientAgreementPage() {
     const eventDuration = event?.eventDuration || client.eventDuration || '';
     const eventPackage = event?.eventPackage || client.eventPackage || '';
     const packagePrice = event?.packagePrice || client.packagePrice;
-    
+
     processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
     processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
     
@@ -200,15 +195,16 @@ export default function ClientAgreementPage() {
           template: {
             ...data.agreement.template,
             htmlContent: processSmartFields(
-              data.agreement.template.htmlContent, 
-              data.agreement.client, 
+              data.agreement.template.htmlContent,
+              data.agreement.client,
               data.agreement.id,
-              data.agreement.event
+              data.agreement.event,
+              data.agreement
             )
           }
         };
         setAgreement(processedAgreement);
-        
+
         // View tracking + "Agreement Viewed" email are now done server-side in verify-email (reliable)
       } else {
         setVerificationError(data.error || 'Email verification failed');
@@ -377,10 +373,11 @@ export default function ClientAgreementPage() {
           template: {
             ...data.agreement.template,
             htmlContent: processSmartFields(
-              data.agreement.template.htmlContent, 
-              data.agreement.client, 
+              data.agreement.template.htmlContent,
+              data.agreement.client,
               data.agreement.id,
-              data.agreement.event
+              data.agreement.event,
+              data.agreement
             )
           }
         };

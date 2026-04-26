@@ -743,10 +743,19 @@ export default function TemplatesPage() {
             }}>
               <SmartFieldItem field="{{client.firstName}}" />
               <SmartFieldItem field="{{client.lastName}}" />
+              <SmartFieldItem field="{{client.fullName}}" />
               <SmartFieldItem field="{{client.email}}" />
               <SmartFieldItem field="{{client.phone}}" />
               <SmartFieldItem field="{{client.eventDate}}" />
               <SmartFieldItem field="{{client.notes}}" />
+              <SmartFieldItem field="{{clients.fullNames}}" />
+              <SmartFieldItem field="{{clients.firstNames}}" />
+              <SmartFieldItem field="{{clients.lastNames}}" />
+              <SmartFieldItem field="{{secondSigner.firstName}}" />
+              <SmartFieldItem field="{{secondSigner.lastName}}" />
+              <SmartFieldItem field="{{secondSigner.fullName}}" />
+              <SmartFieldItem field="{{secondSigner.email}}" />
+              <SmartFieldItem field="{{secondSigner.phone}}" />
               <SmartFieldItem field="{{event.type}}" />
               <SmartFieldItem field="{{event.location}}" />
               <SmartFieldItem field="{{event.startTime}}" />
@@ -756,12 +765,15 @@ export default function TemplatesPage() {
               <SmartFieldItem field="{{agreement.date}}" />
               <SmartFieldItem field="{{agreement.id}}" />
             </div>
-            <p style={{ 
-              margin: '12px 0 0 0', 
-              fontSize: '14px', 
-              color: mutedText 
+            <p style={{
+              margin: '12px 0 0 0',
+              fontSize: '14px',
+              color: mutedText
             }}>
               Use these smart fields in your template content. They will be automatically replaced with actual client data when creating agreements.
+              When an agreement has a second signer, <code>{'{{client.firstName}} {{client.lastName}}'}</code> auto-expands to include both names
+              (e.g. &quot;Alice Smith and Bob Jones&quot;), and the <code>{'{{secondSigner.*}}'}</code> tokens render the second signer&apos;s details.
+              Use <code>{'{{clients.fullNames}}'}</code> for an explicit &quot;both signers&quot; rendering that always works.
             </p>
           </div>
         )}

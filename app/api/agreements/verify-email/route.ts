@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { sendViewAlertEmail } from '@/lib/view-alert-email';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -38,14 +39,10 @@ export async function POST(request: NextRequest) {
     }
 
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = html;
+      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
       const address = event ? (event.eventLocation ?? '') : (client.address || '');
       const notes = event ? (event.notes ?? '') : (client.notes || '');
 
-      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
       processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
 

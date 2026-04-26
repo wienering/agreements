@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 export async function GET(request: NextRequest) {
   try {
@@ -136,9 +137,9 @@ export async function GET(request: NextRequest) {
           ? agreement.mergedHtml
           : (agreement.customHtmlContent || agreement.template.htmlContent);
         
-        let processedHtml = agreement.status === 'SIGNED' && agreement.mergedHtml 
-          ? agreement.mergedHtml 
-          : processHtmlContent(htmlToProcess, sessionClient, agreement.id);
+        let processedHtml = agreement.status === 'SIGNED' && agreement.mergedHtml
+          ? agreement.mergedHtml
+          : processHtmlContent(htmlToProcess, sessionClient, agreement.id, agreement);
         
         return {
           ...baseData,
@@ -185,14 +186,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function processHtmlContent(html: string, client: any, agreementId: string): string {
-  let processedHtml = html;
-  
-  // Replace client fields
-  processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-  processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-  processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-  processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+function processHtmlContent(html: string, client: any, agreementId: string, agreement: any = null): string {
+  let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
+
   processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, client.address || '');
   processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
   processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');

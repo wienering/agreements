@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateSession } from '../../shared/auth';
 import jsPDF from 'jspdf';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 // Generate PDF using jsPDF (serverless-friendly)
 const generatePDF = async (htmlContent: string, agreement: any): Promise<Buffer> => {
@@ -129,7 +130,7 @@ export async function GET(
 
     // Process HTML content (use event when available, else client deprecated fields)
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = html;
+      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
       const eventDate = event ? event.eventDate : client.eventDate;
       const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
       const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
@@ -140,10 +141,6 @@ export async function GET(
       const address = event ? (event.eventLocation ?? '') : (client.address || '');
       const notes = event ? (event.notes ?? '') : (client.notes || '');
 
-      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
       processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
       processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);

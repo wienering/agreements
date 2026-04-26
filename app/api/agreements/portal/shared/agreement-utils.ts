@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { SessionWithClient } from './auth';
+import { applySignerSmartFields, type SecondSigner } from '@/lib/agreementSmartFields';
 
 /**
  * Verify that an agreement belongs to a client (by email)
@@ -135,20 +136,28 @@ export async function getClientAgreements(
 }
 
 /**
- * Process HTML content by replacing template variables
+ * Process HTML content by replacing template variables.
+ *
+ * The optional `secondSigner` parameter lets templates auto-expand client
+ * name tokens to include both signers when a second signer is configured
+ * on the agreement (see `lib/agreementSmartFields.ts`).
  */
-export function processHtmlContent(html: string, client: any, agreementId: string, event: any = null): string {
-  let processedHtml = html;
+export function processHtmlContent(
+  html: string,
+  client: any,
+  agreementId: string,
+  event: any = null,
+  secondSigner: SecondSigner | null = null,
+): string {
+  // Signer / client name tokens are handled by the shared helper so behaviour
+  // stays consistent across every render path. We run it first so combined
+  // patterns like `{{client.firstName}} {{client.lastName}}` resolve cleanly.
+  let processedHtml = applySignerSmartFields(html, client, secondSigner);
 
   // Extract address and notes from event if available, otherwise use client data
   const address = event ? (event.eventLocation ?? '') : (client.address || '');
   const notes = event ? (event.notes ?? '') : (client.notes || '');
 
-  // Replace client fields
-  processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-  processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-  processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-  processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
   processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
   processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
 

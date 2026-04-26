@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { devLog } from '@/lib/logger';
+import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Process smart fields in the HTML content (use event when available, else client deprecated fields)
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = html;
+      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
       const eventDate = event ? event.eventDate : client.eventDate;
       const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
       const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
@@ -44,11 +45,6 @@ export async function POST(request: NextRequest) {
       const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
       const packagePrice = event ? event.packagePrice : client.packagePrice;
 
-      // Replace client fields
-      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
       processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
       processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, event ? (event.notes ?? client.notes ?? '') : (client.notes || ''));
       

@@ -113,34 +113,49 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
 }
 
 // Preview component to show how the HTML will render
-export function RichTextPreview({ 
-  html, 
-  style, 
-  clientData, 
+export function RichTextPreview({
+  html,
+  style,
+  clientData,
   agreementId,
   eventData,
-  isDark = false 
-}: { 
-  html: string; 
+  secondSigner,
+  isDark = false
+}: {
+  html: string;
   style?: React.CSSProperties;
   clientData?: any;
   agreementId?: string;
   eventData?: any;
+  secondSigner?: { enabled?: boolean; firstName?: string; lastName?: string; email?: string; phone?: string } | null;
   isDark?: boolean;
 }) {
   // Replace smart fields with actual data, showing nothing for blank fields
   const processPreviewHtml = (html: string) => {
     if (!html) return '';
-    
+
     let processedHtml = html;
-    
+
     // Use actual client data if available, otherwise show empty string
     const firstName = clientData?.firstName || '';
     const lastName = clientData?.lastName || '';
     const email = clientData?.email || '';
     const phone = clientData?.phone || '';
     const notes = clientData?.notes || '';
-    
+
+    // Second-signer values (empty when not enabled).
+    const secondEnabled = Boolean(secondSigner && secondSigner.enabled);
+    const sFirst = secondEnabled ? (secondSigner?.firstName || '') : '';
+    const sLast = secondEnabled ? (secondSigner?.lastName || '') : '';
+    const sEmail = secondEnabled ? (secondSigner?.email || '') : '';
+    const sPhone = secondEnabled ? (secondSigner?.phone || '') : '';
+
+    const pFull = `${firstName} ${lastName}`.trim();
+    const sFull = `${sFirst} ${sLast}`.trim();
+    const fullNames = secondEnabled && sFull ? `${pFull} and ${sFull}` : pFull;
+    const firstNames = secondEnabled && sFirst ? `${firstName} and ${sFirst}` : firstName;
+    const lastNames = secondEnabled && sLast ? `${lastName} and ${sLast}` : lastName;
+
     // Prioritize event data from Event model, fall back to deprecated client fields, show empty if blank
     const eventDate = eventData?.eventDate 
       ? new Date(eventData.eventDate).toLocaleDateString() 
@@ -152,14 +167,37 @@ export function RichTextPreview({
     const eventPackage = eventData?.eventPackage || clientData?.eventPackage || '';
     const packagePrice = eventData?.packagePrice || clientData?.packagePrice;
     const eventPrice = packagePrice ? `$${typeof packagePrice === 'number' ? packagePrice.toFixed(2) : packagePrice}` : '';
-    
-    // Replace client fields with clean, readable styling
-    processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${firstName}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${lastName}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${email}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${phone}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${eventDate}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${notes}</strong>`);
+
+    const clientChip = (value: string) => `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${value}</strong>`;
+    const secondChip = (value: string) => `<strong style="color: #1f2937; background-color: #fef3c7; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d;">${value}</strong>`;
+
+    // Combined pattern resolves first so "{{client.firstName}} {{client.lastName}}"
+    // renders cleanly as "Alice Smith" or "Alice Smith and Bob Jones".
+    processedHtml = processedHtml.replace(
+      /\{\{\s*client\.firstName\s*\}\}\s+\{\{\s*client\.lastName\s*\}\}/g,
+      clientChip(fullNames),
+    );
+
+    // Aggregate / convenience tokens.
+    processedHtml = processedHtml.replace(/\{\{\s*client\.fullName\s*\}\}/g, clientChip(pFull));
+    processedHtml = processedHtml.replace(/\{\{\s*clients\.fullNames\s*\}\}/g, clientChip(fullNames));
+    processedHtml = processedHtml.replace(/\{\{\s*clients\.firstNames\s*\}\}/g, clientChip(firstNames));
+    processedHtml = processedHtml.replace(/\{\{\s*clients\.lastNames\s*\}\}/g, clientChip(lastNames));
+
+    // Explicit second-signer tokens (chip stays, value is empty when disabled).
+    processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.firstName\s*\}\}/g, secondChip(sFirst));
+    processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.lastName\s*\}\}/g, secondChip(sLast));
+    processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.fullName\s*\}\}/g, secondChip(sFull));
+    processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.email\s*\}\}/g, secondChip(sEmail));
+    processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.phone\s*\}\}/g, secondChip(sPhone));
+
+    // Individual primary name tokens — auto-expand to both names when a second signer is enabled.
+    processedHtml = processedHtml.replace(/\{\{\s*client\.firstName\s*\}\}/g, clientChip(firstNames));
+    processedHtml = processedHtml.replace(/\{\{\s*client\.lastName\s*\}\}/g, clientChip(lastNames));
+    processedHtml = processedHtml.replace(/\{\{\s*client\.email\s*\}\}/g, clientChip(email));
+    processedHtml = processedHtml.replace(/\{\{\s*client\.phone\s*\}\}/g, clientChip(phone));
+    processedHtml = processedHtml.replace(/\{\{\s*client\.eventDate\s*\}\}/g, clientChip(eventDate));
+    processedHtml = processedHtml.replace(/\{\{\s*client\.notes\s*\}\}/g, clientChip(notes));
     
     // Replace event fields with clean, readable styling
     processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventType}</strong>`);
