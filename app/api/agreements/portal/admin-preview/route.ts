@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         template: true,
-        signature: true,
+        signatures: { orderBy: { signedAt: 'asc' } },
         backdropLink: true,
         event: true
       },
@@ -215,7 +215,8 @@ export async function GET(request: NextRequest) {
           ...publicTemplate,
           htmlContent: processedHtml
         },
-        signature: agreement.signature,
+        signature: (agreement as any).signatures?.[0] ?? null,
+        signatures: (agreement as any).signatures ?? [],
         summary: {
           templateTitle: publicTemplate.title,
           status: agreement.status,

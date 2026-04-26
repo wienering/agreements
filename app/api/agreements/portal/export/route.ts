@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         },
         include: {
           template: true,
-          signature: true
+          signatures: { orderBy: { signedAt: 'asc' } }
         }
       });
 
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
         },
         include: {
           template: true,
-          signature: true
+          signatures: { orderBy: { signedAt: 'asc' } }
         },
         orderBy: { createdAt: 'desc' }
       });

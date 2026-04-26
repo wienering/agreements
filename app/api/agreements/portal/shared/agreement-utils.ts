@@ -18,7 +18,7 @@ export async function verifyAgreementOwnership(
     },
     include: {
       template: true,
-      signature: true,
+      signatures: { orderBy: { signedAt: 'asc' } },
     },
   });
 
@@ -114,7 +114,7 @@ export async function getClientAgreements(
     where: whereClause,
     include: {
       template: true,
-      signature: true,
+      signatures: { orderBy: { signedAt: 'asc' } },
     },
     orderBy,
     skip: offset,

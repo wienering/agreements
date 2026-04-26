@@ -56,7 +56,18 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { clientId, templateId, eventId, expiresAt } = body;
+    const {
+      clientId,
+      templateId,
+      eventId,
+      expiresAt,
+      secondSignerEnabled,
+      secondSignerFirstName,
+      secondSignerLastName,
+      secondSignerEmail,
+      secondSignerPhone,
+      requireBothSignatures,
+    } = body;
 
     // Validate required fields
     if (!clientId || !templateId) {
@@ -89,6 +100,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
+    // Validate second-signer details if enabled
+    const enableSecondSigner = Boolean(secondSignerEnabled);
+    if (enableSecondSigner) {
+      if (typeof secondSignerEmail !== 'string' || !secondSignerEmail.trim()) {
+        return NextResponse.json({ error: 'Second signer email is required when second signer is enabled' }, { status: 400 });
+      }
+      // Basic email format check
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(secondSignerEmail.trim());
+      if (!emailOk) {
+        return NextResponse.json({ error: 'Second signer email is not a valid email address' }, { status: 400 });
+      }
+    }
+
     // Generate unique token
     const uniqueToken = randomBytes(32).toString('hex');
 
@@ -101,6 +125,12 @@ export async function POST(request: NextRequest) {
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         status: 'DRAFT',
         customHtmlContent: template.htmlContent, // Copy template content to agreement
+        secondSignerEnabled: enableSecondSigner,
+        secondSignerFirstName: enableSecondSigner ? (secondSignerFirstName || null) : null,
+        secondSignerLastName: enableSecondSigner ? (secondSignerLastName || null) : null,
+        secondSignerEmail: enableSecondSigner ? (secondSignerEmail?.toString().trim().toLowerCase() || null) : null,
+        secondSignerPhone: enableSecondSigner ? (secondSignerPhone || null) : null,
+        requireBothSignatures: enableSecondSigner ? Boolean(requireBothSignatures) : false,
       },
       include: {
         client: true,

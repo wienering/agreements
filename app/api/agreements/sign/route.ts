@@ -10,6 +10,92 @@ const signAgreementSchema = z.object({
   clientEmail: z.string().email('Valid email is required'),
 });
 
+const getClientIP = (request: NextRequest): string => {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  const cfConnectingIP = request.headers.get('cf-connecting-ip');
+
+  if (cfConnectingIP) return cfConnectingIP;
+  if (realIP) return realIP;
+  if (forwarded) return forwarded.split(',')[0].trim();
+
+  return 'Unknown';
+};
+
+// Process and save the HTML content as a snapshot
+const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
+  let processedHtml = html;
+
+  // Extract address and notes from event if available, otherwise use client data
+  const address = event ? (event.eventLocation ?? '') : (client.address || '');
+  const notes = event ? (event.notes ?? '') : (client.notes || '');
+
+  // Replace client fields
+  processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
+  processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
+  processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
+  processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
+  processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
+  processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
+
+  // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
+  const eventDate = event ? event.eventDate : client.eventDate;
+  const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
+  const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
+  const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
+  const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
+  const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
+  const packagePrice = event ? event.packagePrice : client.packagePrice;
+
+  processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '');
+  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
+  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
+  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
+  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
+  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
+  processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
+
+  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
+  processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
+
+  return processedHtml;
+};
+
+// Build a "Digital Signature Details" HTML block listing all signers, used to append to the merged snapshot.
+function buildSignatureBlockHtml(
+  signatures: { signerName: string; signerEmail: string; signedAt: Date | string; method: string; ip?: string | null }[],
+): string {
+  if (!signatures.length) return '';
+  const rows = signatures
+    .map((s) => {
+      const when = s.signedAt
+        ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' })
+        : '';
+      return `
+        <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #4a9e72; background-color: #f8fafc;">
+          <p style="margin: 0; font-weight: 600;">${escapeHtml(s.signerName)}</p>
+          <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">${escapeHtml(s.signerEmail)}</p>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: #777;">Signed: ${escapeHtml(when)}${s.ip ? ` &middot; IP: ${escapeHtml(s.ip)}` : ''}</p>
+        </div>`;
+    })
+    .join('\n');
+
+  return `
+    <div style="margin-top: 32px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
+      <h3 style="margin: 0 0 12px 0;">Digital Signature Details</h3>
+      ${rows}
+    </div>`;
+}
+
+function escapeHtml(s: string): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -26,153 +112,240 @@ export async function POST(request: NextRequest) {
       include: {
         client: true,
         template: true,
-        event: true
+        event: true,
+        signatures: true,
       }
     });
 
     if (!agreement) {
-      return NextResponse.json({ 
-        error: 'Agreement not found or has expired' 
+      return NextResponse.json({
+        error: 'Agreement not found or has expired'
       }, { status: 404 });
     }
 
-    // Verify client information matches
-    const clientName = `${agreement.client.firstName} ${agreement.client.lastName}`.toLowerCase();
-    const providedName = validatedData.clientName.toLowerCase();
-    const clientEmail = agreement.client.email.toLowerCase();
-    const providedEmail = validatedData.clientEmail.toLowerCase();
+    // Determine which contact this signer is (primary or secondary)
+    const providedEmail = validatedData.clientEmail.trim().toLowerCase();
+    const providedName = validatedData.clientName.trim().toLowerCase();
 
-    if (clientName !== providedName || clientEmail !== providedEmail) {
-      return NextResponse.json({ 
-        error: 'Client information does not match. Please verify your name and email.' 
+    const primaryEmail = (agreement.client.email || '').toLowerCase();
+    const primaryName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim().toLowerCase();
+
+    const secondSignerEnabled = Boolean((agreement as any).secondSignerEnabled);
+    const secondaryEmail = secondSignerEnabled
+      ? ((agreement as any).secondSignerEmail || '').toLowerCase()
+      : '';
+    const secondaryFirstName = (agreement as any).secondSignerFirstName || '';
+    const secondaryLastName = (agreement as any).secondSignerLastName || '';
+    const secondaryName = `${secondaryFirstName} ${secondaryLastName}`.trim().toLowerCase();
+
+    let signerRole: 'primary' | 'secondary' | null = null;
+    if (providedEmail === primaryEmail && providedName === primaryName) {
+      signerRole = 'primary';
+    } else if (
+      secondSignerEnabled &&
+      secondaryEmail &&
+      providedEmail === secondaryEmail &&
+      providedName === secondaryName
+    ) {
+      signerRole = 'secondary';
+    }
+
+    if (!signerRole) {
+      return NextResponse.json({
+        error: 'Signer information does not match. Please verify your name and email.'
       }, { status: 400 });
     }
 
-    // Check if already signed
+    // Check if already SIGNED — no further signatures may be recorded
     if (agreement.status === 'SIGNED') {
-      return NextResponse.json({ 
-        error: 'This agreement has already been signed' 
+      return NextResponse.json({
+        error: 'This agreement has already been signed'
       }, { status: 400 });
     }
-
-    // Get client IP address
-    const getClientIP = (request: NextRequest): string => {
-      const forwarded = request.headers.get('x-forwarded-for');
-      const realIP = request.headers.get('x-real-ip');
-      const cfConnectingIP = request.headers.get('cf-connecting-ip');
-      
-      if (cfConnectingIP) return cfConnectingIP;
-      if (realIP) return realIP;
-      if (forwarded) return forwarded.split(',')[0].trim();
-      
-      return 'Unknown';
-    };
 
     const clientIP = getClientIP(request);
+    const userAgent = request.headers.get('user-agent') || 'Unknown';
 
-    // Process and save the HTML content as a snapshot
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = html;
-      
-      // Extract address and notes from event if available, otherwise use client data
-      const address = event ? (event.eventLocation ?? '') : (client.address || '');
-      const notes = event ? (event.notes ?? '') : (client.notes || '');
-      
-      // Replace client fields
-      processedHtml = processedHtml.replace(/\{\{client\.firstName\}\}/g, client.firstName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.lastName\}\}/g, client.lastName || '');
-      processedHtml = processedHtml.replace(/\{\{client\.email\}\}/g, client.email || '');
-      processedHtml = processedHtml.replace(/\{\{client\.phone\}\}/g, client.phone || '');
-      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
-      
-      // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
-      const eventDate = event ? event.eventDate : client.eventDate;
-      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-      const packagePrice = event ? event.packagePrice : client.packagePrice;
-      
-      // Replace event fields - use event data if available, otherwise client fields
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '');
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
-      
-      // Replace agreement fields
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-      
-      return processedHtml;
-    };
+    // Has this signer already signed?
+    const existingSignatures = (agreement as any).signatures || [];
+    const alreadySigned = existingSignatures.some(
+      (s: any) => (s.signerEmail || '').toLowerCase() === providedEmail,
+    );
+    if (alreadySigned) {
+      return NextResponse.json({
+        error: 'You have already signed this agreement.',
+      }, { status: 400 });
+    }
 
-    // Create a snapshot of the agreement content at the time of signing
-    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
-    const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-    const signedHtmlContent = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
-    devLog('🔍 SIGN API: Created snapshot length:', signedHtmlContent.length);
-    devLog('🔍 SIGN API: Snapshot preview:', signedHtmlContent.substring(0, 200) + '...');
+    const signerName = signerRole === 'primary'
+      ? `${agreement.client.firstName} ${agreement.client.lastName}`.trim()
+      : `${secondaryFirstName} ${secondaryLastName}`.trim();
+    const signerEmail = signerRole === 'primary'
+      ? agreement.client.email
+      : (agreement as any).secondSignerEmail;
 
-    // Update agreement status to SIGNED and save the snapshot
-    const updatedAgreement = await prisma.agreement.update({
-      where: { id: agreement.id },
-      data: {
-        status: 'SIGNED',
-        signedAt: new Date(),
-        signedFromIP: clientIP,
-        mergedHtml: signedHtmlContent // Save the processed HTML as a snapshot
+    // Upsert the signature row
+    await prisma.signature.upsert({
+      where: {
+        agreementId_signerEmail: {
+          agreementId: agreement.id,
+          signerEmail,
+        },
       },
-      include: {
-        client: true,
-        template: true,
-        lead: true,
-        event: true
-      }
+      create: {
+        agreementId: agreement.id,
+        signerName,
+        signerEmail,
+        method: 'typed',
+        signedAt: new Date(),
+        ip: clientIP,
+        userAgent,
+      },
+      update: {
+        signerName,
+        method: 'typed',
+        signedAt: new Date(),
+        ip: clientIP,
+        userAgent,
+      },
     });
 
-    // Update linked lead stage when agreement is signed
-    if (updatedAgreement.leadId) {
-      await prisma.lead.update({
-        where: { id: updatedAgreement.leadId },
-        data: { stage: 'SIGNED' },
-      }).catch((err) => console.warn('Could not update lead stage:', err));
+    // Determine if this completes the agreement
+    const requireBoth = secondSignerEnabled && Boolean((agreement as any).requireBothSignatures);
+
+    // Re-read all signatures after the upsert
+    const allSignatures = await prisma.signature.findMany({
+      where: { agreementId: agreement.id },
+      orderBy: { signedAt: 'asc' },
+    });
+
+    const primarySigned = allSignatures.some((s) => s.signerEmail.toLowerCase() === primaryEmail);
+    const secondarySigned = secondaryEmail
+      ? allSignatures.some((s) => s.signerEmail.toLowerCase() === secondaryEmail)
+      : false;
+
+    const isFinalSignature = requireBoth ? (primarySigned && secondarySigned) : true;
+
+    let updatedAgreement: any;
+    if (isFinalSignature) {
+      // Build the merged snapshot from primary client's perspective and append signature blocks.
+      const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+      const baseHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+      const signatureBlock = requireBoth
+        ? buildSignatureBlockHtml(
+            allSignatures.map((s) => ({
+              signerName: s.signerName,
+              signerEmail: s.signerEmail,
+              signedAt: s.signedAt,
+              method: s.method,
+              ip: s.ip,
+            })),
+          )
+        : '';
+      const signedHtmlContent = baseHtml + signatureBlock;
+
+      devLog('🔍 SIGN API: Final signature - snapshot length:', signedHtmlContent.length);
+
+      updatedAgreement = await prisma.agreement.update({
+        where: { id: agreement.id },
+        data: {
+          status: 'SIGNED',
+          signedAt: agreement.signedAt || new Date(),
+          signedFromIP: agreement.signedFromIP || clientIP,
+          mergedHtml: signedHtmlContent,
+        },
+        include: {
+          client: true,
+          template: true,
+          lead: true,
+          event: true,
+          signatures: { orderBy: { signedAt: 'asc' } },
+        },
+      });
+
+      // Update linked lead stage when agreement is fully signed
+      if (updatedAgreement.leadId) {
+        await prisma.lead
+          .update({
+            where: { id: updatedAgreement.leadId },
+            data: { stage: 'SIGNED' },
+          })
+          .catch((err) => console.warn('Could not update lead stage:', err));
+      }
+
+      // Send notification + thank-you emails
+      try {
+        await sendSignedAgreementNotification(updatedAgreement, clientIP, request);
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+      }
+      try {
+        await sendClientThankYouEmail(updatedAgreement, request);
+      } catch (emailError) {
+        console.error('Failed to send client thank you email:', emailError);
+      }
+    } else {
+      // Partial signature — agreement stays LIVE; record signedAt only if not yet set,
+      // because mergedHtml will be finalized on the second signature.
+      updatedAgreement = await prisma.agreement.update({
+        where: { id: agreement.id },
+        data: {
+          // keep status, but bump signedAt for the first signer if missing
+          signedAt: agreement.signedAt || new Date(),
+          signedFromIP: agreement.signedFromIP || clientIP,
+        },
+        include: {
+          client: true,
+          template: true,
+          lead: true,
+          event: true,
+          signatures: { orderBy: { signedAt: 'asc' } },
+        },
+      });
+
+      // Email the OTHER party "waiting on you to sign"
+      try {
+        await sendWaitingForSecondSignerEmail(
+          updatedAgreement,
+          signerRole,
+          request,
+        );
+      } catch (emailError) {
+        console.error('Failed to send waiting-on-second-signer email:', emailError);
+      }
     }
 
-    // Send automatic notification email to info@photoboothguys.ca
-    try {
-      await sendSignedAgreementNotification(updatedAgreement, clientIP, request);
-    } catch (emailError) {
-      console.error('Failed to send notification email:', emailError);
-      // Don't fail the signing process if email fails
-    }
-
-    // Send thank you email to the client
-    try {
-      await sendClientThankYouEmail(updatedAgreement, request);
-    } catch (emailError) {
-      console.error('Failed to send client thank you email:', emailError);
-      // Don't fail the signing process if email fails
-    }
+    // Reshape secondSigner into the same shape verify-email returns, so the
+    // client UI does not have to handle two different shapes.
+    const responseAgreement = {
+      ...updatedAgreement,
+      secondSignerEnabled: Boolean((updatedAgreement as any).secondSignerEnabled),
+      requireBothSignatures: Boolean((updatedAgreement as any).requireBothSignatures),
+      secondSigner: (updatedAgreement as any).secondSignerEnabled
+        ? {
+            firstName: (updatedAgreement as any).secondSignerFirstName || '',
+            lastName: (updatedAgreement as any).secondSignerLastName || '',
+            email: (updatedAgreement as any).secondSignerEmail || '',
+          }
+        : null,
+    };
 
     return NextResponse.json({
-      message: 'Agreement signed successfully',
-      agreement: updatedAgreement
+      message: isFinalSignature ? 'Agreement signed successfully' : 'Signature recorded; waiting on the other signer.',
+      agreement: responseAgreement,
+      isFinalSignature,
+      signerRole,
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: error.errors
       }, { status: 400 });
     }
     console.error('Error signing agreement:', error);
-    return NextResponse.json({ 
-      error: 'Failed to sign agreement' 
+    return NextResponse.json({
+      error: 'Failed to sign agreement'
     }, { status: 500 });
   }
 }
@@ -204,6 +377,25 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
     greetingTimeout: 10000,
     socketTimeout: 10000,
   });
+
+  // Build a "Signed By" block — list every signer for clarity
+  const signers = (agreement.signatures && agreement.signatures.length)
+    ? agreement.signatures
+    : [{
+        signerName: `${agreement.client.firstName} ${agreement.client.lastName}`,
+        signerEmail: agreement.client.email,
+        signedAt: agreement.signedAt,
+        ip: clientIP,
+      }];
+
+  const signersListHtml = signers
+    .map((s: any) => `
+      <li>
+        <strong>${escapeHtml(s.signerName)}</strong> &lt;${escapeHtml(s.signerEmail)}&gt;
+        — ${s.signedAt ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+        ${s.ip ? `(IP ${escapeHtml(s.ip)})` : ''}
+      </li>`)
+    .join('\n');
 
   // Create email content
   const emailHtml = `
@@ -268,6 +460,9 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
             <h3>Agreement Details:</h3>
             <p><strong>Client:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
             <p><strong>Email:</strong> ${agreement.client.email}</p>
+            ${agreement.secondSignerEnabled && agreement.secondSignerEmail
+              ? `<p><strong>Second Signer:</strong> ${escapeHtml(agreement.secondSignerFirstName || '')} ${escapeHtml(agreement.secondSignerLastName || '')} &lt;${escapeHtml(agreement.secondSignerEmail)}&gt;</p>`
+              : ''}
             <p><strong>Template:</strong> ${agreement.template.title}</p>
             <p><strong>Agreement ID:</strong> ${agreement.id}</p>
             <p><strong>Signed At:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
@@ -276,12 +471,9 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
           
           <div class="signature-info">
             <h3>Digital Signature Information:</h3>
-            <p>This agreement has been legally signed by the client using their email verification. The signature includes:</p>
+            <p>This agreement has been legally signed${signers.length > 1 ? ' by both parties' : ''}:</p>
             <ul>
-              <li>Client identity verification</li>
-              <li>Timestamp of signing (Toronto timezone)</li>
-              <li>IP address of signing location</li>
-              <li>Unique agreement identifier</li>
+              ${signersListHtml}
             </ul>
           </div>
           
@@ -312,7 +504,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
   `;
 
   // Send email
-  const mailOptions = {
+  const mailOptions: any = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: 'info@photoboothguys.ca',
     subject: `Agreement Signed - ${agreement.client.firstName} ${agreement.client.lastName} - ${agreement.template.title}`,
@@ -495,20 +687,129 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
     </html>
   `;
 
-  // Send email
-  const mailOptions = {
+  // Send email — CC second signer when enabled and email is different from primary
+  const mailOptions: any = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: agreement.client.email,
     subject: `Agreement Signed - Thank You for Choosing Photobooth Guys`,
     html: emailHtml,
   };
 
+  if (
+    agreement.secondSignerEnabled &&
+    agreement.secondSignerEmail &&
+    agreement.secondSignerEmail.toLowerCase() !== (agreement.client.email || '').toLowerCase()
+  ) {
+    mailOptions.cc = [agreement.secondSignerEmail];
+  }
+
   try {
     await transporter.verify();
     await transporter.sendMail(mailOptions);
-    devLog('Client thank you email sent successfully to:', agreement.client.email);
+    devLog('Client thank you email sent successfully to:', agreement.client.email, 'cc:', mailOptions.cc || 'none');
   } catch (error) {
     console.error('Failed to send client thank you email:', error);
     throw error;
   }
+}
+
+// Email the OTHER signer that we are waiting on them to sign.
+async function sendWaitingForSecondSignerEmail(
+  agreement: any,
+  signerJustSigned: 'primary' | 'secondary',
+  request: NextRequest,
+) {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    devLog('SMTP not configured, skipping waiting-on-second-signer email');
+    return;
+  }
+
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const host = request.headers.get('host') || 'localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+  const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
+
+  // Determine recipient (the OTHER party)
+  const recipientEmail = signerJustSigned === 'primary'
+    ? agreement.secondSignerEmail
+    : agreement.client.email;
+  const recipientName = signerJustSigned === 'primary'
+    ? `${agreement.secondSignerFirstName || ''} ${agreement.secondSignerLastName || ''}`.trim() || 'there'
+    : `${agreement.client.firstName || ''}`.trim() || 'there';
+
+  const justSignedName = signerJustSigned === 'primary'
+    ? `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim()
+    : `${agreement.secondSignerFirstName || ''} ${agreement.secondSignerLastName || ''}`.trim();
+
+  if (!recipientEmail) {
+    devLog('No recipient email for waiting-on-second-signer email; skipping');
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_PORT === '465',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+  });
+
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #4a9e72; margin: 0; }
+        .info { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 16px; border-radius: 8px; margin: 20px 0; }
+        .button {
+          display: inline-block;
+          background-color: #3d8560;
+          color: white !important;
+          padding: 14px 28px;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: 600;
+        }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Photobooth Guys</h1>
+          <p>Your signature is needed</p>
+        </div>
+        <p>Hi ${escapeHtml(recipientName)},</p>
+        <p>${escapeHtml(justSignedName)} has signed the agreement, and this agreement requires both signatures to be binding.</p>
+        <div class="info">
+          <p style="margin: 0;"><strong>Please review and sign the agreement to complete the process.</strong></p>
+        </div>
+        <p style="text-align: center; margin: 28px 0;">
+          <a href="${agreementUrl}" class="button">Review &amp; Sign Agreement</a>
+        </p>
+        <p>If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
+        <div class="footer">
+          <p>Photobooth Guys Agreement Management System</p>
+          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions: any = {
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: recipientEmail,
+    subject: `Action needed: please sign the agreement`,
+    html: emailHtml,
+  };
+
+  await transporter.verify();
+  await transporter.sendMail(mailOptions);
+  devLog('Waiting-on-second-signer email sent to:', recipientEmail);
 }

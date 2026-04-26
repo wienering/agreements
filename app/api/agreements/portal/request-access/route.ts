@@ -91,10 +91,24 @@ export async function POST(request: NextRequest) {
 
     const emailLower = email.toLowerCase();
 
-    // Check if client exists
-    const client = await prisma.client.findFirst({
+    // Check if client exists by primary email...
+    let client = await prisma.client.findFirst({
       where: { email: emailLower },
     });
+
+    // ...or by secondary signer email on any agreement
+    if (!client) {
+      const agreementWithSecondary = await prisma.agreement.findFirst({
+        where: {
+          secondSignerEnabled: true,
+          secondSignerEmail: emailLower,
+        },
+        include: { client: true },
+      });
+      if (agreementWithSecondary?.client) {
+        client = agreementWithSecondary.client;
+      }
+    }
 
     if (!client) {
       // Don't reveal if email exists for security

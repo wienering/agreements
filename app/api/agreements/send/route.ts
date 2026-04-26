@@ -241,13 +241,27 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
-    // Send email with timeout and error handling
-    const mailOptions = {
+    // Send email with timeout and error handling — CC second signer when enabled
+    const secondSignerEnabled = Boolean((agreement as any).secondSignerEnabled);
+    const secondSignerEmail = (agreement as any).secondSignerEmail as string | null | undefined;
+    const ccList: string[] = [];
+    if (
+      secondSignerEnabled &&
+      secondSignerEmail &&
+      secondSignerEmail.toLowerCase() !== (agreement.client.email || '').toLowerCase()
+    ) {
+      ccList.push(secondSignerEmail);
+    }
+
+    const mailOptions: any = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: agreement.client.email,
       subject: emailSubject,
       html: emailHtml,
     };
+    if (ccList.length > 0) {
+      mailOptions.cc = ccList;
+    }
 
     try {
       // Verify connection first
@@ -276,6 +290,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         message: 'Agreement sent successfully',
         recipientEmail: agreement.client.email,
+        ccEmails: ccList,
         agreementId: agreement.id,
         status: 'LIVE'
       });

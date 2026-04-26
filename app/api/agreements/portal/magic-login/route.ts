@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Find the client by ID and verify email matches
-    const client = await prisma.client.findFirst({
-      where: { 
+    let client = await prisma.client.findFirst({
+      where: {
         id: payload.clientId,
-        email: payload.clientEmail 
+        email: payload.clientEmail
       },
       include: {
         agreements: {
@@ -39,6 +39,33 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    let isSecondarySigner = false;
+    if (!client) {
+      // Maybe the magic link was issued to a second signer for one of this client's agreements
+      const agreementWithSecondary = await prisma.agreement.findFirst({
+        where: {
+          clientId: payload.clientId,
+          secondSignerEnabled: true,
+          secondSignerEmail: payload.clientEmail,
+        },
+        select: { clientId: true },
+      });
+      if (agreementWithSecondary) {
+        client = await prisma.client.findUnique({
+          where: { id: agreementWithSecondary.clientId },
+          include: {
+            agreements: {
+              include: { template: true },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        });
+        if (client) {
+          isSecondarySigner = true;
+        }
+      }
+    }
 
     if (!client) {
       return NextResponse.json({ 
@@ -51,10 +78,12 @@ export async function POST(request: NextRequest) {
     const sessionToken = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 90 * 60 * 1000); // 90 minutes
 
-    // Create client session
+    // Create client session — for secondary signers, attach session to primary
+    // client's email and record the secondary email for audit.
     await prisma.clientSession.create({
       data: {
         clientEmail: client.email,
+        secondaryEmail: isSecondarySigner ? payload.clientEmail : null,
         sessionToken,
         expiresAt,
         lastActivityAt: new Date(),

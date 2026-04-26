@@ -125,11 +125,45 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
   if (isSigned) {
     addText('DIGITAL SIGNATURE:', 12, true);
     yPosition += 3;
-    addText('This agreement has been digitally signed by:');
-    addText(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
-    addText(`Email: ${agreement.client.email}`);
-    addText(`Date & Time Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`);
-    addText(`IP Address: ${agreement.signedFromIP || 'N/A'}`);
+
+    // List every recorded signature when available (multi-signer support);
+    // fall back to the primary client + agreement.signedAt for legacy rows.
+    const signatures: Array<{
+      signerName: string;
+      signerEmail: string;
+      signedAt?: Date | string | null;
+      ip?: string | null;
+    }> = Array.isArray((agreement as any).signatures) && (agreement as any).signatures.length > 0
+      ? (agreement as any).signatures
+      : [
+          {
+            signerName: `${agreement.client.firstName} ${agreement.client.lastName}`,
+            signerEmail: agreement.client.email,
+            signedAt: agreement.signedAt,
+            ip: agreement.signedFromIP,
+          },
+        ];
+
+    addText(
+      signatures.length > 1
+        ? 'This agreement has been digitally signed by both parties:'
+        : 'This agreement has been digitally signed by:'
+    );
+    yPosition += 2;
+
+    signatures.forEach((s, idx) => {
+      if (signatures.length > 1) {
+        addText(`Signer ${idx + 1}:`, 10, true);
+      }
+      addText(`Name: ${s.signerName}`);
+      addText(`Email: ${s.signerEmail}`);
+      addText(
+        `Date & Time Signed: ${s.signedAt ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`
+      );
+      addText(`IP Address: ${s.ip || 'N/A'}`);
+      yPosition += 3;
+    });
+
     addText(`Agreement ID: ${agreement.id}`);
     addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
     yPosition += 8;
@@ -175,7 +209,8 @@ export async function POST(request: NextRequest) {
       include: {
         client: true,
         template: true,
-        event: true
+        event: true,
+        signatures: { orderBy: { signedAt: 'asc' } },
       }
     });
 

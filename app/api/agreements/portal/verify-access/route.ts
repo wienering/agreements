@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Code is valid - find the client
-    const client = await prisma.client.findFirst({
+    // Code is valid - find the client (primary or secondary signer)
+    let client = await prisma.client.findFirst({
       where: { email },
       include: {
         agreements: {
@@ -52,6 +52,32 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    let isSecondarySigner = false;
+    if (!client) {
+      // Try to resolve via second signer email
+      const agreementWithSecondary = await prisma.agreement.findFirst({
+        where: {
+          secondSignerEnabled: true,
+          secondSignerEmail: email,
+        },
+        select: { clientId: true },
+      });
+      if (agreementWithSecondary) {
+        client = await prisma.client.findUnique({
+          where: { id: agreementWithSecondary.clientId },
+          include: {
+            agreements: {
+              include: { template: true },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        });
+        if (client) {
+          isSecondarySigner = true;
+        }
+      }
+    }
+
     if (!client) {
       return NextResponse.json({ 
         error: 'Client not found' 
@@ -62,10 +88,13 @@ export async function POST(request: NextRequest) {
     const sessionToken = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 90 * 60 * 1000); // 90 minutes
 
-    // Create client session
+    // Create client session — for secondary signers, the session is owned by the
+    // primary client (so existing dashboard queries still work) and the actual
+    // authenticated email is recorded in `secondaryEmail` for audit.
     await prisma.clientSession.create({
       data: {
-        clientEmail: email,
+        clientEmail: client.email,
+        secondaryEmail: isSecondarySigner ? email : null,
         sessionToken,
         expiresAt,
         lastActivityAt: new Date(),

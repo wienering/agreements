@@ -115,7 +115,7 @@ export async function GET(
       include: {
         client: true,
         template: true,
-        signature: true,
+        signatures: { orderBy: { signedAt: 'asc' } },
         event: true
       }
     });

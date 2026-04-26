@@ -5,6 +5,13 @@ import { useParams } from 'next/navigation';
 import { devLog } from '@/lib/logger';
 import { UIcon } from '../../components/UIcon';
 
+interface SignatureRecord {
+  signerName: string;
+  signerEmail: string;
+  signedAt: string;
+  method?: string;
+}
+
 interface AgreementData {
   id: string;
   client: {
@@ -44,6 +51,22 @@ interface AgreementData {
     key: string;
     value: string;
   }>;
+  // Second signer support
+  secondSignerEnabled?: boolean;
+  requireBothSignatures?: boolean;
+  secondSigner?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  signatures?: SignatureRecord[];
+}
+
+interface VerifiedContact {
+  role: 'primary' | 'secondary';
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 export default function ClientAgreementPage() {
@@ -54,6 +77,7 @@ export default function ClientAgreementPage() {
   const hasFetchedData = useRef(false);
   
   const [agreement, setAgreement] = useState<AgreementData | null>(null);
+  const [verifiedContact, setVerifiedContact] = useState<VerifiedContact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(true);
@@ -164,7 +188,11 @@ export default function ClientAgreementPage() {
         // Email verified successfully - NOW we can safely load agreement data
         setIsEmailVerified(true);
         setShowEmailVerification(false);
-        
+
+        if (data.verifiedContact) {
+          setVerifiedContact(data.verifiedContact);
+        }
+
         // The API already processes the HTML with event data, so we can use it directly
         // Only reprocess if there are still placeholders (shouldn't happen, but just in case)
         const processedAgreement = {
@@ -292,12 +320,19 @@ export default function ClientAgreementPage() {
 
   const handleSignAgreement = async () => {
     if (!agreement) return;
-    
-    setClientName(`${agreement.client.firstName} ${agreement.client.lastName}`);
-    setClientEmail(agreement.client.email);
+
+    // Prefill with the contact who actually verified their email,
+    // falling back to the primary client.
+    if (verifiedContact) {
+      setClientName(`${verifiedContact.firstName || ''} ${verifiedContact.lastName || ''}`.trim());
+      setClientEmail(verifiedContact.email);
+    } else {
+      setClientName(`${agreement.client.firstName} ${agreement.client.lastName}`);
+      setClientEmail(agreement.client.email);
+    }
     setShowSignModal(true);
     setSignError(null);
-    
+
     // Auto-focus the first input after modal opens
     setTimeout(() => {
       const firstInput = document.querySelector('input[type="text"]') as HTMLInputElement;
@@ -350,17 +385,26 @@ export default function ClientAgreementPage() {
           }
         };
         setAgreement(processedAgreement);
-        
-        // Show success animation
-        setSignSuccessMessage('Agreement signed successfully. A copy has been emailed to you.');
-        setShowSignSuccess(true);
-        
-        // Redirect to thank-you page after 3 seconds
-        setTimeout(() => {
-          setShowSignSuccess(false);
-          // Navigate to thank-you page with agreement data
-          window.location.href = `/agreement/${token}/thank-you`;
-        }, 3000);
+
+        if (data.isFinalSignature === false) {
+          // Partial signature — agreement still LIVE; show a partial success message and stay on page
+          setSignSuccessMessage('Signature recorded. Waiting for the other signer to complete the agreement.');
+          setShowSignSuccess(true);
+          setTimeout(() => {
+            setShowSignSuccess(false);
+          }, 3500);
+        } else {
+          // Show success animation
+          setSignSuccessMessage('Agreement signed successfully. A copy has been emailed to you.');
+          setShowSignSuccess(true);
+
+          // Redirect to thank-you page after 3 seconds
+          setTimeout(() => {
+            setShowSignSuccess(false);
+            // Navigate to thank-you page with agreement data
+            window.location.href = `/agreement/${token}/thank-you`;
+          }, 3000);
+        }
       } else {
         const errorData = await response.json();
         setSignError(errorData.error || 'Failed to sign agreement');
@@ -1203,6 +1247,62 @@ export default function ClientAgreementPage() {
               </p>
             </div>
           )}
+
+          {/* Partial signed state — both signatures required, only first signed */}
+          {agreement &&
+            agreement.status !== 'SIGNED' &&
+            agreement.requireBothSignatures &&
+            (agreement.signatures?.length ?? 0) > 0 && (
+              <div style={{
+                marginTop: '24px',
+                padding: '20px',
+                backgroundColor: '#1f2937',
+                borderRadius: '8px',
+                border: '1px solid #f59e0b',
+                display: 'inline-block',
+                textAlign: 'left',
+                maxWidth: '640px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '8px'
+                }}>
+                  <UIcon name="hourglass" style={{ fontSize: '20px', color: '#fbbf24' }} />
+                  <span style={{
+                    color: '#fbbf24',
+                    fontSize: '16px',
+                    fontWeight: '600'
+                  }}>
+                    Waiting on the other signer
+                  </span>
+                </div>
+                <p style={{ margin: '0 0 8px 0', color: '#fde68a', fontSize: '14px' }}>
+                  {agreement.signatures && agreement.signatures.length > 0 ? (
+                    <>
+                      Signed by <strong>{agreement.signatures[0].signerName}</strong>{' '}
+                      ({agreement.signatures[0].signerEmail}).
+                    </>
+                  ) : null}{' '}
+                  Both signatures are required for this agreement to become binding.
+                </p>
+                {agreement.secondSigner && agreement.signatures && (() => {
+                  const signedEmails = agreement.signatures.map(s => (s.signerEmail || '').toLowerCase());
+                  const primaryEmailLower = (agreement.client.email || '').toLowerCase();
+                  const secondaryEmailLower = (agreement.secondSigner.email || '').toLowerCase();
+                  const otherSigner = signedEmails.includes(primaryEmailLower)
+                    ? `${agreement.secondSigner.firstName || ''} ${agreement.secondSigner.lastName || ''}`.trim() || agreement.secondSigner.email
+                    : `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || agreement.client.email;
+                  const otherEmail = signedEmails.includes(primaryEmailLower) ? secondaryEmailLower : primaryEmailLower;
+                  return (
+                    <p style={{ margin: '0', color: '#fde68a', fontSize: '13px' }}>
+                      Awaiting signature from <strong>{otherSigner}</strong> ({otherEmail}).
+                    </p>
+                  );
+                })()}
+              </div>
+            )}
         </div>
 
         {/* Agreement Content */}
@@ -1229,8 +1329,8 @@ export default function ClientAgreementPage() {
           />
         </div>
 
-        {/* Signature Details (if signed) */}
-        {agreement && agreement.status === 'SIGNED' && (
+        {/* Signature Details (if signed OR partially signed) */}
+        {agreement && (agreement.status === 'SIGNED' || (agreement.signatures?.length ?? 0) > 0) && (
           <div style={{
             backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
             padding: '32px',
@@ -1266,80 +1366,83 @@ export default function ClientAgreementPage() {
                 Digital Signature Details
               </h3>
             </div>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '16px' 
-            }}>
-              <div>
-                <p style={{ 
-                  margin: '0 0 4px 0', 
-                  fontSize: '12px', 
-                  color: isDark ? '#8f9a8f' : '#64748b',
-                  fontWeight: '500'
-                }}>
-                  SIGNED BY
-                </p>
-                <p style={{ 
-                  margin: '0', 
-                  fontSize: '14px', 
-                  color: isDark ? '#ffffff' : '#1e293b' 
-                }}>
-                  {agreement.client.firstName} {agreement.client.lastName}
-                </p>
-              </div>
-              <div>
-                <p style={{ 
-                  margin: '0 0 4px 0', 
-                  fontSize: '12px', 
-                  color: isDark ? '#8f9a8f' : '#64748b',
-                  fontWeight: '500'
-                }}>
-                  EMAIL
-                </p>
-                <p style={{ 
-                  margin: '0', 
-                  fontSize: '14px', 
-                  color: isDark ? '#ffffff' : '#1e293b' 
-                }}>
-                  {agreement.client.email}
-                </p>
-              </div>
-              <div>
-                <p style={{ 
-                  margin: '0 0 4px 0', 
-                  fontSize: '12px', 
-                  color: isDark ? '#8f9a8f' : '#64748b',
-                  fontWeight: '500'
-                }}>
-                  DATE & TIME SIGNED
-                </p>
-                <p style={{ 
-                  margin: '0', 
-                  fontSize: '14px', 
-                  color: isDark ? '#ffffff' : '#1e293b' 
-                }}>
-                  {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p style={{ 
-                  margin: '0 0 4px 0', 
-                  fontSize: '12px', 
-                  color: isDark ? '#8f9a8f' : '#64748b',
-                  fontWeight: '500'
-                }}>
-                  IP ADDRESS
-                </p>
-                <p style={{ 
-                  margin: '0', 
-                  fontSize: '14px', 
-                  color: isDark ? '#ffffff' : '#1e293b' 
-                }}>
-                  {agreement.signedFromIP || 'N/A'}
-                </p>
-              </div>
-            </div>
+
+            {(() => {
+              // Build a list of signature rows. Prefer rows from agreement.signatures
+              // (now multi-signer aware); fall back to the legacy single-signer fields.
+              const rows: Array<{
+                signerName: string;
+                signerEmail: string;
+                signedAt: string | null;
+                ip?: string | null;
+              }> = (agreement.signatures && agreement.signatures.length > 0)
+                ? agreement.signatures.map((s) => ({
+                    signerName: s.signerName,
+                    signerEmail: s.signerEmail,
+                    signedAt: s.signedAt,
+                    ip: null,
+                  }))
+                : [{
+                    signerName: `${agreement.client.firstName} ${agreement.client.lastName}`.trim(),
+                    signerEmail: agreement.client.email,
+                    signedAt: agreement.signedAt,
+                    ip: agreement.signedFromIP,
+                  }];
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {rows.map((row, idx) => (
+                    <div
+                      key={`${row.signerEmail}-${idx}`}
+                      style={{
+                        padding: '16px',
+                        borderLeft: `3px solid ${isDark ? '#4a9e72' : '#3d8560'}`,
+                        backgroundColor: isDark ? '#0f1310' : '#f8fafc',
+                        borderRadius: '6px',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '12px',
+                      }}
+                    >
+                      <div>
+                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#8f9a8f' : '#64748b', fontWeight: '500' }}>
+                          SIGNED BY
+                        </p>
+                        <p style={{ margin: '0', fontSize: '14px', color: isDark ? '#ffffff' : '#1e293b' }}>
+                          {row.signerName}
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#8f9a8f' : '#64748b', fontWeight: '500' }}>
+                          EMAIL
+                        </p>
+                        <p style={{ margin: '0', fontSize: '14px', color: isDark ? '#ffffff' : '#1e293b' }}>
+                          {row.signerEmail}
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#8f9a8f' : '#64748b', fontWeight: '500' }}>
+                          DATE & TIME SIGNED
+                        </p>
+                        <p style={{ margin: '0', fontSize: '14px', color: isDark ? '#ffffff' : '#1e293b' }}>
+                          {row.signedAt ? new Date(row.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                        </p>
+                      </div>
+                      {row.ip && (
+                        <div>
+                          <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: isDark ? '#8f9a8f' : '#64748b', fontWeight: '500' }}>
+                            IP ADDRESS
+                          </p>
+                          <p style={{ margin: '0', fontSize: '14px', color: isDark ? '#ffffff' : '#1e293b' }}>
+                            {row.ip}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -1501,7 +1604,17 @@ export default function ClientAgreementPage() {
               <button
                 ref={signButtonRef}
                 onClick={handleSignAgreement}
-                disabled={isSigning}
+                disabled={
+                  isSigning ||
+                  // If verified contact has already signed, prevent re-signing
+                  Boolean(
+                    verifiedContact &&
+                      agreement.signatures &&
+                      agreement.signatures.some(
+                        (s) => s.signerEmail.toLowerCase() === verifiedContact.email.toLowerCase(),
+                      ),
+                  )
+                }
                 style={{
                   backgroundColor: '#dc2626',
                   color: 'white',
@@ -1540,7 +1653,18 @@ export default function ClientAgreementPage() {
                 ) : (
                   <UIcon name="signature" style={{ fontSize: '18px' }} />
                 )}{' '}
-                {isSigning ? 'Signing...' : 'Sign Agreement'}
+                {(() => {
+                  if (isSigning) return 'Signing...';
+                  const alreadySigned = Boolean(
+                    verifiedContact &&
+                      agreement.signatures &&
+                      agreement.signatures.some(
+                        (s) => s.signerEmail.toLowerCase() === verifiedContact.email.toLowerCase(),
+                      ),
+                  );
+                  if (alreadySigned) return "You've signed — waiting on the other party";
+                  return 'Sign Agreement';
+                })()}
               </button>
               
               <button

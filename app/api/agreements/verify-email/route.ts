@@ -20,7 +20,16 @@ export async function POST(request: NextRequest) {
         client: true,
         template: true,
         event: true,
-        fields: true
+        fields: true,
+        signatures: {
+          orderBy: { signedAt: 'asc' },
+          select: {
+            signerName: true,
+            signerEmail: true,
+            signedAt: true,
+            method: true,
+          },
+        },
       }
     });
 
@@ -61,7 +70,15 @@ export async function POST(request: NextRequest) {
       return processedHtml;
     };
 
-    const emailMatches = agreement.client.email.toLowerCase() === validatedData.email.toLowerCase();
+    const inputEmail = validatedData.email.toLowerCase();
+    const primaryEmail = agreement.client.email.toLowerCase();
+    const secondarySignerEnabled = Boolean((agreement as any).secondSignerEnabled);
+    const secondaryEmailRaw = (agreement as any).secondSignerEmail as string | null | undefined;
+    const secondaryEmail = secondaryEmailRaw ? secondaryEmailRaw.toLowerCase() : null;
+
+    const matchesPrimary = primaryEmail === inputEmail;
+    const matchesSecondary = secondarySignerEnabled && !!secondaryEmail && secondaryEmail === inputEmail;
+    const emailMatches = matchesPrimary || matchesSecondary;
 
     if (emailMatches) {
       // Track view + send alert (wrapped in try-catch so it never blocks verification)
@@ -101,9 +118,34 @@ export async function POST(request: NextRequest) {
         packagePrice: agreement.client.packagePrice != null ? Number(agreement.client.packagePrice) : null,
       };
 
+      // Build secondary signer summary (without phone — not needed by client UI)
+      const secondSigner = secondarySignerEnabled
+        ? {
+            firstName: (agreement as any).secondSignerFirstName || '',
+            lastName: (agreement as any).secondSignerLastName || '',
+            email: secondaryEmailRaw || '',
+          }
+        : null;
+
+      // Identify which signer just verified (so the page can prefill the sign modal)
+      const verifiedContact = matchesPrimary
+        ? {
+            role: 'primary' as const,
+            firstName: agreement.client.firstName || '',
+            lastName: agreement.client.lastName || '',
+            email: agreement.client.email,
+          }
+        : {
+            role: 'secondary' as const,
+            firstName: (agreement as any).secondSignerFirstName || '',
+            lastName: (agreement as any).secondSignerLastName || '',
+            email: secondaryEmailRaw || validatedData.email,
+          };
+
       return NextResponse.json({
         success: true,
         message: 'Email verified successfully',
+        verifiedContact,
         agreement: {
           id: agreement.id,
           client,
@@ -113,16 +155,22 @@ export async function POST(request: NextRequest) {
           signedFromIP: agreement.signedFromIP,
           mergedHtml: agreement.mergedHtml,
           event: agreement.event,
-          fields: agreement.fields
+          fields: agreement.fields,
+          secondSignerEnabled: secondarySignerEnabled,
+          requireBothSignatures: Boolean((agreement as any).requireBothSignatures),
+          secondSigner,
+          signatures: (agreement as any).signatures || [],
         }
       });
     } else {
       // Wrong email — send unauthorized access alert
-      console.log('[verify-email] Email mismatch. expected:', agreement.client.email, 'got:', validatedData.email);
+      const expectedEmails = [agreement.client.email];
+      if (secondarySignerEnabled && secondaryEmailRaw) expectedEmails.push(secondaryEmailRaw);
+      console.log('[verify-email] Email mismatch. expected one of:', expectedEmails.join(', '), 'got:', validatedData.email);
       try {
         await sendUnauthorizedAccessEmail({
           agreementId: agreement.id,
-          clientEmail: agreement.client.email,
+          clientEmail: expectedEmails.join(' / '),
           attemptedEmail: validatedData.email,
           ipAddress: getClientIP(request),
           userAgent: request.headers.get('user-agent') || 'Unknown',

@@ -96,16 +96,26 @@ model Agreement {
   selectedBackdropName String?
   showPhoneNumberAlways Boolean            @default(false)
   forceVirtualGreenScreen Boolean          @default(false)
-  
+
+  // Second signer (optional)
+  secondSignerEnabled    Boolean           @default(false)
+  secondSignerFirstName  String?
+  secondSignerLastName   String?
+  secondSignerEmail      String?
+  secondSignerPhone      String?
+  requireBothSignatures  Boolean           @default(false)
+
   leadId             String?    @unique
   client             Client                @relation(fields: [clientId], references: [id])
   template           Template              @relation(fields: [templateId], references: [id])
   event              Event?                @relation(fields: [eventId], references: [id], onDelete: SetNull)
   lead               Lead?                 @relation(fields: [leadId], references: [id], onDelete: SetNull)
   fields             AgreementFieldValue[]
-  signature          Signature?
+  signatures         Signature[]
   auditLogs          AuditLog[]
   notes              ClientNote[]
+
+  @@index([secondSignerEmail])
 }
 
 model AgreementField {
@@ -133,7 +143,7 @@ model AgreementFieldValue {
 
 model Signature {
   id          String    @id @default(cuid())
-  agreementId String    @unique
+  agreementId String
   signerName  String
   signerEmail String
   method      String
@@ -144,6 +154,9 @@ model Signature {
   userAgent   String?
   contentHash String?
   agreement   Agreement @relation(fields: [agreementId], references: [id])
+
+  @@unique([agreementId, signerEmail])
+  @@index([agreementId])
 }
 
 model AuditLog {
@@ -159,6 +172,7 @@ model AuditLog {
 model ClientSession {
   id             String   @id @default(cuid())
   clientEmail    String?
+  secondaryEmail String?
   sessionToken   String   @unique
   expiresAt      DateTime
   createdAt      DateTime @default(now())
@@ -166,6 +180,7 @@ model ClientSession {
   client         Client?  @relation(fields: [clientEmail], references: [email])
 
   @@index([clientEmail])
+  @@index([secondaryEmail])
 }
 
 model ClientNote {

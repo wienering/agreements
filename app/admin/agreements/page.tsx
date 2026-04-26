@@ -239,6 +239,14 @@ export default function AgreementsPage() {
   const [editingStatusAgreementId, setEditingStatusAgreementId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Second signer editing state (for currently selected agreement)
+  const [editSecondSignerEnabled, setEditSecondSignerEnabled] = useState(false);
+  const [editSecondSignerFirstName, setEditSecondSignerFirstName] = useState('');
+  const [editSecondSignerLastName, setEditSecondSignerLastName] = useState('');
+  const [editSecondSignerEmail, setEditSecondSignerEmail] = useState('');
+  const [editSecondSignerPhone, setEditSecondSignerPhone] = useState('');
+  const [editRequireBothSignatures, setEditRequireBothSignatures] = useState(false);
+
   // Portal enhancements state
   const [paymentStatus, setPaymentStatus] = useState('');
   const [stripePaymentLink, setStripePaymentLink] = useState('');
@@ -323,7 +331,13 @@ const normalizePaymentStatus = (value?: string | null) => {
     clientId: '',
     templateId: '',
     eventId: '',
-    expiresAt: getDefaultExpirationDate()
+    expiresAt: getDefaultExpirationDate(),
+    secondSignerEnabled: false,
+    secondSignerFirstName: '',
+    secondSignerLastName: '',
+    secondSignerEmail: '',
+    secondSignerPhone: '',
+    requireBothSignatures: false,
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
@@ -880,7 +894,18 @@ const normalizePaymentStatus = (value?: string | null) => {
         const createdAgreement = await response.json();
         setAgreements([createdAgreement, ...agreements]);
         setShowCreateForm(false);
-        setNewAgreement({ clientId: '', templateId: '', eventId: '', expiresAt: getDefaultExpirationDate() });
+        setNewAgreement({
+          clientId: '',
+          templateId: '',
+          eventId: '',
+          expiresAt: getDefaultExpirationDate(),
+          secondSignerEnabled: false,
+          secondSignerFirstName: '',
+          secondSignerLastName: '',
+          secondSignerEmail: '',
+          secondSignerPhone: '',
+          requireBothSignatures: false,
+        });
         showToast('Agreement created successfully!');
       } else {
         try {
@@ -923,6 +948,14 @@ const normalizePaymentStatus = (value?: string | null) => {
     setNextAction((agreement as any).nextAction || '');
     setSelectedBackdropLinkId((agreement as any).backdropLinkId || '');
     setSelectedBackdropName((agreement as any).selectedBackdropName || '');
+
+    // Load second signer fields
+    setEditSecondSignerEnabled(Boolean((agreement as any).secondSignerEnabled));
+    setEditSecondSignerFirstName((agreement as any).secondSignerFirstName || '');
+    setEditSecondSignerLastName((agreement as any).secondSignerLastName || '');
+    setEditSecondSignerEmail((agreement as any).secondSignerEmail || '');
+    setEditSecondSignerPhone((agreement as any).secondSignerPhone || '');
+    setEditRequireBothSignatures(Boolean((agreement as any).requireBothSignatures));
     
     // Extract attendant ID and fetch backdrop options if backdrop link is set
     // Use a timeout to ensure backdropLinks are loaded
@@ -962,7 +995,13 @@ const normalizePaymentStatus = (value?: string | null) => {
         },
         body: JSON.stringify({
           id: selectedAgreement.id,
-          htmlContent: editingContent
+          htmlContent: editingContent,
+          secondSignerEnabled: editSecondSignerEnabled,
+          secondSignerFirstName: editSecondSignerEnabled ? editSecondSignerFirstName : null,
+          secondSignerLastName: editSecondSignerEnabled ? editSecondSignerLastName : null,
+          secondSignerEmail: editSecondSignerEnabled ? editSecondSignerEmail : null,
+          secondSignerPhone: editSecondSignerEnabled ? editSecondSignerPhone : null,
+          requireBothSignatures: editSecondSignerEnabled ? editRequireBothSignatures : false,
         }),
       });
 
@@ -1979,6 +2018,150 @@ const normalizePaymentStatus = (value?: string | null) => {
                   />
                 </div>
               </div>
+
+              {/* Second Signer Section */}
+              <div style={{
+                marginBottom: '16px',
+                padding: '16px',
+                border: `1px solid ${borderColor}`,
+                borderRadius: '6px',
+                backgroundColor: isDark ? '#0f1310' : '#f8fafc'
+              }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  color: textColor,
+                  fontSize: '14px'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={newAgreement.secondSignerEnabled}
+                    onChange={(e) => setNewAgreement({ ...newAgreement, secondSignerEnabled: e.target.checked })}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span>Add a second signer</span>
+                </label>
+                <p style={{ margin: '4px 0 0 24px', fontSize: '12px', color: mutedText }}>
+                  Either email on file will be able to unlock the agreement page to sign.
+                </p>
+
+                {newAgreement.secondSignerEnabled && (
+                  <>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                      gap: '12px',
+                      marginTop: '16px'
+                    }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Second Signer First Name
+                        </label>
+                        <input
+                          type="text"
+                          value={newAgreement.secondSignerFirstName}
+                          onChange={(e) => setNewAgreement({ ...newAgreement, secondSignerFirstName: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="First name"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Second Signer Last Name
+                        </label>
+                        <input
+                          type="text"
+                          value={newAgreement.secondSignerLastName}
+                          onChange={(e) => setNewAgreement({ ...newAgreement, secondSignerLastName: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="Last name"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Second Signer Email
+                        </label>
+                        <input
+                          type="email"
+                          value={newAgreement.secondSignerEmail}
+                          onChange={(e) => setNewAgreement({ ...newAgreement, secondSignerEmail: e.target.value })}
+                          required={newAgreement.secondSignerEnabled}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Second Signer Phone
+                        </label>
+                        <input
+                          type="tel"
+                          value={newAgreement.secondSignerPhone}
+                          onChange={(e) => setNewAgreement({ ...newAgreement, secondSignerPhone: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                    </div>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      marginTop: '12px',
+                      fontSize: '13px',
+                      color: textColor
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={newAgreement.requireBothSignatures}
+                        onChange={(e) => setNewAgreement({ ...newAgreement, requireBothSignatures: e.target.checked })}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>Require both signatures to make agreement binding</span>
+                    </label>
+                    <p style={{ margin: '4px 0 0 24px', fontSize: '12px', color: mutedText }}>
+                      When enabled, the agreement only becomes SIGNED after both people have signed.
+                    </p>
+                  </>
+                )}
+              </div>
+
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
@@ -3088,6 +3271,154 @@ const normalizePaymentStatus = (value?: string | null) => {
                     borderColor: borderColor
                   }}
                 />
+              </div>
+
+              {/* Second Signer Section */}
+              <div style={{
+                marginTop: '24px',
+                padding: '16px',
+                backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
+                borderRadius: '8px',
+                border: `1px solid ${borderColor}`
+              }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
+                  Second Signer
+                </h3>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  color: textColor,
+                  fontSize: '13px'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={editSecondSignerEnabled}
+                    onChange={(e) => setEditSecondSignerEnabled(e.target.checked)}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  <span>Add a second signer</span>
+                </label>
+                <p style={{ margin: '4px 0 0 24px', fontSize: '12px', color: mutedText }}>
+                  Either email on file will be able to unlock the agreement page to sign.
+                </p>
+
+                {editSecondSignerEnabled && (
+                  <>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                      gap: '12px',
+                      marginTop: '16px'
+                    }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editSecondSignerFirstName}
+                          onChange={(e) => setEditSecondSignerFirstName(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="First name"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editSecondSignerLastName}
+                          onChange={(e) => setEditSecondSignerLastName(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="Last name"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={editSecondSignerEmail}
+                          onChange={(e) => setEditSecondSignerEmail(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: textColor }}>
+                          Phone
+                        </label>
+                        <input
+                          type="tel"
+                          value={editSecondSignerPhone}
+                          onChange={(e) => setEditSecondSignerPhone(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            border: `1px solid ${borderColor}`,
+                            borderRadius: '4px',
+                            backgroundColor: cardBg,
+                            color: textColor,
+                            fontSize: '14px'
+                          }}
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                    </div>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      marginTop: '12px',
+                      fontSize: '13px',
+                      color: textColor
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={editRequireBothSignatures}
+                        onChange={(e) => setEditRequireBothSignatures(e.target.checked)}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>Require both signatures to make agreement binding</span>
+                    </label>
+                    <p style={{ margin: '4px 0 0 24px', fontSize: '12px', color: mutedText }}>
+                      When enabled, the agreement only becomes SIGNED after both people have signed.
+                    </p>
+                  </>
+                )}
+                <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: mutedText, fontStyle: 'italic' }}>
+                  Click &quot;Save Changes&quot; below to apply.
+                </p>
               </div>
 
               {/* Portal Enhancement Fields */}

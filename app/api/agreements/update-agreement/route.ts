@@ -6,6 +6,17 @@ import { z } from 'zod';
 const agreementUpdateSchema = z.object({
   id: z.string().min(1, 'Agreement ID is required'),
   htmlContent: z.string().min(1, 'HTML content is required'),
+  secondSignerEnabled: z.boolean().optional(),
+  secondSignerFirstName: z.string().nullable().optional(),
+  secondSignerLastName: z.string().nullable().optional(),
+  secondSignerEmail: z
+    .string()
+    .email('Second signer email must be a valid email')
+    .nullable()
+    .optional()
+    .or(z.literal('').transform(() => null)),
+  secondSignerPhone: z.string().nullable().optional(),
+  requireBothSignatures: z.boolean().optional(),
 });
 
 export async function PUT(request: NextRequest) {
@@ -38,12 +49,39 @@ export async function PUT(request: NextRequest) {
 
     devLog('Found agreement, updating customHtmlContent');
 
+    // Build update data, only setting second-signer fields when explicitly provided
+    const data: any = {
+      customHtmlContent: validatedData.htmlContent,
+    };
+
+    if (typeof validatedData.secondSignerEnabled === 'boolean') {
+      const enabled = validatedData.secondSignerEnabled;
+      data.secondSignerEnabled = enabled;
+      if (enabled) {
+        // When enabling, require an email
+        const email = validatedData.secondSignerEmail?.toString().trim().toLowerCase() || null;
+        if (!email) {
+          return NextResponse.json({ error: 'Second signer email is required when second signer is enabled' }, { status: 400 });
+        }
+        data.secondSignerFirstName = validatedData.secondSignerFirstName ?? null;
+        data.secondSignerLastName = validatedData.secondSignerLastName ?? null;
+        data.secondSignerEmail = email;
+        data.secondSignerPhone = validatedData.secondSignerPhone ?? null;
+        data.requireBothSignatures = Boolean(validatedData.requireBothSignatures);
+      } else {
+        // When disabling, clear all second-signer fields
+        data.secondSignerFirstName = null;
+        data.secondSignerLastName = null;
+        data.secondSignerEmail = null;
+        data.secondSignerPhone = null;
+        data.requireBothSignatures = false;
+      }
+    }
+
     // Update the agreement's custom content (not the template)
     const updatedAgreement = await prisma.agreement.update({
       where: { id },
-      data: {
-        customHtmlContent: validatedData.htmlContent
-      },
+      data,
       include: {
         client: true,
         template: true

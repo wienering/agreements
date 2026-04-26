@@ -64,7 +64,7 @@ export async function GET(
         notes: {
           orderBy: { createdAt: 'desc' }
         },
-        signature: true,
+        signatures: { orderBy: { signedAt: 'asc' } },
         backdropLink: true,
         event: true
       }
