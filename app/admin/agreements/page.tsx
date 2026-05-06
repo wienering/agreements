@@ -2501,7 +2501,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             textAlign: isMobile ? 'left' : 'right'
                           }}>
                             <UIcon name="link" style={{ fontSize: '12px', flexShrink: 0 }} />
-                            Backdrop Link: {(agreement as any).backdropLink.name}
+                            Attendant: {(agreement as any).backdropLink.name}
                           </span>
                         )}
                         {agreement.selectedBackdropName && (
