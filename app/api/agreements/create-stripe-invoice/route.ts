@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
       where: { id: validatedData.agreementId },
       data: {
         stripePaymentLink: primaryInvoiceUrl || agreement.stripePaymentLink,
-        paymentStatus: 'Not Paid', // Automatically set payment status to "Not Paid" when invoice is created
+        paymentStatus: 'Invoice issued', // Sent to client; follow-up statuses come from Stripe webhooks or manual edits
         // Store additional invoice info in a JSON format if needed
         // For now, we'll store the primary URL
       },

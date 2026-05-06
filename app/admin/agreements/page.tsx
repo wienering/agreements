@@ -317,6 +317,7 @@ const normalizePaymentStatus = (value?: string | null) => {
   if (v === 'balance due') return 'Balance due';
   if (v === 'deposit paid' || v === 'deposit') return 'Deposit paid';
   if (v === 'not paid' || v === 'unpaid') return 'Not paid';
+  if (v === 'invoice issued') return 'Invoice issued';
   return value; // fall back to original to avoid losing data
 };
   
@@ -666,6 +667,12 @@ const normalizePaymentStatus = (value?: string | null) => {
         color: '#dc2626',
         backgroundColor: '#fef2f2',
         border: '1px solid #fecaca'
+      };
+    } else if (statusLower.includes('invoice issued')) {
+      return {
+        color: isDark ? '#c4b5fd' : '#5b21b6',
+        backgroundColor: isDark ? '#2e1065' : '#f5f3ff',
+        border: isDark ? '1px solid #6d28d9' : '1px solid #ddd6fe'
       };
     }
     
@@ -1627,6 +1634,20 @@ const normalizePaymentStatus = (value?: string | null) => {
       if (response.ok) {
         setInvoiceResult(data);
         showToast(`Successfully created ${data.invoices?.length || 1} invoice(s)!`, 'success');
+        setAgreements(prev =>
+          prev.map(a =>
+            a.id === invoiceAgreement.id
+              ? { ...a, paymentStatus: 'Invoice issued' }
+              : a
+          )
+        );
+        if (selectedAgreement?.id === invoiceAgreement.id) {
+          setPaymentStatus('Invoice issued');
+          setSelectedAgreement({
+            ...selectedAgreement,
+            paymentStatus: 'Invoice issued',
+          });
+        }
         // Refresh agreements to get updated stripePaymentLink
         fetchAgreements();
       } else {
@@ -3504,6 +3525,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   >
                     <option value="">Not Set</option>
                     <option value="Not paid">Not paid</option>
+                    <option value="Invoice issued">Invoice issued</option>
                     <option value="Deposit paid">Deposit paid</option>
                     <option value="Balance due">Balance due</option>
                     <option value="Fully paid">Fully paid</option>
