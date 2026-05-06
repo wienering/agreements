@@ -792,6 +792,26 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     setSaving(true);
     try {
+      // Persist attendant (backdrop link) together with backdrop choice so admins
+      // do not need a separate "Update Portal Settings" save for the dropdown.
+      let agreementAfterBackdropLinkSave: Record<string, unknown> | null = null;
+      if (selectedBackdropLinkId) {
+        const linkResponse = await fetch('/api/agreements/set-backdrop-link', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agreementId: selectedAgreement.id,
+            backdropLinkId: selectedBackdropLinkId,
+          }),
+        });
+        const linkPayload = await linkResponse.json().catch(() => ({}));
+        if (!linkResponse.ok) {
+          showToast(linkPayload.error || 'Failed to save attendant', 'error');
+          return;
+        }
+        agreementAfterBackdropLinkSave = linkPayload.agreement ?? null;
+      }
+
       const response = await fetch('/api/agreements/update-backdrop-selection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -812,6 +832,12 @@ const normalizePaymentStatus = (value?: string | null) => {
           const updatedAgreement = agreements.find(a => a.id === selectedAgreement.id);
           if (updatedAgreement) {
             (updatedAgreement as any).selectedBackdropName = selectedBackdropName || null;
+            if (agreementAfterBackdropLinkSave) {
+              (updatedAgreement as any).backdropLinkId =
+                agreementAfterBackdropLinkSave.backdropLinkId ?? null;
+              (updatedAgreement as any).backdropLink =
+                agreementAfterBackdropLinkSave.backdropLink ?? null;
+            }
             setSelectedAgreement(updatedAgreement);
           }
         }
