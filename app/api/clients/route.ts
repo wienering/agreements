@@ -1,5 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+
+const createClientSchema = z.object({
+  firstName: z.string().trim().pipe(z.string().min(1, 'First name is required')),
+  lastName: z.string().trim().pipe(z.string().min(1, 'Last name is required')),
+  email: z
+    .string()
+    .transform((s) => s.normalize('NFKC').trim().toLowerCase())
+    .pipe(z.string().min(1, 'Email is required').email('Invalid email address')),
+  phone: z.string().optional().nullable(),
+  eventDate: z.string().optional().nullable(),
+  eventType: z.string().optional().nullable(),
+  eventLocation: z.string().optional().nullable(),
+  eventStartTime: z.string().optional().nullable(),
+  eventDuration: z.string().optional().nullable(),
+  eventPackage: z.string().optional().nullable(),
+  packagePrice: z.union([z.string(), z.number()]).optional().nullable(),
+  notes: z.string().optional().nullable(),
+  isWhitelabelClient: z.boolean().optional(),
+});
+
+function parseOptionalPackagePrice(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const n = typeof value === 'number' ? value : parseFloat(String(value).trim());
+  if (!Number.isFinite(n)) {
+    throw new Error('INVALID_PACKAGE_PRICE');
+  }
+  return n;
+}
 
 export async function GET() {
   try {
@@ -51,27 +82,33 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { 
-      firstName, 
-      lastName, 
-      email, 
-      phone, 
-      eventDate, 
+    const raw = await request.json();
+    const parsed = createClientSchema.safeParse(raw);
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message ?? 'Invalid request body';
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+    let packagePriceParsed: number | null;
+    try {
+      packagePriceParsed = parseOptionalPackagePrice(parsed.data.packagePrice);
+    } catch {
+      return NextResponse.json({ error: 'Package price must be a valid number' }, { status: 400 });
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      eventDate,
       eventType,
       eventLocation,
       eventStartTime,
       eventDuration,
       eventPackage,
-      packagePrice,
       notes,
-      isWhitelabelClient
-    } = body;
-
-    // Validate required fields
-    if (!firstName || !lastName || !email) {
-      return NextResponse.json({ error: 'First name, last name, and email are required' }, { status: 400 });
-    }
+      isWhitelabelClient,
+    } = parsed.data;
 
     // Check if client exists by email
     let client = await prisma.client.findUnique({
@@ -106,7 +143,15 @@ export async function POST(request: NextRequest) {
 
     // Create Event record for this booking
     // Only create if there's event data provided
-    if (eventDate || eventType || eventLocation || eventStartTime || eventDuration || eventPackage || packagePrice) {
+    if (
+      eventDate ||
+      eventType ||
+      eventLocation ||
+      eventStartTime ||
+      eventDuration ||
+      eventPackage ||
+      packagePriceParsed !== null
+    ) {
       await prisma.event.create({
         data: {
           clientId: client.id,
@@ -116,7 +161,7 @@ export async function POST(request: NextRequest) {
           eventStartTime: eventStartTime || null,
           eventDuration: eventDuration || null,
           eventPackage: eventPackage || null,
-          packagePrice: packagePrice ? parseFloat(packagePrice) : null,
+          packagePrice: packagePriceParsed,
           notes: notes || null,
           archived: false,
         },

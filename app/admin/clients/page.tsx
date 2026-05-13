@@ -1043,7 +1043,10 @@ export default function ClientsPage() {
                         Email *
                       </label>
                       <input
-                        type="email"
+                        type="text"
+                        inputMode="email"
+                        autoComplete="email"
+                        spellCheck={false}
                         value={newClient.email}
                         onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
                         required={!editingClient}
