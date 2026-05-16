@@ -110,11 +110,13 @@ export async function POST(request: NextRequest) {
                 <a class="button" href="${GOOGLE_REVIEW_URL}">Write a Google Review</a>
               </div>
 
+              <p>Thanks so much,<br />Photobooth Guys</p>
+
               <p class="muted">If the button doesn’t work, copy and paste this link:</p>
               <p class="link"><a href="${GOOGLE_REVIEW_URL}">${GOOGLE_REVIEW_URL}</a></p>
             </div>
             <div class="footer">
-              <p class="muted" style="margin:0;">Agreement ID: ${agreement.id}</p>
+              <p class="muted" style="margin:0;">Event ID: ${agreement.id}</p>
             </div>
           </div>
         </body>
