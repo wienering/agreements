@@ -285,6 +285,7 @@ export default function AgreementsPage() {
   // Review request email state
   const [showReviewRequestModal, setShowReviewRequestModal] = useState(false);
   const [reviewRequestAgreement, setReviewRequestAgreement] = useState<Agreement | null>(null);
+  const [reviewRequestUseCalgary, setReviewRequestUseCalgary] = useState(false);
   const [reviewRequestSent, setReviewRequestSent] = useState<Record<string, boolean>>({});
 
   // Invoice creation state
@@ -1169,7 +1170,10 @@ const normalizePaymentStatus = (value?: string | null) => {
     }
   };
 
-  const handleSendReviewRequest = async (agreement: Agreement) => {
+  const handleSendReviewRequest = async (
+    agreement: Agreement,
+    reviewMarket: 'ontario' | 'calgary' = 'ontario'
+  ) => {
     if (agreement.status !== 'COMPLETED') {
       showToast('Review requests can only be sent for completed agreements', 'error');
       return false;
@@ -1186,7 +1190,7 @@ const normalizePaymentStatus = (value?: string | null) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ agreementId: agreement.id }),
+        body: JSON.stringify({ agreementId: agreement.id, reviewMarket }),
       });
 
       const data = await response.json();
@@ -1217,6 +1221,7 @@ const normalizePaymentStatus = (value?: string | null) => {
   };
 
   const openReviewRequestModal = (agreement: Agreement) => {
+    setReviewRequestUseCalgary(false);
     setReviewRequestAgreement(agreement);
     setShowReviewRequestModal(true);
   };
@@ -1224,11 +1229,15 @@ const normalizePaymentStatus = (value?: string | null) => {
   const closeReviewRequestModal = () => {
     setShowReviewRequestModal(false);
     setReviewRequestAgreement(null);
+    setReviewRequestUseCalgary(false);
   };
 
   const handleConfirmSendReviewRequest = async () => {
     if (!reviewRequestAgreement) return;
-    const ok = await handleSendReviewRequest(reviewRequestAgreement);
+    const ok = await handleSendReviewRequest(
+      reviewRequestAgreement,
+      reviewRequestUseCalgary ? 'calgary' : 'ontario'
+    );
     if (ok) {
       setReviewRequestSent(prev => ({ ...prev, [reviewRequestAgreement.id]: true }));
       closeReviewRequestModal();
@@ -4827,6 +4836,67 @@ const normalizePaymentStatus = (value?: string | null) => {
                   <p style={{ margin: 0, color: textColor, fontSize: '13px' }}>
                     <strong>Email:</strong> {reviewRequestAgreement.client.email || 'Not set'}
                   </p>
+                </div>
+              </div>
+
+              <div style={{
+                marginBottom: '20px',
+                padding: '12px 16px',
+                backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
+                border: `1px solid ${borderColor}`,
+                borderRadius: '8px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px'
+                }}>
+                  <div>
+                    <div style={{
+                      color: textColor,
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      marginBottom: '4px'
+                    }}>
+                      Google listing
+                    </div>
+                    <p style={{ margin: 0, fontSize: '12px', color: mutedText, lineHeight: 1.45 }}>
+                      {reviewRequestUseCalgary
+                        ? 'Email will use the Calgary review link.'
+                        : 'Ontario (default). Turn on for Calgary clients.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReviewRequestUseCalgary(v => !v)}
+                    disabled={sendingReviewRequest[reviewRequestAgreement.id]}
+                    aria-label={reviewRequestUseCalgary ? 'Use Ontario Google listing' : 'Use Calgary Google listing'}
+                    style={{
+                      flexShrink: 0,
+                      position: 'relative',
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      backgroundColor: reviewRequestUseCalgary ? '#3d8560' : (isDark ? '#475569' : '#cbd5e1'),
+                      border: 'none',
+                      cursor: sendingReviewRequest[reviewRequestAgreement.id] ? 'not-allowed' : 'pointer',
+                      transition: 'background-color 0.2s',
+                      opacity: sendingReviewRequest[reviewRequestAgreement.id] ? 0.6 : 1
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: reviewRequestUseCalgary ? '22px' : '2px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      transition: 'left 0.2s',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }} />
+                  </button>
                 </div>
               </div>
 

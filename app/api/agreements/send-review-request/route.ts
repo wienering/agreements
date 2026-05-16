@@ -5,15 +5,22 @@ import { z } from 'zod';
 
 const sendReviewRequestSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
+  reviewMarket: z.enum(['ontario', 'calgary']).optional(),
 });
 
-// Google review link provided by Dennis
-const GOOGLE_REVIEW_URL = 'https://g.page/r/CXHuVoPHi-cIEAI/review';
+const GOOGLE_REVIEW_URL_ONTARIO = 'https://g.page/r/CXHuVoPHi-cIEAI/review';
+const GOOGLE_REVIEW_URL_CALGARY = 'https://g.page/r/CVmM2MGaxRWdEAE/review';
+
+function reviewUrlForMarket(market: 'ontario' | 'calgary'): string {
+  return market === 'calgary' ? GOOGLE_REVIEW_URL_CALGARY : GOOGLE_REVIEW_URL_ONTARIO;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const validatedData = sendReviewRequestSchema.parse(body);
+    const reviewMarket: 'ontario' | 'calgary' = validatedData.reviewMarket ?? 'ontario';
+    const reviewUrl = reviewUrlForMarket(reviewMarket);
 
     const agreement = await prisma.agreement.findUnique({
       where: { id: validatedData.agreementId },
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Email service is not configured. Please contact support to set up email functionality.',
           fallback: {
-            reviewLink: GOOGLE_REVIEW_URL,
+            reviewLink: reviewUrl,
             message: 'You can copy and share this review link with your client instead.',
           },
         },
@@ -107,13 +114,13 @@ export async function POST(request: NextRequest) {
               <p>If anything was off, just reply to this email and let me know. I would rather hear it from you.</p>
 
               <div class="button-wrap">
-                <a class="button" href="${GOOGLE_REVIEW_URL}">Write a Google Review</a>
+                <a class="button" href="${reviewUrl}">Write a Google Review</a>
               </div>
 
               <p>Thanks so much,<br />Photobooth Guys</p>
 
               <p class="muted">If the button doesn’t work, copy and paste this link:</p>
-              <p class="link"><a href="${GOOGLE_REVIEW_URL}">${GOOGLE_REVIEW_URL}</a></p>
+              <p class="link"><a href="${reviewUrl}">${reviewUrl}</a></p>
             </div>
             <div class="footer">
               <p class="muted" style="margin:0;">Event ID: ${agreement.id}</p>
