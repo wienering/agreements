@@ -8,7 +8,7 @@ const sendReviewRequestSchema = z.object({
 });
 
 // Google review link provided by Dennis
-const GOOGLE_REVIEW_URL = 'https://share.google/cQ0sGZEBM1rhWvlux';
+const GOOGLE_REVIEW_URL = 'https://g.page/r/CXHuVoPHi-cIEAI/review';
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,8 +62,10 @@ export async function POST(request: NextRequest) {
       socketTimeout: 10000,
     });
 
-    const clientName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim();
-    const subject = `Quick favor: could you leave us a Google review?`;
+    const firstName = agreement.client.firstName?.trim() || '';
+    const lastName = agreement.client.lastName?.trim() || '';
+    const clientGreetingName = [firstName, lastName].filter(Boolean).join(' ');
+    const subject = `Would you leave us a Google review?`;
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -99,8 +101,10 @@ export async function POST(request: NextRequest) {
               <p style="margin:8px 0 0 0;opacity:0.9;">Thanks again for choosing us</p>
             </div>
             <div class="content">
-              <p>Hello${clientName ? ` ${clientName}` : ''},</p>
-              <p>We hope you loved your experience. If you have 30 seconds, would you mind leaving us a quick Google review? It really helps our small business.</p>
+              <p>Hello${clientGreetingName ? ` ${clientGreetingName}` : ''},</p>
+              <p>Thanks again for having us out. Hope you had a great time and that the prints came out the way you wanted.</p>
+              <p>If you have a moment, we would really appreciate it if you could leave us a Google review. It makes a big difference for a small business like ours, and helps other people find us when they are planning their own events.</p>
+              <p>If anything was off, just reply to this email and let me know. I would rather hear it from you.</p>
 
               <div class="button-wrap">
                 <a class="button" href="${GOOGLE_REVIEW_URL}">Write a Google Review</a>
