@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { devLog } from '@/lib/logger';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
+import { useLockBodyScroll } from '@/lib/useLockBodyScroll';
 import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import SearchableSelect from '../../components/SearchableSelect';
@@ -459,14 +460,20 @@ const normalizePaymentStatus = (value?: string | null) => {
     selectedAgreement
   ]);
 
-  useEffect(() => {
-    if (!showCreateForm) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [showCreateForm]);
+  const fullscreenAdminModalOpen =
+    showCreateForm ||
+    editingStatus ||
+    editingExpiration ||
+    Boolean(selectedAgreement && !showAttendantModal && !showCopyLinkModal) ||
+    Boolean(showCopyLinkModal && copyLinkAgreement) ||
+    Boolean(showCancelModal && cancellingAgreement) ||
+    Boolean(showPaymentWarningModal && completingAgreement) ||
+    Boolean(showReviewRequestModal && reviewRequestAgreement) ||
+    Boolean(showInvoiceModal && invoiceAgreement) ||
+    Boolean(showEmailPreview && previewAgreement) ||
+    Boolean(showAttendantModal && (attendantModalAgreement || selectedAgreement));
+
+  useLockBodyScroll(fullscreenAdminModalOpen);
 
   // Filter agreements based on search term and status
   useEffect(() => {
