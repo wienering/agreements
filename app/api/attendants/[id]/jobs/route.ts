@@ -87,7 +87,6 @@ export async function GET(
         client: {
           select: {
             firstName: true,
-            lastName: true,
             eventDate: true, // Deprecated but fallback
             eventLocation: true,
             eventStartTime: true,
@@ -120,7 +119,7 @@ export async function GET(
       const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
       const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
       const eventType = agreement.event?.eventType || agreement.client.eventType;
-      const clientName = agreement.event?.eventName || `${agreement.client.firstName} ${agreement.client.lastName}`.trim();
+      const clientName = agreement.event?.eventName || agreement.client.firstName?.trim() || 'Unknown Client';
 
       // Determine if event is upcoming or completed
       let isUpcoming = false;

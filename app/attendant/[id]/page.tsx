@@ -84,12 +84,10 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
         clientId: true,
         selectedBackdropName: true,
         eventId: true,
-        showPhoneNumberAlways: true,
         forceVirtualGreenScreen: true,
         client: {
           select: {
             firstName: true,
-            phone: true,
             eventDate: true,
             eventLocation: true,
             eventStartTime: true,
@@ -106,7 +104,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
             eventDuration: true,
             notes: true,
             eventName: true,
-            eventPhone: true,
           },
         },
         backdropLink: {
@@ -123,7 +120,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
       return <NotFoundError />;
     }
 
-    const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways, forceVirtualGreenScreen } = agreement;
+    const { client, event, backdropLink, selectedBackdropName, forceVirtualGreenScreen } = agreement;
     
     // Extract attendantId from backdropLink URL for navigation back to hub
     const extractAttendantIdFromUrl = (url: string | null): string | null => {
@@ -195,7 +192,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     // For whitelabel clients, get event-specific contact info
     const isWhitelabelClient = client.isWhitelabelClient || false;
     const eventContactName = event?.eventName || client.firstName;
-    const eventContactPhone = event?.eventPhone || client.phone;
 
     // Helper function to calculate event datetime
     const getEventDateTime = () => {
@@ -273,19 +269,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
       return new Date() > expirationTime;
     })();
 
-    // Check if event is within 24 hours (before or after) to show phone number
-    const isEventWithin24Hours = (() => {
-      const eventDateTime = getEventDateTime();
-      if (!eventDateTime) return false;
-      
-      const now = new Date();
-      const hoursUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-      
-      // Show phone if event is within 24 hours before OR up to 24 hours after
-      // (Page is accessible until 24 hours after, so phone should be visible in that window too)
-      return hoursUntilEvent >= -24 && hoursUntilEvent <= 24;
-    })();
-
     // If event has expired (more than 24 hours after), show expired message
     if (isEventExpired) {
       return <EventExpiredError />;
@@ -316,14 +299,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
       if (!address) return null;
       const encoded = encodeURIComponent(address);
       return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
-    };
-
-    // Generate tel: link for phone number
-    const getTelLink = (phone: string | null) => {
-      if (!phone) return null;
-      // Remove all non-digit characters except + for international numbers
-      const cleaned = phone.replace(/[^\d+]/g, '');
-      return `tel:${cleaned}`;
     };
 
     return (
@@ -633,39 +608,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                       </p>
                     </div>
                   )}
-
-                  {(isWhitelabelClient ? eventContactPhone : client.phone) &&
-                    (isEventWithin24Hours || showPhoneNumberAlways) && (
-                      <div>
-                        <p
-                          style={{
-                            margin: '0 0 4px 0',
-                            fontSize: '14px',
-                            color: '#8f9a8f',
-                            fontWeight: '600',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          {isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}
-                        </p>
-                        <a
-                          href={
-                            getTelLink(isWhitelabelClient ? eventContactPhone : client.phone) || '#'
-                          }
-                          style={{
-                            margin: '0',
-                            fontSize: '16px',
-                            color: '#60a5fa',
-                            fontWeight: '500',
-                            textDecoration: 'none',
-                            display: 'block',
-                          }}
-                        >
-                          {isWhitelabelClient ? eventContactPhone : client.phone}
-                        </a>
-                      </div>
-                    )}
 
                   {eventLocation && (
                     <div>
