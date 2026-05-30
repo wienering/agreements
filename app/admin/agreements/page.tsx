@@ -244,6 +244,14 @@ export default function AgreementsPage() {
   const [activePage, setActivePage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
   const [completedExpanded, setCompletedExpanded] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   // Edit Agreement modal — collapsible section state
   const [editModalSections, setEditModalSections] = useState<{
@@ -544,6 +552,14 @@ const normalizePaymentStatus = (value?: string | null) => {
         return false;
       });
     }
+    // Sort by event date ascending (soonest upcoming first); agreements without an event date go to the bottom.
+    const getEventTime = (a: typeof filtered[number]): number => {
+      const raw = a.event?.eventDate || a.client.eventDate;
+      if (!raw) return Number.POSITIVE_INFINITY;
+      const t = new Date(raw).getTime();
+      return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
+    };
+    filtered = [...filtered].sort((a, b) => getEventTime(a) - getEventTime(b));
     return filtered;
   }, [agreements, debouncedSearchTerm, statusFilter]);
 
@@ -2363,13 +2379,37 @@ const normalizePaymentStatus = (value?: string | null) => {
                 return `1px solid ${borderColor}`;
               };
 
+              const isRowExpanded = expandedRows.has(agreement.id);
+              const eventDateRaw = agreement.event?.eventDate || agreement.client.eventDate;
+              const eventDateObj = eventDateRaw ? new Date(eventDateRaw) : null;
+              const attendantName = (agreement as any).backdropLink?.name as string | undefined;
+              const formatEventRelative = (d: Date | null): string => {
+                if (!d || isNaN(d.getTime())) return '';
+                const startOfToday = new Date();
+                startOfToday.setHours(0, 0, 0, 0);
+                const startOfEvent = new Date(d);
+                startOfEvent.setHours(0, 0, 0, 0);
+                const diffDays = Math.round((startOfEvent.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays < 0) return 'past';
+                if (diffDays === 0) return 'today';
+                if (diffDays === 1) return 'tomorrow';
+                if (diffDays < 7) return `in ${diffDays} days`;
+                if (diffDays < 14) return 'in 1 week';
+                if (diffDays < 30) return `in ${Math.round(diffDays / 7)} weeks`;
+                if (diffDays < 60) return 'in 1 month';
+                if (diffDays < 365) return `in ${Math.round(diffDays / 30)} months`;
+                return `in ${Math.round(diffDays / 365)} year${Math.round(diffDays / 365) === 1 ? '' : 's'}`;
+              };
+              const showFollowUpPad = agreement.status === 'LIVE' && agreement.lastEmailedAt &&
+                Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) >= 3;
               return (
               <div key={agreement.id} style={{
                 backgroundColor: cardBg,
                 border: getWarningBorderStyle(),
                 borderRadius: '8px',
-                padding: '20px',
-                position: 'relative'
+                padding: '0',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
                 {/* Warning Indicator */}
                 {warningType && (
@@ -2428,72 +2468,117 @@ const normalizePaymentStatus = (value?: string | null) => {
                   return null;
                 })()}
                 
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'start',
-                  marginBottom: '12px',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? '12px' : '0',
-                  paddingTop: (agreement.status === 'LIVE' && agreement.lastEmailedAt && 
-                    Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) >= 3) 
-                    ? '36px' : '0'
-                }}>
-                  <div style={{ position: 'relative' }}>
-                    <h3 style={{ 
-                      margin: '0', 
-                      fontSize: '16px', 
-                      color: textColor,
-                      cursor: 'pointer',
-                      position: 'relative'
+                {/* Compact collapsed clickable row */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isRowExpanded}
+                  onClick={() => toggleRow(agreement.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleRow(agreement.id);
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px 16px',
+                    paddingTop: showFollowUpPad ? '36px' : '14px',
+                    cursor: 'pointer',
+                    flexWrap: isMobile ? 'wrap' : 'nowrap',
+                    minHeight: '56px',
+                    userSelect: 'none'
+                  }}
+                  title="Click to expand/collapse"
+                >
+                  <UIcon
+                    name="angle-down"
+                    style={{
+                      fontSize: '14px',
+                      color: mutedText,
+                      flexShrink: 0,
+                      transition: prefersReducedMotion ? 'none' : 'transform 0.2s ease',
+                      transform: isRowExpanded ? 'rotate(0deg)' : 'rotate(-90deg)'
                     }}
-                    title="Hover for agreement name, email, and engagement"
-                    onMouseEnter={(e) => {
-                      document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
-                      const tooltip = document.createElement('div');
-                      tooltip.className = 'engagement-tooltip';
-                      const bgColor = isDark ? '#1a1d1a' : '#ffffff';
-                      const borderCol = isDark ? '#2d3530' : '#e2e8f0';
-                      const textCol = isDark ? '#ffffff' : '#1e293b';
-                      tooltip.style.cssText =
-                        'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
-                        bgColor +
-                        '; border: 1px solid ' +
-                        borderCol +
-                        '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
-                        textCol +
-                        '; overflow: hidden;';
-                      tooltip.innerHTML = buildEngagementTooltipHtml(agreement, isDark);
-                      e.currentTarget.appendChild(tooltip);
-                    }}
-                    onMouseLeave={(e) => {
-                      // Remove tooltip from this element
-                      const tooltip = e.currentTarget.querySelector('.engagement-tooltip');
-                      if (tooltip) {
-                        tooltip.remove();
-                      }
-                    }}
+                  />
+                  {/* Event date column */}
+                  <div style={{ minWidth: '92px', flexShrink: 0 }}>
+                    <div style={{ fontSize: '13px', color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
+                      {eventDateObj
+                        ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' })
+                        : 'No date'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: mutedText, lineHeight: 1.2, marginTop: '2px' }}>
+                      {eventDateObj ? formatEventRelative(eventDateObj) : '—'}
+                    </div>
+                  </div>
+                  {/* Name column (truncates) */}
+                  <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                    <div
+                      style={{
+                        fontSize: '14px',
+                        color: textColor,
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'engagement-tooltip';
+                        const bgColor = isDark ? '#1a1d1a' : '#ffffff';
+                        const borderCol = isDark ? '#2d3530' : '#e2e8f0';
+                        const textCol = isDark ? '#ffffff' : '#1e293b';
+                        tooltip.style.cssText =
+                          'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
+                          bgColor +
+                          '; border: 1px solid ' +
+                          borderCol +
+                          '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
+                          textCol +
+                          '; overflow: hidden;';
+                        tooltip.innerHTML = buildEngagementTooltipHtml(agreement, isDark);
+                        e.currentTarget.appendChild(tooltip);
+                      }}
+                      onMouseLeave={(e) => {
+                        const tooltip = e.currentTarget.querySelector('.engagement-tooltip');
+                        if (tooltip) tooltip.remove();
+                      }}
                     >
                       {agreement.client.firstName} {agreement.client.lastName}
-                    </h3>
+                    </div>
+                    {attendantName && (
+                      <div style={{
+                        fontSize: '12px',
+                        color: mutedText,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginTop: '2px'
+                      }}>
+                        Attendant: {attendantName}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ 
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: isMobile ? 'stretch' : 'flex-end',
-                    gap: '8px',
-                    maxWidth: isMobile ? '100%' : 'none'
-                  }}>
-                    <div style={{ 
-                    display: 'flex', 
-                    gap: '8px',
-                    flexDirection: isMobile ? 'column' : 'row',
-                    flexWrap: 'wrap',
-                    justifyContent: isMobile ? 'flex-start' : 'flex-end'
-                  }}>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: agreement.status === 'DRAFT' ? '#dc2626' : 
+                  {/* Status badge — same colors and click-to-edit, propagation stopped so row doesn't toggle */}
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingStatus(true);
+                      setEditingStatusAgreementId(agreement.id);
+                      setNewStatus(agreement.status);
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#4a9e72'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; }}
+                    title="Click to edit status"
+                    style={{
+                      fontSize: '12px',
+                      flexShrink: 0,
+                      color: agreement.status === 'DRAFT' ? '#dc2626' :
                              agreement.status === 'LIVE' ? '#3d8560' :
                              agreement.status === 'SIGNED' ? '#3d8560' :
                              agreement.status === 'COMPLETED' ? '#7c3aed' :
@@ -2506,136 +2591,85 @@ const normalizePaymentStatus = (value?: string | null) => {
                                       isDark ? '#1a1d1a' : '#f1f5f9',
                       padding: '4px 8px',
                       borderRadius: '4px',
-                      alignSelf: isMobile ? 'flex-start' : 'auto',
                       cursor: 'pointer',
                       border: '1px solid transparent',
                       transition: 'border-color 0.2s',
                       fontWeight: '500'
                     }}
-                    onClick={() => {
-                      setEditingStatus(true);
-                      setEditingStatusAgreementId(agreement.id);
-                      setNewStatus(agreement.status);
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#4a9e72';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'transparent';
-                    }}
-                    title="Click to edit status"
-                    >
-                      {agreement.status}
-                    </span>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: mutedText,
-                      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      alignSelf: isMobile ? 'flex-start' : 'auto'
-                    }}>
-                      Created {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
-                    </span>
-                    {(agreement.event?.eventDate || agreement.client.eventDate) && (
-                      <span style={{ 
-                        fontSize: '12px', 
-                        color: isDark ? '#f5f3ff' : '#5b21b6',
-                        backgroundColor: isDark ? '#4c1d95' : '#f3e8ff',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        alignSelf: isMobile ? 'flex-start' : 'auto',
-                        border: isDark ? '1px solid #a78bfa' : '1px solid #c4b5fd',
-                        fontWeight: 500
-                      }}
-                      >
-                        Event {new Date(agreement.event?.eventDate || agreement.client.eventDate!).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
-                      </span>
-                    )}
-                    {agreement.status !== 'SIGNED' && (
-                      <span style={{ 
-                        fontSize: '12px', 
-                        color: mutedText,
-                        backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        alignSelf: isMobile ? 'flex-start' : 'auto',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setEditingExpiration(true);
-                        setEditingAgreementId(agreement.id);
-                        setNewExpirationDate(new Date(agreement.expiresAt).toISOString().slice(0, 16));
-                      }}
-                      title="Click to edit expiration date"
-                      >
-                        Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
-                      </span>
-                    )}
-                    {agreement.paymentStatus && (
-                      <span style={{ 
-                        fontSize: '12px', 
+                  >
+                    {agreement.status}
+                  </span>
+                  {/* Payment badge — same styles */}
+                  {agreement.paymentStatus && (
+                    <span
+                      title="Payment status"
+                      style={{
+                        fontSize: '12px',
+                        flexShrink: 0,
                         ...getPaymentStatusStyle(agreement.paymentStatus),
                         padding: '4px 8px',
                         borderRadius: '4px',
-                        alignSelf: isMobile ? 'flex-start' : 'auto',
                         fontWeight: '500',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: '6px',
+                        gap: '6px'
                       }}
-                      title="Payment status"
-                      >
-                        <UIcon name="credit-card" style={{ fontSize: '12px' }} />
-                        {agreement.paymentStatus}
-                      </span>
-                    )}
-                  </div>
-                    {((agreement as any).backdropLink?.name || agreement.selectedBackdropName) && (
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: isMobile ? 'flex-start' : 'flex-end',
-                        gap: '4px',
-                        width: '100%'
-                      }}>
-                        {(agreement as any).backdropLink?.name && (
-                          <span style={{
-                            color: '#4a9e72',
-                            fontSize: '12px',
-                            fontWeight: 500,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            textAlign: isMobile ? 'left' : 'right'
-                          }}>
-                            <UIcon name="link" style={{ fontSize: '12px', flexShrink: 0 }} />
-                            Attendant: {(agreement as any).backdropLink.name}
+                    >
+                      <UIcon name="credit-card" style={{ fontSize: '12px' }} />
+                      {agreement.paymentStatus}
+                    </span>
+                  )}
+                </div>
+                {/* Expanded section — smooth height transition; respects prefers-reduced-motion */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateRows: isRowExpanded ? '1fr' : '0fr',
+                    transition: prefersReducedMotion ? 'none' : 'grid-template-rows 0.25s ease'
+                  }}
+                  aria-hidden={!isRowExpanded}
+                >
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ borderTop: `1px solid ${borderColor}`, padding: '12px 16px 16px 16px' }}>
+                      {/* Compact metadata muted line */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: mutedText, marginBottom: '12px', alignItems: 'center' }}>
+                        <span>Created {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}</span>
+                        {agreement.status !== 'SIGNED' && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingExpiration(true);
+                              setEditingAgreementId(agreement.id);
+                              setNewExpirationDate(new Date(agreement.expiresAt).toISOString().slice(0, 16));
+                            }}
+                            title="Click to edit expiration date"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                          </span>
+                        )}
+                        {attendantName && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#4a9e72', fontWeight: 500 }}>
+                            <UIcon name="link" style={{ fontSize: '12px' }} />
+                            Attendant: {attendantName}
                           </span>
                         )}
                         {agreement.selectedBackdropName && (
-                          <span style={{
-                            color: '#3d8560',
-                            fontSize: '12px',
-                            fontWeight: 500,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            textAlign: isMobile ? 'left' : 'right'
-                          }}>
-                            <UIcon name="camera" style={{ fontSize: '12px', flexShrink: 0 }} />
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#3d8560', fontWeight: 500 }}>
+                            <UIcon name="camera" style={{ fontSize: '12px' }} />
                             Selected Backdrop: {agreement.selectedBackdropName}
                           </span>
                         )}
                       </div>
-                    )}
-                </div>
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '8px',
-                  flexWrap: 'wrap'
-                }}>
+                      {/* Action buttons — exact same set/labels/colors/handlers as before; outer wrapper stops row toggle */}
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap'
+                        }}
+                      >
                   <button
                     onClick={() => handleEditAgreement(agreement)}
                     style={{
@@ -2919,6 +2953,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                       {archivingAgreement[agreement.id] ? 'Archiving...' : 'Archive'}
                     </button>
                   )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               );
