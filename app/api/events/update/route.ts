@@ -14,6 +14,7 @@ const eventUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
   eventName: z.string().optional().nullable(),
   eventPhone: z.string().optional().nullable(),
+  unlimitedPrints: z.boolean().optional(),
 });
 
 export async function PUT(request: NextRequest) {
@@ -56,6 +57,7 @@ export async function PUT(request: NextRequest) {
         notes: validatedData.notes,
         eventName: validatedData.eventName,
         eventPhone: validatedData.eventPhone,
+        unlimitedPrints: validatedData.unlimitedPrints ?? false,
       },
     });
 

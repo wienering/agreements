@@ -232,6 +232,7 @@ model Event {
   notes          String?
   eventName      String?
   eventPhone     String?
+  unlimitedPrints Boolean   @default(false)
   archived       Boolean    @default(false)
   archivedAt     DateTime?
   createdAt      DateTime   @default(now())
