@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
@@ -58,11 +58,14 @@ export default function ClientsPage() {
     document.title = 'Clients | Admin | Photobooth Guys';
   }, []);
 
+  const ITEMS_PER_PAGE = 25;
+
   const hasFetchedData = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [clients, setClients] = useState<Client[]>([]);
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -152,42 +155,52 @@ export default function ClientsPage() {
     };
   }, [showAddForm]);
 
-  // Filter clients based on search term
+  // Debounce search input by 300ms so filtering only fires after typing pauses
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredClients(clients);
-    } else {
-      const searchLower = searchTerm.toLowerCase();
-      const filtered = clients.filter(client => {
-        // Search in client fields
-        if (
-          client.firstName.toLowerCase().includes(searchLower) ||
-          client.lastName.toLowerCase().includes(searchLower) ||
-          client.email.toLowerCase().includes(searchLower) ||
-          (client.phone && client.phone.toLowerCase().includes(searchLower)) ||
-          (client.notes && client.notes.toLowerCase().includes(searchLower))
-        ) {
-          return true;
-        }
-        // Search in events
-        if (client.events && client.events.length > 0) {
-          return client.events.some(event =>
-            (event.eventType && event.eventType.toLowerCase().includes(searchLower)) ||
-            (event.eventLocation && event.eventLocation.toLowerCase().includes(searchLower)) ||
-            (event.eventPackage && event.eventPackage.toLowerCase().includes(searchLower)) ||
-            (event.notes && event.notes.toLowerCase().includes(searchLower))
-          );
-        }
-        // Fallback to deprecated client event fields
-        return (
-          (client.eventType && client.eventType.toLowerCase().includes(searchLower)) ||
-          (client.eventLocation && client.eventLocation.toLowerCase().includes(searchLower)) ||
-          (client.eventPackage && client.eventPackage.toLowerCase().includes(searchLower))
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to page 1 whenever the search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
+  // Filter clients — runs only when clients or debounced search term change
+  const filteredClients = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return clients;
+    const searchLower = debouncedSearchTerm.toLowerCase();
+    return clients.filter(client => {
+      if (
+        client.firstName.toLowerCase().includes(searchLower) ||
+        client.lastName.toLowerCase().includes(searchLower) ||
+        client.email.toLowerCase().includes(searchLower) ||
+        (client.phone && client.phone.toLowerCase().includes(searchLower)) ||
+        (client.notes && client.notes.toLowerCase().includes(searchLower))
+      ) {
+        return true;
+      }
+      if (client.events && client.events.length > 0) {
+        return client.events.some(event =>
+          (event.eventType && event.eventType.toLowerCase().includes(searchLower)) ||
+          (event.eventLocation && event.eventLocation.toLowerCase().includes(searchLower)) ||
+          (event.eventPackage && event.eventPackage.toLowerCase().includes(searchLower)) ||
+          (event.notes && event.notes.toLowerCase().includes(searchLower))
         );
-      });
-      setFilteredClients(filtered);
-    }
-  }, [clients, searchTerm]);
+      }
+      return (
+        (client.eventType && client.eventType.toLowerCase().includes(searchLower)) ||
+        (client.eventLocation && client.eventLocation.toLowerCase().includes(searchLower)) ||
+        (client.eventPackage && client.eventPackage.toLowerCase().includes(searchLower))
+      );
+    });
+  }, [clients, debouncedSearchTerm]);
+
+  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
+  const paginatedClients = filteredClients.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const fetchClients = async () => {
     try {
@@ -657,7 +670,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               </button>
             )}
           </div>
-          {searchTerm && (
+          {debouncedSearchTerm && (
             <div style={{ 
               marginTop: '8px', 
               fontSize: '14px', 
@@ -1400,12 +1413,13 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
             textAlign: 'center'
           }}>
             <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
-              {searchTerm ? 'No clients found matching your search.' : 'No clients found. Add your first client to get started.'}
+              {debouncedSearchTerm ? 'No clients found matching your search.' : 'No clients found. Add your first client to get started.'}
             </p>
           </div>
         ) : (
+          <>
           <div style={{ display: 'grid', gap: '16px' }}>
-            {filteredClients.map(client => (
+            {paginatedClients.map(client => (
               <div key={client.id} style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,
@@ -1805,6 +1819,63 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               </div>
             ))}
           </div>
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '24px',
+              padding: '16px',
+              backgroundColor: cardBg,
+              border: `1px solid ${borderColor}`,
+              borderRadius: '8px',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}>
+              <span style={{ fontSize: '14px', color: mutedText }}>
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredClients.length)} of {filteredClients.length} clients
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    backgroundColor: currentPage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                    color: currentPage === 1 ? mutedText : 'white',
+                    border: 'none',
+                    padding: '6px 14px',
+                    borderRadius: '4px',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  ← Prev
+                </button>
+                <span style={{ fontSize: '14px', color: textColor, minWidth: '80px', textAlign: 'center' }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    backgroundColor: currentPage === totalPages ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                    color: currentPage === totalPages ? mutedText : 'white',
+                    border: 'none',
+                    padding: '6px 14px',
+                    borderRadius: '4px',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>
