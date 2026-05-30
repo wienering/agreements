@@ -244,7 +244,16 @@ export default function AgreementsPage() {
   const [activePage, setActivePage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
   const [completedExpanded, setCompletedExpanded] = useState(false);
-  
+
+  // Edit Agreement modal — collapsible section state
+  const [editModalSections, setEditModalSections] = useState<{
+    content: boolean;
+    secondSigner: boolean;
+    portal: boolean;
+    attendant: boolean;
+  }>({ content: true, secondSigner: false, portal: false, attendant: false });
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
   // Second signer editing state (for currently selected agreement)
   const [editSecondSignerEnabled, setEditSecondSignerEnabled] = useState(false);
   const [editSecondSignerFirstName, setEditSecondSignerFirstName] = useState('');
@@ -365,6 +374,23 @@ const normalizePaymentStatus = (value?: string | null) => {
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
+
+  // Track prefers-reduced-motion for accordion transitions
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setPrefersReducedMotion(mq.matches);
+    update();
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
+  }, []);
+
+  // Reset Edit Agreement modal sections to default whenever a different agreement is opened
+  useEffect(() => {
+    if (selectedAgreement?.id) {
+      setEditModalSections({ content: true, secondSigner: false, portal: false, attendant: false });
+    }
+  }, [selectedAgreement?.id]);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -3306,6 +3332,20 @@ const normalizePaymentStatus = (value?: string | null) => {
                 </button>
               </div>
 
+              {/* Section 1: Agreement Content */}
+              <div style={{ marginTop: '8px', marginBottom: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditModalSections(s => ({ ...s, content: !s.content }))}
+                  aria-expanded={editModalSections.content}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
+                >
+                  <span>Agreement Content</span>
+                  <span aria-hidden="true" style={{ display: 'inline-block', transition: prefersReducedMotion ? 'none' : 'transform 200ms ease', transform: editModalSections.content ? 'rotate(90deg)' : 'rotate(0deg)', color: mutedText, fontSize: '12px' }}>▶</span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: editModalSections.content ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '0 16px 12px 16px' }}>
               {/* Content Editor */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ 
@@ -3484,19 +3524,26 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                 />
               </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              {/* Second Signer Section */}
-              <div style={{
-                marginTop: '24px',
-                padding: '16px',
-                backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
-                borderRadius: '8px',
-                border: `1px solid ${borderColor}`
-              }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
-                  Second Signer
-                </h3>
-                <label style={{
+              {/* Section 2: Second Signer */}
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditModalSections(s => ({ ...s, secondSigner: !s.secondSigner }))}
+                  aria-expanded={editModalSections.secondSigner}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
+                >
+                  <span>Second Signer</span>
+                  <span aria-hidden="true" style={{ display: 'inline-block', transition: prefersReducedMotion ? 'none' : 'transform 200ms ease', transform: editModalSections.secondSigner ? 'rotate(90deg)' : 'rotate(0deg)', color: mutedText, fontSize: '12px' }}>▶</span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: editModalSections.secondSigner ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '0 16px 12px 16px' }}>
+              <label style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -3631,19 +3678,25 @@ const normalizePaymentStatus = (value?: string | null) => {
                 <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: mutedText, fontStyle: 'italic' }}>
                   Click &quot;Save Changes&quot; below to apply.
                 </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Portal Enhancement Fields */}
-              <div style={{ 
-                marginTop: '24px', 
-                padding: '16px', 
-                backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
-                borderRadius: '8px',
-                border: `1px solid ${borderColor}`
-              }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
-                  Client Portal Settings
-                </h3>
+              {/* Section 3: Client Portal Settings */}
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditModalSections(s => ({ ...s, portal: !s.portal }))}
+                  aria-expanded={editModalSections.portal}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
+                >
+                  <span>Client Portal Settings</span>
+                  <span aria-hidden="true" style={{ display: 'inline-block', transition: prefersReducedMotion ? 'none' : 'transform 200ms ease', transform: editModalSections.portal ? 'rotate(90deg)' : 'rotate(0deg)', color: mutedText, fontSize: '12px' }}>▶</span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: editModalSections.portal ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '0 16px 12px 16px' }}>
 
                 {/* Payment Status */}
                 <div style={{ marginBottom: '12px' }}>
@@ -3904,6 +3957,45 @@ const normalizePaymentStatus = (value?: string | null) => {
                   />
                 </div>
 
+                {/* Update Portal Fields Button */}
+                <button
+                  onClick={handleUpdatePortalFields}
+                  disabled={saving}
+                  style={{
+                    width: '100%',
+                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
+                    color: 'white',
+                    border: 'none',
+                    padding: isMobile ? '8px' : '10px',
+                    borderRadius: '6px',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: isMobile ? '13px' : '14px',
+                    fontWeight: '500',
+                    marginTop: '8px'
+                  }}
+                >
+                  {saving ? 'Updating...' : 'Update Portal Settings'}
+                </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Attendant & Backdrop */}
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditModalSections(s => ({ ...s, attendant: !s.attendant }))}
+                  aria-expanded={editModalSections.attendant}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
+                >
+                  <span>Attendant &amp; Backdrop</span>
+                  <span aria-hidden="true" style={{ display: 'inline-block', transition: prefersReducedMotion ? 'none' : 'transform 200ms ease', transform: editModalSections.attendant ? 'rotate(90deg)' : 'rotate(0deg)', color: mutedText, fontSize: '12px' }}>▶</span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: editModalSections.attendant ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '0 16px 12px 16px' }}>
+
                 {/* Backdrop Link Selection */}
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: textColor, fontSize: '13px' }}>
@@ -4035,25 +4127,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                   </div>
                 )}
 
-                {/* Update Portal Fields Button */}
-                <button
-                  onClick={handleUpdatePortalFields}
-                  disabled={saving}
-                  style={{
-                    width: '100%',
-                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
-                    color: 'white',
-                    border: 'none',
-                    padding: isMobile ? '8px' : '10px',
-                    borderRadius: '6px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: isMobile ? '13px' : '14px',
-                    fontWeight: '500',
-                    marginTop: '8px'
-                  }}
-                >
-                  {saving ? 'Updating...' : 'Update Portal Settings'}
-                </button>
+                {/* Update Portal Fields Button (relocated to Section 3 above) */}
+                    </div>
+                  </div>
+                </div>
               </div>
               
               {/* Actions */}
