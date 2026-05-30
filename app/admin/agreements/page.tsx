@@ -251,7 +251,7 @@ export default function AgreementsPage() {
     secondSigner: boolean;
     portal: boolean;
     attendant: boolean;
-  }>({ content: true, secondSigner: false, portal: false, attendant: false });
+  }>({ content: false, secondSigner: false, portal: true, attendant: false });
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Second signer editing state (for currently selected agreement)
@@ -388,7 +388,7 @@ const normalizePaymentStatus = (value?: string | null) => {
   // Reset Edit Agreement modal sections to default whenever a different agreement is opened
   useEffect(() => {
     if (selectedAgreement?.id) {
-      setEditModalSections({ content: true, secondSigner: false, portal: false, attendant: false });
+      setEditModalSections({ content: false, secondSigner: false, portal: true, attendant: false });
     }
   }, [selectedAgreement?.id]);
 
