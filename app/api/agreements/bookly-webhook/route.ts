@@ -71,6 +71,13 @@ const booklyWebhookSchema = z.object({
   // Optional agreement creation
   templateId: z.string().optional(),
   
+  // Bookly service extras. May arrive as a raw JSON string (e.g. '{"2":1}')
+  // or as an already-parsed object. Keys are extra IDs, values are quantities.
+  extras: z
+    .union([z.string(), z.record(z.union([z.string(), z.number()]))])
+    .optional()
+    .nullable(),
+
   // Webhook signature (optional)
   signature: z.string().optional(),
 }).refine(
@@ -172,6 +179,39 @@ function parseDate(dateStr: string | undefined): Date | null {
   } catch {
     return null;
   }
+}
+
+// Detect whether the Bookly "Unlimited Prints" extra is selected in the
+// incoming webhook's `extras` payload. The extra ID is configurable via
+// BOOKLY_UNLIMITED_PRINTS_EXTRA_ID (defaults to "2"). Accepts either a raw
+// JSON string or an already-parsed object. Returns false for any null/empty/
+// malformed input so a bad extras blob never blocks event creation.
+function hasUnlimitedPrintsExtra(
+  extras: string | Record<string, string | number> | null | undefined
+): boolean {
+  if (extras === null || extras === undefined) return false;
+
+  let parsed: unknown = extras;
+  if (typeof extras === 'string') {
+    const trimmed = extras.trim();
+    if (trimmed === '' || trimmed === '[]' || trimmed === '{}') return false;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      return false;
+    }
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return false;
+  }
+
+  const extraId = (process.env.BOOKLY_UNLIMITED_PRINTS_EXTRA_ID || '2').trim();
+  const raw = (parsed as Record<string, unknown>)[extraId];
+  if (raw === undefined || raw === null) return false;
+
+  const quantity = typeof raw === 'number' ? raw : Number(raw);
+  return Number.isFinite(quantity) && quantity >= 1;
 }
 
 // Helper function to parse price
@@ -404,6 +444,7 @@ export async function POST(request: NextRequest) {
           eventPackage: clientData.eventPackage || null,
           packagePrice: clientData.packagePrice !== null ? clientData.packagePrice : null,
           notes: clientData.notes || null,
+          unlimitedPrints: hasUnlimitedPrintsExtra(validatedData.extras),
           archived: false,
         },
       });

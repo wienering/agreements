@@ -3,7 +3,7 @@
  * Plugin Name: Bookly to Agreements App Integration
  * Plugin URI: https://www.photoboothguys.ca
  * Description: Automatically sends booking data from Bookly WordPress plugin to your Agreements app when a booking is created. Creates or updates client records automatically.
- * Version: 1.0.0
+ * Version: 1.4.4
  * Author: Photobooth Guys
  * Author URI: https://www.photoboothguys.ca
  * License: GPL v2 or later
@@ -21,12 +21,14 @@ if (!defined('ABSPATH')) {
 /**
  * Main plugin class
  */
+if (!class_exists('Bookly_Agreements_Integration', false)) {
+
 class Bookly_Agreements_Integration {
     
     /**
      * Plugin version
      */
-    const VERSION = '1.0.0';
+    const VERSION = '1.4.4';
     
     /**
      * Option name for settings
@@ -37,6 +39,13 @@ class Bookly_Agreements_Integration {
      * Singleton instance
      */
     private static $instance = null;
+
+    /**
+     * Plugin settings from the database
+     *
+     * @var array
+     */
+    private $settings = array();
     
     /**
      * Get singleton instance
@@ -439,6 +448,7 @@ class Bookly_Agreements_Integration {
                 s.duration,
                 s.price,
                 ca.notes as booking_notes,
+                ca.extras,
                 ca.status
             FROM {$bookly_customer_appointments_table} ca
             LEFT JOIN {$bookly_customers_table} c ON ca.customer_id = c.id
@@ -478,6 +488,14 @@ class Bookly_Agreements_Integration {
             }
         }
         $booking['location_address'] = $location_address;
+
+        // Ensure extras is always present (raw JSON string from bookly_customer_appointments.extras).
+        // Fallback to $booking_basic (SELECT ca.*) if the JOIN row somehow lacks it; default to '[]'.
+        if (!isset($booking['extras']) || $booking['extras'] === null || $booking['extras'] === '') {
+            $booking['extras'] = isset($booking_basic['extras']) && $booking_basic['extras'] !== ''
+                ? $booking_basic['extras']
+                : '[]';
+        }
         
         // If customer_email is empty but we found the customer separately, use that
         if (empty($booking['customer_email']) && $customer && !empty($customer['email'])) {
@@ -579,6 +597,7 @@ class Bookly_Agreements_Integration {
                         'duration' => $service ? $service->getDuration() : '',
                         'price' => $ca->getTotalPrice() ?: ($service ? $service->getPrice() : ''),
                         'booking_notes' => $ca->getNotes() ?: '',
+                        'extras' => method_exists($ca, 'getExtras') ? ($ca->getExtras() ?: '[]') : '[]',
                     );
                 }
             } catch (Exception $e) {
@@ -642,6 +661,10 @@ class Bookly_Agreements_Integration {
             // Notes
             'notes' => $booking_details['booking_notes'] ?? $booking_details['customer_notes'] ?? null,
             'customerNotes' => $booking_details['customer_notes'] ?? null,
+
+            // Bookly service extras as raw JSON string (e.g. {"2":1}). The agreements
+            // app parses this to auto-set unlimitedPrints on the Event row.
+            'extras' => $booking_details['extras'] ?? '[]',
         );
         
         // Add template ID if auto-create agreement is enabled
@@ -1507,18 +1530,23 @@ define('WP_DEBUG_DISPLAY', false);</code></pre>
     }
 }
 
+}
+
 /**
  * Initialize the plugin
  */
-function bookly_agreements_integration_init() {
-    Bookly_Agreements_Integration::get_instance();
+if (!function_exists('bookly_agreements_integration_init')) {
+    function bookly_agreements_integration_init() {
+        Bookly_Agreements_Integration::get_instance();
+    }
+    add_action('plugins_loaded', 'bookly_agreements_integration_init');
 }
-add_action('plugins_loaded', 'bookly_agreements_integration_init');
 
 /**
  * Hook detector - logs all Bookly-related hooks for debugging
  * This helps identify which hooks Bookly actually fires
  */
+if (!function_exists('bookly_detect_hooks')) {
 function bookly_detect_hooks() {
     // Only enable in debug mode to avoid cluttering logs
     if (!defined('WP_DEBUG') || !WP_DEBUG) {
@@ -1536,6 +1564,29 @@ function bookly_detect_hooks() {
     }, 999);
 }
 add_action('init', 'bookly_detect_hooks', 1);
+}
+
+/**
+ * Load REST API from separate file.
+ */
+if (!function_exists('bookly_agreements_integration_load_rest_api')) {
+function bookly_agreements_integration_load_rest_api() {
+    static $loaded = false;
+    if ($loaded) {
+        return;
+    }
+    $rest_file = dirname(__FILE__) . '/bookly-agreements-rest.php';
+    if (!is_readable($rest_file)) {
+        return;
+    }
+    require_once $rest_file;
+    $loaded = true;
+    if (function_exists('bookly_integration_register_rest_routes')) {
+        bookly_integration_register_rest_routes();
+    }
+}
+add_action('rest_api_init', 'bookly_agreements_integration_load_rest_api', 5);
+}
 
 /**
  * Activation hook
