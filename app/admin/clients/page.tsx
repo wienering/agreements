@@ -21,6 +21,7 @@ interface Event {
   notes?: string;
   eventName?: string;
   eventPhone?: string;
+  unlimitedPrints?: boolean;
   archived: boolean;
   archivedAt?: string;
   createdAt: string;
@@ -94,7 +95,8 @@ export default function ClientsPage() {
     packagePrice: '',
     notes: '',
     eventName: '',
-    eventPhone: ''
+    eventPhone: '',
+    unlimitedPrints: false
   });
   const { isDark } = useDarkMode();
   const router = useRouter();
@@ -302,7 +304,7 @@ export default function ClientsPage() {
     setEditingEvent(null);
     setAddingEventToClient(null);
     setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
-    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '', unlimitedPrints: false });
   };
 
   const handleDeleteClient = async (clientId: string) => {
@@ -378,7 +380,8 @@ export default function ClientsPage() {
       packagePrice: event.packagePrice ? event.packagePrice.toString() : '',
       notes: event.notes || '',
       eventName: event.eventName || '',
-      eventPhone: event.eventPhone || ''
+      eventPhone: event.eventPhone || '',
+      unlimitedPrints: event.unlimitedPrints || false
     });
     setShowAddForm(true);
   };
@@ -403,8 +406,8 @@ export default function ClientsPage() {
         showToast('Event updated successfully!');
         setShowAddForm(false);
         setEditingEvent(null);
-        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
-        fetchClients(); // Refresh the list
+setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '', unlimitedPrints: false });
+    fetchClients(); // Refresh the list
       } else {
         try {
           const error = await response.json();
@@ -426,7 +429,7 @@ export default function ClientsPage() {
   const handleAddNewEvent = (client: Client) => {
     setAddingEventToClient(client);
     setEditingEvent(null);
-    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '', unlimitedPrints: false });
     setShowAddForm(true);
   };
 
@@ -450,7 +453,7 @@ export default function ClientsPage() {
         showToast('Event added successfully!');
         setShowAddForm(false);
         setAddingEventToClient(null);
-        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
+        setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '', unlimitedPrints: false });
         fetchClients(); // Refresh the list
       } else {
         try {
@@ -474,7 +477,7 @@ export default function ClientsPage() {
     setShowAddForm(false);
     setEditingEvent(null);
     setAddingEventToClient(null);
-    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '' });
+    setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '', unlimitedPrints: false });
   };
 
   const handleArchiveEvent = async (eventId: string) => {
@@ -886,6 +889,34 @@ export default function ClientsPage() {
                         }}
                         placeholder="e.g., 1500.00"
                       />
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        color: textColor,
+                        padding: '10px 12px',
+                        borderRadius: '6px',
+                        border: `1px solid ${newEvent.unlimitedPrints ? '#4a9e72' : borderColor}`,
+                        backgroundColor: newEvent.unlimitedPrints ? (isDark ? 'rgba(74,158,114,0.12)' : 'rgba(74,158,114,0.08)') : cardBg,
+                        transition: 'all 0.2s',
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={newEvent.unlimitedPrints}
+                          onChange={(e) => setNewEvent({ ...newEvent, unlimitedPrints: e.target.checked })}
+                          style={{ width: '16px', height: '16px', accentColor: '#4a9e72', cursor: 'pointer', flexShrink: 0 }}
+                        />
+                        <span>Unlimited Prints</span>
+                        {newEvent.unlimitedPrints && (
+                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#4a9e72', fontWeight: '600' }}>
+                            ∞ Enabled
+                          </span>
+                        )}
+                      </label>
                     </div>
                     <div>
                       <label style={{ 
@@ -1511,6 +1542,11 @@ export default function ClientsPage() {
                             {event.packagePrice && (
                               <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
                                 Price: ${parseFloat(event.packagePrice.toString()).toFixed(2)}
+                              </p>
+                            )}
+                            {event.unlimitedPrints && (
+                              <p style={{ margin: '0 0 4px 0', color: '#4a9e72', fontSize: '14px', fontWeight: '600' }}>
+                                ∞ Unlimited Prints
                               </p>
                             )}
                             {event.notes && (

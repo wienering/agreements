@@ -14,6 +14,7 @@ const eventCreateSchema = z.object({
   notes: z.string().optional().nullable(),
   eventName: z.string().optional().nullable(),
   eventPhone: z.string().optional().nullable(),
+  unlimitedPrints: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
         notes: validatedData.notes || null,
         eventName: validatedData.eventName || null,
         eventPhone: validatedData.eventPhone || null,
+        unlimitedPrints: validatedData.unlimitedPrints ?? false,
         archived: false,
       },
     });
