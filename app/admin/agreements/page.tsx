@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { devLog } from '@/lib/logger';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -214,11 +214,13 @@ export default function AgreementsPage() {
     document.title = 'Agreements | Admin | Photobooth Guys';
   }, []);
 
+  const ITEMS_PER_PAGE = 25;
+
   const hasFetchedData = useRef(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
-  const [filteredAgreements, setFilteredAgreements] = useState<Agreement[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -239,6 +241,9 @@ export default function AgreementsPage() {
   const [newStatus, setNewStatus] = useState('');
   const [editingStatusAgreementId, setEditingStatusAgreementId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [activePage, setActivePage] = useState(1);
+  const [completedPage, setCompletedPage] = useState(1);
+  const [completedExpanded, setCompletedExpanded] = useState(false);
   
   // Second signer editing state (for currently selected agreement)
   const [editSecondSignerEnabled, setEditSecondSignerEnabled] = useState(false);
@@ -475,51 +480,66 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   useLockBodyScroll(fullscreenAdminModalOpen);
 
-  // Filter agreements based on search term and status
+  // Debounce search by 300ms so filtering only fires after typing pauses
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset pages whenever search or status filter changes
+  useEffect(() => {
+    setActivePage(1);
+    setCompletedPage(1);
+  }, [debouncedSearchTerm, statusFilter]);
+
+  // Derived filtered list — computed once per change, no extra setState render
+  const filteredAgreements = useMemo(() => {
     let filtered = agreements;
-    
-    // Apply status filter
     if (statusFilter !== 'ALL') {
       filtered = filtered.filter(agreement => agreement.status === statusFilter);
     }
-    
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
+    if (debouncedSearchTerm.trim()) {
+      const searchLower = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter(agreement => {
-        // Search in client fields
         if (
           agreement.client.firstName.toLowerCase().includes(searchLower) ||
           agreement.client.lastName.toLowerCase().includes(searchLower) ||
           agreement.client.email.toLowerCase().includes(searchLower)
-        ) {
-          return true;
-        }
-        // Search in template title
-        if (agreement.template.title.toLowerCase().includes(searchLower)) {
-          return true;
-        }
-        // Search in event fields
+        ) return true;
+        if (agreement.template.title.toLowerCase().includes(searchLower)) return true;
         if (agreement.event) {
           if (
             (agreement.event.eventType && agreement.event.eventType.toLowerCase().includes(searchLower)) ||
             (agreement.event.eventLocation && agreement.event.eventLocation.toLowerCase().includes(searchLower)) ||
             (agreement.event.eventPackage && agreement.event.eventPackage.toLowerCase().includes(searchLower))
-          ) {
-            return true;
-          }
+          ) return true;
         }
-        // Search in status
-        if (agreement.status.toLowerCase().includes(searchLower)) {
-          return true;
-        }
+        if (agreement.status.toLowerCase().includes(searchLower)) return true;
         return false;
       });
     }
-    
-    setFilteredAgreements(filtered);
-  }, [agreements, searchTerm, statusFilter]);
+    return filtered;
+  }, [agreements, debouncedSearchTerm, statusFilter]);
+
+  const activeAgreements = useMemo(
+    () => filteredAgreements.filter(a => a.status !== 'COMPLETED'),
+    [filteredAgreements]
+  );
+  const completedAgreements = useMemo(
+    () => filteredAgreements.filter(a => a.status === 'COMPLETED'),
+    [filteredAgreements]
+  );
+
+  const activeTotalPages = Math.ceil(activeAgreements.length / ITEMS_PER_PAGE);
+  const paginatedActive = activeAgreements.slice(
+    (activePage - 1) * ITEMS_PER_PAGE,
+    activePage * ITEMS_PER_PAGE
+  );
+  const completedTotalPages = Math.ceil(completedAgreements.length / ITEMS_PER_PAGE);
+  const paginatedCompleted = completedAgreements.slice(
+    (completedPage - 1) * ITEMS_PER_PAGE,
+    completedPage * ITEMS_PER_PAGE
+  );
 
   // Handle URL parameters for pre-selecting client, event, or template
   useEffect(() => {
@@ -2272,17 +2292,17 @@ const normalizePaymentStatus = (value?: string | null) => {
             textAlign: 'center'
           }}>
             <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
-              {searchTerm.trim() 
-                ? `No agreements found matching "${searchTerm}".` 
+              {debouncedSearchTerm.trim() 
+                ? `No agreements found matching "${debouncedSearchTerm}".` 
                 : 'No agreements found. Create your first agreement to get started.'}
             </p>
           </div>
         ) : (
           <>
             {/* Active Agreements Section */}
-            {filteredAgreements.filter(a => a.status !== 'COMPLETED').length > 0 && (
+            {activeAgreements.length > 0 && (
               <>
-                {statusFilter === 'ALL' && filteredAgreements.some(a => a.status === 'COMPLETED') && (
+                {statusFilter === 'ALL' && completedAgreements.length > 0 && (
                   <h3 style={{ 
                     margin: '0 0 16px 0', 
                     fontSize: '16px', 
@@ -2299,12 +2319,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                       fontWeight: '400', 
                       color: mutedText 
                     }}>
-                      ({filteredAgreements.filter(a => a.status !== 'COMPLETED').length})
+                      ({activeAgreements.length})
                     </span>
                   </h3>
                 )}
                 <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}>
-                  {filteredAgreements.filter(a => a.status !== 'COMPLETED').map(agreement => {
+                  {paginatedActive.map(agreement => {
               const warningType = getAgreementWarningType(agreement);
               const getWarningBorderStyle = () => {
                 if (warningType === 'expiration') {
@@ -2878,46 +2898,102 @@ const normalizePaymentStatus = (value?: string | null) => {
               );
             })}
                 </div>
-              </>
-            )}
-
-            {/* Completed Agreements Section */}
-            {filteredAgreements.filter(a => a.status === 'COMPLETED').length > 0 && (
-              <>
-                {statusFilter === 'ALL' && filteredAgreements.some(a => a.status !== 'COMPLETED') && (
-                  <h3 style={{ 
-                    margin: '0 0 16px 0', 
-                    fontSize: '16px', 
-                    fontWeight: '600', 
-                    color: '#7c3aed',
+                {/* Active agreements pagination */}
+                {activeTotalPages > 1 && (
+                  <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    justifyContent: 'space-between',
+                    marginTop: '8px',
+                    marginBottom: '32px',
+                    padding: '12px 16px',
+                    backgroundColor: cardBg,
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '8px',
+                    flexWrap: 'wrap',
+                    gap: '12px',
                   }}>
-                    <UIcon name="check" style={{ fontSize: '16px', color: '#7c3aed' }} />
-                    Completed Agreements
-                    <span style={{ 
-                      fontSize: '13px', 
-                      fontWeight: '400', 
-                      color: mutedText 
-                    }}>
-                      ({filteredAgreements.filter(a => a.status === 'COMPLETED').length})
+                    <span style={{ fontSize: '14px', color: mutedText }}>
+                      Showing {(activePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(activePage * ITEMS_PER_PAGE, activeAgreements.length)} of {activeAgreements.length} agreements
                     </span>
-                  </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        onClick={() => setActivePage(p => Math.max(1, p - 1))}
+                        disabled={activePage === 1}
+                        style={{
+                          backgroundColor: activePage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                          color: activePage === 1 ? mutedText : 'white',
+                          border: 'none', padding: '6px 14px', borderRadius: '4px',
+                          cursor: activePage === 1 ? 'not-allowed' : 'pointer',
+                          fontSize: '14px', fontWeight: '500',
+                        }}
+                      >← Prev</button>
+                      <span style={{ fontSize: '14px', color: textColor, minWidth: '80px', textAlign: 'center' }}>
+                        Page {activePage} of {activeTotalPages}
+                      </span>
+                      <button
+                        onClick={() => setActivePage(p => Math.min(activeTotalPages, p + 1))}
+                        disabled={activePage === activeTotalPages}
+                        style={{
+                          backgroundColor: activePage === activeTotalPages ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                          color: activePage === activeTotalPages ? mutedText : 'white',
+                          border: 'none', padding: '6px 14px', borderRadius: '4px',
+                          cursor: activePage === activeTotalPages ? 'not-allowed' : 'pointer',
+                          fontSize: '14px', fontWeight: '500',
+                        }}
+                      >Next →</button>
+                    </div>
+                  </div>
                 )}
-                <div style={{ display: 'grid', gap: '16px' }}>
-                  {filteredAgreements.filter(a => a.status === 'COMPLETED').map(agreement => {
-                    const warningType = getAgreementWarningType(agreement);
-                    const getWarningBorderStyle = () => {
-                      if (warningType === 'expiration') {
-                        return '3px solid #dc2626';
-                      } else if (warningType === 'critical') {
-                        return '3px solid #dc2626';
-                      } else if (warningType === 'warning') {
-                        return '3px solid #f59e0b';
-                      }
-                      return `1px solid ${borderColor}`;
-                    };
+              </>
+            )}
+            {/* Completed Agreements Section — collapsible to avoid rendering all cards on load */}
+            {completedAgreements.length > 0 && (
+              <>
+                <button
+                  onClick={() => setCompletedExpanded(prev => !prev)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '14px 16px',
+                    backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
+                    border: `1px solid #7c3aed`,
+                    borderRadius: completedExpanded ? '8px 8px 0 0' : '8px',
+                    cursor: 'pointer',
+                    color: '#7c3aed',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    textAlign: 'left',
+                  }}
+                >
+                  <UIcon name="check" style={{ fontSize: '16px', color: '#7c3aed' }} />
+                  Completed Agreements
+                  <span style={{ fontSize: '13px', fontWeight: '400', color: mutedText }}>
+                    ({completedAgreements.length})
+                  </span>
+                  <span style={{ marginLeft: 'auto', fontSize: '13px', color: mutedText }}>
+                    {completedExpanded ? '▲ Hide' : '▼ Show'}
+                  </span>
+                </button>
+                {completedExpanded && (
+                  <div style={{
+                    border: `1px solid #7c3aed`,
+                    borderTop: 'none',
+                    borderRadius: '0 0 8px 8px',
+                    padding: '16px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ display: 'grid', gap: '16px' }}>
+                      {paginatedCompleted.map(agreement => {
+                        const warningType = getAgreementWarningType(agreement);
+                        const getWarningBorderStyle = () => {
+                          if (warningType === 'expiration') return '3px solid #dc2626';
+                          if (warningType === 'critical') return '3px solid #dc2626';
+                          if (warningType === 'warning') return '3px solid #f59e0b';
+                          return `1px solid ${borderColor}`;
+                        };
 
                     return (
                       <div key={agreement.id} style={{
@@ -3114,7 +3190,55 @@ const normalizePaymentStatus = (value?: string | null) => {
                       </div>
                     );
                   })}
-                </div>
+                    </div>
+                    {/* Completed agreements pagination */}
+                    {completedTotalPages > 1 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginTop: '16px',
+                        padding: '12px 16px',
+                        backgroundColor: cardBg,
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '8px',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                      }}>
+                        <span style={{ fontSize: '14px', color: mutedText }}>
+                          Showing {(completedPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(completedPage * ITEMS_PER_PAGE, completedAgreements.length)} of {completedAgreements.length} completed
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            onClick={() => setCompletedPage(p => Math.max(1, p - 1))}
+                            disabled={completedPage === 1}
+                            style={{
+                              backgroundColor: completedPage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : '#7c3aed',
+                              color: completedPage === 1 ? mutedText : 'white',
+                              border: 'none', padding: '6px 14px', borderRadius: '4px',
+                              cursor: completedPage === 1 ? 'not-allowed' : 'pointer',
+                              fontSize: '14px', fontWeight: '500',
+                            }}
+                          >← Prev</button>
+                          <span style={{ fontSize: '14px', color: textColor, minWidth: '80px', textAlign: 'center' }}>
+                            Page {completedPage} of {completedTotalPages}
+                          </span>
+                          <button
+                            onClick={() => setCompletedPage(p => Math.min(completedTotalPages, p + 1))}
+                            disabled={completedPage === completedTotalPages}
+                            style={{
+                              backgroundColor: completedPage === completedTotalPages ? (isDark ? '#2d3530' : '#e2e8f0') : '#7c3aed',
+                              color: completedPage === completedTotalPages ? mutedText : 'white',
+                              border: 'none', padding: '6px 14px', borderRadius: '4px',
+                              cursor: completedPage === completedTotalPages ? 'not-allowed' : 'pointer',
+                              fontSize: '14px', fontWeight: '500',
+                            }}
+                          >Next →</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </>
