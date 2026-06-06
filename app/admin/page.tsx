@@ -226,127 +226,118 @@ export default function AdminHome() {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'flex-start',
-            marginBottom: '16px',
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
             flexWrap: 'wrap',
             gap: '16px'
           }}>
             <div style={{ flex: '1', minWidth: '200px' }}>
-              <h1 style={{ 
-                margin: '0',
-                fontSize: 'clamp(24px, 5vw, 32px)',
-                fontWeight: '700', 
-                color: textColor 
+              <div style={{
+                fontSize: '11px',
+                fontWeight: 500,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: mutedText,
+                marginBottom: '6px'
               }}>
-                Welcome to Photobooth Guys
+                Photobooth Guys · Agreements admin
+              </div>
+              <h1 style={{
+                margin: 0,
+                fontSize: '22px',
+                fontWeight: 500,
+                color: textColor,
+                lineHeight: 1.2
+              }}>
+                Overview
               </h1>
             </div>
-            
-            {/* Quick Actions - Compact */}
-            <div style={{ 
-              display: 'flex', 
-              gap: '12px',
+
+            {/* Quick actions: ghost buttons + primary "+ New agreement" */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
               flexWrap: 'wrap',
-              alignItems: 'flex-start'
+              alignItems: 'center'
             }}>
-              <div 
+              <button
+                type="button"
                 onClick={() => router.push('/admin/clients')}
                 style={{
-                  backgroundColor: cardBg,
+                  backgroundColor: 'transparent',
                   border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
-                  padding: '12px 16px',
+                  color: mutedText,
+                  borderRadius: '6px',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  fontWeight: 500,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
+                  transition: 'background-color 0.15s, color 0.15s, border-color 0.15s'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.color = textColor;
+                  e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.color = mutedText;
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  backgroundColor: 'var(--accent)',
-                  borderRadius: '6px'
-                }}></div>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Clients</span>
-              </div>
+                Clients
+              </button>
 
-              <div 
+              <button
+                type="button"
                 onClick={() => router.push('/admin/templates')}
                 style={{
-                  backgroundColor: cardBg,
+                  backgroundColor: 'transparent',
                   border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
-                  padding: '12px 16px',
+                  color: mutedText,
+                  borderRadius: '6px',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  fontWeight: 500,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
+                  transition: 'background-color 0.15s, color 0.15s, border-color 0.15s'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.color = textColor;
+                  e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.color = mutedText;
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  backgroundColor: '#f59e0b',
-                  borderRadius: '6px'
-                }}></div>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Templates</span>
-              </div>
+                Templates
+              </button>
 
-              <div 
+              <button
+                type="button"
                 onClick={() => router.push('/admin/agreements')}
                 style={{
-                  backgroundColor: cardBg,
-                  border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
-                  padding: '12px 16px',
+                  backgroundColor: 'var(--accent)',
+                  border: '1px solid var(--accent)',
+                  color: '#0a0f0c',
+                  borderRadius: '6px',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
+                  transition: 'filter 0.15s'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.filter = 'brightness(0.93)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.filter = 'none';
                 }}
+                title="Create a new agreement"
               >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  backgroundColor: '#8b5cf6',
-                  borderRadius: '6px'
-                }}></div>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Agreements</span>
-              </div>
+                + New agreement
+              </button>
             </div>
           </div>
         </div>
