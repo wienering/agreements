@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -41,13 +41,13 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
 
     switch (type) {
       case 'success':
-        return { ...baseStyles, backgroundColor: '#4a9e72' };
+        return { ...baseStyles, backgroundColor: 'var(--accent)' };
       case 'error':
         return { ...baseStyles, backgroundColor: '#ef4444' };
       case 'info':
-        return { ...baseStyles, backgroundColor: '#4a9e72' };
+        return { ...baseStyles, backgroundColor: 'var(--accent)' };
       default:
-        return { ...baseStyles, backgroundColor: '#4a9e72' };
+        return { ...baseStyles, backgroundColor: 'var(--accent)' };
     }
   };
 

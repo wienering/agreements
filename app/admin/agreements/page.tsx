@@ -82,9 +82,9 @@ function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): stri
 
   const statusColor =
     agreement.status === 'SIGNED'
-      ? '#4a9e72'
+      ? 'var(--accent)'
       : agreement.status === 'LIVE'
-        ? '#4a9e72'
+        ? 'var(--accent)'
         : agreement.status === 'DRAFT'
           ? '#f59e0b'
           : agreement.status === 'COMPLETED'
@@ -722,7 +722,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     const statusLower = paymentStatus.toLowerCase();
     if (statusLower.includes('paid') && !statusLower.includes('deposit')) {
       return {
-        color: '#3d8560',
+        color: 'var(--accent)',
         backgroundColor: '#f0fdf4',
         border: '1px solid #bbf7d0'
       };
@@ -1930,7 +1930,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   outline: 'none'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#4a9e72';
+                  e.currentTarget.style.borderColor = 'var(--accent)';
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = borderColor;
@@ -1965,9 +1965,9 @@ const normalizePaymentStatus = (value?: string | null) => {
             const getStatusColor = (s: string) => {
               switch (s) {
                 case 'DRAFT': return '#dc2626';
-                case 'LIVE': return '#3d8560';
-                case 'SENT': return '#4a9e72';
-                case 'SIGNED': return '#3d8560';
+                case 'LIVE': return 'var(--accent)';
+                case 'SENT': return 'var(--accent)';
+                case 'SIGNED': return 'var(--accent)';
                 case 'COMPLETED': return '#7c3aed';
                 case 'CANCELLED': return '#dc2626';
                 default: return '#6b7280';
@@ -2307,7 +2307,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#4a9e72',
+                    backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -2572,15 +2572,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setEditingStatusAgreementId(agreement.id);
                       setNewStatus(agreement.status);
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#4a9e72'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; }}
                     title="Click to edit status"
                     style={{
                       fontSize: '12px',
                       flexShrink: 0,
                       color: agreement.status === 'DRAFT' ? '#dc2626' :
-                             agreement.status === 'LIVE' ? '#3d8560' :
-                             agreement.status === 'SIGNED' ? '#3d8560' :
+                             agreement.status === 'LIVE' ? 'var(--accent)' :
+                             agreement.status === 'SIGNED' ? 'var(--accent)' :
                              agreement.status === 'COMPLETED' ? '#7c3aed' :
                              agreement.status === 'CANCELLED' ? '#dc2626' : mutedText,
                       backgroundColor: agreement.status === 'DRAFT' ? '#fef2f2' :
@@ -2649,13 +2649,13 @@ const normalizePaymentStatus = (value?: string | null) => {
                           </span>
                         )}
                         {attendantName && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#4a9e72', fontWeight: 500 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent)', fontWeight: 500 }}>
                             <UIcon name="link" style={{ fontSize: '12px' }} />
                             Attendant: {attendantName}
                           </span>
                         )}
                         {agreement.selectedBackdropName && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#3d8560', fontWeight: 500 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent)', fontWeight: 500 }}>
                             <UIcon name="camera" style={{ fontSize: '12px' }} />
                             Selected Backdrop: {agreement.selectedBackdropName}
                           </span>
@@ -2673,7 +2673,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   <button
                     onClick={() => handleEditAgreement(agreement)}
                     style={{
-                      backgroundColor: '#3d8560',
+                      backgroundColor: 'var(--accent)',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2687,7 +2687,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       e.currentTarget.style.backgroundColor = '#047857';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     title="Edit agreement content"
                   >
@@ -2730,7 +2730,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setShowCopyLinkModal(true);
                     }}
                     style={{
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2741,10 +2741,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#4a9e72';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     title="View agreement options"
                   >
@@ -2758,7 +2758,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setShowAttendantModal(true);
                     }}
                     style={{
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -2769,10 +2769,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#4a9e72';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     title="View attendant page (event details for staff)"
                   >
@@ -2984,7 +2984,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         onClick={() => setActivePage(p => Math.max(1, p - 1))}
                         disabled={activePage === 1}
                         style={{
-                          backgroundColor: activePage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                          backgroundColor: activePage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
                           color: activePage === 1 ? mutedText : 'white',
                           border: 'none', padding: '6px 14px', borderRadius: '4px',
                           cursor: activePage === 1 ? 'not-allowed' : 'pointer',
@@ -2998,7 +2998,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         onClick={() => setActivePage(p => Math.min(activeTotalPages, p + 1))}
                         disabled={activePage === activeTotalPages}
                         style={{
-                          backgroundColor: activePage === activeTotalPages ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                          backgroundColor: activePage === activeTotalPages ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
                           color: activePage === activeTotalPages ? mutedText : 'white',
                           border: 'none', padding: '6px 14px', borderRadius: '4px',
                           cursor: activePage === activeTotalPages ? 'not-allowed' : 'pointer',
@@ -3186,7 +3186,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               setShowCopyLinkModal(true);
                             }}
                             style={{
-                              backgroundColor: '#4a9e72',
+                              backgroundColor: 'var(--accent)',
                               color: 'white',
                               border: 'none',
                               padding: '8px 16px',
@@ -3906,7 +3906,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         style={{
                           marginTop: '8px',
                           padding: '8px 16px',
-                          backgroundColor: sendingGalleryEmail ? '#9ca3af' : '#4a9e72',
+                          backgroundColor: sendingGalleryEmail ? '#9ca3af' : 'var(--accent)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -4000,7 +4000,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   disabled={saving}
                   style={{
                     width: '100%',
-                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
+                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: isMobile ? '8px' : '10px',
@@ -4103,7 +4103,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             disabled={saving}
                             style={{
                               width: '100%',
-                              backgroundColor: saving ? '#9ca3af' : '#3d8560',
+                              backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
                               color: 'white',
                               border: 'none',
                               padding: '8px 12px',
@@ -4132,7 +4132,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         marginTop: '8px',
                         padding: '8px 12px',
                         backgroundColor: isDark ? '#1e3a5f' : '#dbeafe',
-                        border: `1px solid ${isDark ? '#4a9e72' : '#4a9e72'}`,
+                        border: `1px solid ${isDark ? 'var(--accent)' : 'var(--accent)'}`,
                         borderRadius: '4px',
                         fontSize: '13px',
                         color: isDark ? '#93c5fd' : '#1e40af',
@@ -4185,7 +4185,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={handleSaveAgreement}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#3d8560',
+                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -4207,7 +4207,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     window.open(clientLink, '_blank');
                   }}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -4232,7 +4232,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3d8560',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -4262,7 +4262,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
@@ -4411,7 +4411,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={() => handleUpdateStatus(editingStatusAgreementId || '')}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
+                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -4505,7 +4505,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onClick={() => handleUpdateExpiration(editingAgreementId || '')}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : '#4a9e72',
+                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -5123,7 +5123,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: reviewRequestUseCalgary ? '#3d8560' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: reviewRequestUseCalgary ? 'var(--accent)' : (isDark ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: sendingReviewRequest[reviewRequestAgreement.id] ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -5351,7 +5351,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               rel="noopener noreferrer"
                               style={{
                                 display: 'inline-block',
-                                backgroundColor: '#4a9e72',
+                                backgroundColor: 'var(--accent)',
                                 color: 'white',
                                 padding: '8px 16px',
                                 borderRadius: '4px',
@@ -5361,10 +5361,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 marginTop: '8px'
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#3d8560';
+                                e.currentTarget.style.backgroundColor = 'var(--accent)';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#4a9e72';
+                                e.currentTarget.style.backgroundColor = 'var(--accent)';
                               }}
                             >
                               View Invoice →
@@ -5394,7 +5394,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <button
                       onClick={closeInvoiceModal}
                       style={{
-                        backgroundColor: '#4a9e72',
+                        backgroundColor: 'var(--accent)',
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
@@ -5989,7 +5989,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       Your photo booth agreement is ready for review and signature. Please click the link below to view and sign your agreement.
                     </p>
                     <div style={{
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       color: 'white',
                       padding: '12px 24px',
                       borderRadius: '6px',
@@ -6185,7 +6185,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: phoneVisibilityToggle ? '#3d8560' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: phoneVisibilityToggle ? 'var(--accent)' : (isDark ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: updatingPhoneVisibility ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -6291,7 +6291,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: virtualGreenScreenToggle ? '#3d8560' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: virtualGreenScreenToggle ? 'var(--accent)' : (isDark ? '#475569' : '#cbd5e1'),
                       border: 'none',
                       cursor: updatingVirtualGreenScreen ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -6342,7 +6342,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -6369,7 +6369,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3d8560',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -6501,7 +6501,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#3d8560',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
@@ -6531,7 +6531,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',

@@ -1,7 +1,19 @@
 /**
  * Charcoal surfaces + muted sage green accent (easier on the eyes than neon).
  * Use dark.* for isDark branches; light.* for light mode.
+ *
+ * Brand green tokens: a single source of truth lives in two places kept
+ * deliberately in sync — `--accent` / `--accent-soft` / `--accent-faint`
+ * in app/globals.css (for CSS / inline styles) and `accentTokens` below
+ * (for contexts that need a literal color string, e.g. SVG attributes
+ * on recharts, which do not resolve CSS variables).
  */
+export const accentTokens = {
+  accent: '#1D9E75',
+  soft: '#5DCAA5',
+  faint: '#9FE1CB',
+} as const;
+
 export const adminTheme = {
   dark: {
     bg: '#080c08',
@@ -11,8 +23,8 @@ export const adminTheme = {
     muted: '#8f9a8f',
     border: '#2d3530',
     surfaceHover: '#2a322a',
-    accent: '#4a9e72',
-    accentHover: '#3d8560',
+    accent: 'var(--accent)',
+    accentHover: 'var(--accent)',
     accentOn: '#0a0f0c',
   },
   light: {
@@ -22,8 +34,8 @@ export const adminTheme = {
     muted: '#64748b',
     border: '#e2e8f0',
     surfaceHover: '#f1f5f9',
-    accent: '#4a9e72',
-    accentHover: '#3d8560',
+    accent: 'var(--accent)',
+    accentHover: 'var(--accent)',
     accentOn: '#0a0f0c',
   },
 } as const;

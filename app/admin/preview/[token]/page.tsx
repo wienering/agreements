@@ -360,7 +360,7 @@ export default function AdminPreviewPage() {
       }}>
         {/* Admin Preview Banner */}
         <div style={{
-          backgroundColor: '#4a9e72',
+          backgroundColor: 'var(--accent)',
           color: 'white',
           padding: '12px 0',
           textAlign: 'center',
@@ -410,7 +410,7 @@ export default function AdminPreviewPage() {
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -626,7 +626,7 @@ export default function AdminPreviewPage() {
                       padding: '8px 16px',
                       backgroundColor: '#065f46',
                       borderRadius: '6px',
-                      border: '1px solid #4a9e72',
+                      border: '1px solid var(--accent)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px'
@@ -679,7 +679,7 @@ export default function AdminPreviewPage() {
                   padding: '20px',
                   backgroundColor: '#065f46',
                   borderRadius: '8px',
-                  border: '1px solid #4a9e72',
+                  border: '1px solid var(--accent)',
                   display: 'inline-block'
                 }}>
                   <div style={{
@@ -857,7 +857,7 @@ export default function AdminPreviewPage() {
                 onClick={handleDownloadPDF}
                 disabled={isDownloading}
                 style={{
-                  backgroundColor: '#4a9e72',
+                  backgroundColor: 'var(--accent)',
                   color: 'white',
                   border: 'none',
                   padding: '16px 32px',
@@ -876,14 +876,14 @@ export default function AdminPreviewPage() {
                 }}
                 onMouseEnter={(e) => {
                   if (!isDownloading) {
-                    e.currentTarget.style.backgroundColor = '#3d8560';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isDownloading) {
-                    e.currentTarget.style.backgroundColor = '#4a9e72';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
                   }
@@ -901,7 +901,7 @@ export default function AdminPreviewPage() {
                 onClick={handleEmailAgreement}
                 disabled={isEmailing}
                 style={{
-                  backgroundColor: '#4a9e72',
+                  backgroundColor: 'var(--accent)',
                   color: 'white',
                   border: 'none',
                   padding: '16px 32px',
@@ -921,14 +921,14 @@ export default function AdminPreviewPage() {
                 }}
                 onMouseEnter={(e) => {
                   if (!isEmailing) {
-                    e.currentTarget.style.backgroundColor = '#3d8560';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isEmailing) {
-                    e.currentTarget.style.backgroundColor = '#4a9e72';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
                   }
@@ -946,7 +946,7 @@ export default function AdminPreviewPage() {
                     right: '-80px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     padding: '6px 12px',
                     borderRadius: '6px',
@@ -1059,7 +1059,7 @@ export default function AdminPreviewPage() {
                       onClick={handleSendEmail}
                       disabled={isEmailing}
                       style={{
-                        backgroundColor: '#4a9e72',
+                        backgroundColor: 'var(--accent)',
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
@@ -1099,7 +1099,7 @@ export default function AdminPreviewPage() {
                   <div style={{
                     width: '32px',
                     height: '32px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     borderRadius: '6px',
                     display: 'flex',
                     alignItems: 'center',

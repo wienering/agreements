@@ -10,6 +10,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /* Brand sage green — single source of truth.
+           Mirrors the --accent / --accent-soft / --accent-faint
+           CSS variables defined in app/globals.css so Tailwind
+           utilities (bg-accent, text-accent, etc.) and inline
+           styles using var(--accent) stay in lockstep. */
+        accent: {
+          DEFAULT: '#1D9E75',
+          soft: '#5DCAA5',
+          faint: '#9FE1CB',
+        },
         admin: {
           bg: '#080c08',
           sidebar: '#0e110e',

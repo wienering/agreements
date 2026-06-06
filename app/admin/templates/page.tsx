@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
@@ -332,7 +332,7 @@ export default function TemplatesPage() {
             <button
               onClick={() => setShowSmartFields(!showSmartFields)}
               style={{
-                backgroundColor: showSmartFields ? '#3d8560' : '#6b7280',
+                backgroundColor: showSmartFields ? 'var(--accent)' : '#6b7280',
                 color: 'white',
                 border: 'none',
                 padding: isMobile ? '12px 20px' : '10px 20px',
@@ -438,7 +438,7 @@ export default function TemplatesPage() {
           </div>
         )}
 
-        {/* Add/Edit Form â€” viewport modal */}
+        {/* Add/Edit Form — viewport modal */}
         {showAddForm && (
           <div
             style={{
@@ -602,7 +602,7 @@ export default function TemplatesPage() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#4a9e72',
+                    backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -613,12 +613,12 @@ export default function TemplatesPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#4a9e72';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }
                   }}
                 >
@@ -725,7 +725,7 @@ export default function TemplatesPage() {
                     color: mutedText, 
                     fontSize: '14px' 
                   }}>
-                    Version {viewingTemplate.version} â€¢ {viewingTemplate.htmlContent.length} characters
+                    Version {viewingTemplate.version} • {viewingTemplate.htmlContent.length} characters
                   </p>
                 </div>
                 <button
@@ -744,7 +744,7 @@ export default function TemplatesPage() {
                   }}
                   title="Close modal"
                 >
-                  Ã—
+                  ×
                 </button>
               </div>
 
@@ -811,7 +811,7 @@ export default function TemplatesPage() {
                     handleCloseViewModal();
                   }}
                   style={{
-                    backgroundColor: '#3d8560',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -825,7 +825,7 @@ export default function TemplatesPage() {
                     e.currentTarget.style.backgroundColor = '#047857';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3d8560';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                   }}
                 >
                   Edit Template
@@ -836,7 +836,7 @@ export default function TemplatesPage() {
                     handleCloseViewModal();
                   }}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -847,10 +847,10 @@ export default function TemplatesPage() {
                     transition: 'background-color 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3d8560';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#4a9e72';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                   }}
                 >
                   Use Template

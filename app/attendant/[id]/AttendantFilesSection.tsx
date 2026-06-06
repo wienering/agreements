@@ -167,7 +167,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#4a9e72';
+                e.currentTarget.style.borderColor = 'var(--accent)';
                 e.currentTarget.style.backgroundColor = '#1a1d1a';
               }}
               onMouseLeave={(e) => {
@@ -200,7 +200,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                 rel="noopener noreferrer"
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#4a9e72',
+                  backgroundColor: 'var(--accent)',
                   color: 'white',
                   borderRadius: '6px',
                   fontSize: '14px',
@@ -210,10 +210,10 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#3d8560';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#4a9e72';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                 }}
               >
                 Open in Drive

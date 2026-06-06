@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 
@@ -84,7 +84,7 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           width: '100%',
           minHeight: '200px',
           padding: '12px',
-          border: `1px solid ${isFocused ? '#4a9e72' : '#d1d5db'}`,
+          border: `1px solid ${isFocused ? 'var(--accent)' : '#d1d5db'}`,
           borderRadius: '6px',
           backgroundColor: '#ffffff',
           color: '#1f2937',
@@ -191,7 +191,7 @@ export function RichTextPreview({
     processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.email\s*\}\}/g, secondChip(sEmail));
     processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.phone\s*\}\}/g, secondChip(sPhone));
 
-    // Individual primary name tokens — auto-expand to both names when a second signer is enabled.
+    // Individual primary name tokens � auto-expand to both names when a second signer is enabled.
     processedHtml = processedHtml.replace(/\{\{\s*client\.firstName\s*\}\}/g, clientChip(firstNames));
     processedHtml = processedHtml.replace(/\{\{\s*client\.lastName\s*\}\}/g, clientChip(lastNames));
     processedHtml = processedHtml.replace(/\{\{\s*client\.email\s*\}\}/g, clientChip(email));

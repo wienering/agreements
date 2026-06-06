@@ -377,7 +377,7 @@ export default function AttendantGroupsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
-                            color: '#4a9e72',
+                            color: 'var(--accent)',
                             fontSize: '13px',
                             textDecoration: 'none',
                             fontWeight: '500'
@@ -388,7 +388,7 @@ export default function AttendantGroupsPage() {
                         <button
                           onClick={() => copyHubLink(group.slug, group.id)}
                           style={{
-                            backgroundColor: copiedId === group.id ? '#4a9e72' : '#3d8560',
+                            backgroundColor: copiedId === group.id ? 'var(--accent)' : 'var(--accent)',
                             color: 'white',
                             border: 'none',
                             padding: '6px 10px',
@@ -407,7 +407,7 @@ export default function AttendantGroupsPage() {
                           }}
                           onMouseLeave={(e) => {
                             if (copiedId !== group.id) {
-                              e.currentTarget.style.backgroundColor = '#3d8560';
+                              e.currentTarget.style.backgroundColor = 'var(--accent)';
                             }
                           }}
                         >
@@ -427,7 +427,7 @@ export default function AttendantGroupsPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
-                                    color: '#4a9e72',
+                                    color: 'var(--accent)',
                                     fontSize: '12px',
                                     textDecoration: 'none',
                                     fontWeight: '500',
@@ -449,7 +449,7 @@ export default function AttendantGroupsPage() {
                                     }
                                   }}
                                   style={{
-                                    backgroundColor: copiedId === `${group.id}-${attendantId}` ? '#4a9e72' : '#4a9e72',
+                                    backgroundColor: copiedId === `${group.id}-${attendantId}` ? 'var(--accent)' : 'var(--accent)',
                                     color: 'white',
                                     border: 'none',
                                     padding: '4px 8px',
@@ -462,12 +462,12 @@ export default function AttendantGroupsPage() {
                                   }}
                                   onMouseEnter={(e) => {
                                     if (copiedId !== `${group.id}-${attendantId}`) {
-                                      e.currentTarget.style.backgroundColor = '#3d8560';
+                                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                                     }
                                   }}
                                   onMouseLeave={(e) => {
                                     if (copiedId !== `${group.id}-${attendantId}`) {
-                                      e.currentTarget.style.backgroundColor = '#4a9e72';
+                                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                                     }
                                   }}
                                 >
@@ -700,7 +700,7 @@ export default function AttendantGroupsPage() {
                   onClick={handleSave}
                   disabled={saving}
                   style={{
-                    backgroundColor: saving ? '#6b7280' : '#4a9e72',
+                    backgroundColor: saving ? '#6b7280' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '10px 20px',
@@ -712,12 +712,12 @@ export default function AttendantGroupsPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!saving) {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!saving) {
-                      e.currentTarget.style.backgroundColor = '#4a9e72';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }
                   }}
                 >

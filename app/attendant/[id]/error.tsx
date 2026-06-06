@@ -104,7 +104,7 @@ export default function Error({
           onClick={reset}
           style={{
             padding: '12px 24px',
-            backgroundColor: '#4a9e72',
+            backgroundColor: 'var(--accent)',
             color: '#ffffff',
             border: 'none',
             borderRadius: '8px',
@@ -114,10 +114,10 @@ export default function Error({
             transition: 'background-color 0.2s',
           }}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#3d8560';
+            e.currentTarget.style.backgroundColor = 'var(--accent)';
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#4a9e72';
+            e.currentTarget.style.backgroundColor = 'var(--accent)';
           }}
         >
           Try Again

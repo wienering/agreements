@@ -41,7 +41,7 @@ export function SmartFieldItem({
         cursor: 'pointer',
         position: 'relative',
         transition: 'all 0.2s ease',
-        border: isCopied ? '2px solid #4a9e72' : '2px solid transparent',
+        border: isCopied ? '2px solid var(--accent)' : '2px solid transparent',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -61,7 +61,7 @@ export function SmartFieldItem({
             width: '16px',
             height: '16px',
             borderRadius: '50%',
-            backgroundColor: '#4a9e72',
+            backgroundColor: 'var(--accent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -263,7 +263,7 @@ export function SortableTemplateItem({
             onClick={() => onTogglePreview(template.id)}
             style={{
               backgroundColor: 'transparent',
-              color: isDark ? '#82a894' : '#4a9e72',
+              color: isDark ? '#82a894' : 'var(--accent)',
               border: 'none',
               padding: '8px 0',
               cursor: 'pointer',
@@ -276,10 +276,10 @@ export function SortableTemplateItem({
               gap: '4px',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = isDark ? '#9cb8aa' : '#3d8560';
+              e.currentTarget.style.color = isDark ? '#9cb8aa' : 'var(--accent)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = isDark ? '#82a894' : '#4a9e72';
+              e.currentTarget.style.color = isDark ? '#82a894' : 'var(--accent)';
             }}
           >
             {isExpanded ? (
@@ -339,7 +339,7 @@ export function SortableTemplateItem({
           type="button"
           onClick={() => onUseTemplate(template.id)}
           style={{
-            backgroundColor: '#4a9e72',
+            backgroundColor: 'var(--accent)',
             color: 'white',
             border: 'none',
             padding: isMobile ? '10px 16px' : '8px 16px',
@@ -351,10 +351,10 @@ export function SortableTemplateItem({
             transition: 'background-color 0.2s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#3d8560';
+            e.currentTarget.style.backgroundColor = 'var(--accent)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#4a9e72';
+            e.currentTarget.style.backgroundColor = 'var(--accent)';
           }}
           title="Use this template to create an agreement"
         >

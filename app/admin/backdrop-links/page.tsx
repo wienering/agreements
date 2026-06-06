@@ -504,7 +504,7 @@ export default function BackdropLinksPage() {
                           target="_blank" 
                           rel="noopener noreferrer"
                           style={{ 
-                            color: '#4a9e72', 
+                            color: 'var(--accent)', 
                             fontSize: '14px',
                             textDecoration: 'none',
                             display: 'inline-block',
@@ -526,7 +526,7 @@ export default function BackdropLinksPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              color: '#4a9e72',
+                              color: 'var(--accent)',
                               fontSize: '13px',
                               textDecoration: 'none',
                               fontWeight: '500',
@@ -542,7 +542,7 @@ export default function BackdropLinksPage() {
                           <button
                             onClick={() => copyHubLink(link.url, link.id)}
                             style={{
-                              backgroundColor: copiedId === link.id ? '#4a9e72' : '#3d8560',
+                              backgroundColor: copiedId === link.id ? 'var(--accent)' : 'var(--accent)',
                               color: 'white',
                               border: 'none',
                               padding: '6px 10px',
@@ -561,7 +561,7 @@ export default function BackdropLinksPage() {
                             }}
                             onMouseLeave={(e) => {
                               if (copiedId !== link.id) {
-                                e.currentTarget.style.backgroundColor = '#3d8560';
+                                e.currentTarget.style.backgroundColor = 'var(--accent)';
                               }
                             }}
                           >
@@ -579,7 +579,7 @@ export default function BackdropLinksPage() {
                         <button
                           onClick={() => copyLink(link.url, link.id)}
                           style={{
-                            backgroundColor: copiedId === link.id ? '#4a9e72' : '#6b7280',
+                            backgroundColor: copiedId === link.id ? 'var(--accent)' : '#6b7280',
                             color: 'white',
                             border: 'none',
                             padding: '8px 12px',
@@ -798,7 +798,7 @@ export default function BackdropLinksPage() {
                   onClick={handleSave}
                   disabled={saving || !formData.name || !formData.url}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '10px 20px',
@@ -811,11 +811,11 @@ export default function BackdropLinksPage() {
                   }}
                   onMouseEnter={(e) => {
                     if (!saving && formData.name && formData.url) {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#4a9e72';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                   }}
                 >
                   {saving ? 'Saving...' : editingLink ? 'Update' : 'Add'}

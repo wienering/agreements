@@ -181,7 +181,7 @@ export default function ThankYouPage() {
           width: '48px',
           height: '48px',
           border: `4px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
-          borderTop: '4px solid #4a9e72',
+          borderTop: '4px solid var(--accent)',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
         }} />
@@ -303,7 +303,7 @@ export default function ThankYouPage() {
             <div style={{
               width: '100px',
               height: '100px',
-              backgroundColor: '#4a9e72',
+              backgroundColor: 'var(--accent)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -523,7 +523,7 @@ export default function ThankYouPage() {
               onClick={handleDownloadPDF}
               disabled={isDownloading}
               style={{
-                backgroundColor: '#4a9e72',
+                backgroundColor: 'var(--accent)',
                 color: 'white',
                 border: 'none',
                 padding: '16px 32px',
@@ -542,14 +542,14 @@ export default function ThankYouPage() {
               }}
               onMouseEnter={(e) => {
                 if (!isDownloading) {
-                  e.currentTarget.style.backgroundColor = '#3d8560';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isDownloading) {
-                  e.currentTarget.style.backgroundColor = '#4a9e72';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
                 }
@@ -567,7 +567,7 @@ export default function ThankYouPage() {
               onClick={handleEmailAgreement}
               disabled={isEmailing}
               style={{
-                backgroundColor: '#4a9e72',
+                backgroundColor: 'var(--accent)',
                 color: 'white',
                 border: 'none',
                 padding: '16px 32px',
@@ -586,14 +586,14 @@ export default function ThankYouPage() {
               }}
               onMouseEnter={(e) => {
                 if (!isEmailing) {
-                  e.currentTarget.style.backgroundColor = '#3d8560';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.4)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isEmailing) {
-                  e.currentTarget.style.backgroundColor = '#4a9e72';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
                 }
@@ -665,7 +665,7 @@ export default function ThankYouPage() {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '12px 20px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     textDecoration: 'none',
                     borderRadius: '6px',
@@ -674,11 +674,11 @@ export default function ThankYouPage() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3d8560';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#4a9e72';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
@@ -720,7 +720,7 @@ export default function ThankYouPage() {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '12px 20px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     textDecoration: 'none',
                     borderRadius: '6px',
@@ -729,11 +729,11 @@ export default function ThankYouPage() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3d8560';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#4a9e72';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
@@ -886,7 +886,7 @@ export default function ThankYouPage() {
                   onClick={handleSendEmail}
                   disabled={isEmailing}
                   style={{
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',

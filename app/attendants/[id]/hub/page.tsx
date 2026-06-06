@@ -250,8 +250,8 @@ function getEventTypeColor(eventType: string | null): string {
   if (!eventType) return '#64748b';
   const type = eventType.toLowerCase();
   if (type.includes('wedding')) return '#ec4899';
-  if (type.includes('corporate') || type.includes('business')) return '#4a9e72';
-  if (type.includes('birthday') || type.includes('party')) return '#4a9e72';
+  if (type.includes('corporate') || type.includes('business')) return 'var(--accent)';
+  if (type.includes('birthday') || type.includes('party')) return 'var(--accent)';
   if (type.includes('sport')) return '#f59e0b';
   if (type.includes('music') || type.includes('concert')) return '#8b5cf6';
   return '#64748b';
@@ -261,8 +261,8 @@ function getEventTypeBgColor(eventType: string | null): string {
   if (!eventType) return '#1a1d1a';
   const type = eventType.toLowerCase();
   if (type.includes('wedding')) return '#ec489920';
-  if (type.includes('corporate') || type.includes('business')) return '#4a9e7220';
-  if (type.includes('birthday') || type.includes('party')) return '#4a9e7220';
+  if (type.includes('corporate') || type.includes('business')) return 'var(--accent)20';
+  if (type.includes('birthday') || type.includes('party')) return 'var(--accent)20';
   if (type.includes('sport')) return '#f59e0b20';
   if (type.includes('music') || type.includes('concert')) return '#8b5cf620';
   return '#1a1d1a';
@@ -408,7 +408,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
           .job-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            border-color: #4a9e72 !important;
+            border-color: var(--accent) !important;
           }
           .metric-card {
             transition: all 0.2s ease;
@@ -418,7 +418,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
           }
           .view-details-button:hover {
-            background-color: #3d8560 !important;
+            background-color: var(--accent) !important;
           }
         `}} />
         <div
@@ -452,7 +452,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
@@ -540,7 +540,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
@@ -593,7 +593,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
@@ -771,7 +771,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           borderRadius: '8px',
                           fontSize: '12px',
                           fontWeight: '600',
-                          backgroundColor: '#4a9e72',
+                          backgroundColor: 'var(--accent)',
                           color: '#ffffff',
                         }}
                       >
@@ -828,7 +828,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         display: 'inline-block',
                         marginTop: '20px',
                         padding: '12px 24px',
-                        backgroundColor: '#4a9e72',
+                        backgroundColor: 'var(--accent)',
                         color: '#ffffff',
                         borderRadius: '8px',
                         textDecoration: 'none',
@@ -906,12 +906,12 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                             ? (calendarDay.hasJob ? '#ffffff' : '#ffffff')
                             : '#475569',
                           backgroundColor: calendarDay.hasJob
-                            ? '#4a9e72'
+                            ? 'var(--accent)'
                             : isToday
                             ? '#2d3530'
                             : 'transparent',
                           borderRadius: '4px',
-                          border: isToday && !calendarDay.hasJob ? '1px solid #4a9e72' : 'none',
+                          border: isToday && !calendarDay.hasJob ? '1px solid var(--accent)' : 'none',
                         }}
                       >
                         {calendarDay.day}
@@ -1060,7 +1060,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                                 borderRadius: '6px',
                                 fontSize: '10px',
                                 fontWeight: '600',
-                                backgroundColor: '#4a9e72',
+                                backgroundColor: 'var(--accent)',
                                 color: '#ffffff',
                               }}
                             >
@@ -1161,7 +1161,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 style={{
                   width: '32px',
                   height: '32px',
-                  backgroundColor: '#4a9e72',
+                  backgroundColor: 'var(--accent)',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',

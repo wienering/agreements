@@ -135,7 +135,7 @@ export default function QuotesPage() {
   const textColor = isDark ? '#ffffff' : '#1e293b';
   const mutedText = isDark ? '#8f9a8f' : '#64748b';
   const borderColor = isDark ? '#2d3530' : '#e2e8f0';
-  const accentColor = '#4a9e72';
+  const accentColor = 'var(--accent)';
 
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -488,7 +488,7 @@ export default function QuotesPage() {
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 {pricingMessage && (
                   <span style={{ 
-                    color: pricingMessage.includes('success') ? '#4a9e72' : '#ef4444',
+                    color: pricingMessage.includes('success') ? 'var(--accent)' : '#ef4444',
                     fontSize: '14px',
                     fontWeight: '500'
                   }}>
@@ -500,7 +500,7 @@ export default function QuotesPage() {
                   disabled={savingPricing}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
@@ -671,7 +671,7 @@ export default function QuotesPage() {
                 height: '40px',
                 borderRadius: '50%',
                 backgroundColor: currentStep === step ? accentColor : 
-                                 currentStep > step ? '#4a9e72' : 
+                                 currentStep > step ? 'var(--accent)' : 
                                  isDark ? '#2d3530' : '#e2e8f0',
                 color: currentStep >= step ? 'white' : mutedText,
                 display: 'flex',

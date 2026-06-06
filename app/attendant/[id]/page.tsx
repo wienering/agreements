@@ -460,7 +460,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   style={{
                     width: '44px',
                     height: '44px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
@@ -735,7 +735,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: '#4a9e72',
+                          color: 'var(--accent)',
                           fontWeight: '600',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
@@ -768,7 +768,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                           style={{
                             margin: '0',
                             fontSize: '16px',
-                            color: '#4a9e72',
+                            color: 'var(--accent)',
                             fontWeight: '600',
                           }}
                         >
@@ -785,17 +785,17 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                         alignItems: 'center',
                         gap: '10px',
                         padding: '12px 16px',
-                        backgroundColor: 'rgba(74, 158, 114, 0.12)',
+                        backgroundColor: 'rgba(var(--accent-rgb), 0.12)',
                         borderRadius: '8px',
-                        border: '1px solid rgba(74, 158, 114, 0.35)',
+                        border: '1px solid rgba(var(--accent-rgb), 0.35)',
                       }}
                     >
-                      <span style={{ fontSize: '20px', color: '#4a9e72', fontWeight: '700', lineHeight: '1' }}>∞</span>
+                      <span style={{ fontSize: '20px', color: 'var(--accent)', fontWeight: '700', lineHeight: '1' }}>∞</span>
                       <p
                         style={{
                           margin: '0',
                           fontSize: '16px',
-                          color: '#4a9e72',
+                          color: 'var(--accent)',
                           fontWeight: '700',
                           letterSpacing: '0.01em',
                         }}
@@ -884,7 +884,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   style={{
                     width: '32px',
                     height: '32px',
-                    backgroundColor: '#4a9e72',
+                    backgroundColor: 'var(--accent)',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1024,7 +1024,7 @@ function EventExpiredError() {
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#4a9e72',
+                backgroundColor: 'var(--accent)',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
@@ -1153,7 +1153,7 @@ function NotFoundError() {
               style={{
                 width: '32px',
                 height: '32px',
-                backgroundColor: '#4a9e72',
+                backgroundColor: 'var(--accent)',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',

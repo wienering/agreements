@@ -913,19 +913,19 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         color: textColor,
                         padding: '10px 12px',
                         borderRadius: '6px',
-                        border: `1px solid ${newEvent.unlimitedPrints ? '#4a9e72' : borderColor}`,
-                        backgroundColor: newEvent.unlimitedPrints ? (isDark ? 'rgba(74,158,114,0.12)' : 'rgba(74,158,114,0.08)') : cardBg,
+                        border: `1px solid ${newEvent.unlimitedPrints ? 'var(--accent)' : borderColor}`,
+                        backgroundColor: newEvent.unlimitedPrints ? (isDark ? 'rgba(var(--accent-rgb),0.12)' : 'rgba(var(--accent-rgb),0.08)') : cardBg,
                         transition: 'all 0.2s',
                       }}>
                         <input
                           type="checkbox"
                           checked={newEvent.unlimitedPrints}
                           onChange={(e) => setNewEvent({ ...newEvent, unlimitedPrints: e.target.checked })}
-                          style={{ width: '16px', height: '16px', accentColor: '#4a9e72', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ width: '16px', height: '16px', accentColor: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}
                         />
                         <span>Unlimited Prints</span>
                         {newEvent.unlimitedPrints && (
-                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#4a9e72', fontWeight: '600' }}>
+                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--accent)', fontWeight: '600' }}>
                             ∞ Enabled
                           </span>
                         )}
@@ -1384,7 +1384,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   type="submit"
                   disabled={loading}
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#4a9e72',
+                    backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
                     color: 'white',
                     border: 'none',
                     padding: '8px 16px',
@@ -1441,7 +1441,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                       </h3>
                       {client.isWhitelabelClient && (
                         <span style={{
-                          backgroundColor: '#4a9e72',
+                          backgroundColor: 'var(--accent)',
                           color: 'white',
                           padding: '2px 8px',
                           borderRadius: '4px',
@@ -1476,7 +1476,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         <button
                           onClick={() => handleAddNewEvent(client)}
                           style={{
-                            backgroundColor: '#4a9e72',
+                            backgroundColor: 'var(--accent)',
                             color: 'white',
                             border: 'none',
                             padding: '4px 12px',
@@ -1487,10 +1487,10 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                             transition: 'background-color 0.2s'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3d8560';
+                            e.currentTarget.style.backgroundColor = 'var(--accent)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#4a9e72';
+                            e.currentTarget.style.backgroundColor = 'var(--accent)';
                           }}
                           title="Add a new event to this client"
                         >
@@ -1559,7 +1559,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               </p>
                             )}
                             {event.unlimitedPrints && (
-                              <p style={{ margin: '0 0 4px 0', color: '#4a9e72', fontSize: '14px', fontWeight: '600' }}>
+                              <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
                                 ∞ Unlimited Prints
                               </p>
                             )}
@@ -1572,7 +1572,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               <button
                                 onClick={() => handleCreateAgreement(client, event)}
                                 style={{
-                                  backgroundColor: '#4a9e72',
+                                  backgroundColor: 'var(--accent)',
                                   color: 'white',
                                   border: 'none',
                                   padding: '6px 12px',
@@ -1583,10 +1583,10 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                                   transition: 'background-color 0.2s'
                                 }}
                                 onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#3d8560';
+                                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#4a9e72';
+                                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                                 }}
                                 title="Create agreement for this event"
                               >
@@ -1595,7 +1595,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               <button
                                 onClick={() => handleEditEvent(event)}
                                 style={{
-                                  backgroundColor: '#3d8560',
+                                  backgroundColor: 'var(--accent)',
                                   color: 'white',
                                   border: 'none',
                                   padding: '6px 12px',
@@ -1609,7 +1609,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                                   e.currentTarget.style.backgroundColor = '#047857';
                                 }}
                                 onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#3d8560';
+                                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                                 }}
                                 title="Edit event details"
                               >
@@ -1694,7 +1694,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   <button
                     onClick={() => handleEditClient(client)}
                     style={{
-                      backgroundColor: '#3d8560',
+                      backgroundColor: 'var(--accent)',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -1708,7 +1708,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                       e.currentTarget.style.backgroundColor = '#047857';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     title="Edit client details"
                   >
@@ -1719,7 +1719,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                     <button
                       onClick={() => handleCreateAgreement(client)}
                       style={{
-                        backgroundColor: '#4a9e72',
+                        backgroundColor: 'var(--accent)',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
@@ -1730,10 +1730,10 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         transition: 'background-color 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#3d8560';
+                        e.currentTarget.style.backgroundColor = 'var(--accent)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#4a9e72';
+                        e.currentTarget.style.backgroundColor = 'var(--accent)';
                       }}
                       title="Create new agreement for this client"
                     >
@@ -1841,7 +1841,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   style={{
-                    backgroundColor: currentPage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                    backgroundColor: currentPage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
                     color: currentPage === 1 ? mutedText : 'white',
                     border: 'none',
                     padding: '6px 14px',
@@ -1860,7 +1860,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                   style={{
-                    backgroundColor: currentPage === totalPages ? (isDark ? '#2d3530' : '#e2e8f0') : '#4a9e72',
+                    backgroundColor: currentPage === totalPages ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
                     color: currentPage === totalPages ? mutedText : 'white',
                     border: 'none',
                     padding: '6px 14px',

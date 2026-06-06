@@ -76,7 +76,7 @@ export default function AdminLayout({
   const textColor = isDark ? adminTheme.dark.text : '#0f172a';
   const cardBg = isDark ? adminTheme.dark.card : '#ffffff';
   const borderColor = isDark ? adminTheme.dark.border : '#e2e8f0';
-  const navActiveBg = 'rgba(74, 158, 114, 0.14)';
+  const navActiveBg = 'rgba(var(--accent-rgb), 0.14)';
   const navHoverBg = adminTheme.dark.surfaceHover;
 
   return (
@@ -120,7 +120,7 @@ export default function AdminLayout({
             <div style={{ 
               width: '40px', 
               height: '40px', 
-              backgroundColor: 'rgba(74, 158, 114, 0.14)', 
+              backgroundColor: 'rgba(var(--accent-rgb), 0.14)', 
               borderRadius: '8px',
               border: `1px solid ${adminTheme.dark.accent}`,
               display: 'flex',
@@ -333,7 +333,7 @@ export default function AdminLayout({
                 <div style={{
                   width: '32px',
                   height: '32px',
-                  backgroundColor: 'rgba(74, 158, 114, 0.14)',
+                  backgroundColor: 'rgba(var(--accent-rgb), 0.14)',
                   borderRadius: '6px',
                   border: `1px solid ${adminTheme.dark.accent}`,
                   display: 'flex',

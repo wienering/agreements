@@ -13,6 +13,16 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+
+  /* Brand sage green accent — single source of truth.
+     Use --accent for the main green (heading, nav, chart bars/line,
+     primary buttons, status text). --accent-soft / --accent-faint
+     are lighter stops for secondary surfaces. --accent-rgb is the
+     same value as channels for use with rgba(). */
+  --accent: #1D9E75;
+  --accent-soft: #5DCAA5;
+  --accent-faint: #9FE1CB;
+  --accent-rgb: 29, 158, 117;
 }
 
 @media (prefers-color-scheme: dark) {

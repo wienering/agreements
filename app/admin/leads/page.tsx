@@ -373,7 +373,7 @@ export default function LeadsPage() {
         </div>
 
         {followUpLeads.length > 0 && (
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: isDark ? '#164a2e' : '#ecfdf5', borderRadius: '12px', border: `1px solid ${isDark ? '#4a9e72' : '#9cb8aa'}` }}>
+          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: isDark ? '#164a2e' : '#ecfdf5', borderRadius: '12px', border: `1px solid ${isDark ? 'var(--accent)' : '#9cb8aa'}` }}>
             <h2 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
               Needs Follow-up ({followUpLeads.length})
             </h2>
@@ -397,7 +397,7 @@ export default function LeadsPage() {
                   <span style={{ fontSize: '12px', color: mutedText }}>Last: {formatDate(lead.lastContactedAt)}</span>
                   <Link
                     href={`/admin/agreements`}
-                    style={{ fontSize: '13px', color: '#4a9e72', textDecoration: 'none' }}
+                    style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none' }}
                   >
                     View
                   </Link>
@@ -409,7 +409,7 @@ export default function LeadsPage() {
                         onChange={(e) => setNextFollowUp(e.target.value)}
                         style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                       />
-                      <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: '#4a9e72', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                         Save
                       </button>
                       <button onClick={() => { setEditingLead(null); setNextFollowUp(''); }} style={{ padding: '4px 12px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
@@ -424,7 +424,7 @@ export default function LeadsPage() {
                       >
                         Create quote
                       </Link>
-                      <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#4a9e72', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                      <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
                         Mark contacted
                       </button>
                       <button onClick={() => openEditLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
@@ -496,7 +496,7 @@ export default function LeadsPage() {
                               onChange={(e) => setNextFollowUp(e.target.value)}
                               style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                             />
-                            <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: '#4a9e72', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                               Save
                             </button>
                             <button onClick={() => { setEditingLead(null); setNextFollowUp(''); }} style={{ padding: '4px 12px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
@@ -505,11 +505,11 @@ export default function LeadsPage() {
                           </div>
                         ) : (
                           <>
-                            <button onClick={() => setEditingLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#4a9e72', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            <button onClick={() => setEditingLead(lead)} style={{ padding: '6px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                               Mark contacted
                             </button>
                             {!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' && (
-                              <button onClick={() => setCreateAgreementLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#4a9e72', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                              <button onClick={() => setCreateAgreementLead(lead)} style={{ padding: '6px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
                                 Create agreement
                               </button>
                             )}
@@ -752,7 +752,7 @@ export default function LeadsPage() {
                   <button
                     type="submit"
                     disabled={addLeadSaving}
-                    style={{ padding: '10px 20px', backgroundColor: '#4a9e72', color: 'white', border: 'none', borderRadius: '8px', cursor: addLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: addLeadSaving ? 0.7 : 1 }}
+                    style={{ padding: '10px 20px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '8px', cursor: addLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: addLeadSaving ? 0.7 : 1 }}
                   >
                     {addLeadSaving ? 'Adding...' : 'Add Lead'}
                   </button>

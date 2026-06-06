@@ -310,7 +310,7 @@ export default function ArchivedAgreementsPage() {
                   <button
                     onClick={() => window.open(`/agreement/${agreement.uniqueToken}`, '_blank')}
                     style={{
-                      backgroundColor: '#4a9e72',
+                      backgroundColor: 'var(--accent)',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -321,10 +321,10 @@ export default function ArchivedAgreementsPage() {
                       transition: 'background-color 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3d8560';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#4a9e72';
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
                     }}
                     title="View agreement"
                   >
@@ -334,7 +334,7 @@ export default function ArchivedAgreementsPage() {
                     onClick={() => handleUnarchiveAgreement(agreement.id)}
                     disabled={loading}
                     style={{
-                      backgroundColor: loading ? '#9ca3af' : '#3d8560',
+                      backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
                       color: 'white',
                       border: 'none',
                       padding: '8px 16px',
@@ -351,7 +351,7 @@ export default function ArchivedAgreementsPage() {
                     }}
                     onMouseLeave={(e) => {
                       if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#3d8560';
+                        e.currentTarget.style.backgroundColor = 'var(--accent)';
                       }
                     }}
                     title="Unarchive this agreement"

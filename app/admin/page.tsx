@@ -5,6 +5,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from 'recharts';
 import { UIcon } from '../components/UIcon';
+import { accentTokens } from '../lib/adminTheme';
 
 interface DashboardStats {
   totalClients: number;
@@ -187,7 +188,9 @@ export default function AdminHome() {
   const textColor = isDark ? '#ffffff' : '#1e293b';
   const mutedText = isDark ? '#8f9a8f' : '#64748b';
   const borderColor = isDark ? '#2d3530' : '#e2e8f0';
-  const accentGreen = '#4a9e72';
+  // Literal hex (mirrors --accent in globals.css) — recharts passes this
+  // through to SVG fill/stroke attributes, which don't resolve CSS vars.
+  const accentGreen = accentTokens.accent;
   const donutTrack = isDark ? '#2a2f2a' : '#e2e8f0';
 
   // Calculate total agreements and growth for display based on period
@@ -275,7 +278,7 @@ export default function AdminHome() {
                 <div style={{
                   width: '24px',
                   height: '24px',
-                  backgroundColor: '#4a9e72',
+                  backgroundColor: 'var(--accent)',
                   borderRadius: '6px'
                 }}></div>
                 <span style={{ fontSize: '14px', fontWeight: '600', color: textColor }}>Clients</span>
@@ -741,7 +744,7 @@ export default function AdminHome() {
                     borderRadius: '6px',
                     border: 'none',
                     backgroundColor: timePeriod === period
-                      ? (isDark ? accentGreen : '#3d8560')
+                      ? (isDark ? accentGreen : 'var(--accent)')
                       : 'transparent',
                     color: timePeriod === period ? '#ffffff' : mutedText,
                     fontSize: '13px',
