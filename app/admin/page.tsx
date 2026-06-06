@@ -170,8 +170,9 @@ export default function AdminHome() {
   const cardBorderStrong = isDark ? '#3a443d' : '#d3dce6';
   const cardShadow = isDark ? '0 1px 3px rgba(0, 0, 0, 0.45)' : '0 1px 3px rgba(15, 23, 42, 0.10)';
   const cardPad = 'clamp(18px, 4vw, 26px)';
-  // Neutral fill for prior-month bars; the current month is drawn in accent.
-  const neutralBar = isDark ? '#3a443d' : '#cbd5e1';
+  // Neutral fill for prior-month / secondary chart series. Lightened a few
+  // shades so history reads clearly against cardSurface; current month stays accent.
+  const neutralBar = isDark ? '#5e7065' : '#dce4ec';
 
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
@@ -563,7 +564,7 @@ export default function AdminHome() {
                         <Bar
                           yAxisId="left"
                           dataKey="eventCount"
-                          fill={accentGreen}
+                          fill={neutralBar}
                           radius={[4, 4, 0, 0]}
                           name="eventCount"
                         />
@@ -573,7 +574,7 @@ export default function AdminHome() {
                           dataKey="totalHours"
                           stroke={accentGreen}
                           strokeWidth={2}
-                          dot={{ fill: accentGreen, r: 3 }}
+                          dot={{ fill: neutralBar, r: 3 }}
                           name="totalHours"
                         />
                       </ComposedChart>
