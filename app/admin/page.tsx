@@ -40,37 +40,6 @@ const AGREEMENT_STATUS_LABELS: Record<string, string> = {
   VOID: 'Void'
 };
 
-function StatusDonut({
-  fraction,
-  accent,
-  track
-}: {
-  fraction: number;
-  accent: string;
-  track: string;
-}) {
-  const r = 9;
-  const circumference = 2 * Math.PI * r;
-  const f = Math.min(1, Math.max(0, fraction));
-  const dash = f * circumference;
-  return (
-    <svg width={28} height={28} viewBox="0 0 28 28" aria-hidden style={{ flexShrink: 0 }}>
-      <circle cx="14" cy="14" r={r} fill="none" stroke={track} strokeWidth={2.5} />
-      <circle
-        cx="14"
-        cy="14"
-        r={r}
-        fill="none"
-        stroke={accent}
-        strokeWidth={2.5}
-        strokeDasharray={`${dash} ${circumference}`}
-        strokeLinecap="round"
-        transform="rotate(-90 14 14)"
-      />
-    </svg>
-  );
-}
-
 interface Warning {
   id: string;
   status: string;
@@ -191,8 +160,6 @@ export default function AdminHome() {
   // Literal hex (mirrors --accent in globals.css) — recharts passes this
   // through to SVG fill/stroke attributes, which don't resolve CSS vars.
   const accentGreen = accentTokens.accent;
-  const donutTrack = isDark ? '#2a2f2a' : '#e2e8f0';
-
   // Calculate total agreements and growth for display based on period
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
@@ -394,42 +361,92 @@ export default function AdminHome() {
                 }}>
                   {activeTotal}
                 </div>
-                <div className="admin-overview-status-grid">
-                  {activeByStatus.filter((row) => row.count > 0).map((row) => (
-                    <div
-                      key={row.status}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '14px 0',
-                        borderBottom: `1px solid ${borderColor}`
-                      }}
-                    >
-                      <StatusDonut
-                        fraction={activeTotal > 0 ? row.count / activeTotal : 0}
-                        accent={accentGreen}
-                        track={donutTrack}
-                      />
-                      <span style={{
-                        flex: 1,
-                        fontSize: '14px',
-                        color: textColor,
-                        minWidth: 0
-                      }}>
-                        {AGREEMENT_STATUS_LABELS[row.status] ?? row.status}
-                      </span>
-                      <span style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: textColor,
-                        fontVariantNumeric: 'tabular-nums'
-                      }}>
-                        {row.count} / {activeTotal}
-                      </span>
+                {(() => {
+                  // Render the breakdown as a single segmented bar + legend.
+                  // Order is fixed left→right so the eye can track proportion
+                  // over time even as counts shift: Completed → Live → Signed
+                  // → Draft → anything else (e.g. Sent, Cancelled) folded into
+                  // the neutral tail.
+                  const SEGMENT_ORDER = ['COMPLETED', 'LIVE', 'SIGNED', 'DRAFT'] as const;
+                  const segmentColor: Record<string, string> = {
+                    COMPLETED: 'var(--accent)',
+                    LIVE: 'var(--accent-soft)',
+                    SIGNED: 'var(--accent-faint)',
+                    DRAFT: borderColor,
+                  };
+                  const byStatus = new Map(activeByStatus.map((r) => [r.status, r.count]));
+                  const rest = activeByStatus.filter((r) => !SEGMENT_ORDER.includes(r.status as typeof SEGMENT_ORDER[number]));
+                  const ordered = [
+                    ...SEGMENT_ORDER.map((s) => ({ status: s, count: byStatus.get(s) ?? 0, color: segmentColor[s] })),
+                    ...rest.map((r) => ({ status: r.status, count: r.count, color: borderColor })),
+                  ];
+                  const denom = activeTotal > 0 ? activeTotal : 1;
+                  return (
+                    <div style={{ marginBottom: '4px' }}>
+                      <div
+                        role="img"
+                        aria-label={`Status breakdown out of ${activeTotal}`}
+                        style={{
+                          display: 'flex',
+                          width: '100%',
+                          height: '8px',
+                          borderRadius: '9999px',
+                          overflow: 'hidden',
+                          backgroundColor: borderColor,
+                          marginBottom: '14px',
+                        }}
+                      >
+                        {ordered.filter((s) => s.count > 0).map((s) => (
+                          <div
+                            key={s.status}
+                            title={`${AGREEMENT_STATUS_LABELS[s.status] ?? s.status}: ${s.count}`}
+                            style={{
+                              width: `${(s.count / denom) * 100}%`,
+                              backgroundColor: s.color,
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <div className="admin-overview-status-grid">
+                        {ordered.filter((s) => s.count > 0).map((s) => (
+                          <div
+                            key={s.status}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              padding: '6px 0',
+                            }}
+                          >
+                            <span
+                              aria-hidden
+                              style={{
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '2px',
+                                backgroundColor: s.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span style={{ flex: 1, fontSize: '13px', color: mutedText, minWidth: 0 }}>
+                              {AGREEMENT_STATUS_LABELS[s.status] ?? s.status}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '13px',
+                                fontWeight: 400,
+                                color: textColor,
+                                fontVariantNumeric: 'tabular-nums',
+                              }}
+                            >
+                              {s.count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
 
                 <div style={{
                   marginTop: '4px',
@@ -620,15 +637,26 @@ export default function AdminHome() {
                   </svg>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {upcomingEvents.length > 0 ? (
-                    upcomingEvents.map((event) => {
+                    upcomingEvents.map((event, idx) => {
                       const eventDate = new Date(event.eventDate);
-                      const dateStr = eventDate.toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric'
-                      });
+                      const monthLabel = eventDate.toLocaleDateString('en-US', { month: 'short' });
+                      const dayLabel = eventDate.toLocaleDateString('en-US', { day: 'numeric' });
+                      // Split out the "c/o ..." suffix so the lead-in name reads
+                      // as the primary subject and the care-of contact recedes.
+                      const coMatch = event.clientName.match(/^(.*?)(\s+c\/o\s+.*)$/i);
+                      const primaryName = coMatch ? coMatch[1] : event.clientName;
+                      const coSuffix = coMatch ? coMatch[2].trim() : '';
+                      const secondaryLine = [event.eventType, event.eventLocation].filter(Boolean).join(' · ');
+                      const relativeLabel = event.daysUntil === 0
+                        ? 'today'
+                        : event.daysUntil === 1
+                          ? 'tomorrow'
+                          : `in ${event.daysUntil} days`;
+                      // Only the next-up event gets accent treatment on its
+                      // time; the rest stay in standard text color.
+                      const isSoonest = idx === 0;
                       return (
                         <div
                           key={event.id}
@@ -642,39 +670,94 @@ export default function AdminHome() {
                             }
                           }}
                           style={{
-                            padding: '12px',
-                            borderRadius: '8px',
-                            border: `1px solid ${borderColor}`,
-                            backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '14px',
+                            padding: '12px 4px',
+                            borderTop: idx === 0 ? 'none' : `1px solid ${borderColor}`,
                             cursor: 'pointer',
-                            transition: 'all 0.2s'
+                            transition: 'background-color 0.15s',
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = isDark ? '#080c08' : '#f8fafc';
+                            e.currentTarget.style.backgroundColor = 'transparent';
                           }}
                         >
-                          <div style={{ fontSize: '14px', fontWeight: '600', color: textColor, marginBottom: '4px' }}>
-                            {dateStr}{event.eventStartTime ? `, ${event.eventStartTime}` : ''}
-                          </div>
-                          <div style={{ fontSize: '13px', color: textColor, marginBottom: '2px' }}>
-                            {event.clientName}
-                          </div>
-                          {event.eventType && (
-                            <div style={{ fontSize: '12px', color: mutedText, marginBottom: '2px' }}>
-                              {event.eventType}
+                          {/* Date block */}
+                          <div style={{
+                            flexShrink: 0,
+                            width: '40px',
+                            textAlign: 'center',
+                            paddingTop: '2px',
+                          }}>
+                            <div style={{
+                              fontSize: '10px',
+                              fontWeight: 500,
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                              color: mutedText,
+                              lineHeight: 1,
+                            }}>
+                              {monthLabel}
                             </div>
-                          )}
-                          {event.eventLocation && (
-                            <div style={{ fontSize: '11px', color: mutedText, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <UIcon name="marker" style={{ fontSize: '11px', flexShrink: 0 }} />
-                              {event.eventLocation}
+                            <div style={{
+                              fontSize: '20px',
+                              fontWeight: 500,
+                              color: textColor,
+                              lineHeight: 1.1,
+                              marginTop: '4px',
+                              fontVariantNumeric: 'tabular-nums',
+                            }}>
+                              {dayLabel}
                             </div>
-                          )}
-                          <div style={{ fontSize: '11px', color: accentGreen, fontWeight: '600' }}>
-                            {event.daysUntil === 0 ? 'Today' : `${event.daysUntil} day${event.daysUntil === 1 ? '' : 's'} away`}
+                          </div>
+
+                          {/* Middle: client + secondary line */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '14px', color: textColor, lineHeight: 1.3 }}>
+                              <span style={{ fontWeight: 500 }}>{primaryName}</span>
+                              {coSuffix && (
+                                <span style={{ color: mutedText, fontWeight: 400 }}> {coSuffix}</span>
+                              )}
+                            </div>
+                            {secondaryLine && (
+                              <div style={{
+                                fontSize: '12px',
+                                color: mutedText,
+                                marginTop: '4px',
+                                lineHeight: 1.3,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {secondaryLine}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right: time + relative */}
+                          <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                            {event.eventStartTime && (
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                color: isSoonest ? 'var(--accent)' : textColor,
+                                lineHeight: 1.2,
+                                fontVariantNumeric: 'tabular-nums',
+                              }}>
+                                {event.eventStartTime}
+                              </div>
+                            )}
+                            <div style={{
+                              fontSize: '11px',
+                              color: mutedText,
+                              marginTop: '4px',
+                              lineHeight: 1.2,
+                            }}>
+                              {relativeLabel}
+                            </div>
                           </div>
                         </div>
                       );
