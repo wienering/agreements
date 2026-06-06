@@ -438,7 +438,7 @@ export default function TemplatesPage() {
           </div>
         )}
 
-        {/* Add/Edit Form — viewport modal */}
+        {/* Add/Edit Form â€” viewport modal */}
         {showAddForm && (
           <div
             style={{
@@ -725,7 +725,7 @@ export default function TemplatesPage() {
                     color: mutedText, 
                     fontSize: '14px' 
                   }}>
-                    Version {viewingTemplate.version} • {viewingTemplate.htmlContent.length} characters
+                    Version {viewingTemplate.version} â€¢ {viewingTemplate.htmlContent.length} characters
                   </p>
                 </div>
                 <button
@@ -744,7 +744,7 @@ export default function TemplatesPage() {
                   }}
                   title="Close modal"
                 >
-                  ×
+                  Ã—
                 </button>
               </div>
 

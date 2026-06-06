@@ -191,7 +191,7 @@ export function RichTextPreview({
     processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.email\s*\}\}/g, secondChip(sEmail));
     processedHtml = processedHtml.replace(/\{\{\s*secondSigner\.phone\s*\}\}/g, secondChip(sPhone));
 
-    // Individual primary name tokens — auto-expand to both names when a second signer is enabled.
+    // Individual primary name tokens â€” auto-expand to both names when a second signer is enabled.
     processedHtml = processedHtml.replace(/\{\{\s*client\.firstName\s*\}\}/g, clientChip(firstNames));
     processedHtml = processedHtml.replace(/\{\{\s*client\.lastName\s*\}\}/g, clientChip(lastNames));
     processedHtml = processedHtml.replace(/\{\{\s*client\.email\s*\}\}/g, clientChip(email));
