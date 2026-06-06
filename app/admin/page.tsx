@@ -222,90 +222,97 @@ export default function AdminHome() {
               </h1>
             </div>
 
-            {/* Quick actions: ghost buttons + primary "+ New agreement" */}
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              flexWrap: 'wrap',
-              alignItems: 'center'
-            }}>
-              <button
-                type="button"
-                onClick={() => router.push('/admin/clients')}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: `1px solid ${borderColor}`,
-                  color: mutedText,
-                  borderRadius: '6px',
-                  padding: '8px 14px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s, color 0.15s, border-color 0.15s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = textColor;
-                  e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = mutedText;
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                Clients
-              </button>
+            {/* Quick actions: ghost buttons + primary "+ New agreement".
+                All three share headerBtnBase so the ghost border doesn't
+                shift their outer footprint and the corner radius / height
+                stay identical to the solid button. */}
+            {(() => {
+              const headerBtnBase: React.CSSProperties = {
+                boxSizing: 'border-box',
+                height: '34px',
+                padding: '0 14px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                lineHeight: 1,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                transition: 'background-color 0.15s, color 0.15s, border-color 0.15s, filter 0.15s',
+              };
+              const ghostBtn: React.CSSProperties = {
+                ...headerBtnBase,
+                backgroundColor: 'transparent',
+                border: `1px solid ${borderColor}`,
+                color: mutedText,
+                fontWeight: 500,
+              };
+              const primaryBtn: React.CSSProperties = {
+                ...headerBtnBase,
+                backgroundColor: 'var(--accent)',
+                border: '1px solid var(--accent)',
+                color: '#0a0f0c',
+                fontWeight: 600,
+              };
+              return (
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/admin/clients')}
+                    style={ghostBtn}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = textColor;
+                      e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = mutedText;
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    Clients
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => router.push('/admin/templates')}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: `1px solid ${borderColor}`,
-                  color: mutedText,
-                  borderRadius: '6px',
-                  padding: '8px 14px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s, color 0.15s, border-color 0.15s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = textColor;
-                  e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = mutedText;
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                Templates
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/admin/templates')}
+                    style={ghostBtn}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = textColor;
+                      e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = mutedText;
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    Templates
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => router.push('/admin/agreements')}
-                style={{
-                  backgroundColor: 'var(--accent)',
-                  border: '1px solid var(--accent)',
-                  color: '#0a0f0c',
-                  borderRadius: '6px',
-                  padding: '8px 14px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'filter 0.15s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.filter = 'brightness(0.93)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.filter = 'none';
-                }}
-                title="Create a new agreement"
-              >
-                + New agreement
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/admin/agreements')}
+                    style={primaryBtn}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'brightness(0.93)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'none';
+                    }}
+                    title="Create a new agreement"
+                  >
+                    + New agreement
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
