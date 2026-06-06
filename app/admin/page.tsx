@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, Cell } from 'recharts';
 import { UIcon } from '../components/UIcon';
 import { accentTokens } from '../lib/adminTheme';
 
@@ -160,25 +160,21 @@ export default function AdminHome() {
   // Literal hex (mirrors --accent in globals.css) — recharts passes this
   // through to SVG fill/stroke attributes, which don't resolve CSS vars.
   const accentGreen = accentTokens.accent;
-  // Calculate total agreements and growth for display based on period
+
+  // Overview-only card chrome: a slightly lighter surface than the page
+  // background plus a marginally stronger border so cards read as raised
+  // panels. Scoped to this page (not the shared cardBg/borderColor) so no
+  // other admin page is affected. cardPad uses clamp so the roomier desktop
+  // padding tightens on narrow phones, avoiding horizontal overflow at 375px.
+  const cardSurface = isDark ? '#1f241f' : '#ffffff';
+  const cardBorderStrong = isDark ? '#3a443d' : '#d3dce6';
+  const cardShadow = isDark ? '0 1px 3px rgba(0, 0, 0, 0.45)' : '0 1px 3px rgba(15, 23, 42, 0.10)';
+  const cardPad = 'clamp(18px, 4vw, 26px)';
+  // Neutral fill for prior-month bars; the current month is drawn in accent.
+  const neutralBar = isDark ? '#3a443d' : '#cbd5e1';
+
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
-  
-  let growthText = '';
-  let growthValue = 0;
-  if (chartData.length >= 2) {
-    const currentPeriod = chartData[chartData.length - 1]?.count || 0;
-    const previousPeriod = chartData[chartData.length - 2]?.count || 0;
-    
-    if (previousPeriod > 0) {
-      growthValue = Math.round(((currentPeriod - previousPeriod) / previousPeriod) * 100);
-    } else if (currentPeriod > 0) {
-      growthValue = 100;
-    }
-    
-    const periodLabel = timePeriod === 'week' ? 'last week' : timePeriod === 'year' ? 'last year' : 'last month';
-    growthText = `${growthValue >= 0 ? '+' : ''}${growthValue}% vs ${periodLabel}`;
-  }
 
   const activeTotal = stats?.activeAgreements?.total ?? 0;
   const activeByStatus = stats?.activeAgreements?.byStatus ?? [];
@@ -321,19 +317,21 @@ export default function AdminHome() {
           {loading ? (
             <>
               <div style={{
-                backgroundColor: cardBg,
+                backgroundColor: cardSurface,
                 borderRadius: '12px',
-                padding: '24px',
-                border: `1px solid ${borderColor}`,
+                padding: cardPad,
+                border: `1px solid ${cardBorderStrong}`,
+                boxShadow: cardShadow,
                 minHeight: '220px'
               }}>
                 <div style={{ color: mutedText }}>Loading...</div>
               </div>
               <div style={{
-                backgroundColor: cardBg,
+                backgroundColor: cardSurface,
                 borderRadius: '12px',
-                padding: '24px',
-                border: `1px solid ${borderColor}`,
+                padding: cardPad,
+                border: `1px solid ${cardBorderStrong}`,
+                boxShadow: cardShadow,
                 minHeight: '220px'
               }}>
                 <div style={{ color: mutedText }}>Loading...</div>
@@ -342,11 +340,11 @@ export default function AdminHome() {
           ) : stats ? (
             <>
               <div style={{
-                backgroundColor: cardBg,
+                backgroundColor: cardSurface,
                 borderRadius: '12px',
-                padding: '22px 24px',
-                border: `1px solid ${borderColor}`,
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                padding: cardPad,
+                border: `1px solid ${cardBorderStrong}`,
+                boxShadow: cardShadow,
                 minWidth: 0
               }}>
                 <h3 style={{
@@ -612,11 +610,11 @@ export default function AdminHome() {
               </div>
 
               <div style={{
-                backgroundColor: cardBg,
+                backgroundColor: cardSurface,
                 borderRadius: '12px',
-                padding: '20px',
-                border: `1px solid ${borderColor}`,
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                padding: cardPad,
+                border: `1px solid ${cardBorderStrong}`,
+                boxShadow: cardShadow,
                 minWidth: 0
               }}>
                 <div style={{
@@ -782,12 +780,12 @@ export default function AdminHome() {
 
         {/* Agreements over time — compact */}
         <div style={{
-          backgroundColor: cardBg,
+          backgroundColor: cardSurface,
           borderRadius: '12px',
-          padding: '16px 20px',
-          border: `1px solid ${borderColor}`,
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          marginBottom: '24px'
+          padding: cardPad,
+          border: `1px solid ${cardBorderStrong}`,
+          boxShadow: cardShadow,
+          marginBottom: '28px'
         }}>
           <div style={{
             display: 'flex',
@@ -806,11 +804,11 @@ export default function AdminHome() {
               }}>
                 Agreements
               </h2>
-              <div style={{ fontSize: '22px', fontWeight: '700', color: textColor, marginBottom: '2px' }}>
+              <div style={{ fontSize: '22px', fontWeight: '700', color: textColor, marginBottom: '4px' }}>
                 {totalAgreementsDisplay}
               </div>
-              <div style={{ fontSize: '12px', color: mutedText }}>
-                {growthText || 'No comparison available'}
+              <div style={{ fontSize: '12px', color: mutedText, lineHeight: 1.4 }}>
+                June is mid-cycle — pacing roughly in line with May.
               </div>
             </div>
 
@@ -859,7 +857,14 @@ export default function AdminHome() {
                     color: textColor
                   }}
                 />
-                <Bar dataKey="count" fill={accentGreen} radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={entry.month ?? index}
+                      fill={index === chartData.length - 1 ? accentGreen : neutralBar}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -877,13 +882,13 @@ export default function AdminHome() {
         </div>
 
         {warnings && warnings.summary.totalWarnings > 0 && (
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '28px' }}>
             <div style={{
-              backgroundColor: cardBg,
+              backgroundColor: cardSurface,
               borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${borderColor}`,
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              padding: cardPad,
+              border: `1px solid ${cardBorderStrong}`,
+              boxShadow: cardShadow
             }}>
               <div style={{
                 display: 'flex',

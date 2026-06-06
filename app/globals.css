@@ -48,8 +48,8 @@ body {
 .admin-overview-top {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 28px;
+  margin-bottom: 28px;
 }
 
 @media (max-width: 1024px) {
