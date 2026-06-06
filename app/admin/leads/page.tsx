@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { AdminButton, AdminLink } from '../../components/AdminButton';
 
 const STAGES: { key: string; label: string }[] = [
   { key: 'QUOTE_REQUESTED', label: 'Quote Requested' },
@@ -330,28 +329,9 @@ export default function LeadsPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button
-              onClick={() => setShowAddLead(true)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: adminHeaderAddButton.bg,
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
-              }}
-            >
+            <AdminButton variant="primary" onClick={() => setShowAddLead(true)}>
               + Add Lead
-            </button>
+            </AdminButton>
             <select
               value={filterStage}
               onChange={(e) => setFilterStage(e.target.value)}
@@ -373,7 +353,7 @@ export default function LeadsPage() {
         </div>
 
         {followUpLeads.length > 0 && (
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: isDark ? '#164a2e' : '#ecfdf5', borderRadius: '12px', border: `1px solid ${isDark ? 'var(--accent)' : '#9cb8aa'}` }}>
+          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: cardBg, borderRadius: '12px', border: `1px solid ${borderColor}` }}>
             <h2 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
               Needs Follow-up ({followUpLeads.length})
             </h2>
@@ -389,48 +369,43 @@ export default function LeadsPage() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
+                    flexWrap: 'wrap',
                   }}
                 >
                   <span style={{ fontWeight: '600', color: textColor }}>{lead.firstName} {lead.lastName}</span>
                   <span style={{ color: mutedText, fontSize: '13px' }}>{lead.email}</span>
                   <span style={{ fontSize: '12px', color: mutedText }}>{STAGES.find((s) => s.key === lead.stage)?.label}</span>
                   <span style={{ fontSize: '12px', color: mutedText }}>Last: {formatDate(lead.lastContactedAt)}</span>
-                  <Link
-                    href={`/admin/agreements`}
-                    style={{ fontSize: '13px', color: 'var(--accent)', textDecoration: 'none' }}
-                  >
+                  <AdminLink href="/admin/agreements" variant="ghost" size="compact">
                     View
-                  </Link>
+                  </AdminLink>
                   {editingLead?.id === lead.id ? (
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <input
                         type="date"
                         value={nextFollowUp}
                         onChange={(e) => setNextFollowUp(e.target.value)}
                         style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                       />
-                      <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
                         Save
-                      </button>
-                      <button onClick={() => { setEditingLead(null); setNextFollowUp(''); }} style={{ padding: '4px 12px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      </AdminButton>
+                      <AdminButton variant="ghost" size="compact" onClick={() => { setEditingLead(null); setNextFollowUp(''); }}>
                         Cancel
-                      </button>
+                      </AdminButton>
                     </div>
                   ) : (
-                    <>
-                      <Link
-                        href={getQuoteUrl(lead)}
-                        style={{ padding: '4px 10px', backgroundColor: '#8b5cf6', color: 'white', textDecoration: 'none', borderRadius: '6px', fontSize: '12px', display: 'inline-block' }}
-                      >
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <AdminLink href={getQuoteUrl(lead)} variant="primary" size="compact">
                         Create quote
-                      </Link>
-                      <button onClick={() => setEditingLead(lead)} style={{ padding: '4px 10px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                      </AdminLink>
+                      <AdminButton variant="ghost" size="compact" onClick={() => setEditingLead(lead)}>
                         Mark contacted
-                      </button>
-                      <button onClick={() => openEditLead(lead)} style={{ padding: '4px 10px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                      </AdminButton>
+                      <AdminButton variant="ghost" size="compact" onClick={() => openEditLead(lead)}>
                         Edit
-                      </button>
-                    </>
+                      </AdminButton>
+                    </div>
                   )}
                 </div>
               ))}
@@ -487,54 +462,54 @@ export default function LeadsPage() {
                       </td>
                       <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.lastContactedAt)}</td>
                       <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.nextFollowUpAt)}</td>
-                      <td style={{ padding: '12px 16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', maxWidth: '100%' }}>
                         {editingLead?.id === lead.id ? (
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <>
                             <input
                               type="date"
                               value={nextFollowUp}
                               onChange={(e) => setNextFollowUp(e.target.value)}
                               style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
                             />
-                            <button onClick={() => handleMarkContacted(lead)} style={{ padding: '4px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
                               Save
-                            </button>
-                            <button onClick={() => { setEditingLead(null); setNextFollowUp(''); }} style={{ padding: '4px 12px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            </AdminButton>
+                            <AdminButton variant="ghost" size="compact" onClick={() => { setEditingLead(null); setNextFollowUp(''); }}>
                               Cancel
-                            </button>
-                          </div>
+                            </AdminButton>
+                          </>
                         ) : (
                           <>
-                            <button onClick={() => setEditingLead(lead)} style={{ padding: '6px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                              Mark contacted
-                            </button>
                             {!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' && (
-                              <button onClick={() => setCreateAgreementLead(lead)} style={{ padding: '6px 12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                              <AdminButton variant="primary" size="compact" onClick={() => setCreateAgreementLead(lead)}>
                                 Create agreement
-                              </button>
+                              </AdminButton>
                             )}
-                            {lead.agreement && (
-                              <Link
-                                href={`/admin/agreements`}
-                                style={{ padding: '6px 12px', backgroundColor: '#6366f1', color: 'white', textDecoration: 'none', borderRadius: '6px', fontSize: '13px', display: 'inline-block' }}
-                              >
-                                View agreement
-                              </Link>
-                            )}
-                            <Link
+                            <AdminLink
                               href={getQuoteUrl(lead)}
-                              style={{ padding: '6px 12px', backgroundColor: '#8b5cf6', color: 'white', textDecoration: 'none', borderRadius: '6px', fontSize: '13px', display: 'inline-block' }}
+                              variant={!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' ? 'ghost' : 'primary'}
+                              size="compact"
                             >
                               Create quote
-                            </Link>
-                            <button onClick={() => openEditLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            </AdminLink>
+                            {lead.agreement && (
+                              <AdminLink href="/admin/agreements" variant="ghost" size="compact">
+                                View agreement
+                              </AdminLink>
+                            )}
+                            <AdminButton variant="ghost" size="compact" onClick={() => setEditingLead(lead)}>
+                              Mark contacted
+                            </AdminButton>
+                            <AdminButton variant="ghost" size="compact" onClick={() => openEditLead(lead)}>
                               Edit
-                            </button>
-                            <button onClick={() => handleDeleteLead(lead)} style={{ padding: '6px 12px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                            </AdminButton>
+                            <AdminButton variant="danger" size="compact" onClick={() => handleDeleteLead(lead)}>
                               Delete
-                            </button>
+                            </AdminButton>
                           </>
                         )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -593,9 +568,9 @@ export default function LeadsPage() {
                   <option key={t.id} value={t.id}>{t.title}</option>
                 ))}
               </select>
-              <button onClick={() => setCreateAgreementLead(null)} style={{ padding: '8px 16px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>
+              <AdminButton variant="ghost" onClick={() => setCreateAgreementLead(null)}>
                 Cancel
-              </button>
+              </AdminButton>
             </div>
           </div>
         )}
@@ -742,20 +717,16 @@ export default function LeadsPage() {
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                  <button
+                  <AdminButton
                     type="button"
+                    variant="ghost"
                     onClick={() => { setShowAddLead(false); setAddLeadError(''); }}
-                    style={{ padding: '10px 20px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
                   >
                     Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={addLeadSaving}
-                    style={{ padding: '10px 20px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '8px', cursor: addLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: addLeadSaving ? 0.7 : 1 }}
-                  >
+                  </AdminButton>
+                  <AdminButton type="submit" variant="primary" disabled={addLeadSaving}>
                     {addLeadSaving ? 'Adding...' : 'Add Lead'}
-                  </button>
+                  </AdminButton>
                 </div>
               </form>
             </div>
@@ -904,20 +875,16 @@ export default function LeadsPage() {
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                  <button
+                  <AdminButton
                     type="button"
+                    variant="ghost"
                     onClick={() => { setEditLead(null); setEditLeadError(''); }}
-                    style={{ padding: '10px 20px', backgroundColor: mutedText, color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
                   >
                     Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={editLeadSaving}
-                    style={{ padding: '10px 20px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', cursor: editLeadSaving ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '600', opacity: editLeadSaving ? 0.7 : 1 }}
-                  >
+                  </AdminButton>
+                  <AdminButton type="submit" variant="primary" disabled={editLeadSaving}>
                     {editLeadSaving ? 'Saving...' : 'Save Changes'}
-                  </button>
+                  </AdminButton>
                 </div>
               </form>
             </div>

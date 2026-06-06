@@ -116,6 +116,36 @@ body {
   }
 }
 
+/* Admin button system — shared geometry; beats global mobile button !important */
+.admin-btn {
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .admin-btn {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+  }
+
+  .admin-btn.admin-btn--compact {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+}
+
 .admin-overview-status-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { adminTheme } from '../lib/adminTheme';
 import { UIcon } from '../components/UIcon';
+import { AdminButton } from '../components/AdminButton';
 
 export default function AdminLayout({
   children,
@@ -223,34 +224,15 @@ export default function AdminLayout({
 
           {/* Logout Button */}
           <div>
-            <button
+            <AdminButton
+              variant="danger"
+              fullWidth
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
-              style={{
-                width: '100%',
-                padding: '10px 20px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'background-color 0.2s',
-              }}
               title="Sign out of admin dashboard"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#b91c1c';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#dc2626';
-              }}
             >
               <UIcon name="sign-out" style={{ fontSize: '16px' }} />
               Logout
-            </button>
+            </AdminButton>
           </div>
           <p style={{ margin: '12px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.35 }}>
             <a

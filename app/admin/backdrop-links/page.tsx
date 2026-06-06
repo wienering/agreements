@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
-import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { AdminButton } from '../../components/AdminButton';
 import { UIcon } from '../../components/UIcon';
 
 interface BackdropLink {
@@ -317,28 +317,9 @@ export default function BackdropLinksPage() {
             </p>
           </div>
 
-          <button
-            onClick={handleAdd}
-            style={{
-              backgroundColor: adminHeaderAddButton.bg,
-              color: 'white',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
-            }}
-          >
+          <AdminButton variant="primary" onClick={handleAdd}>
             + Add Backdrop Link
-          </button>
+          </AdminButton>
         </div>
 
         {/* Backdrop Links List */}
@@ -539,34 +520,14 @@ export default function BackdropLinksPage() {
                           >
                             View Hub →
                           </a>
-                          <button
+                          <AdminButton
+                            variant="ghost"
+                            size="compact"
                             onClick={() => copyHubLink(link.url, link.id)}
-                            style={{
-                              backgroundColor: copiedId === link.id ? 'var(--accent)' : 'var(--accent)',
-                              color: 'white',
-                              border: 'none',
-                              padding: '6px 10px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              transition: 'background-color 0.2s',
-                              whiteSpace: 'nowrap',
-                              width: 'fit-content'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (copiedId !== link.id) {
-                                e.currentTarget.style.backgroundColor = '#047857';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (copiedId !== link.id) {
-                                e.currentTarget.style.backgroundColor = 'var(--accent)';
-                              }
-                            }}
+                            style={{ width: 'fit-content' }}
                           >
                             {copiedId === link.id ? '✓ Copied' : 'Copy Hub Link'}
-                          </button>
+                          </AdminButton>
                         </div>
                       ) : (
                         <span style={{ color: mutedText, fontSize: '13px' }}>
@@ -576,79 +537,27 @@ export default function BackdropLinksPage() {
                     </td>
                     <td style={{ padding: '16px' }}>
                       <div className="action-buttons" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                        <button
+                        <AdminButton
+                          variant="ghost"
+                          size="compact"
                           onClick={() => copyLink(link.url, link.id)}
-                          style={{
-                            backgroundColor: copiedId === link.id ? 'var(--accent)' : '#6b7280',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (copiedId !== link.id) {
-                              e.currentTarget.style.backgroundColor = '#4b5563';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (copiedId !== link.id) {
-                              e.currentTarget.style.backgroundColor = '#6b7280';
-                            }
-                          }}
                         >
                           {copiedId === link.id ? '✓ Copied' : 'Copy Link'}
-                        </button>
-                        <button
+                        </AdminButton>
+                        <AdminButton
+                          variant="ghost"
+                          size="compact"
                           onClick={() => handleEdit(link)}
-                          style={{
-                            backgroundColor: '#f59e0b',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#d97706';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f59e0b';
-                          }}
                         >
                           Edit
-                        </button>
-                        <button
+                        </AdminButton>
+                        <AdminButton
+                          variant="danger"
+                          size="compact"
                           onClick={() => handleDelete(link.id)}
-                          style={{
-                            backgroundColor: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#dc2626';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#ef4444';
-                          }}
                         >
                           Delete
-                        </button>
+                        </AdminButton>
                       </div>
                     </td>
                   </tr>
@@ -774,52 +683,23 @@ export default function BackdropLinksPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
+                <AdminButton
+                  variant="ghost"
+                  disabled={saving}
                   onClick={() => {
                     setShowAddModal(false);
                     setFormData({ name: '', url: '', displayOrder: 0 });
                   }}
-                  disabled={saving}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: mutedText,
-                    border: `1px solid ${borderColor}`,
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    opacity: saving ? 0.5 : 1
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={handleSave}
                   disabled={saving || !formData.name || !formData.url}
-                  style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    cursor: (saving || !formData.name || !formData.url) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    opacity: (saving || !formData.name || !formData.url) ? 0.5 : 1,
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!saving && formData.name && formData.url) {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  }}
                 >
                   {saving ? 'Saving...' : editingLink ? 'Update' : 'Add'}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>

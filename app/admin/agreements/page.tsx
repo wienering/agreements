@@ -8,7 +8,13 @@ import { useLockBodyScroll } from '@/lib/useLockBodyScroll';
 import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import SearchableSelect from '../../components/SearchableSelect';
-import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { AdminButton } from '../../components/AdminButton';
+import {
+  StatusBadge,
+  agreementStatusToBadgeVariant,
+  paymentStatusToBadgeVariant,
+  getStatusBadgeStyles,
+} from '../../components/StatusBadge';
 import { UIcon } from '../../components/UIcon';
 
 interface Agreement {
@@ -708,48 +714,6 @@ const normalizePaymentStatus = (value?: string | null) => {
     
     const warning = warningData.warnings.find(w => w.id === agreement.id);
     return warning?.warningType || null;
-  };
-
-  // Get payment status styling
-  const getPaymentStatusStyle = (paymentStatus?: string) => {
-    if (!paymentStatus) {
-      return {
-        color: mutedText,
-        backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9'
-      };
-    }
-    
-    const statusLower = paymentStatus.toLowerCase();
-    if (statusLower.includes('paid') && !statusLower.includes('deposit')) {
-      return {
-        color: 'var(--accent)',
-        backgroundColor: '#f0fdf4',
-        border: '1px solid #bbf7d0'
-      };
-    } else if (statusLower.includes('deposit')) {
-      return {
-        color: '#d97706',
-        backgroundColor: '#fffbeb',
-        border: '1px solid #fde68a'
-      };
-    } else if (statusLower.includes('not paid') || statusLower.includes('unpaid')) {
-      return {
-        color: '#dc2626',
-        backgroundColor: '#fef2f2',
-        border: '1px solid #fecaca'
-      };
-    } else if (statusLower.includes('invoice issued')) {
-      return {
-        color: isDark ? '#c4b5fd' : '#5b21b6',
-        backgroundColor: isDark ? '#2e1065' : '#f5f3ff',
-        border: isDark ? '1px solid #6d28d9' : '1px solid #ddd6fe'
-      };
-    }
-    
-    return {
-      color: mutedText,
-      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9'
-    };
   };
 
   // Extract attendant ID from backdrop link URL
@@ -1826,55 +1790,24 @@ const normalizePaymentStatus = (value?: string | null) => {
               gap: '12px',
               flexWrap: 'wrap'
             }}>
-              <button
+              <AdminButton
+                variant="ghost"
+                size="compact"
                 onClick={() => router.push('/admin/agreements/archived')}
-                style={{
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#4b5563';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#6b7280';
-                }}
                 title="View archived agreements (includes completed and cancelled)"
               >
                 Archived
-              </button>
+              </AdminButton>
             </div>
           </div>
-          <button
+          <AdminButton
+            variant="primary"
+            fullWidth={isMobile}
             onClick={() => setShowCreateForm(true)}
-            style={{
-              backgroundColor: adminHeaderAddButton.bg,
-              color: 'white',
-              border: 'none',
-              padding: isMobile ? '12px 20px' : '10px 20px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              width: isMobile ? '100%' : 'auto',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
-            }}
             title="Create a new agreement"
           >
             + New Agreement
-          </button>
+          </AdminButton>
         </div>
 
         {/* Search Bar */}
@@ -1962,58 +1895,20 @@ const normalizePaymentStatus = (value?: string | null) => {
           </span>
           {['ALL', 'DRAFT', 'LIVE', 'SENT', 'SIGNED', 'COMPLETED', 'CANCELLED'].map((status) => {
             const isActive = statusFilter === status;
-            const getStatusColor = (s: string) => {
-              switch (s) {
-                case 'DRAFT': return '#dc2626';
-                case 'LIVE': return 'var(--accent)';
-                case 'SENT': return 'var(--accent)';
-                case 'SIGNED': return 'var(--accent)';
-                case 'COMPLETED': return '#7c3aed';
-                case 'CANCELLED': return '#dc2626';
-                default: return '#6b7280';
-              }
-            };
-            const getStatusBgColor = (s: string) => {
-              switch (s) {
-                case 'DRAFT': return '#fef2f2';
-                case 'LIVE': return '#f0fdf4';
-                case 'SENT': return '#eff6ff';
-                case 'SIGNED': return '#eff6ff';
-                case 'COMPLETED': return '#faf5ff';
-                case 'CANCELLED': return '#fef2f2';
-                default: return isDark ? '#1a1d1a' : '#f1f5f9';
-              }
-            };
-            
+            const filterStyle = isActive
+              ? { ...getStatusBadgeStyles('accent', isDark), borderRadius: '6px', fontWeight: 600 }
+              : { ...getStatusBadgeStyles('neutral', isDark), borderRadius: '6px' };
+
             return (
-              <button
+              <AdminButton
                 key={status}
+                size="compact"
+                variant="ghost"
                 onClick={() => setStatusFilter(status)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  border: `1px solid ${isActive ? getStatusColor(status) : borderColor}`,
-                  backgroundColor: isActive ? getStatusBgColor(status) : (isDark ? '#1a1d1a' : '#f1f5f9'),
-                  color: isActive ? getStatusColor(status) : textColor,
-                  fontSize: '13px',
-                  fontWeight: isActive ? '600' : '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = isDark ? '#2d3530' : '#e2e8f0';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
-                  }
-                }}
+                style={filterStyle}
               >
                 {status}
-              </button>
+              </AdminButton>
             );
           })}
         </div>
@@ -2288,36 +2183,20 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
+                <AdminButton
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowCreateForm(false)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: mutedText,
-                    border: `1px solid ${borderColor}`,
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
                   type="submit"
+                  variant="primary"
                   disabled={loading}
-                  style={{
-                    backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
-                  }}
                 >
                   {loading ? 'Creating...' : 'Create Agreement'}
-                </button>
+                </AdminButton>
               </div>
             </form>
             </div>
@@ -2564,60 +2443,31 @@ const normalizePaymentStatus = (value?: string | null) => {
                       </div>
                     )}
                   </div>
-                  {/* Status badge — same colors and click-to-edit, propagation stopped so row doesn't toggle */}
+                  {/* Status badge — click-to-edit; propagation stopped so row doesn't toggle */}
                   <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingStatus(true);
-                      setEditingStatusAgreementId(agreement.id);
-                      setNewStatus(agreement.status);
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'transparent'; }}
-                    title="Click to edit status"
-                    style={{
-                      fontSize: '12px',
-                      flexShrink: 0,
-                      color: agreement.status === 'DRAFT' ? '#dc2626' :
-                             agreement.status === 'LIVE' ? 'var(--accent)' :
-                             agreement.status === 'SIGNED' ? 'var(--accent)' :
-                             agreement.status === 'COMPLETED' ? '#7c3aed' :
-                             agreement.status === 'CANCELLED' ? '#dc2626' : mutedText,
-                      backgroundColor: agreement.status === 'DRAFT' ? '#fef2f2' :
-                                      agreement.status === 'LIVE' ? '#f0fdf4' :
-                                      agreement.status === 'SIGNED' ? '#eff6ff' :
-                                      agreement.status === 'COMPLETED' ? '#faf5ff' :
-                                      agreement.status === 'CANCELLED' ? '#fef2f2' :
-                                      isDark ? '#1a1d1a' : '#f1f5f9',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      border: '1px solid transparent',
-                      transition: 'border-color 0.2s',
-                      fontWeight: '500'
-                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ display: 'inline-flex', flexShrink: 0 }}
                   >
-                    {agreement.status}
-                  </span>
-                  {/* Payment badge — same styles */}
-                  {agreement.paymentStatus && (
-                    <span
-                      title="Payment status"
-                      style={{
-                        fontSize: '12px',
-                        flexShrink: 0,
-                        ...getPaymentStatusStyle(agreement.paymentStatus),
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontWeight: '500',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px'
+                    <StatusBadge
+                      variant={agreementStatusToBadgeVariant(agreement.status)}
+                      onClick={() => {
+                        setEditingStatus(true);
+                        setEditingStatusAgreementId(agreement.id);
+                        setNewStatus(agreement.status);
                       }}
+                      title="Click to edit status"
+                    >
+                      {agreement.status}
+                    </StatusBadge>
+                  </span>
+                  {agreement.paymentStatus && (
+                    <StatusBadge
+                      variant={paymentStatusToBadgeVariant(agreement.paymentStatus)}
+                      title="Payment status"
                     >
                       <UIcon name="credit-card" style={{ fontSize: '12px' }} />
                       {agreement.paymentStatus}
-                    </span>
+                    </StatusBadge>
                   )}
                 </div>
                 {/* Expanded section — smooth height transition; respects prefers-reduced-motion */}
@@ -2670,288 +2520,104 @@ const normalizePaymentStatus = (value?: string | null) => {
                           flexWrap: 'wrap'
                         }}
                       >
-                  <button
+                  <AdminButton
+                    variant="ghost"
                     onClick={() => handleEditAgreement(agreement)}
-                    style={{
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#047857';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
                     title="Edit agreement content"
                   >
                     Edit
-                  </button>
-                  <button
+                  </AdminButton>
+                  <AdminButton
+                    variant="primary"
                     onClick={() => handleCreateInvoice(agreement)}
                     disabled={!agreement.client.email}
-                    style={{
-                      backgroundColor: !agreement.client.email ? '#9ca3af' : '#8b5cf6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: !agreement.client.email ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (agreement.client.email) {
-                        e.currentTarget.style.backgroundColor = '#7c3aed';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (agreement.client.email) {
-                        e.currentTarget.style.backgroundColor = '#8b5cf6';
-                      }
-                    }}
                     title={!agreement.client.email ? 'Client email is required to create invoice' : 'Create Stripe invoice for this agreement'}
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <UIcon name="credit-card" style={{ fontSize: '14px' }} />
                       Create Invoice
                     </span>
-                  </button>
-                  <button
+                  </AdminButton>
+                  <AdminButton
+                    variant="ghost"
                     onClick={() => {
                       setCopyLinkAgreement(agreement);
                       setShowCopyLinkModal(true);
                     }}
-                    style={{
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
                     title="View agreement options"
                   >
                     View Agreement
-                  </button>
-                  <button
+                  </AdminButton>
+                  <AdminButton
+                    variant="ghost"
                     onClick={() => {
                       setAttendantModalAgreement(agreement);
                       setPhoneVisibilityToggle(agreement.showPhoneNumberAlways || false);
                       setVirtualGreenScreenToggle(agreement.forceVirtualGreenScreen || false);
                       setShowAttendantModal(true);
                     }}
-                    style={{
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
                     title="View attendant page (event details for staff)"
                   >
                     Attendant View
-                  </button>
+                  </AdminButton>
                   {(agreement.status === 'LIVE' || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
-                    <button
+                    <AdminButton
+                      variant="ghost"
                       onClick={() => handleResendEmail(agreement)}
                       disabled={sendingToClient[agreement.id]}
-                      style={{
-                        backgroundColor: sendingToClient[agreement.id] ? '#9ca3af' : '#f59e0b',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: sendingToClient[agreement.id] ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!sendingToClient[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#d97706';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!sendingToClient[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#f59e0b';
-                        }
-                      }}
                       title={`Resend email to client (Previously sent ${agreement.emailSendCount} time${agreement.emailSendCount > 1 ? 's' : ''})`}
                     >
                       {sendingToClient[agreement.id] ? 'Sending...' : 'Resend Email'}
-                    </button>
+                    </AdminButton>
                   )}
                   {agreement.status === 'COMPLETED' && !reviewRequestSent[agreement.id] && (
-                    <button
+                    <AdminButton
+                      variant="ghost"
                       onClick={() => openReviewRequestModal(agreement)}
                       disabled={sendingReviewRequest[agreement.id] || !agreement.client.email}
-                      style={{
-                        backgroundColor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? '#9ca3af' : '#16a34a',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!sendingReviewRequest[agreement.id] && agreement.client.email) {
-                          e.currentTarget.style.backgroundColor = '#15803d';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!sendingReviewRequest[agreement.id] && agreement.client.email) {
-                          e.currentTarget.style.backgroundColor = '#16a34a';
-                        }
-                      }}
                       title={!agreement.client.email ? 'Client email is required' : 'Send client an email to request a Google review'}
                     >
                       {sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
-                    </button>
+                    </AdminButton>
                   )}
                   {agreement.status === 'DRAFT' && (
-                    <button
+                    <AdminButton
+                      variant="ghost"
                       onClick={() => handleSendToClient(agreement)}
                       disabled={sendingToClient[agreement.id]}
-                      style={{
-                        backgroundColor: sendingToClient[agreement.id] ? '#9ca3af' : '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: sendingToClient[agreement.id] ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!sendingToClient[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#b91c1c';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!sendingToClient[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#dc2626';
-                        }
-                      }}
                       title="Send agreement to client"
                     >
                       {sendingToClient[agreement.id] ? 'Sending...' : 'Send to Client'}
-                    </button>
+                    </AdminButton>
                   )}
                   {agreement.status === 'DRAFT' && (
-                    <button
+                    <AdminButton
+                      variant="danger"
                       onClick={() => handleDeleteAgreement(agreement.id)}
                       disabled={deletingAgreement[agreement.id]}
-                      style={{
-                        backgroundColor: deletingAgreement[agreement.id] ? '#9ca3af' : '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: deletingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!deletingAgreement[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#4b5563';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!deletingAgreement[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#6b7280';
-                        }
-                      }}
                       title="Delete this agreement permanently (only DRAFT agreements can be deleted)"
                     >
                       {deletingAgreement[agreement.id] ? 'Deleting...' : 'Delete'}
-                    </button>
+                    </AdminButton>
                   )}
                   {agreement.status === 'SIGNED' && (
-                    <button
+                    <AdminButton
+                      variant="danger"
                       onClick={() => handleCancelAgreement(agreement)}
-                      style={{
-                        backgroundColor: '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#b91c1c';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#dc2626';
-                      }}
                       title="Cancel this signed agreement (Admin only - requires confirmation)"
                     >
                       Cancel Agreement
-                    </button>
+                    </AdminButton>
                   )}
                   {(agreement.status === 'SIGNED' || agreement.status === 'COMPLETED') && (
-                    <button
+                    <AdminButton
+                      variant="danger"
                       onClick={() => handleArchiveAgreement(agreement.id)}
                       disabled={archivingAgreement[agreement.id]}
-                      style={{
-                        backgroundColor: archivingAgreement[agreement.id] ? '#9ca3af' : '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: archivingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!archivingAgreement[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#4b5563';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!archivingAgreement[agreement.id]) {
-                          e.currentTarget.style.backgroundColor = '#6b7280';
-                        }
-                      }}
                       title="Archive this agreement"
                     >
                       {archivingAgreement[agreement.id] ? 'Archiving...' : 'Archive'}
-                    </button>
+                    </AdminButton>
                   )}
                       </div>
                     </div>
@@ -3061,26 +2727,18 @@ const normalizePaymentStatus = (value?: string | null) => {
                     return (
                       <div key={agreement.id} style={{
                         backgroundColor: cardBg,
-                        border: `2px solid #7c3aed`,
+                        border: `1px solid ${borderColor}`,
                         borderRadius: '8px',
                         padding: '20px',
                         position: 'relative',
-                        opacity: 0.9
                       }}>
                         {/* Completed Badge */}
                         <div style={{
                           position: 'absolute',
                           top: '-10px',
                           right: '16px',
-                          backgroundColor: '#7c3aed',
-                          color: 'white',
-                          padding: '4px 12px',
-                          borderRadius: '12px',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          textTransform: 'uppercase'
                         }}>
-                          Completed
+                          <StatusBadge variant="accent">Completed</StatusBadge>
                         </div>
 
                         {/* Agreement Header */}
@@ -3128,16 +2786,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                             gap: '8px',
                             flexWrap: 'wrap' 
                           }}>
-                            <span style={{
-                              backgroundColor: '#f3e8ff',
-                              color: '#7c3aed',
-                              padding: '4px 12px',
-                              borderRadius: '20px',
-                              fontSize: '12px',
-                              fontWeight: '600'
-                            }}>
+                            <StatusBadge variant={agreementStatusToBadgeVariant(agreement.status)}>
                               {agreement.status}
-                            </span>
+                            </StatusBadge>
                           </div>
                         </div>
 
@@ -3180,75 +2831,39 @@ const normalizePaymentStatus = (value?: string | null) => {
                           gap: '8px',
                           flexWrap: 'wrap'
                         }}>
-                          <button
+                          <AdminButton
+                            variant="ghost"
                             onClick={() => {
                               setCopyLinkAgreement(agreement);
                               setShowCopyLinkModal(true);
                             }}
-                            style={{
-                              backgroundColor: 'var(--accent)',
-                              color: 'white',
-                              border: 'none',
-                              padding: '8px 16px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '500'
-                            }}
                           >
                             View Agreement
-                          </button>
-                          <button
+                          </AdminButton>
+                          <AdminButton
+                            variant="ghost"
                             onClick={() => handleEditAgreement(agreement)}
-                            style={{
-                              backgroundColor: '#f59e0b',
-                              color: 'white',
-                              border: 'none',
-                              padding: '8px 16px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '500'
-                            }}
                           >
                             Edit Details
-                          </button>
+                          </AdminButton>
                           {!reviewRequestSent[agreement.id] && (
-                            <button
+                            <AdminButton
+                              variant="ghost"
                               onClick={() => openReviewRequestModal(agreement)}
                               disabled={sendingReviewRequest[agreement.id] || !agreement.client.email}
-                              style={{
-                                backgroundColor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? '#9ca3af' : '#16a34a',
-                                color: 'white',
-                                border: 'none',
-                                padding: '8px 16px',
-                                borderRadius: '4px',
-                                cursor: (sendingReviewRequest[agreement.id] || !agreement.client.email) ? 'not-allowed' : 'pointer',
-                                fontSize: '14px',
-                                fontWeight: '500'
-                              }}
                               title={!agreement.client.email ? 'Client email is required' : 'Send client an email to request a Google review'}
                             >
                               {sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
-                            </button>
+                            </AdminButton>
                           )}
-                          <button
+                          <AdminButton
+                            variant="danger"
                             onClick={() => handleArchiveAgreement(agreement.id)}
                             disabled={archivingAgreement[agreement.id]}
-                            style={{
-                              backgroundColor: archivingAgreement[agreement.id] ? '#9ca3af' : '#6b7280',
-                              color: 'white',
-                              border: 'none',
-                              padding: '8px 16px',
-                              borderRadius: '4px',
-                              cursor: archivingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '500'
-                            }}
                             title="Archive this completed agreement"
                           >
                             {archivingAgreement[agreement.id] ? 'Archiving...' : 'Archive'}
-                          </button>
+                          </AdminButton>
                         </div>
                       </div>
                     );
@@ -3272,31 +2887,21 @@ const normalizePaymentStatus = (value?: string | null) => {
                           Showing {(completedPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(completedPage * ITEMS_PER_PAGE, completedAgreements.length)} of {completedAgreements.length} completed
                         </span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <button
+                          <AdminButton
+                            variant={completedPage === 1 ? 'ghost' : 'primary'}
+                            size="compact"
                             onClick={() => setCompletedPage(p => Math.max(1, p - 1))}
                             disabled={completedPage === 1}
-                            style={{
-                              backgroundColor: completedPage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : '#7c3aed',
-                              color: completedPage === 1 ? mutedText : 'white',
-                              border: 'none', padding: '6px 14px', borderRadius: '4px',
-                              cursor: completedPage === 1 ? 'not-allowed' : 'pointer',
-                              fontSize: '14px', fontWeight: '500',
-                            }}
-                          >← Prev</button>
+                          >← Prev</AdminButton>
                           <span style={{ fontSize: '14px', color: textColor, minWidth: '80px', textAlign: 'center' }}>
                             Page {completedPage} of {completedTotalPages}
                           </span>
-                          <button
+                          <AdminButton
+                            variant={completedPage === completedTotalPages ? 'ghost' : 'primary'}
+                            size="compact"
                             onClick={() => setCompletedPage(p => Math.min(completedTotalPages, p + 1))}
                             disabled={completedPage === completedTotalPages}
-                            style={{
-                              backgroundColor: completedPage === completedTotalPages ? (isDark ? '#2d3530' : '#e2e8f0') : '#7c3aed',
-                              color: completedPage === completedTotalPages ? mutedText : 'white',
-                              border: 'none', padding: '6px 14px', borderRadius: '4px',
-                              cursor: completedPage === completedTotalPages ? 'not-allowed' : 'pointer',
-                              fontSize: '14px', fontWeight: '500',
-                            }}
-                          >Next →</button>
+                          >Next →</AdminButton>
                         </div>
                       </div>
                     )}
@@ -4181,49 +3786,34 @@ const normalizePaymentStatus = (value?: string | null) => {
                 paddingLeft: (isMobile || isTablet) ? '8px' : '4px',
                 paddingRight: (isMobile || isTablet) ? '8px' : '4px'
               }}>
-                <button
+                <AdminButton
+                  variant="primary"
                   onClick={handleSaveAgreement}
                   disabled={saving}
+                  title="Save changes to this agreement"
                   style={{
-                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
-                    borderRadius: '6px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
-                    fontWeight: '500',
                     flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
                     minWidth: (isMobile || isTablet) ? '0' : '140px',
-                    whiteSpace: 'nowrap'
                   }}
-                  title="Save changes to this agreement"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     const clientLink = `${window.location.origin}/agreement/${selectedAgreement.uniqueToken}`;
                     window.open(clientLink, '_blank');
                   }}
+                  title="Open client view in new tab"
                   style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
-                    fontWeight: '500',
                     flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
                     minWidth: (isMobile || isTablet) ? '0' : '140px',
-                    whiteSpace: 'nowrap'
                   }}
-                  title="Open client view in new tab"
                 >
                   {(isMobile || isTablet) ? 'Preview' : 'Preview Client View'}
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     if (selectedAgreement?.id) {
                       setPhoneVisibilityToggle(selectedAgreement.showPhoneNumberAlways || false);
@@ -4231,99 +3821,65 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setShowAttendantModal(true);
                     }
                   }}
+                  title="View attendant page (event details for staff)"
                   style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
-                    fontWeight: '500',
                     flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
                     minWidth: (isMobile || isTablet) ? '0' : '140px',
-                    whiteSpace: 'nowrap'
                   }}
-                  title="View attendant page (event details for staff)"
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
                     <UIcon name="users" style={{ fontSize: '14px' }} />
                     {(isMobile || isTablet) ? 'Attendant' : 'Attendant View'}
                   </span>
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     if (selectedAgreement?.client?.email) {
-                      // Open portal admin preview in a new tab
                       const portalUrl = `${window.location.origin}/portal/admin-preview?email=${encodeURIComponent(selectedAgreement.client.email)}`;
                       window.open(portalUrl, '_blank');
                     } else {
                       alert('Client email not found');
                     }
                   }}
-                  style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
-                    fontWeight: '500',
-                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
-                    minWidth: (isMobile || isTablet) ? '0' : '140px',
-                    whiteSpace: 'nowrap'
-                  }}
                   title="View client portal (admin preview)"
                   disabled={!selectedAgreement?.client?.email}
+                  style={{
+                    flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
+                    minWidth: (isMobile || isTablet) ? '0' : '140px',
+                  }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
                     <UIcon name="search" style={{ fontSize: '14px' }} />
                     {(isMobile || isTablet) ? 'Portal' : 'View Client Portal'}
                   </span>
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
                   onClick={() => handlePreviewEmail(selectedAgreement)}
+                  title="Preview the email that will be sent to the client"
                   style={{
-                    backgroundColor: '#8b5cf6',
-                    color: 'white',
-                    border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
-                    fontWeight: '500',
                     flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
                     minWidth: (isMobile || isTablet) ? '0' : '140px',
-                    whiteSpace: 'nowrap'
                   }}
-                  title="Preview the email that will be sent to the client"
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
                     <UIcon name="envelope" style={{ fontSize: '14px' }} />
                     {(isMobile || isTablet) ? 'Email' : 'Preview Email'}
                   </span>
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
                   onClick={() => handleSendToClient(selectedAgreement)}
                   disabled={loading}
+                  title="Send this agreement to the client"
                   style={{
-                    backgroundColor: loading ? '#9ca3af' : '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    padding: (isMobile || isTablet) ? '8px 12px' : '10px 20px',
-                    borderRadius: '6px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: (isMobile || isTablet) ? '13px' : '14px',
-                    fontWeight: '500',
                     flex: (isMobile || isTablet) ? '1 1 calc(50% - 4px)' : '1 1 auto',
                     minWidth: (isMobile || isTablet) ? '0' : '140px',
-                    whiteSpace: 'nowrap'
                   }}
-                  title="Send this agreement to the client"
                 >
                   {loading ? 'Sending...' : ((isMobile || isTablet) ? 'Send' : 'Send to Client')}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -4388,41 +3944,23 @@ const normalizePaymentStatus = (value?: string | null) => {
                 gap: '12px',
                 justifyContent: 'flex-end'
               }}>
-                <button
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     setEditingStatus(false);
                     setEditingStatusAgreementId(null);
                     setNewStatus('');
                   }}
-                  style={{
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={() => handleUpdateStatus(editingStatusAgreementId || '')}
                   disabled={saving}
-                  style={{
-                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   {saving ? 'Updating...' : 'Update'}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -4482,41 +4020,23 @@ const normalizePaymentStatus = (value?: string | null) => {
                 gap: '12px',
                 justifyContent: 'flex-end'
               }}>
-                <button
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     setEditingExpiration(false);
                     setEditingAgreementId(null);
                     setNewExpirationDate('');
                   }}
-                  style={{
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={() => handleUpdateExpiration(editingAgreementId || '')}
                   disabled={saving}
-                  style={{
-                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   {saving ? 'Updating...' : 'Update'}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -4597,36 +4117,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '12px', 
                     justifyContent: 'flex-end' 
                   }}>
-                    <button
-                      onClick={closeCancelModal}
-                      style={{
-                        backgroundColor: '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    <AdminButton variant="ghost" onClick={closeCancelModal}>
                       Cancel
-                    </button>
-                    <button
-                      onClick={handleCancelStep1}
-                      style={{
-                        backgroundColor: '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    </AdminButton>
+                    <AdminButton variant="danger" onClick={handleCancelStep1}>
                       Continue
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               )}
@@ -4667,36 +4163,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '12px', 
                     justifyContent: 'flex-end' 
                   }}>
-                    <button
-                      onClick={() => setCancellationStep(1)}
-                      style={{
-                        backgroundColor: '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    <AdminButton variant="ghost" onClick={() => setCancellationStep(1)}>
                       Back
-                    </button>
-                    <button
-                      onClick={handleCancelStep2}
-                      style={{
-                        backgroundColor: '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    </AdminButton>
+                    <AdminButton variant="danger" onClick={handleCancelStep2}>
                       Continue
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               )}
@@ -4757,36 +4229,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '12px', 
                     justifyContent: 'flex-end' 
                   }}>
-                    <button
-                      onClick={() => setCancellationStep(2)}
-                      style={{
-                        backgroundColor: '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    <AdminButton variant="ghost" onClick={() => setCancellationStep(2)}>
                       Back
-                    </button>
-                    <button
-                      onClick={handleCancelStep3}
-                      style={{
-                        backgroundColor: '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    </AdminButton>
+                    <AdminButton variant="danger" onClick={handleCancelStep3}>
                       Continue
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               )}
@@ -4842,37 +4290,16 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '12px', 
                     justifyContent: 'flex-end' 
                   }}>
-                    <button
-                      onClick={() => setCancellationStep(3)}
-                      style={{
-                        backgroundColor: '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    <AdminButton variant="ghost" onClick={() => setCancellationStep(3)}>
                       Back
-                    </button>
-                    <button
+                    </AdminButton>
+                    <AdminButton
+                      variant="danger"
                       onClick={handleConfirmCancellation}
                       disabled={cancelling}
-                      style={{
-                        backgroundColor: cancelling ? '#9ca3af' : '#dc2626',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: cancelling ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
                     >
                       {cancelling ? 'Cancelling...' : 'CANCEL AGREEMENT'}
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               )}
@@ -4952,55 +4379,16 @@ const normalizePaymentStatus = (value?: string | null) => {
                 gap: '12px', 
                 justifyContent: 'flex-end' 
               }}>
-                <button
-                  onClick={handleCancelPaymentWarning}
-                  style={{
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#4b5563';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#6b7280';
-                  }}
-                >
+                <AdminButton variant="ghost" onClick={handleCancelPaymentWarning}>
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={handleConfirmPaymentWarning}
                   disabled={saving}
-                  style={{
-                    backgroundColor: saving ? '#9ca3af' : '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = '#d97706';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = '#f59e0b';
-                    }
-                  }}
                 >
                   {saving ? 'Completing...' : 'Yes, Complete Anyway'}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -5146,38 +4534,20 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
+                <AdminButton
+                  variant="ghost"
                   onClick={closeReviewRequestModal}
                   disabled={sendingReviewRequest[reviewRequestAgreement.id]}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: mutedText,
-                    border: `1px solid ${borderColor}`,
-                    padding: '10px 16px',
-                    borderRadius: '6px',
-                    cursor: sendingReviewRequest[reviewRequestAgreement.id] ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={handleConfirmSendReviewRequest}
                   disabled={sendingReviewRequest[reviewRequestAgreement.id] || !reviewRequestAgreement.client.email}
-                  style={{
-                    backgroundColor: (sendingReviewRequest[reviewRequestAgreement.id] || !reviewRequestAgreement.client.email) ? '#9ca3af' : '#16a34a',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 16px',
-                    borderRadius: '6px',
-                    cursor: (sendingReviewRequest[reviewRequestAgreement.id] || !reviewRequestAgreement.client.email) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}
                 >
                   {sendingReviewRequest[reviewRequestAgreement.id] ? 'Sending...' : 'Send Review Request'}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -5434,21 +4804,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '12px',
                     justifyContent: 'flex-end'
                   }}>
-                    <button
-                      onClick={closeInvoiceModal}
-                      style={{
-                        backgroundColor: '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        padding: '12px 24px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    <AdminButton variant="ghost" onClick={closeInvoiceModal}>
                       Close
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               )}
@@ -5734,37 +5092,16 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '12px',
                     justifyContent: 'flex-end'
                   }}>
-                    <button
-                      onClick={closeInvoiceModal}
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: mutedText,
-                        border: `1px solid ${borderColor}`,
-                        padding: '12px 24px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
-                    >
+                    <AdminButton variant="ghost" onClick={closeInvoiceModal}>
                       Cancel
-                    </button>
-                    <button
+                    </AdminButton>
+                    <AdminButton
+                      variant="primary"
                       onClick={handleConfirmCreateInvoice}
                       disabled={!invoiceAgreement.client.email || (invoiceType === 'custom-amount' && !customInvoiceAmount)}
-                      style={{
-                        backgroundColor: (!invoiceAgreement.client.email || (invoiceType === 'custom-amount' && !customInvoiceAmount)) ? '#9ca3af' : '#8b5cf6',
-                        color: 'white',
-                        border: 'none',
-                        padding: '12px 24px',
-                        borderRadius: '4px',
-                        cursor: (!invoiceAgreement.client.email || (invoiceType === 'custom-amount' && !customInvoiceAmount)) ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500'
-                      }}
                     >
                       Create Invoice
-                    </button>
+                    </AdminButton>
                   </div>
                 </div>
               )}
@@ -6017,43 +5354,25 @@ const normalizePaymentStatus = (value?: string | null) => {
                 gap: '12px',
                 justifyContent: 'flex-end'
               }}>
-                <button
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     setShowEmailPreview(false);
                     setPreviewAgreement(null);
                   }}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: textColor,
-                    border: `1px solid ${borderColor}`,
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   Close
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={() => {
                     setShowEmailPreview(false);
                     setPreviewAgreement(null);
                     handleSendToClient(previewAgreement);
                   }}
-                  style={{
-                    backgroundColor: '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
                 >
                   Send Email
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -6385,27 +5704,18 @@ const normalizePaymentStatus = (value?: string | null) => {
                     View Page
                   </span>
                 </button>
-                <button
+                <AdminButton
+                  variant="ghost"
+                  fullWidth
                   onClick={() => {
                     setShowAttendantModal(false);
                     setAttendantModalAgreement(null);
                     setPhoneVisibilityToggle(false);
                     setVirtualGreenScreenToggle(false);
                   }}
-                  style={{
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    width: '100%'
-                  }}
                 >
                   Cancel
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
@@ -6465,7 +5775,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                 flexDirection: 'column',
                 gap: '12px'
               }}>
-                <button
+                <AdminButton
+                  variant="ghost"
+                  fullWidth
                   onClick={() => {
                     if (copyLinkAgreement?.uniqueToken) {
                       const adminPreviewLink = `${window.location.origin}/admin/preview/${copyLinkAgreement.uniqueToken}`;
@@ -6474,24 +5786,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setCopyLinkAgreement(null);
                     }
                   }}
-                  style={{
-                    backgroundColor: '#8b5cf6',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    width: '100%'
-                  }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                     <UIcon name="lock" style={{ fontSize: '14px' }} />
                     Admin View
                   </span>
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
+                  fullWidth
                   onClick={() => {
                     if (copyLinkAgreement?.uniqueToken) {
                       const clientLink = `${window.location.origin}/agreement/${copyLinkAgreement.uniqueToken}`;
@@ -6500,24 +5803,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setCopyLinkAgreement(null);
                     }
                   }}
-                  style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    width: '100%'
-                  }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                     <UIcon name="eye" style={{ fontSize: '14px' }} />
                     Client View
                   </span>
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
+                  fullWidth
                   onClick={() => {
                     if (copyLinkAgreement?.uniqueToken) {
                       const clientLink = `${window.location.origin}/agreement/${copyLinkAgreement.uniqueToken}`;
@@ -6530,42 +5824,22 @@ const normalizePaymentStatus = (value?: string | null) => {
                       });
                     }
                   }}
-                  style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    width: '100%'
-                  }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                     <UIcon name="clipboard" style={{ fontSize: '14px' }} />
                     Copy Client Link
                   </span>
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
+                  fullWidth
                   onClick={() => {
                     setShowCopyLinkModal(false);
                     setCopyLinkAgreement(null);
                   }}
-                  style={{
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    width: '100%'
-                  }}
                 >
                   Cancel
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>

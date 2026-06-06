@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, Cell } from 'recharts';
 import { UIcon } from '../components/UIcon';
 import { accentTokens } from '../lib/adminTheme';
+import { AdminButton } from '../components/AdminButton';
 
 interface DashboardStats {
   totalClients: number;
@@ -219,81 +220,21 @@ export default function AdminHome() {
               </h1>
             </div>
 
-            {/* Quick actions: ghost buttons + primary "+ New agreement".
-                Geometry lives in .admin-overview-header-btn (globals.css) so
-                mobile !important button rules can't inflate the primary. */}
-            {(() => {
-              const headerBtnTransition: React.CSSProperties = {
-                transition: 'background-color 0.15s, color 0.15s, border-color 0.15s, filter 0.15s',
-              };
-              const ghostBtn: React.CSSProperties = {
-                ...headerBtnTransition,
-                backgroundColor: 'transparent',
-                border: `1px solid ${borderColor}`,
-                color: mutedText,
-                fontWeight: 500,
-              };
-              const primaryBtn: React.CSSProperties = {
-                ...headerBtnTransition,
-                backgroundColor: 'var(--accent)',
-                border: '1px solid var(--accent)',
-                color: '#0a0f0c',
-                fontWeight: 600,
-              };
-              return (
-                <div className="admin-overview-header-actions">
-                  <button
-                    type="button"
-                    className="admin-overview-header-btn"
-                    onClick={() => router.push('/admin/clients')}
-                    style={ghostBtn}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = textColor;
-                      e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = mutedText;
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    Clients
-                  </button>
-
-                  <button
-                    type="button"
-                    className="admin-overview-header-btn"
-                    onClick={() => router.push('/admin/templates')}
-                    style={ghostBtn}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = textColor;
-                      e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = mutedText;
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    Templates
-                  </button>
-
-                  <button
-                    type="button"
-                    className="admin-overview-header-btn"
-                    onClick={() => router.push('/admin/agreements')}
-                    style={primaryBtn}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.filter = 'brightness(0.93)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.filter = 'none';
-                    }}
-                    title="Create a new agreement"
-                  >
-                    + New agreement
-                  </button>
-                </div>
-              );
-            })()}
+            <div className="admin-overview-header-actions">
+              <AdminButton variant="ghost" onClick={() => router.push('/admin/clients')}>
+                Clients
+              </AdminButton>
+              <AdminButton variant="ghost" onClick={() => router.push('/admin/templates')}>
+                Templates
+              </AdminButton>
+              <AdminButton
+                variant="primary"
+                onClick={() => router.push('/admin/agreements')}
+                title="Create a new agreement"
+              >
+                + New agreement
+              </AdminButton>
+            </div>
           </div>
         </div>
 

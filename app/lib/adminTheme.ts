@@ -25,7 +25,7 @@ export const adminTheme = {
     surfaceHover: '#2a322a',
     accent: 'var(--accent)',
     accentHover: 'var(--accent)',
-    accentOn: '#0a0f0c',
+    accentOn: '#04342C',
   },
   light: {
     bg: '#f8fafc',
@@ -36,7 +36,7 @@ export const adminTheme = {
     surfaceHover: '#f1f5f9',
     accent: 'var(--accent)',
     accentHover: 'var(--accent)',
-    accentOn: '#0a0f0c',
+    accentOn: '#04342C',
   },
 } as const;
 

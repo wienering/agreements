@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
+import { AdminButton } from '../../../components/AdminButton';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../components/Toast';
 import { UIcon } from '../../../components/UIcon';
@@ -212,23 +213,14 @@ export default function ArchivedAgreementsPage() {
               View completed and cancelled agreements
             </p>
           </div>
-          <button
+          <AdminButton
+            variant="ghost"
+            fullWidth={isMobile}
             onClick={() => router.push('/admin/agreements')}
-            style={{
-              backgroundColor: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: isMobile ? '12px 20px' : '10px 20px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              width: isMobile ? '100%' : 'auto'
-            }}
             title="Back to main agreements"
           >
             ← Back to Agreements
-          </button>
+          </AdminButton>
         </div>
 
         {/* Archived Agreements List */}

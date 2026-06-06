@@ -1,6 +1,7 @@
 'use client';
 
 import { RichTextPreview } from '../../components/RichTextEditor';
+import { AdminButton } from '../../components/AdminButton';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -310,86 +311,31 @@ export function SortableTemplateItem({
       </div>
 
       <div style={{ display: 'flex', gap: '8px', flexDirection: isMobile ? 'column' : 'row' }}>
-        <button
-          type="button"
+        <AdminButton
+          variant="ghost"
+          fullWidth={isMobile}
           onClick={() => onView(template)}
-          style={{
-            backgroundColor: '#7c3aed',
-            color: 'white',
-            border: 'none',
-            padding: isMobile ? '10px 16px' : '8px 16px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            width: isMobile ? '100%' : 'auto',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#6d28d9';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#7c3aed';
-          }}
           title="View full template content"
         >
           View/Edit
-        </button>
-        <button
-          type="button"
+        </AdminButton>
+        <AdminButton
+          variant="primary"
+          fullWidth={isMobile}
           onClick={() => onUseTemplate(template.id)}
-          style={{
-            backgroundColor: 'var(--accent)',
-            color: 'white',
-            border: 'none',
-            padding: isMobile ? '10px 16px' : '8px 16px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            width: isMobile ? '100%' : 'auto',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--accent)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--accent)';
-          }}
           title="Use this template to create an agreement"
         >
           Use Template
-        </button>
-        <button
-          type="button"
+        </AdminButton>
+        <AdminButton
+          variant="danger"
+          fullWidth={isMobile}
           onClick={() => onDelete(template.id)}
           disabled={loading}
-          style={{
-            backgroundColor: loading ? '#9ca3af' : '#dc2626',
-            color: 'white',
-            border: 'none',
-            padding: isMobile ? '10px 16px' : '8px 16px',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            width: isMobile ? '100%' : 'auto',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (!loading) {
-              e.currentTarget.style.backgroundColor = '#b91c1c';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) {
-              e.currentTarget.style.backgroundColor = '#dc2626';
-            }
-          }}
           title="Delete this template permanently"
         >
           {loading ? 'Deleting...' : 'Delete'}
-        </button>
+        </AdminButton>
       </div>
     </div>
   );

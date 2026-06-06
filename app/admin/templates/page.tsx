@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
-import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { AdminButton } from '../../components/AdminButton';
 import { useLockBodyScroll } from '@/lib/useLockBodyScroll';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
 import {
@@ -329,47 +329,22 @@ export default function TemplatesPage() {
             flexDirection: isMobile ? 'column' : 'row',
             width: isMobile ? '100%' : 'auto'
           }}>
-            <button
+            <AdminButton
+              variant="ghost"
+              fullWidth={isMobile}
               onClick={() => setShowSmartFields(!showSmartFields)}
-              style={{
-                backgroundColor: showSmartFields ? 'var(--accent)' : '#6b7280',
-                color: 'white',
-                border: 'none',
-                padding: isMobile ? '12px 20px' : '10px 20px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                width: isMobile ? '100%' : 'auto'
-              }}
               title="Show available smart fields"
             >
               {showSmartFields ? 'Hide Smart Fields' : 'Show Smart Fields'}
-            </button>
-            <button
+            </AdminButton>
+            <AdminButton
+              variant="primary"
+              fullWidth={isMobile}
               onClick={() => setShowAddForm(true)}
-              style={{
-                backgroundColor: adminHeaderAddButton.bg,
-                color: 'white',
-                border: 'none',
-                padding: isMobile ? '12px 20px' : '10px 20px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                width: isMobile ? '100%' : 'auto',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
-              }}
               title="Create a new template"
             >
               + New Template
-            </button>
+            </AdminButton>
           </div>
         </div>
 
@@ -574,56 +549,16 @@ export default function TemplatesPage() {
               </div>
               
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: mutedText,
-                    border: `1px solid ${borderColor}`,
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    transition: 'background-color 0.2s, color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
-                    e.currentTarget.style.color = textColor;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = mutedText;
-                  }}
-                >
+                <AdminButton variant="ghost" onClick={handleCancelEdit}>
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   type="submit"
                   disabled={loading}
-                  style={{
-                    backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }
-                  }}
                 >
                   {loading ? (editingTemplate ? 'Updating...' : 'Creating...') : (editingTemplate ? 'Update Template' : 'Create Template')}
-                </button>
+                </AdminButton>
               </div>
             </form>
             </div>
@@ -782,79 +717,27 @@ export default function TemplatesPage() {
                 gap: '12px',
                 justifyContent: 'flex-end'
               }}>
-                <button
-                  onClick={handleCloseViewModal}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: mutedText,
-                    border: `1px solid ${borderColor}`,
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    transition: 'background-color 0.2s, color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
-                    e.currentTarget.style.color = textColor;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = mutedText;
-                  }}
-                >
+                <AdminButton variant="ghost" onClick={handleCloseViewModal}>
                   Close
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="ghost"
                   onClick={() => {
                     handleEditTemplate(viewingTemplate);
                     handleCloseViewModal();
                   }}
-                  style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#047857';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  }}
                 >
                   Edit Template
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
                   onClick={() => {
                     handleUseTemplate(viewingTemplate.id);
                     handleCloseViewModal();
                   }}
-                  style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  }}
                 >
                   Use Template
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>

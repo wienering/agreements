@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import { UIcon } from '../../components/UIcon';
 import FileUpload from '../../components/FileUpload';
-import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { AdminButton } from '../../components/AdminButton';
 
 interface Event {
   id: string;
@@ -166,7 +166,7 @@ export default function ClientsPage() {
     setCurrentPage(1);
   }, [debouncedSearchTerm]);
 
-  // Filter clients — runs only when clients or debounced search term change
+  // Filter clients â€” runs only when clients or debounced search term change
   const filteredClients = useMemo(() => {
     if (!debouncedSearchTerm.trim()) return clients;
     const searchLower = debouncedSearchTerm.toLowerCase();
@@ -568,30 +568,14 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               Manage your client database
             </p>
           </div>
-          <button
+          <AdminButton
+            variant="primary"
+            fullWidth={isMobile}
             onClick={() => setShowAddForm(true)}
-            style={{
-              backgroundColor: adminHeaderAddButton.bg,
-              color: 'white',
-              border: 'none',
-              padding: isMobile ? '12px 20px' : '10px 20px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              width: isMobile ? '100%' : 'auto',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
-            }}
             title="Add a new client"
           >
             + New Client
-          </button>
+          </AdminButton>
         </div>
 
         {/* Search Bar */}
@@ -681,7 +665,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
           )}
         </div>
 
-        {/* Add/Edit Form — viewport modal */}
+        {/* Add/Edit Form â€” viewport modal */}
         {showAddForm && (
           <div
             style={{
@@ -926,7 +910,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         <span>Unlimited Prints</span>
                         {newEvent.unlimitedPrints && (
                           <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--accent)', fontWeight: '600' }}>
-                            ∞ Enabled
+                            âˆž Enabled
                           </span>
                         )}
                       </label>
@@ -1365,38 +1349,21 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                 )}
               </div>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
+                <AdminButton
+                  variant="ghost"
                   onClick={editingEvent || addingEventToClient ? handleCancelEditEvent : handleCancelEdit}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: mutedText,
-                    border: `1px solid ${borderColor}`,
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </AdminButton>
+                <AdminButton
                   type="submit"
+                  variant="primary"
                   disabled={loading}
-                  style={{
-                    backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
-                  }}
                 >
                   {loading 
                     ? (editingEvent ? 'Updating Event...' : addingEventToClient ? 'Adding Event...' : editingClient ? 'Updating...' : 'Adding...') 
                     : (editingEvent ? 'Update Event' : addingEventToClient ? 'Add Event' : editingClient ? 'Update Client' : 'Add Client')}
-                </button>
+                </AdminButton>
               </div>
             </form>
             </div>
@@ -1473,29 +1440,14 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         <h4 style={{ margin: '0', fontSize: '14px', color: textColor, fontWeight: '600' }}>
                           Events ({client.events ? client.events.length : 0}):
                         </h4>
-                        <button
+                        <AdminButton
+                          variant="primary"
+                          size="compact"
                           onClick={() => handleAddNewEvent(client)}
-                          style={{
-                            backgroundColor: 'var(--accent)',
-                            color: 'white',
-                            border: 'none',
-                            padding: '4px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--accent)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--accent)';
-                          }}
                           title="Add a new event to this client"
                         >
                           + Add Event
-                        </button>
+                        </AdminButton>
                       </div>
                       {client.events && client.events.length > 0 && (
                         <>
@@ -1560,7 +1512,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                             )}
                             {event.unlimitedPrints && (
                               <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
-                                ∞ Unlimited Prints
+                                âˆž Unlimited Prints
                               </p>
                             )}
                             {event.notes && (
@@ -1569,75 +1521,30 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               </p>
                             )}
                             <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                              <button
+                              <AdminButton
+                                variant="primary"
+                                size="compact"
                                 onClick={() => handleCreateAgreement(client, event)}
-                                style={{
-                                  backgroundColor: 'var(--accent)',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '6px 12px',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '12px',
-                                  fontWeight: '500',
-                                  transition: 'background-color 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                                }}
                                 title="Create agreement for this event"
                               >
                                 Create Agreement
-                              </button>
-                              <button
+                              </AdminButton>
+                              <AdminButton
+                                variant="ghost"
+                                size="compact"
                                 onClick={() => handleEditEvent(event)}
-                                style={{
-                                  backgroundColor: 'var(--accent)',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '6px 12px',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '12px',
-                                  fontWeight: '500',
-                                  transition: 'background-color 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#047857';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                                }}
                                 title="Edit event details"
                               >
                                 Edit Event
-                              </button>
-                              <button
+                              </AdminButton>
+                              <AdminButton
+                                variant="danger"
+                                size="compact"
                                 onClick={() => handleArchiveEvent(event.id)}
-                                style={{
-                                  backgroundColor: '#f59e0b',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '6px 12px',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '12px',
-                                  fontWeight: '500',
-                                  transition: 'background-color 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#d97706';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#f59e0b';
-                                }}
                                 title="Archive this event"
                               >
                                 Archive Event
-                              </button>
+                              </AdminButton>
                             </div>
                           </div>
                           );
@@ -1691,106 +1598,38 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   gap: '8px',
                   flexWrap: 'wrap'
                 }}>
-                  <button
+                  <AdminButton
+                    variant="ghost"
                     onClick={() => handleEditClient(client)}
-                    style={{
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#047857';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
                     title="Edit client details"
                   >
                     Edit
-                  </button>
+                  </AdminButton>
                   {/* Create Agreement button moved to individual events - only show if client has no events */}
                   {(!client.events || client.events.length === 0) && (
-                    <button
+                    <AdminButton
+                      variant="primary"
                       onClick={() => handleCreateAgreement(client)}
-                      style={{
-                        backgroundColor: 'var(--accent)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--accent)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--accent)';
-                      }}
                       title="Create new agreement for this client"
                     >
                       Create Agreement
-                    </button>
+                    </AdminButton>
                   )}
-                  <button
+                  <AdminButton
+                    variant="danger"
                     onClick={() => handleDeleteClient(client.id)}
                     disabled={loading}
-                    style={{
-                      backgroundColor: loading ? '#9ca3af' : '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#b91c1c';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#dc2626';
-                      }
-                    }}
                     title="Delete client permanently"
                   >
                     {loading ? 'Deleting...' : 'Delete'}
-                  </button>
-                  <button
+                  </AdminButton>
+                  <AdminButton
+                    variant="ghost"
                     onClick={() => setShowFileUpload(prev => ({ ...prev, [client.id]: !prev[client.id] }))}
-                    style={{
-                      backgroundColor: showFileUpload[client.id] ? '#64748b' : '#8b5cf6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = showFileUpload[client.id] ? '#475569' : '#7c3aed';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = showFileUpload[client.id] ? '#64748b' : '#8b5cf6';
-                    }}
                     title="Upload files to Google Drive"
                   >
                     {showFileUpload[client.id] ? 'Hide Upload' : 'Upload Files'}
-                  </button>
+                  </AdminButton>
                 </div>
                 {/* File Upload Section */}
                 {showFileUpload[client.id] && (
@@ -1834,44 +1673,26 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               gap: '12px',
             }}>
               <span style={{ fontSize: '14px', color: mutedText }}>
-                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredClients.length)} of {filteredClients.length} clients
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}â€“{Math.min(currentPage * ITEMS_PER_PAGE, filteredClients.length)} of {filteredClients.length} clients
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button
+                <AdminButton
+                  variant={currentPage === 1 ? 'ghost' : 'primary'}
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  style={{
-                    backgroundColor: currentPage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
-                    color: currentPage === 1 ? mutedText : 'white',
-                    border: 'none',
-                    padding: '6px 14px',
-                    borderRadius: '4px',
-                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  }}
                 >
-                  ← Prev
-                </button>
+                  â† Prev
+                </AdminButton>
                 <span style={{ fontSize: '14px', color: textColor, minWidth: '80px', textAlign: 'center' }}>
                   Page {currentPage} of {totalPages}
                 </span>
-                <button
+                <AdminButton
+                  variant={currentPage === totalPages ? 'ghost' : 'primary'}
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  style={{
-                    backgroundColor: currentPage === totalPages ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
-                    color: currentPage === totalPages ? mutedText : 'white',
-                    border: 'none',
-                    padding: '6px 14px',
-                    borderRadius: '4px',
-                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  }}
                 >
-                  Next →
-                </button>
+                  Next â†’
+                </AdminButton>
               </div>
             </div>
           )}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
-import { adminHeaderAddButton } from '../../lib/adminTheme';
+import { AdminButton } from '../../components/AdminButton';
 import { UIcon } from '../../components/UIcon';
 
 interface AttendantGroup {
@@ -200,28 +200,9 @@ export default function AttendantGroupsPage() {
               Manage groups of attendants and their hub links
             </p>
           </div>
-          <button
-            onClick={handleAdd}
-            style={{
-              backgroundColor: adminHeaderAddButton.bg,
-              color: 'white',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.hover;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = adminHeaderAddButton.bg;
-            }}
-          >
+          <AdminButton variant="primary" onClick={handleAdd}>
             + Add Attendant Group
-          </button>
+          </AdminButton>
         </div>
 
         {/* Groups List */}
@@ -385,34 +366,13 @@ export default function AttendantGroupsPage() {
                         >
                           View Group Hub →
                         </a>
-                        <button
+                        <AdminButton
+                          variant="ghost"
+                          size="compact"
                           onClick={() => copyHubLink(group.slug, group.id)}
-                          style={{
-                            backgroundColor: copiedId === group.id ? 'var(--accent)' : 'var(--accent)',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s',
-                            whiteSpace: 'nowrap',
-                            width: 'fit-content'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (copiedId !== group.id) {
-                              e.currentTarget.style.backgroundColor = '#047857';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (copiedId !== group.id) {
-                              e.currentTarget.style.backgroundColor = 'var(--accent)';
-                            }
-                          }}
                         >
                           {copiedId === group.id ? '✓ Copied' : 'Copy Group Hub Link'}
-                        </button>
+                        </AdminButton>
                       </div>
                     </td>
                     <td style={{ padding: '16px' }}>
@@ -437,7 +397,9 @@ export default function AttendantGroupsPage() {
                                 >
                                   {attendantId} →
                                 </a>
-                                <button
+                                <AdminButton
+                                  variant="ghost"
+                                  size="compact"
                                   onClick={async () => {
                                     try {
                                       await navigator.clipboard.writeText(individualHubLink);
@@ -448,31 +410,9 @@ export default function AttendantGroupsPage() {
                                       alert('Failed to copy hub link to clipboard');
                                     }
                                   }}
-                                  style={{
-                                    backgroundColor: copiedId === `${group.id}-${attendantId}` ? 'var(--accent)' : 'var(--accent)',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '11px',
-                                    fontWeight: '500',
-                                    transition: 'background-color 0.2s',
-                                    whiteSpace: 'nowrap'
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (copiedId !== `${group.id}-${attendantId}`) {
-                                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (copiedId !== `${group.id}-${attendantId}`) {
-                                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                                    }
-                                  }}
                                 >
                                   {copiedId === `${group.id}-${attendantId}` ? '✓' : 'Copy'}
-                                </button>
+                                </AdminButton>
                               </div>
                             );
                           })
@@ -483,50 +423,12 @@ export default function AttendantGroupsPage() {
                     </td>
                     <td style={{ padding: '16px' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <button
-                          onClick={() => handleEdit(group)}
-                          style={{
-                            backgroundColor: '#6b7280',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#4b5563';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#6b7280';
-                          }}
-                        >
+                        <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(group)}>
                           Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(group.id)}
-                          style={{
-                            backgroundColor: '#dc2626',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#b91c1c';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#dc2626';
-                          }}
-                        >
+                        </AdminButton>
+                        <AdminButton variant="danger" size="compact" onClick={() => handleDelete(group.id)}>
                           Delete
-                        </button>
+                        </AdminButton>
                       </div>
                     </td>
                   </tr>
@@ -674,55 +576,12 @@ export default function AttendantGroupsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: textColor,
-                    border: `1px solid ${borderColor}`,
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#2d3530' : '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
+                <AdminButton variant="ghost" onClick={() => setShowAddModal(false)}>
                   Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{
-                    backgroundColor: saving ? '#6b7280' : 'var(--accent)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }
-                  }}
-                >
+                </AdminButton>
+                <AdminButton variant="primary" onClick={handleSave} disabled={saving}>
                   {saving ? 'Saving...' : editingGroup ? 'Update' : 'Create'}
-                </button>
+                </AdminButton>
               </div>
             </div>
           </div>
