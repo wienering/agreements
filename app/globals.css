@@ -68,6 +68,54 @@ body {
   }
 }
 
+/* Overview header actions — pin identical button geometry on all viewports.
+   Global mobile rules (button padding !important, button + button margin-top)
+   otherwise make the solid primary taller than the ghost buttons. */
+.admin-overview-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-overview-header-btn {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0 14px;
+  margin: 0;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .admin-overview-header-actions .admin-overview-header-btn {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-overview-header-actions .admin-overview-header-btn {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+  }
+}
+
 .admin-overview-status-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

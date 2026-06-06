@@ -192,7 +192,7 @@ export default function AdminHome() {
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'flex-end',
+            alignItems: 'center',
             flexWrap: 'wrap',
             gap: '16px'
           }}>
@@ -219,49 +219,31 @@ export default function AdminHome() {
             </div>
 
             {/* Quick actions: ghost buttons + primary "+ New agreement".
-                All three share headerBtnBase so the ghost border doesn't
-                shift their outer footprint and the corner radius / height
-                stay identical to the solid button. */}
+                Geometry lives in .admin-overview-header-btn (globals.css) so
+                mobile !important button rules can't inflate the primary. */}
             {(() => {
-              const headerBtnBase: React.CSSProperties = {
-                boxSizing: 'border-box',
-                height: '34px',
-                padding: '0 14px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                lineHeight: 1,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                appearance: 'none',
-                WebkitAppearance: 'none',
+              const headerBtnTransition: React.CSSProperties = {
                 transition: 'background-color 0.15s, color 0.15s, border-color 0.15s, filter 0.15s',
               };
               const ghostBtn: React.CSSProperties = {
-                ...headerBtnBase,
+                ...headerBtnTransition,
                 backgroundColor: 'transparent',
                 border: `1px solid ${borderColor}`,
                 color: mutedText,
                 fontWeight: 500,
               };
               const primaryBtn: React.CSSProperties = {
-                ...headerBtnBase,
+                ...headerBtnTransition,
                 backgroundColor: 'var(--accent)',
                 border: '1px solid var(--accent)',
                 color: '#0a0f0c',
                 fontWeight: 600,
               };
               return (
-                <div style={{
-                  display: 'flex',
-                  gap: '8px',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                }}>
+                <div className="admin-overview-header-actions">
                   <button
                     type="button"
+                    className="admin-overview-header-btn"
                     onClick={() => router.push('/admin/clients')}
                     style={ghostBtn}
                     onMouseEnter={(e) => {
@@ -278,6 +260,7 @@ export default function AdminHome() {
 
                   <button
                     type="button"
+                    className="admin-overview-header-btn"
                     onClick={() => router.push('/admin/templates')}
                     style={ghostBtn}
                     onMouseEnter={(e) => {
@@ -294,6 +277,7 @@ export default function AdminHome() {
 
                   <button
                     type="button"
+                    className="admin-overview-header-btn"
                     onClick={() => router.push('/admin/agreements')}
                     style={primaryBtn}
                     onMouseEnter={(e) => {
