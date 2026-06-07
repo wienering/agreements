@@ -39,31 +39,39 @@ type QuotePayload = {
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
-const MARGIN = 15;
-const BOTTOM_MARGIN = 15;
-const BORDER_RADIUS = 3;
-const TABLE_HEADER_HEIGHT = 10;
-const DESC_COL_WIDTH = 100;
-const PRICE_COL_WIDTH = 35;
-const QTY_COL_WIDTH = 25;
-const TOTAL_COL_WIDTH = 35;
-const TABLE_WIDTH = DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH;
-const ROW_HEIGHT = 8;
-const TOTAL_BANNER_HEIGHT = 15;
-const FOOTER_TOP_SPACING = 20;
-const OPTION_GAP = 12;
-const OPTION_LABEL_HEIGHT = 10;
+const MARGIN = 18;
+const BOTTOM_MARGIN = 16;
+const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+const RIGHT_X = PAGE_WIDTH - MARGIN;
 
-const DARK_GRAY: [number, number, number] = [51, 51, 51];
-const BLUE: [number, number, number] = [59, 130, 246];
-const LIGHT_GRAY: [number, number, number] = [156, 163, 175];
-const WHITE: [number, number, number] = [255, 255, 255];
-const RED: [number, number, number] = [220, 38, 38];
+const TOP_BAR_HEIGHT = 4.5;
+const CONTENT_START_Y = 16;
+const FOOTER_TOP_SPACING = 14;
+const OPTION_GAP = 10;
+const OPTION_LABEL_HEIGHT = 8;
+const LINE_ROW_HEIGHT = 7;
+const LINE_GAP = 1.5;
+const TOTAL_ROW_HEIGHT = 9;
+const PANEL_RADIUS = 3;
+
+const PAPER: [number, number, number] = [250, 246, 239];
+const INK: [number, number, number] = [42, 39, 36];
+const ACCENT: [number, number, number] = [192, 85, 47];
+const MUTED: [number, number, number] = [110, 101, 90];
+const FAINT: [number, number, number] = [154, 143, 128];
+const HAIRLINE: [number, number, number] = [229, 221, 207];
+const ROW_DIVIDER: [number, number, number] = [237, 230, 217];
+const PANEL_FILL: [number, number, number] = [242, 235, 221];
+
+const TERMS = [
+  'A $100 retainer fee is required to secure your booking.',
+  'Balance due 7 days before event.',
+  'Quote valid for 30 days from date of issue.',
+  'Attendant will arrive 1 hour before the start time for set up.',
+];
 
 type PdfContext = {
   doc: jsPDF;
-  drawRoundedRectLeft: (x: number, y: number, w: number, h: number, r: number) => void;
-  drawRoundedRectBlue: (x: number, y: number, w: number, h: number, r: number) => void;
 };
 
 function normalizePackage(raw: unknown): NormalizedPackage | null {
@@ -158,61 +166,98 @@ function normalizeQuotePayload(raw: unknown): QuotePayload | null {
   };
 }
 
-function createPdfContext(doc: jsPDF): PdfContext {
-  const drawRoundedRectLeft = (x: number, y: number, w: number, h: number, r: number) => {
-    doc.setFillColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-    doc.rect(x + r, y, w - r, h, 'F');
-    doc.rect(x, y + r, r, h - 2 * r, 'F');
-    doc.circle(x + r, y + r, r, 'F');
-    doc.circle(x + r, y + h - r, r, 'F');
-  };
-
-  const drawRoundedRectBlue = (x: number, y: number, w: number, h: number, r: number) => {
-    doc.setFillColor(BLUE[0], BLUE[1], BLUE[2]);
-    doc.rect(x + r, y, w - r, h, 'F');
-    doc.rect(x, y + r, r, h - 2 * r, 'F');
-    doc.circle(x + r, y + r, r, 'F');
-    doc.circle(x + r, y + h - r, r, 'F');
-  };
-
-  return { doc, drawRoundedRectLeft, drawRoundedRectBlue };
+function formatMoney(amount: number): string {
+  return `$${amount.toFixed(2)}`;
 }
 
-function estimateFooterHeight(): number {
-  const memoHeight = 12;
-  const termsHeight = 6 + 4 * 5;
-  return memoHeight + 10 + termsHeight;
+function titleCaseName(name: string): string {
+  return name.toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase());
+}
+
+function fillPageBackground(doc: jsPDF): void {
+  doc.setFillColor(PAPER[0], PAPER[1], PAPER[2]);
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
+}
+
+function drawTopAccentBar(doc: jsPDF): void {
+  doc.setFillColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+  doc.rect(0, 0, PAGE_WIDTH, TOP_BAR_HEIGHT, 'F');
+}
+
+function drawHairline(doc: jsPDF, y: number): void {
+  doc.setDrawColor(HAIRLINE[0], HAIRLINE[1], HAIRLINE[2]);
+  doc.setLineWidth(0.25);
+  doc.line(MARGIN, y, RIGHT_X, y);
+}
+
+function drawRowDivider(doc: jsPDF, y: number): void {
+  doc.setDrawColor(ROW_DIVIDER[0], ROW_DIVIDER[1], ROW_DIVIDER[2]);
+  doc.setLineWidth(0.2);
+  doc.line(MARGIN, y, RIGHT_X, y);
+}
+
+function drawRoundedFillRect(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+  color: [number, number, number]
+): void {
+  doc.setFillColor(color[0], color[1], color[2]);
+  doc.rect(x + r, y, w - 2 * r, h, 'F');
+  doc.rect(x, y + r, w, h - 2 * r, 'F');
+  doc.circle(x + r, y + r, r, 'F');
+  doc.circle(x + w - r, y + r, r, 'F');
+  doc.circle(x + r, y + h - r, r, 'F');
+  doc.circle(x + w - r, y + h - r, r, 'F');
+}
+
+function drawSpacedLabel(doc: jsPDF, text: string, x: number, y: number): void {
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(FAINT[0], FAINT[1], FAINT[2]);
+  doc.text(text.toUpperCase(), x, y, { charSpace: 0.8 });
+}
+
+function setupContinuationPage(doc: jsPDF): number {
+  fillPageBackground(doc);
+  drawTopAccentBar(doc);
+  return CONTENT_START_Y;
+}
+
+function countLineItems(option: QuoteOption): number {
+  let count = 1;
+  const { package: packageInfo, addons } = option;
+  if (addons.unlimitedPrints && packageInfo.kind === 'standard') count += 1;
+  if (addons.glamBooth) count += 1;
+  if (addons.waitingTime && (addons.waitingHours ?? 0) > 0) count += 1;
+  return count;
 }
 
 function estimateOptionBlockHeight(option: QuoteOption, showOptionLabel: boolean): number {
-  let height = TABLE_HEADER_HEIGHT + 2 + ROW_HEIGHT + 2;
+  let height = showOptionLabel ? OPTION_LABEL_HEIGHT + 4 : 0;
+  height += countLineItems(option) * (LINE_ROW_HEIGHT + LINE_GAP);
 
-  if (showOptionLabel) {
-    height += OPTION_LABEL_HEIGHT;
-  }
-
-  const { package: packageInfo, addons, discount } = option;
-
+  const { package: packageInfo } = option;
   if (packageInfo.kind === 'custom' && packageInfo.description?.trim()) {
-    const descLines = Math.ceil(packageInfo.description.trim().length / 40);
-    height += Math.max(0, descLines * 4);
+    height += Math.ceil(packageInfo.description.trim().length / 52) * 3.5;
   }
 
-  if (addons.unlimitedPrints && packageInfo.kind === 'standard') {
-    height += ROW_HEIGHT + 2;
-  }
-  if (addons.glamBooth) {
-    height += ROW_HEIGHT + 2;
-  }
-  if (addons.waitingTime && (addons.waitingHours ?? 0) > 0) {
-    height += ROW_HEIGHT + 2;
-  }
-  if (discount && discount.amount > 0) {
-    height += 5 + (ROW_HEIGHT + 2) * 2;
+  if (option.discount && option.discount.amount > 0) {
+    height += LINE_ROW_HEIGHT * 2 + 4;
   }
 
-  height += 10 + TOTAL_BANNER_HEIGHT;
+  height += TOTAL_ROW_HEIGHT + 6;
   return height;
+}
+
+function estimateFooterHeight(): number {
+  const thankYouPanel = 16;
+  const termsBlock = 8 + TERMS.length * 4.5 + 6;
+  const bottomFooter = 10;
+  return thankYouPanel + 10 + termsBlock + bottomFooter;
 }
 
 function ensureVerticalSpace(doc: jsPDF, y: number, neededHeight: number): number {
@@ -220,94 +265,177 @@ function ensureVerticalSpace(doc: jsPDF, y: number, neededHeight: number): numbe
     return y;
   }
   doc.addPage();
-  return MARGIN;
+  return setupContinuationPage(doc);
 }
 
 function drawSharedHeader(ctx: PdfContext, contactInfo: ContactInfo): number {
-  const { doc, drawRoundedRectBlue } = ctx;
-  let yPosition = MARGIN;
+  const { doc } = ctx;
 
-  doc.setFillColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-  doc.rect(0, 0, PAGE_WIDTH, 50, 'F');
+  fillPageBackground(doc);
+  drawTopAccentBar(doc);
 
-  doc.setTextColor(BLUE[0], BLUE[1], BLUE[2]);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Photobooth Guys', MARGIN, 20);
+  let y = CONTENT_START_Y;
 
-  doc.setTextColor(LIGHT_GRAY[0], LIGHT_GRAY[1], LIGHT_GRAY[2]);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Professional Photo Booth Rental Toronto', MARGIN, 28);
-
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-  doc.setFontSize(9);
-  doc.text('647-378-5332', MARGIN, 35);
-  doc.text('info@photoboothguys.ca', MARGIN, 39);
-  doc.text('www.photoboothguys.ca', MARGIN, 43);
-
-  const contactInfoX = PAGE_WIDTH - MARGIN;
-  const bannerWidth = 35;
-  const bannerHeight = 15;
-  const bannerX = PAGE_WIDTH - MARGIN - bannerWidth;
-  const bannerY = 12;
-
-  drawRoundedRectBlue(bannerX, bannerY, bannerWidth, bannerHeight, BORDER_RADIUS);
-
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Quote', bannerX + bannerWidth / 2, bannerY + bannerHeight / 2 + 3, { align: 'center' });
-
-  yPosition = 60;
-
-  doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Quote Date:', contactInfoX, yPosition, { align: 'right' });
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(22);
+  doc.text('Photobooth Guys', MARGIN, y);
 
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+  doc.text('PROFESSIONAL PHOTO BOOTH RENTAL · TORONTO', MARGIN, y + 6, { charSpace: 0.6 });
+
+  doc.setFontSize(8);
+  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+  doc.text('647-378-5332', RIGHT_X, y, { align: 'right' });
+  doc.text('info@photoboothguys.ca', RIGHT_X, y + 4.5, { align: 'right' });
+  doc.text('www.photoboothguys.ca', RIGHT_X, y + 9, { align: 'right' });
+
+  y += 16;
+  drawHairline(doc, y);
+  y += 10;
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(26);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text('Quote', MARGIN, y);
+
   const quoteDate = new Date().toLocaleDateString('en-US', {
-    month: 'numeric',
+    month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
-  doc.text(quoteDate, contactInfoX, yPosition + 5, { align: 'right' });
 
-  yPosition += 20;
-
-  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-  doc.text('Quote To:', MARGIN, yPosition);
-
-  yPosition += 8;
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  const clientName = contactInfo.name || '';
-  const titleCaseName = clientName.toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase());
-  doc.text(titleCaseName, MARGIN, yPosition);
-
-  yPosition += 8;
-
+  doc.setFontSize(7);
+  doc.setTextColor(FAINT[0], FAINT[1], FAINT[2]);
+  doc.text('DATE', RIGHT_X, y - 8, { align: 'right', charSpace: 0.7 });
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+  doc.text(quoteDate, RIGHT_X, y - 3, { align: 'right' });
+  doc.setFontSize(8);
+  doc.text('Valid 30 days', RIGHT_X, y + 2, { align: 'right' });
 
-  if (contactInfo.phone) {
-    doc.text(`Phone : ${contactInfo.phone}`, MARGIN, yPosition);
-    yPosition += 5;
-  }
-  if (contactInfo.email) {
-    doc.text(`Email : ${contactInfo.email}`, MARGIN, yPosition);
-    yPosition += 5;
-  }
+  y += 12;
+  drawSpacedLabel(doc, 'Prepared for', MARGIN, y);
+
+  const clientName = contactInfo.name || '';
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text(titleCaseName(clientName), MARGIN, y + 6);
+
   if (contactInfo.eventDate) {
-    doc.text(`Event Date : ${contactInfo.eventDate}`, MARGIN, yPosition);
-    yPosition += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+    doc.text(contactInfo.eventDate, MARGIN, y + 12);
+    y += 12;
+  } else {
+    y += 6;
   }
 
-  return yPosition + 15;
+  return y + 10;
+}
+
+type LineItem = {
+  description: string;
+  descriptionLines?: string[];
+  price: number;
+};
+
+function buildLineItems(option: QuoteOption): LineItem[] {
+  const { package: packageInfo, addons } = option;
+  const items: LineItem[] = [];
+
+  if (packageInfo.kind === 'standard') {
+    items.push({
+      description: `${packageInfo.hours} Hour Photo Booth Package`,
+      price: packageInfo.price,
+    });
+  } else {
+    const lines = [packageInfo.title];
+    if (packageInfo.description?.trim()) {
+      lines.push(...packageInfo.description.trim().split('\n').filter(Boolean));
+    }
+    items.push({
+      description: packageInfo.title,
+      descriptionLines: lines,
+      price: packageInfo.price,
+    });
+  }
+
+  if (addons.unlimitedPrints && packageInfo.kind === 'standard') {
+    const isShortPackage = packageInfo.hours <= 3;
+    const ratePerHour = isShortPackage ? 60 : 50;
+    items.push({
+      description: 'Unlimited Prints',
+      price: ratePerHour * packageInfo.hours,
+    });
+  }
+
+  if (addons.glamBooth) {
+    items.push({ description: 'Glam Booth', price: 75 });
+  }
+
+  if (addons.waitingTime && (addons.waitingHours ?? 0) > 0) {
+    const waitingHours = addons.waitingHours ?? 0;
+    const description =
+      waitingHours > 1 ? `Waiting Time x ${waitingHours}` : 'Waiting Time';
+    items.push({
+      description,
+      price: 50 * waitingHours,
+    });
+  }
+
+  return items;
+}
+
+function drawLineItemRow(ctx: PdfContext, startY: number, item: LineItem): number {
+  const { doc } = ctx;
+  const descMaxWidth = CONTENT_WIDTH - 38;
+  const priceX = RIGHT_X;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+
+  let rowHeight = LINE_ROW_HEIGHT;
+  let textY = startY + 4.5;
+
+  if (item.descriptionLines && item.descriptionLines.length > 1) {
+    doc.setFont('helvetica', 'bold');
+    doc.text(item.descriptionLines[0], MARGIN, textY);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    let lineY = textY + 4;
+    for (let i = 1; i < item.descriptionLines.length; i += 1) {
+      const wrapped = doc.splitTextToSize(item.descriptionLines[i], descMaxWidth);
+      wrapped.forEach((line: string) => {
+        doc.text(line, MARGIN, lineY);
+        lineY += 3.8;
+      });
+    }
+    rowHeight = Math.max(LINE_ROW_HEIGHT, lineY - startY);
+    doc.setFontSize(9.5);
+  } else {
+    const wrapped = doc.splitTextToSize(item.description, descMaxWidth);
+    if (wrapped.length > 1) {
+      wrapped.forEach((line: string, index: number) => {
+        doc.text(line, MARGIN, textY + index * 4);
+      });
+      rowHeight = Math.max(LINE_ROW_HEIGHT, wrapped.length * 4 + 1);
+    } else {
+      doc.text(item.description, MARGIN, textY);
+    }
+  }
+
+  doc.text(formatMoney(item.price), priceX, startY + 4.5, { align: 'right' });
+
+  const dividerY = startY + rowHeight;
+  drawRowDivider(doc, dividerY);
+  return dividerY + LINE_GAP;
 }
 
 function drawOptionBlock(
@@ -316,255 +444,100 @@ function drawOptionBlock(
   option: QuoteOption,
   optionLabel: string | null
 ): number {
-  const { doc, drawRoundedRectLeft, drawRoundedRectBlue } = ctx;
-  const { package: packageInfo, addons, discount, subtotal, total } = option;
+  const { doc } = ctx;
+  const { discount, subtotal, total } = option;
   let yPosition = startY;
 
   if (optionLabel) {
-    doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(optionLabel, MARGIN, yPosition);
-    yPosition += OPTION_LABEL_HEIGHT;
+    doc.setFontSize(7.5);
+    doc.setTextColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+    doc.text(optionLabel.toUpperCase(), MARGIN, yPosition, { charSpace: 0.9 });
+    yPosition += OPTION_LABEL_HEIGHT + 3;
   }
 
-  drawRoundedRectLeft(MARGIN, yPosition, DESC_COL_WIDTH, TABLE_HEADER_HEIGHT, BORDER_RADIUS);
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Item Description', MARGIN + 5, yPosition + 7);
-
-  doc.setFillColor(BLUE[0], BLUE[1], BLUE[2]);
-  doc.rect(MARGIN + DESC_COL_WIDTH, yPosition, PRICE_COL_WIDTH, TABLE_HEADER_HEIGHT, 'F');
-  doc.text('Unit Price', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH / 2, yPosition + 7, { align: 'center' });
-
-  doc.setFillColor(BLUE[0], BLUE[1], BLUE[2]);
-  doc.rect(MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH, yPosition, QTY_COL_WIDTH, TABLE_HEADER_HEIGHT, 'F');
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-  doc.text('Qty', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH / 2, yPosition + 7, {
-    align: 'center',
-  });
-
-  doc.setFillColor(BLUE[0], BLUE[1], BLUE[2]);
-  doc.rect(
-    MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH,
-    yPosition,
-    TOTAL_COL_WIDTH,
-    TABLE_HEADER_HEIGHT,
-    'F'
-  );
-  doc.text(
-    'Price',
-    MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2,
-    yPosition + 7,
-    { align: 'center' }
-  );
-
-  yPosition += TABLE_HEADER_HEIGHT + 2;
-
-  doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.2);
-
-  const descMaxW = DESC_COL_WIDTH - 10;
-  const lineGap = 4.5;
-  let baseRowHeight = ROW_HEIGHT;
-  let priceY = yPosition + 5;
-
-  if (packageInfo.kind === 'standard') {
-    doc.text(`${packageInfo.hours} Hour Photo Booth Package`, MARGIN + 5, yPosition + 5);
-  } else {
-    let lineY = yPosition + 5;
-    let lineCount = 0;
-    doc.setFont('helvetica', 'bold');
-    const titleLines = doc.splitTextToSize(packageInfo.title, descMaxW);
-    titleLines.forEach((line: string) => {
-      doc.text(line, MARGIN + 5, lineY);
-      lineY += lineGap;
-      lineCount += 1;
-    });
-    doc.setFont('helvetica', 'normal');
-    if (packageInfo.description?.trim()) {
-      doc.setFontSize(8);
-      const bodyLines = doc.splitTextToSize(packageInfo.description.trim(), descMaxW);
-      bodyLines.forEach((line: string) => {
-        doc.text(line, MARGIN + 5, lineY);
-        lineY += lineGap - 0.5;
-        lineCount += 1;
-      });
-      doc.setFontSize(9);
-    }
-    baseRowHeight = Math.max(ROW_HEIGHT, 4 + lineCount * lineGap);
-    priceY = yPosition + Math.min(5, baseRowHeight / 2);
-  }
-
-  doc.text(
-    `$${packageInfo.price.toFixed(2)}`,
-    MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH / 2,
-    priceY,
-    { align: 'center' }
-  );
-  doc.text('1', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH / 2, priceY, { align: 'center' });
-  doc.text(
-    `$${packageInfo.price.toFixed(2)}`,
-    MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2,
-    priceY,
-    { align: 'center' }
-  );
-
-  doc.line(MARGIN, yPosition + baseRowHeight, MARGIN + TABLE_WIDTH, yPosition + baseRowHeight);
-  yPosition += baseRowHeight + 2;
-
-  if (addons.unlimitedPrints && packageInfo.kind === 'standard') {
-    const isShortPackage = packageInfo.hours <= 3;
-    const ratePerHour = isShortPackage ? 60 : 50;
-    const unlimitedPrintsPrice = ratePerHour * packageInfo.hours;
-
-    doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-    doc.text('Unlimited Prints', MARGIN + 5, yPosition + 5);
-    doc.text(
-      `$${unlimitedPrintsPrice.toFixed(2)}`,
-      MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH / 2,
-      yPosition + 5,
-      { align: 'center' }
-    );
-    doc.text('1', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH / 2, yPosition + 5, {
-      align: 'center',
-    });
-    doc.text(
-      `$${unlimitedPrintsPrice.toFixed(2)}`,
-      MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2,
-      yPosition + 5,
-      { align: 'center' }
-    );
-
-    doc.line(MARGIN, yPosition + ROW_HEIGHT, MARGIN + TABLE_WIDTH, yPosition + ROW_HEIGHT);
-    yPosition += ROW_HEIGHT + 2;
-  }
-
-  if (addons.glamBooth) {
-    doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-    doc.text('Glam Booth', MARGIN + 5, yPosition + 5);
-    doc.text('$75.00', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH / 2, yPosition + 5, { align: 'center' });
-    doc.text('1', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH / 2, yPosition + 5, {
-      align: 'center',
-    });
-    doc.text('$75.00', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2, yPosition + 5, {
-      align: 'center',
-    });
-
-    doc.line(MARGIN, yPosition + ROW_HEIGHT, MARGIN + TABLE_WIDTH, yPosition + ROW_HEIGHT);
-    yPosition += ROW_HEIGHT + 2;
-  }
-
-  if (addons.waitingTime && (addons.waitingHours ?? 0) > 0) {
-    const waitingHours = addons.waitingHours ?? 0;
-    const waitingTimePrice = 50 * waitingHours;
-    const hoursText = waitingHours === 1 ? 'hour' : 'hours';
-
-    doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-    doc.text(`Waiting Time (${waitingHours} ${hoursText})`, MARGIN + 5, yPosition + 5);
-    doc.text(
-      `$${waitingTimePrice.toFixed(2)}`,
-      MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH / 2,
-      yPosition + 5,
-      { align: 'center' }
-    );
-    doc.text('1', MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH / 2, yPosition + 5, {
-      align: 'center',
-    });
-    doc.text(
-      `$${waitingTimePrice.toFixed(2)}`,
-      MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2,
-      yPosition + 5,
-      { align: 'center' }
-    );
-
-    doc.line(MARGIN, yPosition + ROW_HEIGHT, MARGIN + TABLE_WIDTH, yPosition + ROW_HEIGHT);
-    yPosition += ROW_HEIGHT + 2;
+  for (const item of buildLineItems(option)) {
+    yPosition = drawLineItemRow(ctx, yPosition, item);
   }
 
   if (discount && discount.amount > 0) {
-    yPosition += 5;
-    doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Subtotal', MARGIN + 5, yPosition + 5);
-    doc.text(
-      `$${subtotal.toFixed(2)}`,
-      MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2,
-      yPosition + 5,
-      { align: 'center' }
-    );
-    yPosition += ROW_HEIGHT + 2;
-
-    doc.setTextColor(RED[0], RED[1], RED[2]);
     doc.setFont('helvetica', 'normal');
-    const discountLabel = discount.note ? `Discount (${discount.note})` : 'Discount';
-    doc.text(discountLabel, MARGIN + 5, yPosition + 5);
-    doc.text(
-      `-$${discount.amount.toFixed(2)}`,
-      MARGIN + DESC_COL_WIDTH + PRICE_COL_WIDTH + QTY_COL_WIDTH + TOTAL_COL_WIDTH / 2,
-      yPosition + 5,
-      { align: 'center' }
-    );
+    doc.setFontSize(9);
+    doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+    doc.text('Subtotal', MARGIN, yPosition + 4.5);
+    doc.text(formatMoney(subtotal), RIGHT_X, yPosition + 4.5, { align: 'right' });
+    yPosition += LINE_ROW_HEIGHT;
+    drawRowDivider(doc, yPosition);
+    yPosition += LINE_GAP;
 
-    doc.line(MARGIN, yPosition + ROW_HEIGHT, MARGIN + TABLE_WIDTH, yPosition + ROW_HEIGHT);
-    yPosition += ROW_HEIGHT + 2;
+    const discountLabel = discount.note ? `Discount (${discount.note})` : 'Discount';
+    doc.text(discountLabel, MARGIN, yPosition + 4.5);
+    doc.text(`-${formatMoney(discount.amount)}`, RIGHT_X, yPosition + 4.5, { align: 'right' });
+    yPosition += LINE_ROW_HEIGHT;
+    drawRowDivider(doc, yPosition);
+    yPosition += LINE_GAP + 2;
+  } else {
+    yPosition += 2;
   }
 
-  yPosition += 10;
-
-  drawRoundedRectBlue(MARGIN, yPosition, TABLE_WIDTH, TOTAL_BANNER_HEIGHT, BORDER_RADIUS);
-
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Total', MARGIN + 10, yPosition + TOTAL_BANNER_HEIGHT / 2 + 4);
-  doc.text(`$${total.toFixed(2)}`, MARGIN + TABLE_WIDTH - 10, yPosition + TOTAL_BANNER_HEIGHT / 2 + 4, {
-    align: 'right',
-  });
+  doc.setFontSize(10);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text('Total', MARGIN, yPosition + 5);
 
-  return yPosition + TOTAL_BANNER_HEIGHT;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11.5);
+  doc.setTextColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+  doc.text(formatMoney(total), RIGHT_X, yPosition + 5, { align: 'right' });
+
+  return yPosition + TOTAL_ROW_HEIGHT;
 }
 
 function drawFooter(ctx: PdfContext, startY: number): number {
-  const { doc, drawRoundedRectLeft } = ctx;
+  const { doc } = ctx;
   let yPosition = startY;
 
-  const memoWidth = 140;
-  const memoHeight = 12;
-  drawRoundedRectLeft(MARGIN, yPosition, memoWidth, memoHeight, BORDER_RADIUS);
-
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  const thankYouText = 'Thank You For Considering Photobooth Guys For Your Event.';
-  doc.text(thankYouText, MARGIN + memoWidth / 2, yPosition + memoHeight / 2 + 3, { align: 'center' });
-
-  yPosition += memoHeight + 10;
-  doc.setTextColor(DARK_GRAY[0], DARK_GRAY[1], DARK_GRAY[2]);
+  const panelPaddingX = 10;
+  const panelPaddingY = 7;
+  const thankYouText = 'Thank you for considering Photobooth Guys for your event.';
+  doc.setFont('times', 'italic');
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Terms & Conditions:', MARGIN, yPosition);
+  const thankYouLines = doc.splitTextToSize(thankYouText, CONTENT_WIDTH - panelPaddingX * 2);
+  const panelHeight = thankYouLines.length * 4.8 + panelPaddingY * 2;
 
-  yPosition += 6;
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  const terms = [
-    'A $100 retainer fee is required to secure your booking.',
-    'Balance due 7 days before event.',
-    'Quote valid for 30 days from date of issue.',
-    'Attendant will arrive 1 hour before the start time for set up.',
-  ];
+  drawRoundedFillRect(doc, MARGIN, yPosition, CONTENT_WIDTH, panelHeight, PANEL_RADIUS, PANEL_FILL);
 
-  terms.forEach((term) => {
-    doc.text(term, MARGIN, yPosition, { maxWidth: memoWidth });
-    yPosition += 5;
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  thankYouLines.forEach((line: string, index: number) => {
+    doc.text(line, PAGE_WIDTH / 2, yPosition + panelPaddingY + 3.5 + index * 4.8, { align: 'center' });
   });
 
-  return yPosition;
+  yPosition += panelHeight + 10;
+
+  drawSpacedLabel(doc, 'Terms', MARGIN, yPosition);
+  yPosition += 5;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
+  TERMS.forEach((term) => {
+    const lines = doc.splitTextToSize(term, CONTENT_WIDTH);
+    lines.forEach((line: string) => {
+      doc.text(line, MARGIN, yPosition);
+      yPosition += 3.8;
+    });
+    yPosition += 0.8;
+  });
+
+  yPosition += 6;
+  drawHairline(doc, yPosition);
+  yPosition += 6;
+
+  doc.setFontSize(7);
+  doc.setTextColor(FAINT[0], FAINT[1], FAINT[2]);
+  doc.text('photoboothguys.ca · 647-378-5332', PAGE_WIDTH / 2, yPosition, { align: 'center' });
+
+  return yPosition + 4;
 }
 
 export async function POST(request: NextRequest) {
@@ -579,7 +552,7 @@ export async function POST(request: NextRequest) {
     const { contactInfo, options } = payload;
     const showOptionLabels = options.length > 1;
     const doc = new jsPDF('p', 'mm', 'a4');
-    const ctx = createPdfContext(doc);
+    const ctx: PdfContext = { doc };
 
     let yPosition = drawSharedHeader(ctx, contactInfo);
 
