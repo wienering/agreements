@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '../../components/AdminButton';
+import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
 import { UIcon } from '../../components/UIcon';
 
 interface AttendantGroup {
@@ -168,6 +169,117 @@ export default function AttendantGroupsPage() {
     }));
   };
 
+  const renderSlugPill = (slug: string) => (
+    <code style={{
+      backgroundColor: isDark ? '#080c08' : '#f1f5f9',
+      padding: '4px 8px',
+      borderRadius: '4px',
+      fontSize: '13px',
+      color: textColor,
+      wordBreak: 'break-all',
+    }}>
+      {slug}
+    </code>
+  );
+
+  const renderAttendantIds = (attendantIds: string[]) => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+      {attendantIds.map((id, idx) => (
+        <span
+          key={idx}
+          style={{
+            backgroundColor: isDark ? '#2d3530' : '#e2e8f0',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: textColor,
+          }}
+        >
+          {id}
+        </span>
+      ))}
+    </div>
+  );
+
+  const renderGroupHubCell = (group: AttendantGroup) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+      <a
+        href={`/attendants/${group.slug}/hub`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          color: 'var(--accent)',
+          fontSize: '13px',
+          textDecoration: 'none',
+          fontWeight: '500',
+        }}
+      >
+        View Group Hub →
+      </a>
+      <AdminButton variant="ghost" size="compact" onClick={() => copyHubLink(group.slug, group.id)}>
+        {copiedId === group.id ? '✓ Copied' : 'Copy Group Hub Link'}
+      </AdminButton>
+    </div>
+  );
+
+  const renderIndividualHubLinks = (group: AttendantGroup) => {
+    if (group.attendantIds.length === 0) {
+      return <span style={{ fontSize: '12px', color: mutedText }}>No attendant IDs</span>;
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {group.attendantIds.map((attendantId, idx) => {
+          const individualHubLink = `${window.location.origin}/attendants/${attendantId}/hub`;
+          return (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <a
+                href={`/attendants/${attendantId}/hub`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: 'var(--accent)',
+                  fontSize: '12px',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {attendantId} →
+              </a>
+              <AdminButton
+                variant="ghost"
+                size="compact"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(individualHubLink);
+                    setCopiedId(`${group.id}-${attendantId}`);
+                    setTimeout(() => setCopiedId(null), 2000);
+                  } catch (error) {
+                    console.error('Failed to copy hub link:', error);
+                    alert('Failed to copy hub link to clipboard');
+                  }
+                }}
+              >
+                {copiedId === `${group.id}-${attendantId}` ? '✓' : 'Copy'}
+              </AdminButton>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderGroupActions = (group: AttendantGroup) => (
+    <>
+      <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(group)}>
+        Edit
+      </AdminButton>
+      <AdminButton variant="danger" size="compact" onClick={() => handleDelete(group.id)}>
+        Delete
+      </AdminButton>
+    </>
+  );
+
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -237,204 +349,78 @@ export default function AttendantGroupsPage() {
               </p>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ 
-                  backgroundColor: isDark ? '#080c08' : '#f8fafc',
-                  borderBottom: `1px solid ${borderColor}`
-                }}>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText
-                  }}>
-                    Name
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText
-                  }}>
-                    Slug
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText
-                  }}>
-                    Attendant IDs
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText
-                  }}>
-                    Group Hub Link
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText
-                  }}>
-                    Individual Hub Links
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'right', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText,
-                    width: '200px'
-                  }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="admin-table-desktop">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{
+                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      borderBottom: `1px solid ${borderColor}`,
+                    }}>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText }}>Name</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText }}>Slug</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText }}>Attendant IDs</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText }}>Group Hub Link</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText }}>Individual Hub Links</th>
+                      <th style={{ padding: '16px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: mutedText, width: '200px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groups.map((group) => (
+                      <tr
+                        key={group.id}
+                        style={{ borderBottom: `1px solid ${borderColor}`, transition: 'background-color 0.2s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      >
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>{group.name}</div>
+                        </td>
+                        <td style={{ padding: '16px' }}>{renderSlugPill(group.slug)}</td>
+                        <td style={{ padding: '16px' }}>{renderAttendantIds(group.attendantIds)}</td>
+                        <td style={{ padding: '16px' }}>{renderGroupHubCell(group)}</td>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ maxWidth: '300px' }}>{renderIndividualHubLinks(group)}</div>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            {renderGroupActions(group)}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="admin-table-mobile">
                 {groups.map((group) => (
-                  <tr key={group.id} style={{ 
-                    borderBottom: `1px solid ${borderColor}`,
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
+                  <AdminMobileDataCard
+                    key={group.id}
+                    title={group.name}
+                    cardBg={cardBg}
+                    borderColor={borderColor}
+                    textColor={textColor}
+                    mutedText={mutedText}
+                    actions={renderGroupActions(group)}
                   >
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>
-                        {group.name}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <code style={{ 
-                        backgroundColor: isDark ? '#080c08' : '#f1f5f9',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                        color: textColor
-                      }}>
-                        {group.slug}
-                      </code>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        flexWrap: 'wrap', 
-                        gap: '4px' 
-                      }}>
-                        {group.attendantIds.map((id, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              backgroundColor: isDark ? '#2d3530' : '#e2e8f0',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              color: textColor
-                            }}
-                          >
-                            {id}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <a
-                          href={`/attendants/${group.slug}/hub`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: 'var(--accent)',
-                            fontSize: '13px',
-                            textDecoration: 'none',
-                            fontWeight: '500'
-                          }}
-                        >
-                          View Group Hub →
-                        </a>
-                        <AdminButton
-                          variant="ghost"
-                          size="compact"
-                          onClick={() => copyHubLink(group.slug, group.id)}
-                        >
-                          {copiedId === group.id ? '✓ Copied' : 'Copy Group Hub Link'}
-                        </AdminButton>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '300px' }}>
-                        {group.attendantIds.length > 0 ? (
-                          group.attendantIds.map((attendantId, idx) => {
-                            const individualHubLink = `${window.location.origin}/attendants/${attendantId}/hub`;
-                            return (
-                              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <a
-                                  href={`/attendants/${attendantId}/hub`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    color: 'var(--accent)',
-                                    fontSize: '12px',
-                                    textDecoration: 'none',
-                                    fontWeight: '500',
-                                    flex: '1',
-                                    minWidth: '120px'
-                                  }}
-                                >
-                                  {attendantId} →
-                                </a>
-                                <AdminButton
-                                  variant="ghost"
-                                  size="compact"
-                                  onClick={async () => {
-                                    try {
-                                      await navigator.clipboard.writeText(individualHubLink);
-                                      setCopiedId(`${group.id}-${attendantId}`);
-                                      setTimeout(() => setCopiedId(null), 2000);
-                                    } catch (error) {
-                                      console.error('Failed to copy hub link:', error);
-                                      alert('Failed to copy hub link to clipboard');
-                                    }
-                                  }}
-                                >
-                                  {copiedId === `${group.id}-${attendantId}` ? '✓' : 'Copy'}
-                                </AdminButton>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <span style={{ fontSize: '12px', color: mutedText }}>No attendant IDs</span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(group)}>
-                          Edit
-                        </AdminButton>
-                        <AdminButton variant="danger" size="compact" onClick={() => handleDelete(group.id)}>
-                          Delete
-                        </AdminButton>
-                      </div>
-                    </td>
-                  </tr>
+                    <AdminMobileField label="Slug" mutedText={mutedText}>
+                      {renderSlugPill(group.slug)}
+                    </AdminMobileField>
+                    <AdminMobileField label="Attendant IDs" mutedText={mutedText}>
+                      {group.attendantIds.length > 0 ? renderAttendantIds(group.attendantIds) : (
+                        <span style={{ fontSize: '12px', color: mutedText }}>No attendant IDs</span>
+                      )}
+                    </AdminMobileField>
+                    <AdminMobileField label="Group Hub Link" mutedText={mutedText}>
+                      {renderGroupHubCell(group)}
+                    </AdminMobileField>
+                    <AdminMobileField label="Individual Hub Links" mutedText={mutedText}>
+                      {renderIndividualHubLinks(group)}
+                    </AdminMobileField>
+                  </AdminMobileDataCard>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 

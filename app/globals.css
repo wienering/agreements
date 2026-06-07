@@ -146,6 +146,31 @@ body {
   }
 }
 
+/* Responsive admin data tables: desktop table, mobile card stack */
+.admin-table-desktop {
+  display: block;
+}
+
+.admin-table-mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .admin-table-desktop {
+    display: none !important;
+  }
+
+  .admin-table-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .admin-overview-status-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '../../components/AdminButton';
+import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
 import { UIcon } from '../../components/UIcon';
 
 interface BackdropLink {
@@ -188,6 +189,86 @@ export default function BackdropLinksPage() {
     }
   };
 
+  const renderOrderControls = (link: BackdropLink, index: number) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <button
+        onClick={() => moveLink(link.id, 'up')}
+        disabled={index === 0}
+        style={{
+          backgroundColor: 'transparent',
+          border: `1px solid ${borderColor}`,
+          borderRadius: '4px',
+          cursor: index === 0 ? 'not-allowed' : 'pointer',
+          color: index === 0 ? borderColor : mutedText,
+          fontSize: '12px',
+          padding: '4px 8px',
+        }}
+      >
+        ▲
+      </button>
+      <span style={{ fontSize: '14px', color: textColor, fontWeight: 600, minWidth: '24px', textAlign: 'center' }}>
+        {link.displayOrder}
+      </span>
+      <button
+        onClick={() => moveLink(link.id, 'down')}
+        disabled={index === backdropLinks.length - 1}
+        style={{
+          backgroundColor: 'transparent',
+          border: `1px solid ${borderColor}`,
+          borderRadius: '4px',
+          cursor: index === backdropLinks.length - 1 ? 'not-allowed' : 'pointer',
+          color: index === backdropLinks.length - 1 ? borderColor : mutedText,
+          fontSize: '12px',
+          padding: '4px 8px',
+        }}
+      >
+        ▼
+      </button>
+    </div>
+  );
+
+  const renderAttendantHubCell = (link: BackdropLink) => {
+    const hubLink = getAttendantHubLink(link.url);
+    if (!hubLink) {
+      return <span style={{ color: mutedText, fontSize: '13px' }}>No attendant ID</span>;
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+        <a
+          href={hubLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: 'var(--accent)',
+            fontSize: '13px',
+            textDecoration: 'none',
+            fontWeight: '500',
+            wordBreak: 'break-all',
+          }}
+        >
+          View Hub →
+        </a>
+        <AdminButton variant="ghost" size="compact" onClick={() => copyHubLink(link.url, link.id)}>
+          {copiedId === link.id ? '✓ Copied' : 'Copy Hub Link'}
+        </AdminButton>
+      </div>
+    );
+  };
+
+  const renderBackdropActions = (link: BackdropLink) => (
+    <>
+      <AdminButton variant="ghost" size="compact" onClick={() => copyLink(link.url, link.id)}>
+        {copiedId === link.id ? '✓ Copied' : 'Copy Link'}
+      </AdminButton>
+      <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(link)}>
+        Edit
+      </AdminButton>
+      <AdminButton variant="danger" size="compact" onClick={() => handleDelete(link.id)}>
+        Delete
+      </AdminButton>
+    </>
+  );
+
   const moveLink = async (id: string, direction: 'up' | 'down') => {
     const currentIndex = backdropLinks.findIndex(link => link.id === id);
     if (currentIndex === -1) return;
@@ -225,18 +306,6 @@ export default function BackdropLinksPage() {
     <>
       <style dangerouslySetInnerHTML={{__html: `
         @media (max-width: 768px) {
-          .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-          }
-          .table-container table {
-            min-width: 600px;
-          }
-          .table-container th,
-          .table-container td {
-            padding: 12px 8px !important;
-            font-size: 13px !important;
-          }
           .header-actions {
             flex-direction: column !important;
             gap: 12px !important;
@@ -244,27 +313,6 @@ export default function BackdropLinksPage() {
           }
           .header-actions button {
             width: 100%;
-          }
-          .action-buttons {
-            gap: 6px !important;
-          }
-          .action-buttons button {
-            padding: 6px 10px !important;
-            font-size: 12px !important;
-          }
-        }
-        @media (max-width: 480px) {
-          .table-container table {
-            min-width: 500px;
-          }
-          .table-container th,
-          .table-container td {
-            padding: 10px 6px !important;
-            font-size: 12px !important;
-          }
-          .action-buttons button {
-            padding: 6px 8px !important;
-            font-size: 11px !important;
           }
         }
       `}} />
@@ -354,216 +402,130 @@ export default function BackdropLinksPage() {
               </p>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ 
-                  backgroundColor: isDark ? '#080c08' : '#f8fafc',
-                  borderBottom: `1px solid ${borderColor}`
-                }}>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText,
-                    width: '60px'
-                  }}>
-                    Order
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText,
-                    minWidth: '100px'
-                  }}>
-                    Name
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText,
-                    maxWidth: '200px',
-                    width: '200px'
-                  }}>
-                    URL
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'left', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText,
-                    width: '180px',
-                    minWidth: '180px'
-                  }}>
-                    Attendant Hub
-                  </th>
-                  <th style={{ 
-                    padding: '16px', 
-                    textAlign: 'right', 
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: mutedText,
-                    width: '280px',
-                    minWidth: '280px'
-                  }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              <div className="admin-table-desktop">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{
+                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      borderBottom: `1px solid ${borderColor}`,
+                    }}>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, width: '60px' }}>Order</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, minWidth: '100px' }}>Name</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, maxWidth: '200px', width: '200px' }}>URL</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, width: '180px', minWidth: '180px' }}>Attendant Hub</th>
+                      <th style={{ padding: '16px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: mutedText, width: '280px', minWidth: '280px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {backdropLinks.map((link, index) => (
+                      <tr
+                        key={link.id}
+                        style={{ borderBottom: `1px solid ${borderColor}`, transition: 'background-color 0.2s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      >
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <button
+                              onClick={() => moveLink(link.id, 'up')}
+                              disabled={index === 0}
+                              style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                cursor: index === 0 ? 'not-allowed' : 'pointer',
+                                color: index === 0 ? borderColor : mutedText,
+                                fontSize: '12px',
+                                padding: '2px',
+                              }}
+                            >
+                              ▲
+                            </button>
+                            <span style={{ fontSize: '14px', color: textColor, textAlign: 'center', fontWeight: '600' }}>
+                              {link.displayOrder}
+                            </span>
+                            <button
+                              onClick={() => moveLink(link.id, 'down')}
+                              disabled={index === backdropLinks.length - 1}
+                              style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                cursor: index === backdropLinks.length - 1 ? 'not-allowed' : 'pointer',
+                                color: index === backdropLinks.length - 1 ? borderColor : mutedText,
+                                fontSize: '12px',
+                                padding: '2px',
+                              }}
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>{link.name}</div>
+                        </td>
+                        <td style={{ padding: '16px', maxWidth: '200px', width: '200px' }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: 'var(--accent)',
+                                fontSize: '14px',
+                                textDecoration: 'none',
+                                display: 'inline-block',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                              title={link.url}
+                            >
+                              {link.url.length > 35 ? link.url.substring(0, 35) + '...' : link.url}
+                            </a>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px', width: '180px', minWidth: '180px' }}>{renderAttendantHubCell(link)}</td>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            {renderBackdropActions(link)}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="admin-table-mobile">
                 {backdropLinks.map((link, index) => (
-                  <tr key={link.id} style={{ 
-                    borderBottom: `1px solid ${borderColor}`,
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
+                  <AdminMobileDataCard
+                    key={link.id}
+                    title={link.name}
+                    cardBg={cardBg}
+                    borderColor={borderColor}
+                    textColor={textColor}
+                    mutedText={mutedText}
+                    actions={renderBackdropActions(link)}
                   >
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <button
-                          onClick={() => moveLink(link.id, 'up')}
-                          disabled={index === 0}
-                          style={{
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            cursor: index === 0 ? 'not-allowed' : 'pointer',
-                            color: index === 0 ? borderColor : mutedText,
-                            fontSize: '12px',
-                            padding: '2px'
-                          }}
-                        >
-                          ▲
-                        </button>
-                        <span style={{ 
-                          fontSize: '14px', 
-                          color: textColor,
-                          textAlign: 'center',
-                          fontWeight: '600'
-                        }}>
-                          {link.displayOrder}
-                        </span>
-                        <button
-                          onClick={() => moveLink(link.id, 'down')}
-                          disabled={index === backdropLinks.length - 1}
-                          style={{
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            cursor: index === backdropLinks.length - 1 ? 'not-allowed' : 'pointer',
-                            color: index === backdropLinks.length - 1 ? borderColor : mutedText,
-                            fontSize: '12px',
-                            padding: '2px'
-                          }}
-                        >
-                          ▼
-                        </button>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>
-                        {link.name}
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px', maxWidth: '200px', width: '200px' }}>
-                      <div style={{ 
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis', 
-                        whiteSpace: 'nowrap',
-                        maxWidth: '100%'
-                      }}>
-                        <a 
-                          href={link.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          style={{ 
-                            color: 'var(--accent)', 
-                            fontSize: '14px',
-                            textDecoration: 'none',
-                            display: 'inline-block',
-                            maxWidth: '100%',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}
-                          title={link.url}
-                        >
-                          {link.url.length > 35 ? link.url.substring(0, 35) + '...' : link.url}
-                        </a>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px', width: '180px', minWidth: '180px' }}>
-                      {getAttendantHubLink(link.url) ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <a
-                            href={getAttendantHubLink(link.url) || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              color: 'var(--accent)',
-                              fontSize: '13px',
-                              textDecoration: 'none',
-                              fontWeight: '500',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              maxWidth: '100%'
-                            }}
-                            title={getAttendantHubLink(link.url) || ''}
-                          >
-                            View Hub →
-                          </a>
-                          <AdminButton
-                            variant="ghost"
-                            size="compact"
-                            onClick={() => copyHubLink(link.url, link.id)}
-                            style={{ width: 'fit-content' }}
-                          >
-                            {copiedId === link.id ? '✓ Copied' : 'Copy Hub Link'}
-                          </AdminButton>
-                        </div>
-                      ) : (
-                        <span style={{ color: mutedText, fontSize: '13px' }}>
-                          No attendant ID
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding: '16px' }}>
-                      <div className="action-buttons" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                        <AdminButton
-                          variant="ghost"
-                          size="compact"
-                          onClick={() => copyLink(link.url, link.id)}
-                        >
-                          {copiedId === link.id ? '✓ Copied' : 'Copy Link'}
-                        </AdminButton>
-                        <AdminButton
-                          variant="ghost"
-                          size="compact"
-                          onClick={() => handleEdit(link)}
-                        >
-                          Edit
-                        </AdminButton>
-                        <AdminButton
-                          variant="danger"
-                          size="compact"
-                          onClick={() => handleDelete(link.id)}
-                        >
-                          Delete
-                        </AdminButton>
-                      </div>
-                    </td>
-                  </tr>
+                    <AdminMobileField label="Order" mutedText={mutedText}>
+                      {renderOrderControls(link, index)}
+                    </AdminMobileField>
+                    <AdminMobileField label="URL" mutedText={mutedText}>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: 'var(--accent)', fontSize: '14px', textDecoration: 'none', wordBreak: 'break-all' }}
+                      >
+                        {link.url}
+                      </a>
+                    </AdminMobileField>
+                    <AdminMobileField label="Attendant Hub" mutedText={mutedText}>
+                      {renderAttendantHubCell(link)}
+                    </AdminMobileField>
+                  </AdminMobileDataCard>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
 

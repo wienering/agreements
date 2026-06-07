@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { AdminButton, AdminLink } from '../../components/AdminButton';
+import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
 
 const STAGES: { key: string; label: string }[] = [
   { key: 'QUOTE_REQUESTED', label: 'Quote Requested' },
@@ -316,6 +317,86 @@ export default function LeadsPage() {
     return `/admin/quotes?${params.toString()}`;
   };
 
+  const renderLeadActions = (lead: Lead) => {
+    if (editingLead?.id === lead.id) {
+      return (
+        <>
+          <input
+            type="date"
+            value={nextFollowUp}
+            onChange={(e) => setNextFollowUp(e.target.value)}
+            style={{
+              padding: '4px 8px',
+              borderRadius: '4px',
+              border: `1px solid ${borderColor}`,
+              backgroundColor: cardBg,
+              color: textColor,
+              maxWidth: '100%',
+              ...(isDark ? { colorScheme: 'dark' as const } : {}),
+            }}
+          />
+          <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
+            Save
+          </AdminButton>
+          <AdminButton variant="ghost" size="compact" onClick={() => { setEditingLead(null); setNextFollowUp(''); }}>
+            Cancel
+          </AdminButton>
+        </>
+      );
+    }
+    return (
+      <>
+        {!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' && (
+          <AdminButton variant="primary" size="compact" onClick={() => setCreateAgreementLead(lead)}>
+            Create agreement
+          </AdminButton>
+        )}
+        <AdminLink
+          href={getQuoteUrl(lead)}
+          variant={!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' ? 'ghost' : 'primary'}
+          size="compact"
+        >
+          Create quote
+        </AdminLink>
+        {lead.agreement && (
+          <AdminLink href="/admin/agreements" variant="ghost" size="compact">
+            View agreement
+          </AdminLink>
+        )}
+        <AdminButton variant="ghost" size="compact" onClick={() => setEditingLead(lead)}>
+          Mark contacted
+        </AdminButton>
+        <AdminButton variant="ghost" size="compact" onClick={() => openEditLead(lead)}>
+          Edit
+        </AdminButton>
+        <AdminButton variant="danger" size="compact" onClick={() => handleDeleteLead(lead)}>
+          Delete
+        </AdminButton>
+      </>
+    );
+  };
+
+  const renderLeadStageSelect = (lead: Lead) => (
+    <select
+      value={lead.stage}
+      onChange={(e) => handleStageChange(lead, e.target.value)}
+      style={{
+        padding: '6px 10px',
+        borderRadius: '6px',
+        border: `1px solid ${borderColor}`,
+        backgroundColor: cardBg,
+        color: textColor,
+        fontSize: '13px',
+        cursor: 'pointer',
+        maxWidth: '100%',
+      }}
+    >
+      {STAGES.map((s) => (
+        <option key={s.key} value={s.key}>{s.label}</option>
+      ))}
+    </select>
+  );
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: mainBg, padding: '24px' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -417,109 +498,80 @@ export default function LeadsPage() {
           <div style={{ padding: '48px', textAlign: 'center', color: mutedText }}>Loading...</div>
         ) : (
           <div style={{ backgroundColor: cardBg, borderRadius: '12px', border: `1px solid ${borderColor}`, overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: isDark ? '#2d3530' : '#f1f5f9' }}>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Contact</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Event Date</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Stage</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Quote</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Last Contacted</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Next Follow-up</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leads.map((lead) => (
-                    <tr key={lead.id} style={{ borderBottom: `1px solid ${borderColor}` }}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: '500', color: textColor }}>{lead.firstName} {lead.lastName}</div>
-                        <div style={{ fontSize: '13px', color: mutedText }}>{lead.email}</div>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: textColor }}>{formatDate(lead.eventDate)}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <select
-                          value={lead.stage}
-                          onChange={(e) => handleStageChange(lead, e.target.value)}
-                          style={{
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            border: `1px solid ${borderColor}`,
-                            backgroundColor: cardBg,
-                            color: textColor,
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {STAGES.map((s) => (
-                            <option key={s.key} value={s.key}>{s.label}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: textColor }}>
-                        {lead.quoteTotal != null ? `$${lead.quoteTotal}` : '-'}
-                      </td>
-                      <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.lastContactedAt)}</td>
-                      <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.nextFollowUpAt)}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', maxWidth: '100%' }}>
-                        {editingLead?.id === lead.id ? (
-                          <>
-                            <input
-                              type="date"
-                              value={nextFollowUp}
-                              onChange={(e) => setNextFollowUp(e.target.value)}
-                              style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
-                            />
-                            <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
-                              Save
-                            </AdminButton>
-                            <AdminButton variant="ghost" size="compact" onClick={() => { setEditingLead(null); setNextFollowUp(''); }}>
-                              Cancel
-                            </AdminButton>
-                          </>
-                        ) : (
-                          <>
-                            {!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' && (
-                              <AdminButton variant="primary" size="compact" onClick={() => setCreateAgreementLead(lead)}>
-                                Create agreement
-                              </AdminButton>
-                            )}
-                            <AdminLink
-                              href={getQuoteUrl(lead)}
-                              variant={!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' ? 'ghost' : 'primary'}
-                              size="compact"
-                            >
-                              Create quote
-                            </AdminLink>
-                            {lead.agreement && (
-                              <AdminLink href="/admin/agreements" variant="ghost" size="compact">
-                                View agreement
-                              </AdminLink>
-                            )}
-                            <AdminButton variant="ghost" size="compact" onClick={() => setEditingLead(lead)}>
-                              Mark contacted
-                            </AdminButton>
-                            <AdminButton variant="ghost" size="compact" onClick={() => openEditLead(lead)}>
-                              Edit
-                            </AdminButton>
-                            <AdminButton variant="danger" size="compact" onClick={() => handleDeleteLead(lead)}>
-                              Delete
-                            </AdminButton>
-                          </>
-                        )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {leads.length === 0 && (
+            {leads.length === 0 ? (
               <div style={{ padding: '48px', textAlign: 'center', color: mutedText }}>
                 No leads yet. Generate a quote to create your first lead.
               </div>
+            ) : (
+              <>
+                <div className="admin-table-desktop">
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: isDark ? '#2d3530' : '#f1f5f9' }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Contact</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Event Date</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Stage</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Quote</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Last Contacted</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Next Follow-up</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leads.map((lead) => (
+                        <tr key={lead.id} style={{ borderBottom: `1px solid ${borderColor}` }}>
+                          <td style={{ padding: '12px 16px' }}>
+                            <div style={{ fontWeight: '500', color: textColor }}>{lead.firstName} {lead.lastName}</div>
+                            <div style={{ fontSize: '13px', color: mutedText }}>{lead.email}</div>
+                          </td>
+                          <td style={{ padding: '12px 16px', color: textColor }}>{formatDate(lead.eventDate)}</td>
+                          <td style={{ padding: '12px 16px' }}>{renderLeadStageSelect(lead)}</td>
+                          <td style={{ padding: '12px 16px', color: textColor }}>
+                            {lead.quoteTotal != null ? `$${lead.quoteTotal}` : '-'}
+                          </td>
+                          <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.lastContactedAt)}</td>
+                          <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.nextFollowUpAt)}</td>
+                          <td style={{ padding: '12px 16px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', maxWidth: '100%' }}>
+                              {renderLeadActions(lead)}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="admin-table-mobile">
+                  {leads.map((lead) => (
+                    <AdminMobileDataCard
+                      key={lead.id}
+                      title={`${lead.firstName} ${lead.lastName}`}
+                      subtitle={lead.email}
+                      cardBg={cardBg}
+                      borderColor={borderColor}
+                      textColor={textColor}
+                      mutedText={mutedText}
+                      actions={renderLeadActions(lead)}
+                    >
+                      <AdminMobileField label="Event Date" mutedText={mutedText}>
+                        <span style={{ color: textColor }}>{formatDate(lead.eventDate)}</span>
+                      </AdminMobileField>
+                      <AdminMobileField label="Stage" mutedText={mutedText}>
+                        {renderLeadStageSelect(lead)}
+                      </AdminMobileField>
+                      <AdminMobileField label="Quote" mutedText={mutedText}>
+                        <span style={{ color: textColor }}>{lead.quoteTotal != null ? `$${lead.quoteTotal}` : '-'}</span>
+                      </AdminMobileField>
+                      <AdminMobileField label="Last Contacted" mutedText={mutedText}>
+                        <span style={{ color: mutedText }}>{formatDate(lead.lastContactedAt)}</span>
+                      </AdminMobileField>
+                      <AdminMobileField label="Next Follow-up" mutedText={mutedText}>
+                        <span style={{ color: mutedText }}>{formatDate(lead.nextFollowUpAt)}</span>
+                      </AdminMobileField>
+                    </AdminMobileDataCard>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
