@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 
 const createLeadSchema = z.object({
@@ -20,10 +19,8 @@ const createLeadSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+
+    await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const stage = searchParams.get('stage');
@@ -48,6 +45,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(leads);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching leads:', error);
     return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 });
   }
@@ -55,10 +54,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+
+    await requireAdmin();
 
     const body = await request.json();
     const validated = createLeadSchema.parse(body);
@@ -111,6 +108,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(lead, { status: 201 });
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
     }

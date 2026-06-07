@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -19,6 +20,8 @@ const eventUpdateSchema = z.object({
 
 export async function PUT(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = eventUpdateSchema.parse(body);
 

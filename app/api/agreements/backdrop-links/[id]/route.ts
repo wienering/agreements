@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
@@ -15,6 +16,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+
+    await requireAdmin();
     const { id } = await params;
     const body = await request.json();
     const validatedData = updateBackdropLinkSchema.parse(body);
@@ -79,6 +82,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+
+    await requireAdmin();
     const { id } = await params;
 
     // Check if backdrop link exists
@@ -116,6 +121,8 @@ export async function DELETE(
     });
 
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error deleting backdrop link:', error);
     return NextResponse.json({ 
       error: 'Failed to delete backdrop link' 

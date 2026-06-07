@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -12,6 +13,8 @@ const cancelAgreementSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = cancelAgreementSchema.parse(body);
 
@@ -206,6 +209,8 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
     await transporter.sendMail(mailOptions);
     devLog('Cancellation email sent successfully');
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Failed to send cancellation email:', error);
     throw error;
   }

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 export async function PUT(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const { templateIds } = body;
 
@@ -23,6 +26,8 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error reordering templates:', error);
     return NextResponse.json({ error: 'Failed to reorder templates' }, { status: 500 });
   }

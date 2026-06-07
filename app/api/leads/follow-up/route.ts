@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+
+    await requireAdmin();
 
     const now = new Date();
     const threeDaysAgo = new Date(now);
@@ -36,6 +33,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(leads);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching follow-up leads:', error);
     return NextResponse.json({ error: 'Failed to fetch follow-up leads' }, { status: 500 });
   }

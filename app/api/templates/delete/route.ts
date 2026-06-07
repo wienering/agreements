@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
@@ -9,6 +10,8 @@ const templateDeleteSchema = z.object({
 
 export async function DELETE(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     devLog('Template delete request body:', body);
     

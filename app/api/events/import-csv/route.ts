@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import Papa from 'papaparse';
 
@@ -261,6 +262,8 @@ function mapCsvRow(row: Record<string, string>): {
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     // Get form data
     const formData = await request.formData();
     const file = formData.get('file') as File;

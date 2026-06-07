@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -9,6 +10,8 @@ const agreementDeleteSchema = z.object({
 
 export async function DELETE(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     console.log('Agreement delete request body:', body);
     

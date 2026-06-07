@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(
@@ -6,6 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ agreementId: string }> }
 ) {
   try {
+
+    await requireAdmin();
     const { agreementId } = await params;
 
     // Get agreement with event

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
@@ -12,6 +13,8 @@ const updateStatusSchema = z.object({
 
 export async function PUT(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     devLog('Update status request body:', body);
     

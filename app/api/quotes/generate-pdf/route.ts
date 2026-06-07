@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import jsPDF from 'jspdf';
 
 type NormalizedPackage =
@@ -541,6 +542,8 @@ function drawFooter(ctx: PdfContext, startY: number): number {
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const quoteData = await request.json();
     const payload = normalizeQuotePayload(quoteData);
 
@@ -585,6 +588,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error generating PDF:', error);
     return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
   }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { findOrCreateClientFolder, uploadFileToDrive } from '@/lib/google-drive';
 
@@ -30,14 +29,8 @@ function isValidFileType(fileName: string, mimeType: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+
+    const session = await requireAdmin();
 
     // Parse form data
     const formData = await request.formData();
@@ -137,7 +130,7 @@ export async function POST(request: NextRequest) {
         googleDriveFileId: uploadResult.fileId,
         googleDriveLink: uploadResult.webViewLink,
         googleDriveFolderId: folderId,
-        uploadedBy: session.user.email || null,
+        uploadedBy: session.user?.email || null,
       },
       include: {
         client: {
@@ -169,6 +162,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error uploading file:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to upload file' },

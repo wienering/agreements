@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -13,6 +14,8 @@ const createBackdropLinkSchema = z.object({
 // GET - List all backdrop links
 export async function GET() {
   try {
+
+    await requireAdmin();
     const backdropLinks = await prisma.backdropLink.findMany({
       orderBy: { displayOrder: 'asc' }
     });
@@ -23,6 +26,8 @@ export async function GET() {
     });
 
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching backdrop links:', error);
     return NextResponse.json({ 
       error: 'Failed to fetch backdrop links' 
@@ -33,6 +38,8 @@ export async function GET() {
 // POST - Create new backdrop link
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = createBackdropLinkSchema.parse(body);
 

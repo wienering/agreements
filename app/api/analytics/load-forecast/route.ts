@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 const TIMEZONE = 'America/Toronto'; // Eastern Time
@@ -146,6 +147,8 @@ function formatWeekLabel(weekStart: Date): string {
 
 export async function GET(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const weeks = parseInt(searchParams.get('weeks') || '12'); // Default to 12 weeks
     
@@ -373,6 +376,8 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching load forecast:', error);
     return NextResponse.json(
       { error: 'Failed to fetch load forecast' },

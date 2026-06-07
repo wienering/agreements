@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const now = new Date();
     const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
     const fiveDaysAgo = new Date(now.getTime() - (5 * 24 * 60 * 60 * 1000));
@@ -200,6 +203,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Warnings analytics error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch warning data' },

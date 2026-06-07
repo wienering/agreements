@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -186,6 +187,8 @@ function calculateInvoiceDetails(
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     // Check if Stripe API key is configured
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {

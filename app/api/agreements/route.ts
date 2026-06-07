@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 
 export async function GET() {
   try {
+
+    await requireAdmin();
     const agreements = await prisma.agreement.findMany({
       where: {
         archived: false, // Only show non-archived agreements
@@ -48,6 +51,8 @@ export async function GET() {
     
     return NextResponse.json(sortedAgreements);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching agreements:', error);
     return NextResponse.json({ error: 'Failed to fetch agreements' }, { status: 500 });
   }
@@ -55,6 +60,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const {
       clientId,
@@ -147,6 +154,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(agreement, { status: 201 });
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error creating agreement:', error);
     return NextResponse.json({ error: 'Failed to create agreement' }, { status: 500 });
   }

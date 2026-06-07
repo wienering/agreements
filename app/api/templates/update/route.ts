@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
@@ -13,6 +14,8 @@ const templateUpdateSchema = z.object({
 
 export async function PUT(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     devLog('Template update request body:', body);
     

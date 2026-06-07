@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 
 // Get backdrop-selection-tool URL from environment variable or use default
@@ -6,6 +7,8 @@ const BACKDROP_TOOL_URL = process.env.BACKDROP_SELECTION_TOOL_URL || process.env
 
 export async function GET(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const attendantId = searchParams.get('attendantId');
 

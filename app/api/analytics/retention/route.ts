@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '365');
 
@@ -55,6 +58,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Retention analytics error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch retention data' },

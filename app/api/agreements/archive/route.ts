@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -8,6 +9,8 @@ const archiveAgreementSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = archiveAgreementSchema.parse(body);
 
@@ -47,6 +50,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = archiveAgreementSchema.parse(body);
 

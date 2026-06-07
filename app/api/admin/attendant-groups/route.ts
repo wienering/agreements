@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 // GET - Fetch all attendant groups
 export async function GET() {
   try {
+
+    await requireAdmin();
     const groups = await prisma.attendantGroup.findMany({
       orderBy: {
         createdAt: 'desc',
@@ -29,6 +32,8 @@ export async function GET() {
 // POST - Create a new attendant group
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const { name, slug, attendantIds } = body;
 

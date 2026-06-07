@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
@@ -17,6 +18,8 @@ function reviewUrlForMarket(market: 'ontario' | 'calgary'): string {
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = sendReviewRequestSchema.parse(body);
     const reviewMarket: 'ontario' | 'calgary' = validatedData.reviewMarket ?? 'ontario';

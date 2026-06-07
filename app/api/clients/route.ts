@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -34,6 +35,8 @@ function parseOptionalPackagePrice(value: unknown): number | null {
 
 export async function GET() {
   try {
+
+    await requireAdmin();
     const clients = await prisma.client.findMany({
       include: {
         events: {
@@ -75,6 +78,8 @@ export async function GET() {
     
     return NextResponse.json(clientsWithCounts);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching clients:', error);
     return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
   }
@@ -82,6 +87,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const raw = await request.json();
     const parsed = createClientSchema.safeParse(raw);
     if (!parsed.success) {

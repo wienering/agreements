@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 interface RouteParams {
@@ -11,6 +12,8 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
+
+    await requireAdmin();
     const { id } = await params;
     
     const group = await prisma.attendantGroup.findUnique({
@@ -46,6 +49,8 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
+
+    await requireAdmin();
     const { id } = await params;
     const body = await request.json();
     const { name, slug, attendantIds } = body;
@@ -108,6 +113,8 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
+
+    await requireAdmin();
     const { id } = await params;
 
     // Check if group exists

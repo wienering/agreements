@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 
 const updateLeadSchema = z.object({
@@ -27,11 +26,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
+    await requireAdmin();
     const { id } = await params;
 
     const lead = await prisma.lead.findUnique({
@@ -54,6 +50,8 @@ export async function GET(
 
     return NextResponse.json(lead);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching lead:', error);
     return NextResponse.json({ error: 'Failed to fetch lead' }, { status: 500 });
   }
@@ -64,11 +62,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
+    await requireAdmin();
     const { id } = await params;
     const body = await request.json();
     const validated = updateLeadSchema.parse(body);
@@ -102,6 +97,8 @@ export async function PATCH(
 
     return NextResponse.json(lead);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
     }
@@ -115,11 +112,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
+    await requireAdmin();
     const { id } = await params;
 
     const lead = await prisma.lead.findUnique({
@@ -136,6 +130,8 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Lead deleted' });
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error deleting lead:', error);
     return NextResponse.json({ error: 'Failed to delete lead' }, { status: 500 });
   }

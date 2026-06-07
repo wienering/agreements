@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { devLog } from '@/lib/logger';
@@ -47,6 +48,8 @@ function parseOptionalEventDate(value: string | null | undefined): Date | null {
 
 export async function PUT(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     devLog('Client update request body:', body);
 
@@ -121,6 +124,8 @@ export async function PUT(request: NextRequest) {
     devLog('Updated client:', updatedClient);
     return NextResponse.json(updatedClient);
   } catch (error: unknown) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Client update error details:', error);
     const err = error as { code?: string; meta?: unknown };
     if (err.code === 'P2002') {

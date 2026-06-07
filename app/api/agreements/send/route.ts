@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
@@ -11,6 +12,8 @@ const sendAgreementSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json();
     const validatedData = sendAgreementSchema.parse(body);
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 // Default pricing configuration
@@ -21,6 +22,8 @@ const DEFAULT_PRICING = {
 // GET - Fetch current pricing
 export async function GET() {
   try {
+
+    await requireAdmin();
     const settings = await prisma.settings.findUnique({
       where: { key: 'pricing' }
     });
@@ -32,6 +35,8 @@ export async function GET() {
     // Return default pricing if no saved settings
     return NextResponse.json(DEFAULT_PRICING);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching pricing:', error);
     return NextResponse.json(DEFAULT_PRICING);
   }
@@ -40,6 +45,8 @@ export async function GET() {
 // POST - Save updated pricing
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const pricing = await request.json();
 
     // Validate pricing structure
@@ -60,6 +67,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, pricing: settings.value });
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error saving pricing:', error);
     return NextResponse.json(
       { error: 'Failed to save pricing' },

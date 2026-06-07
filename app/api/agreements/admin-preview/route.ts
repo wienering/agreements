@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if user is authenticated as admin
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user?.email) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
 
-    // Verify admin email
-    const isAdmin = session.user.email.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase();
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
+    await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
@@ -135,6 +124,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('❌ Admin Preview API: Error:', error);
     return NextResponse.json({ error: 'Failed to fetch agreement' }, { status: 500 });
   }

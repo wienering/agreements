@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const days = searchParams.get('days');
     const period = searchParams.get('period') || 'month'; // week, month, or year
@@ -461,6 +464,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(analytics);
   } catch (error) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching analytics:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }

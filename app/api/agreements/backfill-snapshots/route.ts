@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { processHtmlContent } from '../portal/shared/agreement-utils';
 
 export async function POST(request: NextRequest) {
   try {
+
+    await requireAdmin();
     const body = await request.json().catch(() => ({}));
     const { regenerateAll = false, onlyWithEvents = false } = body;
 
