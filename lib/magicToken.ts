@@ -1,15 +1,24 @@
 import crypto from 'crypto';
 import { devLog } from '@/lib/logger';
 
-// Use a secret from environment or generate a fallback (for development only)
-const getSecret = () => {
+const getSecret = (): string => {
   const secret = process.env.MAGIC_LINK_SECRET || process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    console.warn('Warning: No MAGIC_LINK_SECRET or NEXTAUTH_SECRET set. Using fallback for development.');
-    return 'development-fallback-secret-change-in-production';
+  if (secret) return secret;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('MAGIC_LINK_SECRET must be set in production');
   }
-  return secret;
+
+  throw new Error('MAGIC_LINK_SECRET or NEXTAUTH_SECRET must be set');
 };
+
+if (
+  process.env.NODE_ENV === 'production' &&
+  !process.env.MAGIC_LINK_SECRET &&
+  !process.env.NEXTAUTH_SECRET
+) {
+  throw new Error('MAGIC_LINK_SECRET must be set in production');
+}
 
 interface MagicTokenPayload {
   clientId: string;
