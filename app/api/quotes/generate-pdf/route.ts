@@ -48,7 +48,6 @@ const TOP_BAR_HEIGHT = 4.5;
 const CONTENT_START_Y = 16;
 const FOOTER_TOP_SPACING = 14;
 const OPTION_GAP = 10;
-const OPTION_LABEL_HEIGHT = 8;
 const LINE_ROW_HEIGHT = 7;
 const LINE_GAP = 1.5;
 const TOTAL_ROW_HEIGHT = 9;
@@ -237,7 +236,7 @@ function countLineItems(option: QuoteOption): number {
 }
 
 function estimateOptionBlockHeight(option: QuoteOption, showOptionLabel: boolean): number {
-  let height = showOptionLabel ? OPTION_LABEL_HEIGHT + 4 : 0;
+  let height = showOptionLabel ? 7 : 0;
   height += countLineItems(option) * (LINE_ROW_HEIGHT + LINE_GAP);
 
   const { package: packageInfo } = option;
@@ -453,7 +452,7 @@ function drawOptionBlock(
     doc.setFontSize(7.5);
     doc.setTextColor(ACCENT[0], ACCENT[1], ACCENT[2]);
     doc.text(optionLabel.toUpperCase(), MARGIN, yPosition, { charSpace: 0.9 });
-    yPosition += OPTION_LABEL_HEIGHT + 3;
+    yPosition += 4;
   }
 
   for (const item of buildLineItems(option)) {
