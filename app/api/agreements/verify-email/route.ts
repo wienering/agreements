@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = verifyEmailSchema.parse(body);
 
+    // TODO(security): enforce expiresAt here (same rules as GET /api/agreements/client) — currently
+    // expired unsigned agreements can still verify and load via this endpoint.
     const agreement = await prisma.agreement.findUnique({
       where: { uniqueToken: validatedData.token },
       include: {
@@ -115,6 +117,8 @@ export async function POST(request: NextRequest) {
         packagePrice: agreement.client.packagePrice != null ? Number(agreement.client.packagePrice) : null,
       };
 
+      const { internalTitle, ...publicTemplate } = agreement.template;
+
       // Build secondary signer summary (without phone — not needed by client UI)
       const secondSigner = secondarySignerEnabled
         ? {
@@ -146,7 +150,7 @@ export async function POST(request: NextRequest) {
         agreement: {
           id: agreement.id,
           client,
-          template: { ...agreement.template, htmlContent: processedHtml },
+          template: { ...publicTemplate, htmlContent: processedHtml },
           status: agreement.status,
           signedAt: agreement.signedAt,
           signedFromIP: agreement.signedFromIP,
