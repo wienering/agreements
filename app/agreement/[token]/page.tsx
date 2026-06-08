@@ -362,6 +362,7 @@ export default function ClientAgreementPage() {
 
       if (response.ok) {
         const data = await response.json();
+        const signerEmail = clientEmail.trim();
         setAgreement(data.agreement);
         setShowSignModal(false);
         setClientName('');
@@ -398,7 +399,11 @@ export default function ClientAgreementPage() {
           // Redirect to thank-you page after 3 seconds
           setTimeout(() => {
             setShowSignSuccess(false);
-            // Navigate to thank-you page with agreement data
+            try {
+              sessionStorage.setItem(`agreement-signer-email-${token}`, signerEmail);
+            } catch {
+              // sessionStorage unavailable — thank-you page will prompt for email
+            }
             window.location.href = `/agreement/${token}/thank-you`;
           }, 3000);
         }

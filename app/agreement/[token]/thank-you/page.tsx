@@ -48,6 +48,9 @@ export default function ThankYouPage() {
   const [agreement, setAgreement] = useState<AgreementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsEmail, setNeedsEmail] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isEmailing, setIsEmailing] = useState(false);
@@ -61,26 +64,55 @@ export default function ThankYouPage() {
   }, []);
 
   useEffect(() => {
-    fetchAgreement();
+    const storedEmail = sessionStorage.getItem(`agreement-signer-email-${token}`);
+    if (storedEmail) {
+      loadAgreement(storedEmail);
+    } else {
+      setNeedsEmail(true);
+      setLoading(false);
+    }
   }, [token]);
 
-  const fetchAgreement = async () => {
+  const loadAgreement = async (email: string) => {
+    setLoading(true);
+    setError(null);
+    setNeedsEmail(false);
+
     try {
-      const response = await fetch(`/api/agreements/client?token=${token}`);
-      
-      if (response.ok) {
-        const agreementData = await response.json();
-        setAgreement(agreementData);
+      const response = await fetch('/api/agreements/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setAgreement(data.agreement);
+        try {
+          sessionStorage.setItem(`agreement-signer-email-${token}`, email.trim());
+        } catch {
+          // ignore
+        }
       } else if (response.status === 404) {
         setError('Agreement not found or has expired.');
       } else {
-        setError('Failed to load agreement.');
+        setError(data.error || 'Failed to load agreement.');
+        setNeedsEmail(true);
       }
-    } catch (err) {
+    } catch {
       setError('Error loading agreement.');
+      setNeedsEmail(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmailSubmit = async () => {
+    if (!verificationEmail.trim()) return;
+    setIsVerifying(true);
+    await loadAgreement(verificationEmail);
+    setIsVerifying(false);
   };
 
   const handleDownloadPDF = async () => {
@@ -191,6 +223,106 @@ export default function ThankYouPage() {
         }}>
           Loading your agreement...
         </p>
+      </div>
+    );
+  }
+
+  if (needsEmail && !agreement) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        padding: '24px',
+      }}>
+        <div style={{
+          backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+          padding: '40px',
+          borderRadius: '12px',
+          border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+          maxWidth: '420px',
+          width: '100%',
+        }}>
+          <h1 style={{
+            color: isDark ? '#ffffff' : '#1e293b',
+            fontSize: '24px',
+            margin: '0 0 12px 0',
+            fontWeight: '700',
+          }}>
+            Confirm Your Email
+          </h1>
+          <p style={{
+            color: isDark ? '#8f9a8f' : '#64748b',
+            fontSize: '16px',
+            margin: '0 0 24px 0',
+            lineHeight: '1.5',
+          }}>
+            Enter the email address you used to sign this agreement to view your confirmation page.
+          </p>
+          {error && (
+            <div style={{
+              marginBottom: '16px',
+              padding: '12px',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '6px',
+              color: '#dc2626',
+              fontSize: '14px',
+            }}>
+              {error}
+            </div>
+          )}
+          <label style={{
+            display: 'block',
+            marginBottom: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: isDark ? '#ffffff' : '#1e293b',
+          }}>
+            Email Address
+          </label>
+          <input
+            type="email"
+            value={verificationEmail}
+            onChange={(e) => setVerificationEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleEmailSubmit();
+            }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: `1px solid ${isDark ? '#2d3530' : '#d1d5db'}`,
+              borderRadius: '6px',
+              backgroundColor: isDark ? '#080c08' : '#ffffff',
+              color: isDark ? '#ffffff' : '#1e293b',
+              fontSize: '14px',
+              marginBottom: '20px',
+              boxSizing: 'border-box',
+            }}
+            placeholder="you@example.com"
+          />
+          <button
+            onClick={handleEmailSubmit}
+            disabled={isVerifying || !verificationEmail.trim()}
+            style={{
+              width: '100%',
+              backgroundColor: 'var(--accent)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              opacity: isVerifying || !verificationEmail.trim() ? 0.7 : 1,
+            }}
+          >
+            {isVerifying ? 'Loading...' : 'Continue'}
+          </button>
+        </div>
       </div>
     );
   }
