@@ -96,9 +96,13 @@ function verifyWebhookSignature(
   signature: string | null,
   secret: string | undefined
 ): boolean {
-  if (!secret || !signature) {
-    // If no secret configured, allow requests (for testing/optional security)
+  if (!secret) {
+    // No secret configured — allow requests (for testing/optional security)
     return true;
+  }
+
+  if (!signature) {
+    return false;
   }
 
   try {
@@ -376,12 +380,12 @@ export async function POST(request: NextRequest) {
                      request.headers.get('x-signature') ||
                      payload.signature || null;
     
-    if (webhookSecret && signature) {
+    if (webhookSecret) {
       const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
       if (!isValid) {
-        console.error('Invalid webhook signature');
+        console.error('Invalid or missing webhook signature');
         return NextResponse.json(
-          { error: 'Invalid webhook signature' },
+          { error: signature ? 'Invalid webhook signature' : 'Missing webhook signature' },
           { status: 401 }
         );
       }
