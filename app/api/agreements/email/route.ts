@@ -34,6 +34,21 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+    const recipientEmail = validatedData.recipientEmail.toLowerCase();
+    const primaryEmail = agreement.client.email.toLowerCase();
+    const matchesPrimary = primaryEmail === recipientEmail;
+    const matchesSecondSigner =
+      agreement.secondSignerEnabled &&
+      !!agreement.secondSignerEmail &&
+      agreement.secondSignerEmail.toLowerCase() === recipientEmail;
+
+    if (!matchesPrimary && !matchesSecondSigner) {
+      return NextResponse.json(
+        { error: 'Recipient email does not match agreement signers' },
+        { status: 403 }
+      );
+    }
+
     // Process smart fields in the HTML content (use event when available, else client deprecated fields)
     const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
       let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
