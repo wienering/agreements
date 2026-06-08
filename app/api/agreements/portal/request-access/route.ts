@@ -132,10 +132,10 @@ export async function POST(request: NextRequest) {
     // Check SMTP configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
       devLog('SMTP not configured, verification code:', verificationCode);
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'Email service is not configured. Please contact support.',
-        debugCode: verificationCode, // Only for development
+        ...(process.env.NODE_ENV === 'development' && { debugCode: verificationCode }),
         rateLimit: {
           remaining: rateLimit.remaining,
           resetTime: new Date(rateLimit.resetTime).toISOString()
