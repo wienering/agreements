@@ -15,10 +15,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = verifyEmailSchema.parse(body);
 
-    // TODO(security): enforce expiresAt here (same rules as GET /api/agreements/client) — currently
-    // expired unsigned agreements can still verify and load via this endpoint.
-    const agreement = await prisma.agreement.findUnique({
-      where: { uniqueToken: validatedData.token },
+    const agreement = await prisma.agreement.findFirst({
+      where: {
+        uniqueToken: validatedData.token,
+        OR: [
+          { status: { in: ['SIGNED', 'COMPLETED'] } },
+          { expiresAt: null },
+          { expiresAt: { gte: new Date() } },
+        ],
+      },
       include: {
         client: true,
         template: true,
