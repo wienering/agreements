@@ -3,7 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { findOrCreateClientFolder, uploadFileToDrive } from '@/lib/google-drive';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB (stays under Vercel's ~4.5MB serverless body cap)
 const ALLOWED_FILE_TYPES = [
   'application/zip',
   'application/x-zip-compressed',

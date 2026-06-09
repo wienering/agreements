@@ -41,7 +41,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
   }, []);
 
   const ALLOWED_TYPES = ['application/zip', 'application/x-zip-compressed', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB (stays under Vercel's ~4.5MB serverless body cap)
 
   const validateFile = (file: File): string | null => {
     // Check file type
@@ -103,7 +103,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
           // Non-JSON response (likely HTML error page)
           const statusText = response.statusText;
           if (response.status === 413) {
-            errorMessage = 'File is too large. Maximum size is 10MB.';
+            errorMessage = 'File is too large. Maximum size is 4MB.';
           } else if (response.status === 502 || response.status === 503) {
             errorMessage = 'Server error. Please try again later.';
           } else {
@@ -292,7 +292,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
           or click to browse
         </div>
         <div style={{ fontSize: isMobile ? '11px' : '12px', color: '#94a3b8' }}>
-          ZIP, JPG, PNG, GIF, WEBP (max 10MB)
+          ZIP, JPG, PNG, GIF, WEBP (max 4MB)
         </div>
         {isUploading && (
           <div style={{ marginTop: '16px' }}>

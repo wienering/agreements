@@ -176,7 +176,7 @@ Attendants use a special hub page:
 
 ### Flow 7: File Uploads (Google Drive)
 
-1. Admin uploads a file on the Clients page (max 10MB per file)
+1. Admin uploads a file on the Clients page (max 4MB per file)
 2. `POST /api/files/upload` receives the file
 3. Uses `lib/google-drive.ts` to:
    - Find or create a folder for the client in Google Drive
@@ -398,6 +398,6 @@ These are run manually, not by the app:
 
 # Additional Completed (This Session)
 
-- **File upload limit** changed from 100MB to 10MB (next.config.js, FileUpload.tsx, api/files/upload)
+- **File upload limit** changed from 100MB to 4MB (next.config.js, FileUpload.tsx, api/files/upload)
 - **Standalone SQL files** backed up to `_legacy-sql-backup/` (gitignored), originals deleted
 - **check-duplicate-emails.sql** removed (backed up)
