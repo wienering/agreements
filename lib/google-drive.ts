@@ -1,9 +1,9 @@
-import { google } from 'googleapis';
+import { drive_v3, drive as googleDrive } from '@googleapis/drive';
 import { devLog } from './logger';
 import { OAuth2Client } from 'google-auth-library';
 import { Readable } from 'stream';
 
-let driveClient: ReturnType<typeof google.drive> | null = null;
+let driveClient: drive_v3.Drive | null = null;
 
 /**
  * Get authenticated Google Drive client using OAuth2
@@ -41,7 +41,7 @@ export function getGoogleDriveClient() {
     }
   });
 
-  driveClient = google.drive({
+  driveClient = googleDrive({
     version: 'v3',
     auth: oauth2Client,
   });
