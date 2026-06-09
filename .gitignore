@@ -17,6 +17,8 @@ out
 
 # Secrets / service account keys
 *service-account*.json
+client_secret*.json
+agreementsupload-*.json
 vercel-service-account-key.txt
 generate-refresh-token*.js
 generate-refresh-token*.txt
