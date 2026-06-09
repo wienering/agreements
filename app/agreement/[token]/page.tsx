@@ -131,6 +131,9 @@ export default function ClientAgreementPage() {
     let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
     const esc = (value: string) => escapeHtml(value);
 
+    const address = event ? (event.eventLocation ?? '') : (client.address || '');
+    const notes = event?.notes ?? client.notes;
+
     // Use event data from event relation if available, otherwise fall back to client fields
     const eventDate = event?.eventDate || client.eventDate;
     const eventType = event?.eventType || client.eventType || '';
@@ -141,7 +144,8 @@ export default function ClientAgreementPage() {
     const packagePrice = event?.packagePrice || client.packagePrice;
 
     processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, esc(eventDate ? new Date(eventDate).toLocaleDateString() : ''));
-    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, esc(client.notes || ''));
+    processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, esc(address));
+    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, esc(notes || ''));
     
     // Replace event fields - use event relation data if available
     processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, esc(eventType));

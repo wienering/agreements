@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
+import { escapeHtml } from '@/lib/htmlEscape';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
 
@@ -8,18 +9,6 @@ const addNoteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(1000, 'Note content must be less than 1000 characters'),
   agreementId: z.string().optional(),
 });
-
-// Helper function to escape HTML entities
-function escapeHtml(text: string): string {
-  const map: { [key: string]: string } = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  };
-  return text.replace(/[&<>"']/g, (m) => map[m]);
-}
 
 // Helper function to send note notification email
 async function sendNoteNotificationEmail(
