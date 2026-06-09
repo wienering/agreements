@@ -13,7 +13,7 @@ export async function DELETE(request: NextRequest) {
 
     await requireAdmin();
     const body = await request.json();
-    console.log('Agreement delete request body:', body);
+    devLog('Agreement delete request body:', body);
     
     const validatedData = agreementDeleteSchema.parse(body);
     devLog('Validated data:', validatedData);

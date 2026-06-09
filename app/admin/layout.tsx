@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { adminTheme } from '../lib/adminTheme';
 import { UIcon } from '../components/UIcon';
 import { AdminButton } from '../components/AdminButton';
@@ -336,16 +335,9 @@ export default function AdminLayout({
             <div style={{ width: '48px', minWidth: '48px' }} />
           </div>
         )}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ 
-            duration: 0.2, 
-            ease: "easeOut" 
-          }}
-        >
+        <div className="admin-fade-in">
           {children}
-        </motion.div>
+        </div>
       </div>
     </div>
   );

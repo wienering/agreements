@@ -17,7 +17,6 @@
     "@flaticon/flaticon-uicons": "^3.3.1",
     "@prisma/client": "^6.16.3",
     "@types/papaparse": "^5.5.0",
-    "framer-motion": "^12.23.22",
     "googleapis": "^166.0.0",
     "jspdf": "^3.0.3",
     "next": "^15.5.7",

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { devLog } from './logger';
 
 /**
  * Send "Agreement Viewed" alert email. Returns true if sent, false if failed or SMTP not configured.
@@ -9,7 +10,7 @@ export async function sendViewAlertEmail(
   userAgent: string
 ): Promise<boolean> {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('[view-alert] SMTP not configured - skipping view alert email');
+    devLog('[view-alert] SMTP not configured - skipping view alert email');
     return false;
   }
 
@@ -30,7 +31,7 @@ export async function sendViewAlertEmail(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const viewAlertTo = process.env.ADMIN_EMAIL || 'info@photoboothguys.ca';
 
-    console.log('[view-alert] SMTP config:', {
+    devLog('[view-alert] SMTP config:', {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       from: process.env.SMTP_FROM,
@@ -71,10 +72,10 @@ export async function sendViewAlertEmail(
       </div>
     `;
 
-    console.log('[view-alert] Calling transporter.verify()...');
+    devLog('[view-alert] Calling transporter.verify()...');
     await transporter.verify();
 
-    console.log('[view-alert] Sending view alert email to:', viewAlertTo);
+    devLog('[view-alert] Sending view alert email to:', viewAlertTo);
     const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: viewAlertTo,
@@ -82,7 +83,7 @@ export async function sendViewAlertEmail(
       html: emailContent,
     });
 
-    console.log('[view-alert] Email SENT. messageId:', result.messageId);
+    devLog('[view-alert] Email SENT. messageId:', result.messageId);
     return true;
   } catch (error) {
     console.error('[view-alert] FAILED to send view alert email:', error);

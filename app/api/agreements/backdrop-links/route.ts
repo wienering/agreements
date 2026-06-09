@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    console.log('Created backdrop link:', backdropLink.id);
+    devLog('Created backdrop link:', backdropLink.id);
     return NextResponse.json({
       success: true,
       backdropLink

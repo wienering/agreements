@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { sendViewAlertEmail } from '@/lib/view-alert-email';
 import nodemailer from 'nodemailer';
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
       // Track view + send alert (wrapped in try-catch so it never blocks verification)
       try {
         const isFirstView = !agreement.firstViewedAt;
-        console.log('[verify-email] Email matched. isFirstView:', isFirstView, 'agreementId:', agreement.id);
+        devLog('[verify-email] Email matched. isFirstView:', isFirstView, 'agreementId:', agreement.id);
 
         await prisma.agreement.update({
           where: { id: agreement.id },
@@ -98,12 +99,12 @@ export async function POST(request: NextRequest) {
             viewCount: agreement.viewCount + 1,
           },
         });
-        console.log('[verify-email] View tracking updated. viewCount:', agreement.viewCount + 1);
+        devLog('[verify-email] View tracking updated. viewCount:', agreement.viewCount + 1);
 
         if (isFirstView) {
-          console.log('[verify-email] First view - sending view alert email...');
+          devLog('[verify-email] First view - sending view alert email...');
           const sent = await sendViewAlertEmail(agreement, getClientIP(request), request.headers.get('user-agent') || 'Unknown');
-          console.log('[verify-email] View alert email result:', sent ? 'SENT' : 'FAILED');
+          devLog('[verify-email] View alert email result:', sent ? 'SENT' : 'FAILED');
         }
       } catch (viewErr) {
         console.error('[verify-email] View tracking/email failed (non-blocking):', viewErr);
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       // Wrong email — send unauthorized access alert
       const expectedEmails = [agreement.client.email];
       if (secondarySignerEnabled && secondaryEmailRaw) expectedEmails.push(secondaryEmailRaw);
-      console.log('[verify-email] Email mismatch. expected one of:', expectedEmails.join(', '), 'got:', validatedData.email);
+      devLog('[verify-email] Email mismatch. expected one of:', expectedEmails.join(', '), 'got:', validatedData.email);
       try {
         await sendUnauthorizedAccessEmail({
           agreementId: agreement.id,
@@ -217,7 +218,7 @@ async function sendUnauthorizedAccessEmail(data: {
   timestamp: Date;
 }) {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log('[verify-email] SMTP not configured - skipping unauthorized access email');
+    devLog('[verify-email] SMTP not configured - skipping unauthorized access email');
     return;
   }
 
@@ -274,7 +275,7 @@ async function sendUnauthorizedAccessEmail(data: {
   `;
 
   const alertTo = process.env.ADMIN_EMAIL || 'info@photoboothguys.ca';
-  console.log('[verify-email] Sending unauthorized access alert to:', alertTo);
+  devLog('[verify-email] Sending unauthorized access alert to:', alertTo);
 
   await transporter.verify();
   await transporter.sendMail({
@@ -284,5 +285,5 @@ async function sendUnauthorizedAccessEmail(data: {
     html: emailHtml,
   });
 
-  console.log('[verify-email] Unauthorized access alert SENT to', alertTo);
+  devLog('[verify-email] Unauthorized access alert SENT to', alertTo);
 }
