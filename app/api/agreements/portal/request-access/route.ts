@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { escapeHtml } from '@/lib/htmlEscape';
 import { verificationCodeStore } from '../shared/verification-codes';
 
 const requestAccessSchema = z.object({
@@ -182,6 +183,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateVerificationEmail(client: any, code: string): Promise<string> {
+  const clientFirstName = escapeHtml(client.firstName);
   // Customizable email template
   const template = process.env.VERIFICATION_EMAIL_TEMPLATE || 'default';
   
@@ -189,7 +191,7 @@ async function generateVerificationEmail(client: any, code: string): Promise<str
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Your verification code</h2>
-        <p>Hello ${client.firstName},</p>
+        <p>Hello ${clientFirstName},</p>
         <p>Your verification code is: <strong style="font-size: 24px; letter-spacing: 2px;">${code}</strong></p>
         <p>This code expires in 15 minutes.</p>
       </div>
@@ -232,7 +234,7 @@ async function generateVerificationEmail(client: any, code: string): Promise<str
           </div>
           
           <div class="content">
-            <h2 style="color: #1e293b; margin-top: 0;">Hello ${client.firstName}!</h2>
+            <h2 style="color: #1e293b; margin-top: 0;">Hello ${clientFirstName}!</h2>
             <p style="color: #475569; line-height: 1.6;">You requested access to your client portal. Use the verification code below to log in:</p>
             
             <div class="code-container">

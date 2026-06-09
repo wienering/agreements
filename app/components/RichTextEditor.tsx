@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { escapeHtml } from '@/lib/htmlEscape';
+import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
 
 interface RichTextEditorProps {
   value: string;
@@ -168,8 +170,10 @@ export function RichTextPreview({
     const packagePrice = eventData?.packagePrice || clientData?.packagePrice;
     const eventPrice = packagePrice ? `$${typeof packagePrice === 'number' ? packagePrice.toFixed(2) : packagePrice}` : '';
 
-    const clientChip = (value: string) => `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${value}</strong>`;
-    const secondChip = (value: string) => `<strong style="color: #1f2937; background-color: #fef3c7; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d;">${value}</strong>`;
+    const clientChip = (value: string) => `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${escapeHtml(value)}</strong>`;
+    const secondChip = (value: string) => `<strong style="color: #1f2937; background-color: #fef3c7; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d;">${escapeHtml(value)}</strong>`;
+    const eventChip = (value: string) => `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${escapeHtml(value)}</strong>`;
+    const agreementChip = (value: string) => `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${escapeHtml(value)}</strong>`;
 
     // Combined pattern resolves first so "{{client.firstName}} {{client.lastName}}"
     // renders cleanly as "Alice Smith" or "Alice Smith and Bob Jones".
@@ -200,18 +204,18 @@ export function RichTextPreview({
     processedHtml = processedHtml.replace(/\{\{\s*client\.notes\s*\}\}/g, clientChip(notes));
     
     // Replace event fields with clean, readable styling
-    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventType}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventLocation}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventStartTime}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventDuration}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${eventPackage}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, `<strong style=""color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;"">${eventPrice}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventChip(eventType));
+    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventChip(eventLocation));
+    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventChip(eventStartTime));
+    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventChip(eventDuration));
+    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventChip(eventPackage));
+    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, eventChip(eventPrice));
     
     // Replace agreement fields with clean, readable styling
     const agreementDate = new Date().toLocaleDateString();
     const agreementIdValue = agreementId || '';
-    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${agreementDate}</strong>`);
-    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${agreementIdValue}</strong>`);
+    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, agreementChip(agreementDate));
+    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementChip(agreementIdValue));
     
     return processedHtml;
   };
@@ -234,7 +238,7 @@ export function RichTextPreview({
       }}
     >
       <div
-        dangerouslySetInnerHTML={{ __html: processPreviewHtml(html) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeAgreementHtml(processPreviewHtml(html)) }}
         style={{
           minHeight: '100%'
         }}

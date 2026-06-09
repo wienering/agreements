@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
+import { escapeHtml } from '@/lib/htmlEscape';
 
 const sendReviewRequestSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     const firstName = agreement.client.firstName?.trim() || '';
     const lastName = agreement.client.lastName?.trim() || '';
-    const clientGreetingName = [firstName, lastName].filter(Boolean).join(' ');
+    const clientGreetingName = escapeHtml([firstName, lastName].filter(Boolean).join(' '));
     const subject = `Would you leave us a Google review?`;
 
     const emailHtml = `

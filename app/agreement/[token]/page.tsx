@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { devLog } from '@/lib/logger';
 import { UIcon } from '../../components/UIcon';
 import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { escapeHtml } from '@/lib/htmlEscape';
+import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
 
 interface SignatureRecord {
   signerName: string;
@@ -127,6 +129,7 @@ export default function ClientAgreementPage() {
     if (!html || !client) return html;
 
     let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
+    const esc = (value: string) => escapeHtml(value);
 
     // Use event data from event relation if available, otherwise fall back to client fields
     const eventDate = event?.eventDate || client.eventDate;
@@ -137,20 +140,20 @@ export default function ClientAgreementPage() {
     const eventPackage = event?.eventPackage || client.eventPackage || '';
     const packagePrice = event?.packagePrice || client.packagePrice;
 
-    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
+    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, esc(eventDate ? new Date(eventDate).toLocaleDateString() : ''));
+    processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, esc(client.notes || ''));
     
     // Replace event fields - use event relation data if available
-    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
+    processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, esc(eventType));
+    processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, esc(eventLocation));
+    processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, esc(eventStartTime));
+    processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, esc(eventDuration));
+    processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, esc(eventPackage));
+    processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, esc(packagePrice ? `$${Number(packagePrice).toFixed(2)}` : ''));
     
     // Replace agreement fields
-    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
+    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, esc(new Date().toLocaleDateString()));
+    processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, esc(agreementId || ''));
     
     return processedHtml;
   };
@@ -1324,9 +1327,11 @@ export default function ClientAgreementPage() {
               fontFamily: 'Georgia, serif'
             }}
             dangerouslySetInnerHTML={{ 
-              __html: agreement.status === 'SIGNED' && agreement.mergedHtml 
-                ? agreement.mergedHtml 
-                : (agreement.customHtmlContent || agreement.template.htmlContent)
+              __html: sanitizeAgreementHtml(
+                agreement.status === 'SIGNED' && agreement.mergedHtml 
+                  ? agreement.mergedHtml 
+                  : (agreement.customHtmlContent || agreement.template.htmlContent)
+              )
             }}
           />
         </div>

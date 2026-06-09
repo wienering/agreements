@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,7 +74,8 @@ export async function GET(request: NextRequest) {
         },
         include: {
           template: true,
-          signatures: { orderBy: { signedAt: 'asc' } }
+          signatures: { orderBy: { signedAt: 'asc' } },
+          event: true,
         }
       });
 
@@ -96,7 +98,8 @@ export async function GET(request: NextRequest) {
         },
         include: {
           template: true,
-          signatures: { orderBy: { signedAt: 'asc' } }
+          signatures: { orderBy: { signedAt: 'asc' } },
+          event: true,
         },
         orderBy: { createdAt: 'desc' }
       });
@@ -139,7 +142,14 @@ export async function GET(request: NextRequest) {
         
         let processedHtml = agreement.status === 'SIGNED' && agreement.mergedHtml
           ? agreement.mergedHtml
-          : processHtmlContent(htmlToProcess, sessionClient, agreement.id, agreement);
+          : processHtmlContent(
+              htmlToProcess,
+              sessionClient,
+              agreement.id,
+              agreement.event,
+              pickSecondSigner(agreement),
+              { escapeValues: false },
+            );
         
         return {
           ...baseData,
@@ -184,28 +194,6 @@ export async function GET(request: NextRequest) {
       code: 'SERVER_ERROR'
     }, { status: 500 });
   }
-}
-
-function processHtmlContent(html: string, client: any, agreementId: string, agreement: any = null): string {
-  let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-
-  processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, client.address || '');
-  processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, client.eventDate ? new Date(client.eventDate).toLocaleDateString() : '');
-  processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
-  
-  // Replace event fields
-  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, client.eventType || '');
-  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, client.eventLocation || '');
-  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, client.eventStartTime || '');
-  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, client.eventDuration || '');
-  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, client.eventPackage || '');
-  processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, client.packagePrice ? `$${Number(client.packagePrice).toFixed(2)}` : '');
-  
-  // Replace agreement fields
-  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-  processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-  
-  return processedHtml;
 }
 
 function generateCSVResponse(data: any[]): NextResponse {

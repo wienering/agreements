@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -131,47 +132,6 @@ export async function GET(request: NextRequest) {
       take: limit
     });
 
-    // Process HTML content for each agreement.
-    // The closure captures `currentAgreement` so signer smart-fields can
-    // pick up the active row's second signer config.
-    let currentAgreement: any = null;
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(currentAgreement));
-
-      // Extract address and notes from event if available, otherwise use client data
-      const address = event ? (event.eventLocation ?? '') : (client.address || '');
-      const notes = event ? (event.notes ?? '') : (client.notes || '');
-
-      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
-      
-      // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
-      const eventDate = event ? event.eventDate : client.eventDate;
-      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-      const packagePrice = event ? event.packagePrice : client.packagePrice;
-      
-      // Replace event fields - use event data if available, otherwise client fields
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
-      
-      // Replace agreement fields
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-      
-      return processedHtml;
-    };
-
-    devLog(`[Dashboard] Found ${agreements.length} agreements for client email ${sessionClient.email}`);
-
     // Process agreements with HTML content
     const processedAgreements = agreements.map(agreement => {
       let processedHtml;
@@ -181,11 +141,16 @@ export async function GET(request: NextRequest) {
         ? agreement.mergedHtml
         : (agreement.customHtmlContent || agreement.template.htmlContent);
       
-      currentAgreement = agreement;
       if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {
-        processedHtml = processHtmlContent(htmlToProcess, sessionClient, agreement.id, agreement.event);
+        processedHtml = processHtmlContent(
+          htmlToProcess,
+          sessionClient,
+          agreement.id,
+          agreement.event,
+          pickSecondSigner(agreement),
+        );
       }
 
       const client = {

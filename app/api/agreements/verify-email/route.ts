@@ -4,7 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { sendViewAlertEmail } from '@/lib/view-alert-email';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { escapeHtml } from '@/lib/htmlEscape';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -46,35 +48,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-      const address = event ? (event.eventLocation ?? '') : (client.address || '');
-      const notes = event ? (event.notes ?? '') : (client.notes || '');
-
-      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
-
-      const eventDate = event ? event.eventDate : client.eventDate;
-      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-      const packagePrice = event ? event.packagePrice : client.packagePrice;
-
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-
-      return processedHtml;
-    };
-
     const inputEmail = validatedData.email.toLowerCase();
     const primaryEmail = agreement.client.email.toLowerCase();
     const secondarySignerEnabled = Boolean((agreement as any).secondSignerEnabled);
@@ -115,7 +88,13 @@ export async function POST(request: NextRequest) {
         processedHtml = agreement.mergedHtml;
       } else {
         const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-        processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+        processedHtml = processHtmlContent(
+          htmlToProcess,
+          agreement.client,
+          agreement.id,
+          agreement.event,
+          pickSecondSigner(agreement),
+        );
       }
 
       const client = {
@@ -232,6 +211,12 @@ async function sendUnauthorizedAccessEmail(data: {
     socketTimeout: 10000,
   });
 
+  const safeAgreementId = escapeHtml(data.agreementId);
+  const safeClientEmail = escapeHtml(data.clientEmail);
+  const safeAttemptedEmail = escapeHtml(data.attemptedEmail);
+  const safeIpAddress = escapeHtml(data.ipAddress);
+  const safeUserAgent = escapeHtml(data.userAgent);
+
   const emailHtml = `
     <!DOCTYPE html>
     <html>
@@ -258,11 +243,11 @@ async function sendUnauthorizedAccessEmail(data: {
         <div class="details">
           <h3>Access Details:</h3>
           <ul>
-            <li><strong>Agreement ID:</strong> ${data.agreementId}</li>
-            <li><strong>Correct Email:</strong> ${data.clientEmail}</li>
-            <li><strong>Attempted Email:</strong> ${data.attemptedEmail}</li>
-            <li><strong>IP Address:</strong> ${data.ipAddress}</li>
-            <li><strong>User Agent:</strong> ${data.userAgent}</li>
+            <li><strong>Agreement ID:</strong> ${safeAgreementId}</li>
+            <li><strong>Correct Email:</strong> ${safeClientEmail}</li>
+            <li><strong>Attempted Email:</strong> ${safeAttemptedEmail}</li>
+            <li><strong>IP Address:</strong> ${safeIpAddress}</li>
+            <li><strong>User Agent:</strong> ${safeUserAgent}</li>
             <li><strong>Timestamp:</strong> ${data.timestamp.toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</li>
           </ul>
         </div>

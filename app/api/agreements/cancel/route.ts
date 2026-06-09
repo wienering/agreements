@@ -4,6 +4,7 @@ import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { escapeHtml } from '@/lib/htmlEscape';
 
 const cancelAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -112,6 +113,13 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
   });
 
   // Create email content
+  const clientFirstName = escapeHtml(agreement.client.firstName);
+  const clientLastName = escapeHtml(agreement.client.lastName);
+  const clientEmail = escapeHtml(agreement.client.email);
+  const templateTitle = escapeHtml(agreement.template.title);
+  const safeAdminName = escapeHtml(adminName);
+  const safeReason = escapeHtml(reason);
+
   const emailHtml = `
     <!DOCTYPE html>
     <html>
@@ -153,20 +161,20 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
             <p><strong>Your service agreement has been cancelled by Photobooth Guys.</strong></p>
           </div>
           
-          <p>Dear ${agreement.client.firstName} ${agreement.client.lastName},</p>
+          <p>Dear ${clientFirstName} ${clientLastName},</p>
           
           <p>We are writing to inform you that your service agreement has been cancelled. This action was taken by our administration team and is effective immediately.</p>
           
           <div class="agreement-details">
             <h3>Agreement Details:</h3>
-            <p><strong>Client:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
-            <p><strong>Email:</strong> ${agreement.client.email}</p>
-            <p><strong>Template:</strong> ${agreement.template.title}</p>
+            <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
+            <p><strong>Email:</strong> ${clientEmail}</p>
+            <p><strong>Template:</strong> ${templateTitle}</p>
             <p><strong>Agreement ID:</strong> ${agreement.id}</p>
             <p><strong>Originally Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
             <p><strong>Cancelled On:</strong> ${agreement.cancelledAt ? new Date(agreement.cancelledAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
-            <p><strong>Cancelled By:</strong> ${adminName}</p>
-            <p><strong>Reason:</strong> ${reason}</p>
+            <p><strong>Cancelled By:</strong> ${safeAdminName}</p>
+            <p><strong>Reason:</strong> ${safeReason}</p>
           </div>
           
           <div class="important">
@@ -200,7 +208,7 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: agreement.client.email,
-    subject: `Agreement Cancelled - ${agreement.client.firstName} ${agreement.client.lastName} - ${agreement.template.title}`,
+    subject: `Agreement Cancelled - ${clientFirstName} ${clientLastName} - ${templateTitle}`,
     html: emailHtml,
   };
 

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jsPDF from 'jspdf';
 import { z } from 'zod';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 // Generate PDF using jsPDF (serverless-friendly)
 const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolean = false) => {
@@ -223,37 +224,6 @@ export async function POST(request: NextRequest) {
 
     const isSigned = agreement.status === 'SIGNED';
 
-    // Process smart fields in the HTML content
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-      
-      // Use event relation if available, otherwise fall back to client fields
-      const eventDate = event?.eventDate || client.eventDate;
-      const eventType = event?.eventType || client.eventType;
-      const eventLocation = event?.eventLocation || client.eventLocation;
-      const eventStartTime = event?.eventStartTime || client.eventStartTime;
-      const eventDuration = event?.eventDuration || client.eventDuration;
-      const eventPackage = event?.eventPackage || client.eventPackage;
-      const packagePrice = event?.packagePrice || client.packagePrice;
-      
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, client.notes || '');
-      
-      // Replace event fields
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType || '');
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation || '');
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime || '');
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration || '');
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage || '');
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${packagePrice}` : '');
-      
-      // Replace agreement fields
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-      
-      return processedHtml;
-    };
-
     // Determine which HTML content to use (priority: mergedHtml > customHtmlContent > template.htmlContent)
     // For signed agreements, use the saved snapshot to prevent changes
     // For unsigned agreements, use customHtmlContent if available, otherwise template.htmlContent
@@ -267,7 +237,14 @@ export async function POST(request: NextRequest) {
       processedHtml = agreement.mergedHtml;
     } else {
       // Process the content in real-time for unsigned agreements
-      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+      processedHtml = processHtmlContent(
+        htmlToProcess,
+        agreement.client,
+        agreement.id,
+        agreement.event,
+        pickSecondSigner(agreement),
+        { escapeValues: false },
+      );
     }
 
     // Generate PDF using jsPDF (serverless-friendly)

@@ -28,6 +28,8 @@
  *      • `{{clients.lastNames}}` → "Smith" or "Smith and Jones"
  */
 
+import { escapeHtml } from '@/lib/htmlEscape';
+
 export interface PrimarySigner {
   firstName?: string | null;
   lastName?: string | null;
@@ -43,12 +45,21 @@ export interface SecondSigner {
   phone?: string | null;
 }
 
+export interface ApplySignerSmartFieldsOptions {
+  /** When true (default), substituted values are HTML-escaped before interpolation. */
+  escapeValues?: boolean;
+}
+
 export function applySignerSmartFields(
   html: string,
   primary: PrimarySigner | null | undefined,
   secondary: SecondSigner | null | undefined,
+  options: ApplySignerSmartFieldsOptions = {},
 ): string {
   if (!html) return html;
+
+  const { escapeValues = true } = options;
+  const esc = (value: string) => (escapeValues ? escapeHtml(value) : value);
 
   const enabled = Boolean(secondary && secondary.enabled);
 
@@ -76,30 +87,30 @@ export function applySignerSmartFields(
   //    Smith and Jones").
   out = out.replace(
     /\{\{\s*client\.firstName\s*\}\}\s+\{\{\s*client\.lastName\s*\}\}/g,
-    fullNames,
+    esc(fullNames),
   );
 
   // 2) Aggregate / convenience tokens.
-  out = out.replace(/\{\{\s*client\.fullName\s*\}\}/g, pFull);
-  out = out.replace(/\{\{\s*clients\.fullNames\s*\}\}/g, fullNames);
-  out = out.replace(/\{\{\s*clients\.firstNames\s*\}\}/g, firstNames);
-  out = out.replace(/\{\{\s*clients\.lastNames\s*\}\}/g, lastNames);
+  out = out.replace(/\{\{\s*client\.fullName\s*\}\}/g, esc(pFull));
+  out = out.replace(/\{\{\s*clients\.fullNames\s*\}\}/g, esc(fullNames));
+  out = out.replace(/\{\{\s*clients\.firstNames\s*\}\}/g, esc(firstNames));
+  out = out.replace(/\{\{\s*clients\.lastNames\s*\}\}/g, esc(lastNames));
 
   // 3) Explicit second-signer tokens (empty string when no second signer).
-  out = out.replace(/\{\{\s*secondSigner\.firstName\s*\}\}/g, sFirst);
-  out = out.replace(/\{\{\s*secondSigner\.lastName\s*\}\}/g, sLast);
-  out = out.replace(/\{\{\s*secondSigner\.fullName\s*\}\}/g, sFull);
-  out = out.replace(/\{\{\s*secondSigner\.email\s*\}\}/g, sEmail);
-  out = out.replace(/\{\{\s*secondSigner\.phone\s*\}\}/g, sPhone);
+  out = out.replace(/\{\{\s*secondSigner\.firstName\s*\}\}/g, esc(sFirst));
+  out = out.replace(/\{\{\s*secondSigner\.lastName\s*\}\}/g, esc(sLast));
+  out = out.replace(/\{\{\s*secondSigner\.fullName\s*\}\}/g, esc(sFull));
+  out = out.replace(/\{\{\s*secondSigner\.email\s*\}\}/g, esc(sEmail));
+  out = out.replace(/\{\{\s*secondSigner\.phone\s*\}\}/g, esc(sPhone));
 
   // 4) Individual primary name tokens — auto-expand to both names when a
   //    second signer is enabled.
-  out = out.replace(/\{\{\s*client\.firstName\s*\}\}/g, firstNames);
-  out = out.replace(/\{\{\s*client\.lastName\s*\}\}/g, lastNames);
+  out = out.replace(/\{\{\s*client\.firstName\s*\}\}/g, esc(firstNames));
+  out = out.replace(/\{\{\s*client\.lastName\s*\}\}/g, esc(lastNames));
 
   // 5) Contact info tokens stay primary-only.
-  out = out.replace(/\{\{\s*client\.email\s*\}\}/g, pEmail);
-  out = out.replace(/\{\{\s*client\.phone\s*\}\}/g, pPhone);
+  out = out.replace(/\{\{\s*client\.email\s*\}\}/g, esc(pEmail));
+  out = out.replace(/\{\{\s*client\.phone\s*\}\}/g, esc(pPhone));
 
   return out;
 }

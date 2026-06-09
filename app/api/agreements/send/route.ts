@@ -4,7 +4,9 @@ import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { escapeHtml } from '@/lib/htmlEscape';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 const sendAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -44,43 +46,17 @@ export async function POST(request: NextRequest) {
       }, { status: 503 });
     }
 
-    // Process smart fields in the HTML content
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-
-      // Extract address and notes from event if available, otherwise use client data
-      const address = event ? (event.eventLocation ?? '') : (client.address || '');
-      const notes = event ? (event.notes ?? '') : (client.notes || '');
-
-      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
-      
-      // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
-      const eventDate = event ? event.eventDate : client.eventDate;
-      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-      
-      // Replace event fields - use event data if available, otherwise client fields
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-      
-      // Replace agreement fields
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-      
-      return processedHtml;
-    };
-
     // Use customHtmlContent if available, otherwise fall back to template.htmlContent
     const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-    const processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+    const processedHtml = processHtmlContent(
+      htmlToProcess,
+      agreement.client,
+      agreement.id,
+      agreement.event,
+      pickSecondSigner(agreement),
+    );
+    const clientFirstName = escapeHtml(agreement.client.firstName);
+    const clientLastName = escapeHtml(agreement.client.lastName);
     
     // Get the base URL from the request headers or environment
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
@@ -124,17 +100,17 @@ export async function POST(request: NextRequest) {
     let emailSubject, emailTitle, emailMessage, emailUrgency;
     
     if (newSendCount === 1) {
-      emailSubject = `Service Agreement Ready - ${agreement.client.firstName}`;
+      emailSubject = `Service Agreement Ready - ${clientFirstName}`;
       emailTitle = "Service Agreement Ready for Review";
       emailMessage = "Your service agreement is ready for review and digital signature. Please click the button below to access your agreement.";
       emailUrgency = `This agreement expires on ${expirationDate}. Please review and sign before the expiration date.`;
     } else if (newSendCount === 2) {
-      emailSubject = `Reminder: Service Agreement Pending - ${agreement.client.firstName}`;
+      emailSubject = `Reminder: Service Agreement Pending - ${clientFirstName}`;
       emailTitle = "Reminder: Your Service Agreement is Waiting";
       emailMessage = "This is a friendly reminder that your service agreement is still waiting for your review and signature. We want to make sure everything is ready for your event.";
       emailUrgency = `Please review and sign your agreement to secure your booking. This agreement expires on ${expirationDate}.`;
     } else {
-      emailSubject = `Final Notice: Service Agreement - ${agreement.client.firstName}`;
+      emailSubject = `Final Notice: Service Agreement - ${clientFirstName}`;
       emailTitle = "Final Notice: Service Agreement Signature Required";
       emailMessage = "This is our final notice regarding your service agreement. We need your signature to proceed with your booking and ensure everything is ready for your event.";
       emailUrgency = `Please sign your agreement immediately to avoid any delays in your service. This agreement expires on ${expirationDate}.`;
@@ -198,7 +174,7 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div class="content">
-            <p>Dear ${agreement.client.firstName} ${agreement.client.lastName},</p>
+            <p>Dear ${clientFirstName} ${clientLastName},</p>
             
             <p>${emailMessage}</p>
             

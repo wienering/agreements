@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useLockBodyScroll } from '@/lib/useLockBodyScroll';
 import { useToast } from '../../components/Toast';
 import RichTextEditor, { RichTextPreview } from '../../components/RichTextEditor';
+import { escapeHtml } from '@/lib/htmlEscape';
 import SearchableSelect from '../../components/SearchableSelect';
 import { AdminButton } from '../../components/AdminButton';
 import {
@@ -69,14 +70,6 @@ interface WarningData {
   }>;
 }
 
-function escapeHtml(s: string): string {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): string {
   const daysSinceEmailed = agreement.lastEmailedAt
     ? Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24))
@@ -109,20 +102,21 @@ function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): stri
 
   const lastEmailText = agreement.lastEmailedAt
     ? 'Last: ' +
-      new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+      escapeHtml(new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }))
     : 'Never emailed';
-  const lastViewText = lastViewed ? 'Last: ' + lastViewed : 'Never viewed';
+  const lastViewText = lastViewed ? 'Last: ' + escapeHtml(lastViewed) : 'Never viewed';
 
   let followUpHtml = '';
   if (needsFollowUp) {
     followUpHtml =
       '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px; display: flex; align-items: center;"><i class="fi fi-rr-bell" aria-hidden="true"></i></span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' +
-      daysSinceEmailed +
+      escapeHtml(String(daysSinceEmailed)) +
       ' days since last email</div></div></div>';
   }
 
   const agreementTitleSafe = escapeHtml(agreement.template.title);
   const emailSafe = escapeHtml(agreement.client.email);
+  const statusSafe = escapeHtml(agreement.status);
 
   return (
     '<div style="position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; background: ' +
@@ -146,7 +140,7 @@ function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): stri
     '<span style="margin-left: auto; padding: 3px 8px; background: ' +
     statusColor +
     '; color: white; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">' +
-    agreement.status +
+    statusSafe +
     '</span>' +
     '</div>' +
     '<div style="padding: 14px 16px;">' +

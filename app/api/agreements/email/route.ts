@@ -3,7 +3,9 @@ import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { devLog } from '@/lib/logger';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { escapeHtml } from '@/lib/htmlEscape';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -49,38 +51,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process smart fields in the HTML content (use event when available, else client deprecated fields)
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-      const eventDate = event ? event.eventDate : client.eventDate;
-      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-      const packagePrice = event ? event.packagePrice : client.packagePrice;
-
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, event ? (event.notes ?? client.notes ?? '') : (client.notes || ''));
-      
-      // Replace event fields
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
-      
-      // Replace agreement fields
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-      
-      return processedHtml;
-    };
-
-    // Use customHtmlContent if available, otherwise fall back to template.htmlContent
     const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-    const processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+    const processedHtml = processHtmlContent(
+      htmlToProcess,
+      agreement.client,
+      agreement.id,
+      agreement.event,
+      pickSecondSigner(agreement),
+    );
+    const clientFirstName = escapeHtml(agreement.client.firstName);
+    const clientLastName = escapeHtml(agreement.client.lastName);
+    const clientEmail = escapeHtml(agreement.client.email);
 
     // Get the base URL from request headers or environment
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
@@ -114,7 +95,7 @@ export async function POST(request: NextRequest) {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Signed Agreement - ${agreement.client.firstName} ${agreement.client.lastName}</title>
+          <title>Signed Agreement - ${clientFirstName} ${clientLastName}</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -204,13 +185,13 @@ export async function POST(request: NextRequest) {
             </div>
             
             <div class="content">
-              <h2>Hello ${agreement.client.firstName},</h2>
+              <h2>Hello ${clientFirstName},</h2>
               <p>Please find a copy of your previously signed service agreement below. This agreement is already legally binding and does not require any further action from you.</p>
               
               <div class="signature-info">
                 <h3>Agreement Details</h3>
-                <p><strong>Client:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
-                <p><strong>Email:</strong> ${agreement.client.email}</p>
+                <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
+                <p><strong>Email:</strong> ${clientEmail}</p>
                 <p><strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Agreement ID:</strong> ${agreement.id}</p>
                 <p><strong>Status:</strong> <span style="color: #4a9e72; font-weight: bold;">✓ Already Signed</span></p>
@@ -240,7 +221,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: validatedData.recipientEmail,
-      subject: `Copy of Your Signed Agreement - ${agreement.client.firstName} ${agreement.client.lastName}`,
+      subject: `Copy of Your Signed Agreement - ${clientFirstName} ${clientLastName}`,
       html: emailHtml,
     };
 

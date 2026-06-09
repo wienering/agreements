@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { escapeHtml } from '@/lib/htmlEscape';
 import { SessionWithClient } from './auth';
 import { applySignerSmartFields, type SecondSigner } from '@/lib/agreementSmartFields';
 
@@ -135,6 +136,11 @@ export async function getClientAgreements(
   };
 }
 
+export interface ProcessHtmlContentOptions {
+  /** When true (default), substituted values are HTML-escaped before interpolation. */
+  escapeValues?: boolean;
+}
+
 /**
  * Process HTML content by replacing template variables.
  *
@@ -148,18 +154,24 @@ export function processHtmlContent(
   agreementId: string,
   event: any = null,
   secondSigner: SecondSigner | null = null,
+  options: ProcessHtmlContentOptions = {},
 ): string {
+  if (!html || !client) return html;
+
+  const { escapeValues = true } = options;
+  const esc = (value: string) => (escapeValues ? escapeHtml(value) : value);
+
   // Signer / client name tokens are handled by the shared helper so behaviour
   // stays consistent across every render path. We run it first so combined
   // patterns like `{{client.firstName}} {{client.lastName}}` resolve cleanly.
-  let processedHtml = applySignerSmartFields(html, client, secondSigner);
+  let processedHtml = applySignerSmartFields(html, client, secondSigner, { escapeValues });
 
   // Extract address and notes from event if available, otherwise use client data
   const address = event ? (event.eventLocation ?? '') : (client.address || '');
   const notes = event ? (event.notes ?? '') : (client.notes || '');
 
-  processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-  processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
+  processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, esc(address));
+  processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, esc(notes));
 
   // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
   const eventDate = event ? event.eventDate : client.eventDate;
@@ -173,21 +185,21 @@ export function processHtmlContent(
   // Replace event fields - use event data if available, otherwise client fields
   processedHtml = processedHtml.replace(
     /\{\{client\.eventDate\}\}/g,
-    eventDate ? new Date(eventDate).toLocaleDateString() : ''
+    esc(eventDate ? new Date(eventDate).toLocaleDateString() : ''),
   );
-  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
+  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, esc(eventType));
+  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, esc(eventLocation));
+  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, esc(eventStartTime));
+  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, esc(eventDuration));
+  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, esc(eventPackage));
   processedHtml = processedHtml.replace(
     /\{\{event\.price\}\}/g,
-    packagePrice ? `$${Number(packagePrice).toFixed(2)}` : ''
+    esc(packagePrice ? `$${Number(packagePrice).toFixed(2)}` : ''),
   );
 
   // Replace agreement fields
-  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-  processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
+  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, esc(new Date().toLocaleDateString()));
+  processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, esc(agreementId || ''));
 
   return processedHtml;
 }

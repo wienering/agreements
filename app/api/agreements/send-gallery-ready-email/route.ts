@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { generateMagicLoginUrl } from '@/lib/magicToken';
+import { escapeHtml } from '@/lib/htmlEscape';
 
 const sendGalleryReadyEmailSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -90,7 +91,21 @@ export async function POST(request: NextRequest) {
           day: 'numeric'
         })
       : null;
-    const eventType = agreement.event?.eventType || 'your event';
+    const eventType = escapeHtml(agreement.event?.eventType || 'your event');
+    const clientFirstName = escapeHtml(agreement.client.firstName);
+    const clientLastName = escapeHtml(agreement.client.lastName);
+    const eventDateSafe = eventDate ? escapeHtml(eventDate) : null;
+    const galleryLinksHtml = galleryLinks.map((g, i) => {
+      const title = escapeHtml((g.title || 'Photo Gallery').trim() || `Gallery ${i + 1}`);
+      const url = escapeHtml(g.url);
+      return `<li style="margin-bottom: 8px;">
+                    <strong>${title}:</strong> 
+                    <a href="${url}" style="color: #3d8560;">${url}</a>
+                  </li>`;
+    }).join('');
+    const galleryIntro = galleryLinks.length === 1
+      ? `Here is the link for your ${escapeHtml((galleryLinks[0].title || 'photo gallery').trim())}:`
+      : 'Here are the links for your galleries:';
 
     // Create email content
     const emailHtml = `
@@ -183,32 +198,25 @@ export async function POST(request: NextRequest) {
           
           <div class="content">
             <div class="thank-you">
-              <h2 style="margin: 0 0 10px 0; color: #047857;">🎉 Thank You, ${agreement.client.firstName}!</h2>
+              <h2 style="margin: 0 0 10px 0; color: #047857;">🎉 Thank You, ${clientFirstName}!</h2>
               <p style="margin: 0; font-size: 16px;">Thank you for choosing Photobooth Guys for ${eventType}!</p>
             </div>
             
-            <p>Dear ${agreement.client.firstName} ${agreement.client.lastName},</p>
+            <p>Dear ${clientFirstName} ${clientLastName},</p>
             
             <p>We hope you had an amazing time at your event! We're excited to let you know that <strong>your photo gallery is now ready</strong> and waiting for you.</p>
             
             <div class="gallery-ready">
               <h2>📸 Your Photos Are Ready!</h2>
               <p style="margin: 0 0 5px 0; color: #4b5563;">All the fantastic photos from your event are now available to view and download.</p>
-              ${eventDate ? `<p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Event Date: ${eventDate}</p>` : ''}
+              ${eventDateSafe ? `<p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Event Date: ${eventDateSafe}</p>` : ''}
             </div>
             
             <div class="instructions">
               <h3 style="margin: 0 0 15px 0; color: #92400e;">📋 Your Gallery Links</h3>
-              <p style="margin: 0 0 12px 0; color: #78350f;">${galleryLinks.length === 1 
-                ? `Here is the link for your ${(galleryLinks[0].title || 'photo gallery').trim()}:`
-                : 'Here are the links for your galleries:'}</p>
+              <p style="margin: 0 0 12px 0; color: #78350f;">${galleryIntro}</p>
               <ul style="margin: 0; padding-left: 20px; color: #78350f;">
-                ${galleryLinks.map((g, i) => 
-                  `<li style="margin-bottom: 8px;">
-                    <strong>${(g.title || 'Photo Gallery').trim() || 'Gallery ' + (i + 1)}:</strong> 
-                    <a href="${g.url}" style="color: #3d8560;">${g.url}</a>
-                  </li>`
-                ).join('')}
+                ${galleryLinksHtml}
               </ul>
             </div>
             
@@ -260,7 +268,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: agreement.client.email,
-      subject: `Your Photo Gallery is Ready - ${agreement.client.firstName}! 📸`,
+      subject: `Your Photo Gallery is Ready - ${clientFirstName}! 📸`,
       html: emailHtml,
     };
 

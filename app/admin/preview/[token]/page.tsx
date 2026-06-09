@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { UIcon } from '../../../components/UIcon';
+import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
 
 interface AgreementData {
   id: string;
@@ -726,7 +727,7 @@ export default function AdminPreviewPage() {
                   fontFamily: 'Georgia, serif'
                 }}
                 dangerouslySetInnerHTML={{ 
-                  __html: agreement.template.htmlContent
+                  __html: sanitizeAgreementHtml(agreement.template.htmlContent)
                 }}
               />
             </div>

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { escapeHtml } from '@/lib/htmlEscape';
 import { devLog } from './logger';
 
 /**
@@ -38,6 +39,14 @@ export async function sendViewAlertEmail(
       to: viewAlertTo,
     });
 
+    const clientFirstName = escapeHtml(agreement.client.firstName);
+    const clientLastName = escapeHtml(agreement.client.lastName);
+    const clientEmail = escapeHtml(agreement.client.email);
+    const templateTitle = escapeHtml(agreement.template.title);
+    const agreementStatus = escapeHtml(agreement.status);
+    const safeClientIP = escapeHtml(clientIP);
+    const safeUserAgent = escapeHtml(userAgent);
+
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -48,18 +57,18 @@ export async function sendViewAlertEmail(
           <h2 style="color: #333; margin-top: 0;">Agreement Details</h2>
           <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-            <p><strong>Client:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
-            <p><strong>Client Email:</strong> ${agreement.client.email}</p>
-            <p><strong>Template:</strong> ${agreement.template.title}</p>
-            <p><strong>Status:</strong> ${agreement.status}</p>
+            <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
+            <p><strong>Client Email:</strong> ${clientEmail}</p>
+            <p><strong>Template:</strong> ${templateTitle}</p>
+            <p><strong>Status:</strong> ${agreementStatus}</p>
             <p><strong>View Count:</strong> ${agreement.viewCount}</p>
             <p><strong>First Viewed:</strong> ${agreement.firstViewedAt ? new Date(agreement.firstViewedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'Just now'}</p>
             <p><strong>Last Viewed:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
           </div>
           <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <h3 style="color: #333; margin-top: 0;">View Details</h3>
-            <p><strong>IP Address:</strong> ${clientIP}</p>
-            <p><strong>User Agent:</strong> ${userAgent}</p>
+            <p><strong>IP Address:</strong> ${safeClientIP}</p>
+            <p><strong>User Agent:</strong> ${safeUserAgent}</p>
             <p><strong>Viewed At:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
           </div>
           <div style="text-align: center; margin-top: 30px;">
@@ -79,7 +88,7 @@ export async function sendViewAlertEmail(
     const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: viewAlertTo,
-      subject: `📄 Agreement Viewed - ${agreement.client.firstName} ${agreement.client.lastName}`,
+      subject: `📄 Agreement Viewed - ${clientFirstName} ${clientLastName}`,
       html: emailContent,
     });
 

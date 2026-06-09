@@ -3,7 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { escapeHtml } from '@/lib/htmlEscape';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -21,40 +23,6 @@ const getClientIP = (request: NextRequest): string => {
   if (forwarded) return forwarded.split(',')[0].trim();
 
   return 'Unknown';
-};
-
-// Process and save the HTML content as a snapshot
-const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null, agreement: any = null) => {
-  let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-
-  // Extract address and notes from event if available, otherwise use client data
-  const address = event ? (event.eventLocation ?? '') : (client.address || '');
-  const notes = event ? (event.notes ?? '') : (client.notes || '');
-
-  processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-  processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
-
-  // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
-  const eventDate = event ? event.eventDate : client.eventDate;
-  const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-  const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-  const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-  const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-  const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-  const packagePrice = event ? event.packagePrice : client.packagePrice;
-
-  processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '');
-  processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-  processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-  processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-  processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-  processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-  processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
-
-  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }));
-  processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-
-  return processedHtml;
 };
 
 // Build a "Digital Signature Details" HTML block listing all signers, used to append to the merged snapshot.
@@ -81,15 +49,6 @@ function buildSignatureBlockHtml(
       <h3 style="margin: 0 0 12px 0;">Digital Signature Details</h3>
       ${rows}
     </div>`;
-}
-
-function escapeHtml(s: string): string {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 export async function POST(request: NextRequest) {
@@ -226,7 +185,13 @@ export async function POST(request: NextRequest) {
     if (isFinalSignature) {
       // Build the merged snapshot from primary client's perspective and append signature blocks.
       const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-      const baseHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event, agreement);
+      const baseHtml = processHtmlContent(
+        htmlToProcess,
+        agreement.client,
+        agreement.id,
+        agreement.event,
+        pickSecondSigner(agreement),
+      );
       const signatureBlock = requireBoth
         ? buildSignatureBlockHtml(
             allSignatures.map((s) => ({
@@ -393,6 +358,12 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
       </li>`)
     .join('\n');
 
+  const clientFirstName = escapeHtml(agreement.client.firstName);
+  const clientLastName = escapeHtml(agreement.client.lastName);
+  const clientEmail = escapeHtml(agreement.client.email);
+  const templateTitle = escapeHtml(agreement.template.title);
+  const safeClientIP = escapeHtml(clientIP);
+
   // Create email content
   const emailHtml = `
     <!DOCTYPE html>
@@ -454,15 +425,15 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
           
           <div class="agreement-details">
             <h3>Agreement Details:</h3>
-            <p><strong>Client:</strong> ${agreement.client.firstName} ${agreement.client.lastName}</p>
-            <p><strong>Email:</strong> ${agreement.client.email}</p>
+            <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
+            <p><strong>Email:</strong> ${clientEmail}</p>
             ${agreement.secondSignerEnabled && agreement.secondSignerEmail
               ? `<p><strong>Second Signer:</strong> ${escapeHtml(agreement.secondSignerFirstName || '')} ${escapeHtml(agreement.secondSignerLastName || '')} &lt;${escapeHtml(agreement.secondSignerEmail)}&gt;</p>`
               : ''}
-            <p><strong>Template:</strong> ${agreement.template.title}</p>
+            <p><strong>Template:</strong> ${templateTitle}</p>
             <p><strong>Agreement ID:</strong> ${agreement.id}</p>
             <p><strong>Signed At:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
-            <p><strong>IP Address:</strong> ${clientIP}</p>
+            <p><strong>IP Address:</strong> ${safeClientIP}</p>
           </div>
           
           <div class="signature-info">
@@ -479,7 +450,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
               <li>Review the signed agreement details above</li>
               <li>Download a PDF copy for your records</li>
               <li>Update your internal systems with the signed status</li>
-              <li>Contact the client if needed: ${agreement.client.email}</li>
+              <li>Contact the client if needed: ${clientEmail}</li>
             </ul>
           </div>
           
@@ -503,7 +474,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
   const mailOptions: any = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: 'info@photoboothguys.ca',
-    subject: `Agreement Signed - ${agreement.client.firstName} ${agreement.client.lastName} - ${agreement.template.title}`,
+    subject: `Agreement Signed - ${clientFirstName} ${clientLastName} - ${templateTitle}`,
     html: emailHtml,
   };
 
@@ -532,10 +503,15 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
   // Resolve from event first, then client (deprecated fields)
-  const eventType = agreement.event?.eventType ?? agreement.client.eventType ?? 'To be confirmed';
+  const eventType = escapeHtml(agreement.event?.eventType ?? agreement.client.eventType ?? 'To be confirmed');
   const eventDate = agreement.event?.eventDate ?? agreement.client.eventDate;
-  const eventPackage = agreement.event?.eventPackage ?? agreement.client.eventPackage ?? 'Standard Package';
+  const eventDateText = escapeHtml(
+    eventDate ? new Date(eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'To be confirmed',
+  );
+  const eventPackage = escapeHtml(agreement.event?.eventPackage ?? agreement.client.eventPackage ?? 'Standard Package');
   const packagePrice = agreement.event?.packagePrice ?? agreement.client.packagePrice;
+  const clientFirstName = escapeHtml(agreement.client.firstName);
+  const clientEmail = escapeHtml(agreement.client.email);
 
   // Create email transporter
   const transporter = nodemailer.createTransport({
@@ -610,20 +586,20 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
         
         <div class="content">
           <div class="thank-you">
-            <h2 style="margin: 0 0 16px 0; color: #1e40af; font-size: 28px;">🎉 Thank You, ${agreement.client.firstName}!</h2>
+            <h2 style="margin: 0 0 16px 0; color: #1e40af; font-size: 28px;">🎉 Thank You, ${clientFirstName}!</h2>
             <p style="margin: 0; font-size: 18px; color: #1e40af; font-weight: 600;">
               Your agreement has been successfully signed and we're excited to work with you!
             </p>
           </div>
           
-          <p>Dear ${agreement.client.firstName},</p>
+          <p>Dear ${clientFirstName},</p>
           
           <p>Thank you for choosing <strong>Photobooth Guys</strong> for your special event! We're thrilled to be part of your celebration and look forward to creating amazing memories together.</p>
           
           <div class="agreement-details">
             <h3>Your Agreement Details:</h3>
             <p><strong>Event Type:</strong> ${eventType}</p>
-            <p><strong>Event Date:</strong> ${eventDate ? new Date(eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'To be confirmed'}</p>
+            <p><strong>Event Date:</strong> ${eventDateText}</p>
             <p><strong>Package:</strong> ${eventPackage}</p>
             ${packagePrice ? `<p><strong>Investment:</strong> $${Number(packagePrice).toFixed(2)}</p>` : ''}
             <p><strong>Agreement ID:</strong> ${agreement.id}</p>
@@ -647,7 +623,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
           
           <div class="contact-info">
             <h3>Your Client Portal</h3>
-            <p>Access your personal client portal using your email address (${agreement.client.email}) to:</p>
+            <p>Access your personal client portal using your email address (${clientEmail}) to:</p>
             <ul>
               <li>View all your agreements and their current status</li>
               <li>Track payment information and make payments online</li>

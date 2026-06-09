@@ -374,21 +374,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Optional webhook signature verification
+    // Optional webhook signature verification — fail closed when secret is not configured
     const webhookSecret = process.env.BOOKLY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('BOOKLY_WEBHOOK_SECRET is not configured; rejecting Bookly webhook request');
+      return NextResponse.json(
+        { error: 'Webhook authentication is not configured' },
+        { status: 503 },
+      );
+    }
+
     const signature = request.headers.get('x-bookly-signature') || 
                      request.headers.get('x-signature') ||
                      payload.signature || null;
     
-    if (webhookSecret) {
-      const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
-      if (!isValid) {
-        console.error('Invalid or missing webhook signature');
-        return NextResponse.json(
-          { error: signature ? 'Invalid webhook signature' : 'Missing webhook signature' },
-          { status: 401 }
-        );
-      }
+    const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+    if (!isValid) {
+      console.error('Invalid or missing webhook signature');
+      return NextResponse.json(
+        { error: signature ? 'Invalid webhook signature' : 'Missing webhook signature' },
+        { status: 401 }
+      );
     }
 
     // Validate payload

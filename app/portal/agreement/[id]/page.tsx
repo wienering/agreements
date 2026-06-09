@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '../../../components/UIcon';
+import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
 
 interface Agreement {
   id: string;
@@ -645,7 +646,7 @@ function AgreementDetailContent() {
                     maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
                     WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)'
                   } : {}}
-                  dangerouslySetInnerHTML={{ __html: agreement.mergedHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeAgreementHtml(agreement.mergedHtml ?? '') }}
                 />
                 {hasMoreContent && (
                   <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">

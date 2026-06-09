@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
-import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
+import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,44 +42,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
-    // Process smart fields in the HTML content
-    const processHtmlContent = (html: string, client: any, agreementId: string, event: any = null) => {
-      if (!html || !client) return html;
-
-      let processedHtml = applySignerSmartFields(html, client, pickSecondSigner(agreement));
-
-      // Extract address and notes from event if available, otherwise use client data
-      const address = event ? (event.eventLocation ?? '') : (client.address || '');
-      const notes = event ? (event.notes ?? '') : (client.notes || '');
-
-      processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, address);
-      processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, notes);
-      
-      // Use event data exclusively when event exists, otherwise fall back to client event fields (backward compatibility)
-      const eventDate = event ? event.eventDate : client.eventDate;
-      const eventType = event ? (event.eventType ?? '') : (client.eventType || '');
-      const eventLocation = event ? (event.eventLocation ?? '') : (client.eventLocation || '');
-      const eventStartTime = event ? (event.eventStartTime ?? '') : (client.eventStartTime || '');
-      const eventDuration = event ? (event.eventDuration ?? '') : (client.eventDuration || '');
-      const eventPackage = event ? (event.eventPackage ?? '') : (client.eventPackage || '');
-      const packagePrice = event ? event.packagePrice : client.packagePrice;
-      
-      // Replace event fields - use event data if available, otherwise client fields
-      processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, eventDate ? new Date(eventDate).toLocaleDateString() : '');
-      processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, eventType);
-      processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, eventLocation);
-      processedHtml = processedHtml.replace(/\{\{event\.startTime\}\}/g, eventStartTime);
-      processedHtml = processedHtml.replace(/\{\{event\.duration\}\}/g, eventDuration);
-      processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, eventPackage);
-      processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, packagePrice ? `$${Number(packagePrice).toFixed(2)}` : '');
-      
-      // Replace agreement fields
-      processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, new Date().toLocaleDateString());
-      processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementId || '');
-      
-      return processedHtml;
-    };
-
     // For unsigned agreements, process the template in real-time
     let processedHtml;
     devLog('🔍 Admin Preview API: Agreement status:', agreement.status);
@@ -95,14 +58,26 @@ export async function GET(request: NextRequest) {
         // Fallback: create snapshot now if it's missing
         devLog('🔍 Admin Preview API: WARNING - Signed agreement missing snapshot, creating one now');
         const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-        processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+        processedHtml = processHtmlContent(
+          htmlToProcess,
+          agreement.client,
+          agreement.id,
+          agreement.event,
+          pickSecondSigner(agreement),
+        );
       }
     } else {
       // Process the content in real-time for unsigned agreements
       // Use customHtmlContent if available, otherwise fall back to template.htmlContent
       devLog('🔍 Admin Preview API: Processing content in real-time for unsigned agreement');
       const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+      processedHtml = processHtmlContent(
+        htmlToProcess,
+        agreement.client,
+        agreement.id,
+        agreement.event,
+        pickSecondSigner(agreement),
+      );
     }
 
     // Convert Decimal fields to numbers for JSON serialization

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { authenticateSession } from '../../shared/auth';
 
 export async function GET(
@@ -57,7 +58,13 @@ export async function GET(
     if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
       processedHtml = agreement.mergedHtml;
     } else {
-      processedHtml = processHtmlContent(htmlToProcess, agreement.client, agreement.id, agreement.event);
+      processedHtml = processHtmlContent(
+        htmlToProcess,
+        agreement.client,
+        agreement.id,
+        agreement.event,
+        pickSecondSigner(agreement),
+      );
     }
 
     // Return agreement data
