@@ -23,6 +23,7 @@ generate-refresh-token*.txt
 
 # Legacy
 _legacy-sql-backup
+*.zip
 
 # Logs and OS files
 *.log
