@@ -186,3 +186,29 @@ export function renderNoticeBlock(
   </tr>
 </table>`;
 }
+
+/** Content panel without a left accent bar (agreement body, note text, etc.). */
+export function renderContentPanel(contentHtml: string): string {
+  return `
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:16px 0;">
+  <tr>
+    <td style="padding:16px 18px;background-color:${PANEL_FILL};border:1px solid ${HAIRLINE};font-family:${FONT_STACK};font-size:14px;line-height:1.65;color:${INK};word-break:break-word;">
+      ${contentHtml}
+    </td>
+  </tr>
+</table>`;
+}
+
+/** Centered OTP / verification code panel. */
+export function renderCodePanel(code: string): string {
+  return `
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:24px 0;">
+  <tr>
+    <td align="center" style="padding:24px 18px;background-color:${PANEL_FILL};border:1px solid ${HAIRLINE};font-family:${FONT_STACK};">
+      <p style="margin:0 0 12px 0;font-size:14px;font-weight:600;color:${MUTED};">Your verification code:</p>
+      <p style="margin:0;font-size:36px;font-weight:700;letter-spacing:6px;color:${INK};font-family:'Courier New',Courier,monospace;">${code}</p>
+      <p style="margin:12px 0 0 0;font-size:13px;color:${MUTED};">Expires in 15 minutes</p>
+    </td>
+  </tr>
+</table>`;
+}

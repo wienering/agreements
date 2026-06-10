@@ -1,6 +1,7 @@
-import nodemailer from 'nodemailer';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { devLog } from './logger';
+import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 /**
  * Send "Agreement Viewed" alert email. Returns true if sent, false if failed or SMTP not configured.
@@ -16,21 +17,9 @@ export async function sendViewAlertEmail(
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    });
-
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const viewAlertTo = process.env.ADMIN_EMAIL || 'info@photoboothguys.ca';
+    const adminUrl = `${baseUrl}/admin/agreements`;
 
     devLog('[view-alert] SMTP config:', {
       host: process.env.SMTP_HOST,
@@ -47,49 +36,40 @@ export async function sendViewAlertEmail(
     const safeClientIP = escapeHtml(clientIP);
     const safeUserAgent = escapeHtml(userAgent);
 
-    const emailContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">📄 Agreement Viewed</h1>
-          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Someone has viewed an agreement</p>
-        </div>
-        <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
-          <h2 style="color: #333; margin-top: 0;">Agreement Details</h2>
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-            <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
-            <p><strong>Client Email:</strong> ${clientEmail}</p>
-            <p><strong>Template:</strong> ${templateTitle}</p>
-            <p><strong>Status:</strong> ${agreementStatus}</p>
-            <p><strong>View Count:</strong> ${agreement.viewCount}</p>
-            <p><strong>First Viewed:</strong> ${agreement.firstViewedAt ? new Date(agreement.firstViewedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'Just now'}</p>
-            <p><strong>Last Viewed:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-          </div>
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #333; margin-top: 0;">View Details</h3>
-            <p><strong>IP Address:</strong> ${safeClientIP}</p>
-            <p><strong>User Agent:</strong> ${safeUserAgent}</p>
-            <p><strong>Viewed At:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-          </div>
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="${baseUrl}/admin/agreements"
-               style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
-              View in Admin Panel
-            </a>
-          </div>
-        </div>
-      </div>
+    const agreementDetailsHtml = `
+      <strong>Agreement ID:</strong> ${agreement.id}<br>
+      <strong>Client:</strong> ${clientFirstName} ${clientLastName}<br>
+      <strong>Client Email:</strong> ${clientEmail}<br>
+      <strong>Template:</strong> ${templateTitle}<br>
+      <strong>Status:</strong> ${agreementStatus}<br>
+      <strong>View Count:</strong> ${agreement.viewCount}<br>
+      <strong>First Viewed:</strong> ${agreement.firstViewedAt ? new Date(agreement.firstViewedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'Just now'}<br>
+      <strong>Last Viewed:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`;
+
+    const viewDetailsHtml = `
+      <strong>IP Address:</strong> ${safeClientIP}<br>
+      <strong>User Agent:</strong> ${safeUserAgent}<br>
+      <strong>Viewed At:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`;
+
+    const bodyHtml = `
+      <p style="margin:0 0 16px 0;">Someone has viewed an agreement.</p>
+      ${renderCtaButton({ label: 'Open Admin Panel', url: adminUrl, tone: 'default' })}
+      ${renderNoticeBlock('Agreement Details', agreementDetailsHtml, 'default')}
+      ${renderNoticeBlock('View Details', viewDetailsHtml, 'default')}
     `;
 
-    devLog('[view-alert] Calling transporter.verify()...');
-    await transporter.verify();
+    const emailHtml = renderEmailLayout({
+      title: 'Agreement Viewed',
+      preheader: 'Someone has viewed an agreement.',
+      bodyHtml,
+      tone: 'default',
+    });
 
     devLog('[view-alert] Sending view alert email to:', viewAlertTo);
-    const result = await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    const result = await sendEmail({
       to: viewAlertTo,
-      subject: `📄 Agreement Viewed - ${clientFirstName} ${clientLastName}`,
-      html: emailContent,
+      subject: `Agreement Viewed - ${clientFirstName} ${clientLastName}`,
+      html: emailHtml,
     });
 
     devLog('[view-alert] Email SENT. messageId:', result.messageId);

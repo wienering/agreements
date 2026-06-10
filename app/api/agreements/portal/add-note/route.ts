@@ -3,8 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { z } from 'zod';
-import nodemailer from 'nodemailer';
 import { handleApiError } from '@/lib/handleApiError';
+import {
+  renderCtaButton,
+  renderEmailLayout,
+  renderNoticeBlock,
+} from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 const addNoteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(1000, 'Note content must be less than 1000 characters'),
@@ -36,118 +41,44 @@ async function sendNoteNotificationEmail(
     const safeClientLastName = escapeHtml(client.lastName);
     const safeClientEmail = escapeHtml(client.email);
     const safeAgreementTitle = agreement ? escapeHtml(agreement.template.title) : '';
+    const adminUrl = `${baseUrl}/admin/agreements`;
 
-    // Create email transporter
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    });
+    const clientInfoHtml = `
+      <strong>Name:</strong> ${safeClientFirstName} ${safeClientLastName}<br>
+      <strong>Email:</strong> ${safeClientEmail}<br>
+      <strong>Agreement:</strong> ${agreement ? safeAgreementTitle : 'General note (not tied to specific agreement)'}`;
 
-    // Create email content
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { color: #4a9e72; margin: 0; }
-          .content { margin-bottom: 30px; }
-          .note-content { 
-            border: 1px solid #eee; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            background-color: #f9f9f9;
-            white-space: pre-wrap;
-          }
-          .client-details { 
-            border: 1px solid #eee; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            background-color: #f0f9ff;
-          }
-          .button { 
-            display: inline-block; 
-            background-color: #3d8560 !important; 
-            color: white !important; 
-            padding: 12px 24px; 
-            text-decoration: none; 
-            border-radius: 6px; 
-            margin: 10px 5px;
-            font-weight: 600;
-          }
-          .button:hover { 
-            background-color: #1d4ed8; 
-          }
-          .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Photobooth Guys</h1>
-            <p>New Client Note</p>
-          </div>
-          
-          <div class="content">
-            <p><strong>A client has added a note in the client portal.</strong></p>
-            
-            <div class="client-details">
-              <h3 style="margin-top: 0;">Client Information:</h3>
-              <p><strong>Name:</strong> ${safeClientFirstName} ${safeClientLastName}</p>
-              <p><strong>Email:</strong> ${safeClientEmail}</p>
-              ${agreement ? `<p><strong>Agreement:</strong> ${safeAgreementTitle}</p>` : '<p><strong>Agreement:</strong> General note (not tied to specific agreement)</p>'}
-            </div>
-            
-            <div class="note-content">
-              <h3 style="margin-top: 0;">Note Content:</h3>
-              <p>${safeNoteContent.replace(/\n/g, '<br>')}</p>
-            </div>
-            
-            ${agreement ? `
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${baseUrl}/agreement/${agreement.uniqueToken}" class="button">View Agreement</a>
-              <a href="${baseUrl}/admin/agreements" class="button">Admin Panel</a>
-            </div>
-            ` : `
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${baseUrl}/admin/agreements" class="button">Admin Panel</a>
-            </div>
-            `}
-            
-            <p style="color: #666; font-size: 14px;">This notification was automatically sent when the client added a note in the client portal.</p>
-          </div>
-          
-          <div class="footer">
-            <p>Photobooth Guys Agreement Management System</p>
-            <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-          </div>
-        </div>
-      </body>
-      </html>
+    const notePanelHtml = safeNoteContent.replace(/\n/g, '<br>');
+
+    const agreementLinkLine = agreement
+      ? `<p style="margin:16px 0 0 0;">You can also <a href="${baseUrl}/agreement/${agreement.uniqueToken}" style="color:#C0552F;text-decoration:underline;">view the agreement</a>.</p>`
+      : '';
+
+    const bodyHtml = `
+      <p style="margin:0 0 16px 0;"><strong>A client has added a note in the client portal.</strong></p>
+      ${renderNoticeBlock('Client Information', clientInfoHtml, 'default')}
+      ${renderNoticeBlock('Note Content', notePanelHtml, 'default')}
+      ${renderCtaButton({ label: 'View in Admin', url: adminUrl, tone: 'default' })}
+      ${agreementLinkLine}
+      <p style="margin:16px 0 0 0;font-size:14px;color:#6E655A;">This notification was automatically sent when the client added a note in the client portal.</p>
+      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+        Photobooth Guys Agreement Management System<br>
+        Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      </p>
     `;
 
-    // Send email
-    const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca',
-      subject: `📝 New Client Note - ${safeClientFirstName} ${safeClientLastName}${agreement ? ` - ${safeAgreementTitle}` : ''}`,
-      html: emailHtml,
-    };
+    const emailHtml = renderEmailLayout({
+      title: 'New Client Note',
+      preheader: 'A client has added a note in the client portal.',
+      bodyHtml,
+      tone: 'default',
+    });
 
-    await transporter.verify();
-    const result = await transporter.sendMail(mailOptions);
+    const result = await sendEmail({
+      to: process.env.ADMIN_EMAIL || 'agreements@photoboothguys.ca',
+      subject: `New Client Note - ${safeClientFirstName} ${safeClientLastName}${agreement ? ` - ${safeAgreementTitle}` : ''}`,
+      html: emailHtml,
+    });
     devLog('Note notification email sent successfully:', result.messageId);
   } catch (error) {
     // Log error but don't throw - we don't want email failures to block note creation

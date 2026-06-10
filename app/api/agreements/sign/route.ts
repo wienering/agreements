@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
-import nodemailer from 'nodemailer';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
+import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -317,20 +318,6 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
-  // Create email transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-
   // Build a "Signed By" block — list every signer for clarity
   const signers = (agreement.signatures && agreement.signatures.length)
     ? agreement.signatures
@@ -356,123 +343,60 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
   const templateTitle = escapeHtml(agreement.template.title);
   const safeClientIP = escapeHtml(clientIP);
 
-  // Create email content
-  const emailHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #4a9e72; margin: 0; }
-        .content { margin-bottom: 30px; }
-        .agreement-details { 
-          border: 1px solid #eee; 
-          padding: 20px; 
-          border-radius: 8px; 
-          margin: 20px 0; 
-          background-color: #f9f9f9;
-        }
-        .button { 
-          display: inline-block; 
-          background-color: #3d8560 !important; 
-          color: white !important; 
-          padding: 18px 36px; 
-          text-decoration: none; 
-          border-radius: 6px; 
-          margin: 10px 5px;
-          font-weight: 700;
-          font-size: 18px;
-          font-family: Arial, sans-serif;
-          text-align: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-          border: none;
-          transition: all 0.2s ease;
-          min-width: 220px;
-          text-shadow: none;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          letter-spacing: 0.5px;
-        }
-        .button:hover { 
-          background-color: #1d4ed8; 
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-          transform: translateY(-1px);
-        }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
-        .urgent { background-color: #dbeafe; border: 1px solid #93c5fd; padding: 15px; border-radius: 6px; margin: 20px 0; }
-        .signature-info { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 6px; margin: 20px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Photobooth Guys</h1>
-          <p>Agreement Signed Notification</p>
-        </div>
-        
-        <div class="content">
-          <p><strong>An agreement has been digitally signed!</strong></p>
-          
-          <div class="agreement-details">
-            <h3>Agreement Details:</h3>
-            <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
-            <p><strong>Email:</strong> ${clientEmail}</p>
-            ${agreement.secondSignerEnabled && agreement.secondSignerEmail
-              ? `<p><strong>Second Signer:</strong> ${escapeHtml(agreement.secondSignerFirstName || '')} ${escapeHtml(agreement.secondSignerLastName || '')} &lt;${escapeHtml(agreement.secondSignerEmail)}&gt;</p>`
-              : ''}
-            <p><strong>Template:</strong> ${templateTitle}</p>
-            <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-            <p><strong>Signed At:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
-            <p><strong>IP Address:</strong> ${safeClientIP}</p>
-          </div>
-          
-          <div class="signature-info">
-            <h3>Digital Signature Information:</h3>
-            <p>This agreement has been legally signed${signers.length > 1 ? ' by both parties' : ''}:</p>
-            <ul>
-              ${signersListHtml}
-            </ul>
-          </div>
-          
-          <div class="urgent">
-            <strong>📋 Next Steps:</strong>
-            <ul>
-              <li>Review the signed agreement details above</li>
-              <li>Download a PDF copy for your records</li>
-              <li>Update your internal systems with the signed status</li>
-              <li>Contact the client if needed: ${clientEmail}</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${agreementUrl}" class="button">View Signed Agreement</a>
-          </div>
-          
-          <p>This notification was automatically sent when the client completed the digital signing process.</p>
-        </div>
-        
-        <div class="footer">
-          <p>Photobooth Guys Agreement Management System</p>
-          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-        </div>
-      </div>
-    </body>
-    </html>
+  const secondSignerLine =
+    agreement.secondSignerEnabled && agreement.secondSignerEmail
+      ? `<strong>Second Signer:</strong> ${escapeHtml(agreement.secondSignerFirstName || '')} ${escapeHtml(agreement.secondSignerLastName || '')} &lt;${escapeHtml(agreement.secondSignerEmail)}&gt;<br>`
+      : '';
+
+  const agreementDetailsHtml = `
+    <strong>Client:</strong> ${clientFirstName} ${clientLastName}<br>
+    <strong>Email:</strong> ${clientEmail}<br>
+    ${secondSignerLine}
+    <strong>Template:</strong> ${templateTitle}<br>
+    <strong>Agreement ID:</strong> ${agreement.id}<br>
+    <strong>Signed At:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
+    <strong>IP Address:</strong> ${safeClientIP}`;
+
+  const signatureInfoHtml = `
+    This agreement has been legally signed${signers.length > 1 ? ' by both parties' : ''}:<br>
+    <ul style="margin:8px 0 0 0;padding-left:20px;">
+      ${signersListHtml}
+    </ul>`;
+
+  const nextStepsHtml = `
+    <ul style="margin:0;padding-left:20px;">
+      <li>Review the signed agreement details above</li>
+      <li>Download a PDF copy for your records</li>
+      <li>Update your internal systems with the signed status</li>
+      <li>Contact the client if needed: ${clientEmail}</li>
+    </ul>`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px 0;"><strong>An agreement has been digitally signed!</strong></p>
+    ${renderCtaButton({ label: 'View Signed Agreement', url: agreementUrl, tone: 'default' })}
+    ${renderNoticeBlock('Agreement Details', agreementDetailsHtml, 'default')}
+    ${renderNoticeBlock('Digital Signature Information', signatureInfoHtml, 'default')}
+    ${renderNoticeBlock('Next Steps', nextStepsHtml, 'default')}
+    <p style="margin:16px 0 0 0;">This notification was automatically sent when the client completed the digital signing process.</p>
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+      Photobooth Guys Agreement Management System<br>
+      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+    </p>
   `;
 
-  // Send email
-  const mailOptions: any = {
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: 'info@photoboothguys.ca',
-    subject: `Agreement Signed - ${clientFirstName} ${clientLastName} - ${templateTitle}`,
-    html: emailHtml,
-  };
+  const emailHtml = renderEmailLayout({
+    title: 'Agreement Signed Notification',
+    preheader: 'An agreement has been digitally signed.',
+    bodyHtml,
+    tone: 'default',
+  });
 
   try {
-    await transporter.verify();
-    await transporter.sendMail(mailOptions);
+    await sendEmail({
+      to: 'info@photoboothguys.ca',
+      subject: `Agreement Signed - ${clientFirstName} ${clientLastName} - ${templateTitle}`,
+      html: emailHtml,
+    });
     devLog('Signed agreement notification sent successfully');
   } catch (error) {
     console.error('Failed to send notification email:', error);
@@ -504,173 +428,79 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   const packagePrice = agreement.event?.packagePrice ?? agreement.client.packagePrice;
   const clientFirstName = escapeHtml(agreement.client.firstName);
   const clientEmail = escapeHtml(agreement.client.email);
+  const portalUrl = `${baseUrl}/portal/login`;
 
-  // Create email transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
+  const agreementDetailsHtml = `
+    <strong>Event Type:</strong> ${eventType}<br>
+    <strong>Event Date:</strong> ${eventDateText}<br>
+    <strong>Package:</strong> ${eventPackage}<br>
+    ${packagePrice ? `<strong>Investment:</strong> $${Number(packagePrice).toFixed(2)}<br>` : ''}
+    <strong>Agreement ID:</strong> ${agreement.id}<br>
+    <strong>Signed On:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`;
 
-  // Create email content
-  const emailHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #4a9e72; margin: 0; }
-        .content { margin-bottom: 30px; }
-        .agreement-details { 
-          border: 1px solid #eee; 
-          padding: 20px; 
-          border-radius: 8px; 
-          margin: 20px 0; 
-          background-color: #f9f9f9;
-        }
-        .button { 
-          display: inline-block; 
-          background-color: #3d8560 !important; 
-          color: white !important; 
-          padding: 18px 36px; 
-          text-decoration: none; 
-          border-radius: 6px; 
-          margin: 10px 5px;
-          font-weight: 700;
-          font-size: 18px;
-          font-family: Arial, sans-serif;
-          text-align: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-          border: none;
-          transition: all 0.2s ease;
-          min-width: 220px;
-          text-shadow: none;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          letter-spacing: 0.5px;
-        }
-        .button:hover { 
-          background-color: #1d4ed8; 
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-          transform: translateY(-1px);
-        }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
-        .thank-you { background-color: #dbeafe; border: 1px solid #93c5fd; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
-        .next-steps { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .contact-info { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Photobooth Guys</h1>
-          <p>Thank You for Choosing Us!</p>
-        </div>
-        
-        <div class="content">
-          <div class="thank-you">
-            <h2 style="margin: 0 0 16px 0; color: #1e40af; font-size: 28px;">🎉 Thank You, ${clientFirstName}!</h2>
-            <p style="margin: 0; font-size: 18px; color: #1e40af; font-weight: 600;">
-              Your agreement has been successfully signed and we're excited to work with you!
-            </p>
-          </div>
-          
-          <p>Dear ${clientFirstName},</p>
-          
-          <p>Thank you for choosing <strong>Photobooth Guys</strong> for your special event! We're thrilled to be part of your celebration and look forward to creating amazing memories together.</p>
-          
-          <div class="agreement-details">
-            <h3>Your Agreement Details:</h3>
-            <p><strong>Event Type:</strong> ${eventType}</p>
-            <p><strong>Event Date:</strong> ${eventDateText}</p>
-            <p><strong>Package:</strong> ${eventPackage}</p>
-            ${packagePrice ? `<p><strong>Investment:</strong> $${Number(packagePrice).toFixed(2)}</p>` : ''}
-            <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-            <p><strong>Signed On:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
-          </div>
-          
-          <div class="next-steps">
-            <h3>What's Next?</h3>
-            <ul>
-              <li><strong>Client Portal Access:</strong> Use your email to access your personal portal for managing all event details</li>
-              <li><strong>Template Selection:</strong> Choose your photo booth template to match your event theme</li>
-              <li><strong>Event Planning:</strong> We'll be in touch closer to your event date to finalize details</li>
-              <li><strong>Questions:</strong> Don't hesitate to reach out if you have any questions</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${agreementUrl}" class="button">View Your Agreement</a>
-            <a href="${baseUrl}/portal/login" class="button" style="background-color: #4a9e72 !important;">Access Client Portal</a>
-          </div>
-          
-          <div class="contact-info">
-            <h3>Your Client Portal</h3>
-            <p>Access your personal client portal using your email address (${clientEmail}) to:</p>
-            <ul>
-              <li>View all your agreements and their current status</li>
-              <li>Track payment information and make payments online</li>
-              <li>Access your event gallery when photos are ready</li>
-              <li>Update your event details and preferences</li>
-              <li>Download copies of signed agreements anytime</li>
-            </ul>
-            <p style="text-align: center; margin: 20px 0;">
-              <a href="${baseUrl}/portal/login" style="display: inline-block; background-color: #4a9e72; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">Open Client Portal →</a>
-            </p>
-          </div>
-          
-          <div class="contact-info">
-            <h3>Need Help or Have Questions?</h3>
-            <p>Our team is here to help make your event perfect!</p>
-            <p><strong>📧 Email:</strong> info@photoboothguys.ca</p>
-            <p><strong>📞 Phone:</strong> 647-378-5332</p>
-            <p><strong>🌐 Website:</strong> <a href="https://photoboothguys.ca" style="color: #4a9e72;">photoboothguys.ca</a></p>
-          </div>
-          
-          <p>Once again, thank you for choosing Photobooth Guys. We can't wait to make your event unforgettable!</p>
-          
-          <p>Best regards,<br>
-          <strong>The Photobooth Guys Team</strong></p>
-        </div>
-        
-        <div class="footer">
-          <p>Photobooth Guys</p>
-          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-        </div>
-      </div>
-    </body>
-    </html>
+  const nextStepsHtml = `
+    <ul style="margin:0;padding-left:20px;">
+      <li><strong>Client Portal Access:</strong> Use your email to access your personal portal for managing all event details</li>
+      <li><strong>Template Selection:</strong> Choose your photo booth template to match your event theme</li>
+      <li><strong>Event Planning:</strong> We'll be in touch closer to your event date to finalize details</li>
+      <li><strong>Questions:</strong> Don't hesitate to reach out if you have any questions</li>
+    </ul>`;
+
+  const portalInfoHtml = `
+    Access your personal client portal using your email address (${clientEmail}) to:<br>
+    <ul style="margin:8px 0 0 0;padding-left:20px;">
+      <li>View all your agreements and their current status</li>
+      <li>Track payment information and make payments online</li>
+      <li>Access your event gallery when photos are ready</li>
+      <li>Update your event details and preferences</li>
+      <li>Download copies of signed agreements anytime</li>
+    </ul>`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 16px 0;">Thank you, ${clientFirstName}! Your agreement has been successfully signed and we're excited to work with you!</p>
+    <p style="margin:0 0 16px 0;">Dear ${clientFirstName},</p>
+    <p style="margin:0 0 16px 0;">Thank you for choosing <strong>Photobooth Guys</strong> for your special event! We're thrilled to be part of your celebration and look forward to creating amazing memories together.</p>
+    ${renderNoticeBlock('Your Agreement Details', agreementDetailsHtml, 'default')}
+    ${renderCtaButton({ label: 'View Your Agreement', url: agreementUrl, tone: 'default' })}
+    ${renderNoticeBlock("What's Next?", nextStepsHtml, 'default')}
+    ${renderNoticeBlock('Your Client Portal', `${portalInfoHtml}<p style="margin:16px 0 0 0;"><a href="${portalUrl}" style="color:#C0552F;text-decoration:underline;font-weight:600;">Open Client Portal</a></p>`, 'default')}
+    ${renderNoticeBlock('Need Help or Have Questions?', `
+      Our team is here to help make your event perfect!<br>
+      <strong>Email:</strong> info@photoboothguys.ca<br>
+      <strong>Phone:</strong> 647-378-5332<br>
+      <strong>Website:</strong> <a href="https://photoboothguys.ca" style="color:#C0552F;text-decoration:underline;">photoboothguys.ca</a>
+    `, 'default')}
+    <p style="margin:16px 0 0 0;">Once again, thank you for choosing Photobooth Guys. We can't wait to make your event unforgettable!</p>
+    <p style="margin:16px 0 0 0;">Best regards,<br><strong>The Photobooth Guys Team</strong></p>
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+    </p>
   `;
 
-  // Send email — CC second signer when enabled and email is different from primary
-  const mailOptions: any = {
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: agreement.client.email,
-    subject: `Agreement Signed - Thank You for Choosing Photobooth Guys`,
-    html: emailHtml,
-  };
+  const emailHtml = renderEmailLayout({
+    title: 'Thank You for Choosing Us',
+    preheader: 'Your agreement has been successfully signed.',
+    bodyHtml,
+    tone: 'default',
+  });
 
+  const ccList: string[] = [];
   if (
     agreement.secondSignerEnabled &&
     agreement.secondSignerEmail &&
     agreement.secondSignerEmail.toLowerCase() !== (agreement.client.email || '').toLowerCase()
   ) {
-    mailOptions.cc = [agreement.secondSignerEmail];
+    ccList.push(agreement.secondSignerEmail);
   }
 
   try {
-    await transporter.verify();
-    await transporter.sendMail(mailOptions);
-    devLog('Client thank you email sent successfully to:', agreement.client.email, 'cc:', mailOptions.cc || 'none');
+    await sendEmail({
+      to: agreement.client.email,
+      cc: ccList.length > 0 ? ccList : undefined,
+      subject: `Agreement Signed - Thank You for Choosing Photobooth Guys`,
+      html: emailHtml,
+    });
+    devLog('Client thank you email sent successfully to:', agreement.client.email, 'cc:', ccList.length ? ccList : 'none');
   } catch (error) {
     console.error('Failed to send client thank you email:', error);
     throw error;
@@ -710,70 +540,29 @@ async function sendWaitingForSecondSignerEmail(
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-
-  const emailHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #4a9e72; margin: 0; }
-        .info { background-color: #f0f9ff; border: 1px solid #bae6fd; padding: 16px; border-radius: 8px; margin: 20px 0; }
-        .button {
-          display: inline-block;
-          background-color: #3d8560;
-          color: white !important;
-          padding: 14px 28px;
-          text-decoration: none;
-          border-radius: 6px;
-          font-weight: 600;
-        }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Photobooth Guys</h1>
-          <p>Your signature is needed</p>
-        </div>
-        <p>Hi ${escapeHtml(recipientName)},</p>
-        <p>${escapeHtml(justSignedName)} has signed the agreement, and this agreement requires both signatures to be binding.</p>
-        <div class="info">
-          <p style="margin: 0;"><strong>Please review and sign the agreement to complete the process.</strong></p>
-        </div>
-        <p style="text-align: center; margin: 28px 0;">
-          <a href="${agreementUrl}" class="button">Review &amp; Sign Agreement</a>
-        </p>
-        <p>If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
-        <div class="footer">
-          <p>Photobooth Guys Agreement Management System</p>
-          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-        </div>
-      </div>
-    </body>
-    </html>
+  const bodyHtml = `
+    <p style="margin:0 0 16px 0;">Hi ${escapeHtml(recipientName)},</p>
+    <p style="margin:0 0 16px 0;">${escapeHtml(justSignedName)} has signed the agreement, and this agreement requires both signatures to be binding.</p>
+    ${renderNoticeBlock('Action Required', '<strong>Please review and sign the agreement to complete the process.</strong>', 'default')}
+    ${renderCtaButton({ label: 'Review & Sign', url: agreementUrl, tone: 'default' })}
+    <p style="margin:16px 0 0 0;">If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+      Photobooth Guys Agreement Management System<br>
+      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+    </p>
   `;
 
-  const mailOptions: any = {
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+  const emailHtml = renderEmailLayout({
+    title: 'Your signature is needed',
+    preheader: 'Please review and sign the agreement to complete the process.',
+    bodyHtml,
+    tone: 'default',
+  });
+
+  await sendEmail({
     to: recipientEmail,
     subject: `Action needed: please sign the agreement`,
     html: emailHtml,
-  };
-
-  await transporter.verify();
-  await transporter.sendMail(mailOptions);
+  });
   devLog('Waiting-on-second-signer email sent to:', recipientEmail);
 }

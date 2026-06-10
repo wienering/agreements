@@ -1,18 +1,9 @@
 import type { NextAuthOptions } from 'next-auth';
 import { devLog } from './logger';
 import EmailProvider from 'next-auth/providers/email';
-import nodemailer from 'nodemailer';
 import { memoryAdapter } from './memory-adapter';
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import { renderCtaButton, renderEmailLayout } from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 export const authOptions: NextAuthOptions = {
   adapter: memoryAdapter,
@@ -23,12 +14,26 @@ export const authOptions: NextAuthOptions = {
         if (identifier.toLowerCase() !== (process.env.ADMIN_EMAIL || '').toLowerCase()) {
           return;
         }
-        await transporter.sendMail({
+
+        const bodyHtml = `
+          <p style="margin:0 0 16px 0;">Sign in to Agreements using the button below.</p>
+          ${renderCtaButton({ label: 'Sign In', url, tone: 'default' })}
+          <p style="margin:16px 0 0 0;font-size:13px;color:#6E655A;">If the button does not work, copy and paste this link into your browser:</p>
+          <p style="margin:8px 0 0 0;word-break:break-all;font-size:13px;color:#2A2724;">${url}</p>
+        `;
+
+        const html = renderEmailLayout({
+          title: 'Admin Sign In',
+          preheader: 'Your sign-in link for Agreements.',
+          bodyHtml,
+          tone: 'default',
+        });
+
+        await sendEmail({
           to: identifier,
-          from: process.env.SMTP_FROM,
           subject: 'Your sign-in link',
+          html,
           text: `Sign in to Agreements:\n${url}`,
-          html: `<p>Sign in to Agreements:</p><p><a href="${url}">${url}</a></p>`,
         });
       },
     }),

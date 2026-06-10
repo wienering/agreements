@@ -3,9 +3,10 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import nodemailer from 'nodemailer';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { handleApiError } from '@/lib/handleApiError';
+import { renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 const cancelAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -84,26 +85,6 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
     return;
   }
 
-  // Get the base URL from request headers or environment
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'localhost:3000';
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
-  const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
-
-  // Create email transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-
   // Create email content
   const clientFirstName = escapeHtml(agreement.client.firstName);
   const clientLastName = escapeHtml(agreement.client.lastName);
@@ -112,101 +93,52 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
   const safeAdminName = escapeHtml(adminName);
   const safeReason = escapeHtml(reason);
 
-  const emailHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #dc2626; margin: 0; }
-        .content { margin-bottom: 30px; }
-        .cancellation-notice { 
-          border: 2px solid #dc2626; 
-          padding: 20px; 
-          border-radius: 8px; 
-          margin: 20px 0; 
-          background-color: #fef2f2;
-        }
-        .agreement-details { 
-          border: 1px solid #eee; 
-          padding: 20px; 
-          border-radius: 8px; 
-          margin: 20px 0; 
-          background-color: #f9f9f9;
-        }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
-        .important { background-color: #fef3cd; border: 1px solid #fbbf24; padding: 15px; border-radius: 6px; margin: 20px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Photobooth Guys</h1>
-          <p>Agreement Cancellation Notice</p>
-        </div>
-        
-        <div class="content">
-          <div class="cancellation-notice">
-            <h2 style="color: #dc2626; margin-top: 0;">⚠️ AGREEMENT CANCELLED</h2>
-            <p><strong>Your service agreement has been cancelled by Photobooth Guys.</strong></p>
-          </div>
-          
-          <p>Dear ${clientFirstName} ${clientLastName},</p>
-          
-          <p>We are writing to inform you that your service agreement has been cancelled. This action was taken by our administration team and is effective immediately.</p>
-          
-          <div class="agreement-details">
-            <h3>Agreement Details:</h3>
-            <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
-            <p><strong>Email:</strong> ${clientEmail}</p>
-            <p><strong>Template:</strong> ${templateTitle}</p>
-            <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-            <p><strong>Originally Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
-            <p><strong>Cancelled On:</strong> ${agreement.cancelledAt ? new Date(agreement.cancelledAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}</p>
-            <p><strong>Cancelled By:</strong> ${safeAdminName}</p>
-            <p><strong>Reason:</strong> ${safeReason}</p>
-          </div>
-          
-          <div class="important">
-            <h3>Important Information:</h3>
-            <ul>
-              <li>This agreement is now null and void</li>
-              <li>All terms and conditions are no longer in effect</li>
-              <li>Any services scheduled under this agreement are cancelled</li>
-              <li>If you have any questions, please contact us immediately</li>
-            </ul>
-          </div>
-          
-          <p>If you believe this cancellation was made in error, or if you have any questions about this matter, please contact us immediately at <strong>info@photoboothguys.ca</strong>.</p>
-          
-          <p>We apologize for any inconvenience this may cause.</p>
-          
-          <p>Best regards,<br>
-          <strong>Photobooth Guys Administration</strong></p>
-        </div>
-        
-        <div class="footer">
-          <p>Photobooth Guys Agreement Management System</p>
-          <p>Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-        </div>
-      </div>
-    </body>
-    </html>
+  const agreementDetailsHtml = `
+    <strong>Client:</strong> ${clientFirstName} ${clientLastName}<br>
+    <strong>Email:</strong> ${clientEmail}<br>
+    <strong>Template:</strong> ${templateTitle}<br>
+    <strong>Agreement ID:</strong> ${agreement.id}<br>
+    <strong>Originally Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
+    <strong>Cancelled On:</strong> ${agreement.cancelledAt ? new Date(agreement.cancelledAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
+    <strong>Cancelled By:</strong> ${safeAdminName}<br>
+    <strong>Reason:</strong> ${safeReason}`;
+
+  const importantInfoHtml = `
+    <ul style="margin:0;padding-left:20px;">
+      <li>This agreement is now null and void</li>
+      <li>All terms and conditions are no longer in effect</li>
+      <li>Any services scheduled under this agreement are cancelled</li>
+      <li>If you have any questions, please contact us immediately</li>
+    </ul>`;
+
+  const bodyHtml = `
+    ${renderNoticeBlock('Agreement Cancelled', '<strong>Your service agreement has been cancelled by Photobooth Guys.</strong>', 'alert')}
+    <p style="margin:0 0 16px 0;">Dear ${clientFirstName} ${clientLastName},</p>
+    <p style="margin:0 0 16px 0;">We are writing to inform you that your service agreement has been cancelled. This action was taken by our administration team and is effective immediately.</p>
+    ${renderNoticeBlock('Agreement Details', agreementDetailsHtml, 'alert')}
+    ${renderNoticeBlock('Important Information', importantInfoHtml, 'alert')}
+    <p style="margin:0 0 16px 0;">If you believe this cancellation was made in error, or if you have any questions about this matter, please contact us immediately at <strong>info@photoboothguys.ca</strong>.</p>
+    <p style="margin:0 0 16px 0;">We apologize for any inconvenience this may cause.</p>
+    <p style="margin:0 0 16px 0;">Best regards,<br><strong>Photobooth Guys Administration</strong></p>
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+      Photobooth Guys Agreement Management System<br>
+      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+    </p>
   `;
 
-  // Send email
-  const mailOptions = {
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: agreement.client.email,
-    subject: `Agreement Cancelled - ${clientFirstName} ${clientLastName} - ${templateTitle}`,
-    html: emailHtml,
-  };
+  const emailHtml = renderEmailLayout({
+    title: 'Agreement Cancellation Notice',
+    preheader: 'Your service agreement has been cancelled.',
+    bodyHtml,
+    tone: 'alert',
+  });
 
   try {
-    await transporter.verify();
-    await transporter.sendMail(mailOptions);
+    await sendEmail({
+      to: agreement.client.email,
+      subject: `Agreement Cancelled - ${clientFirstName} ${clientLastName} - ${templateTitle}`,
+      html: emailHtml,
+    });
     devLog('Cancellation email sent successfully');
   } catch (error) {
     const authResponse = adminAuthResponse(error);

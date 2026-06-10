@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { devLog } from '@/lib/logger';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
+import {
+  renderContentPanel,
+  renderCtaButton,
+  renderEmailLayout,
+  renderNoticeBlock,
+} from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -68,6 +74,8 @@ export async function POST(request: NextRequest) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const host = request.headers.get('host') || 'localhost:3000';
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+    const agreementUrl = `${baseUrl}/agreement/${validatedData.token}`;
+    const downloadUrl = `${agreementUrl}#download`;
 
     // Check if SMTP is configured
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
@@ -76,167 +84,42 @@ export async function POST(request: NextRequest) {
       }, { status: 503 });
     }
 
-    // Create email transporter (using environment variables for SMTP)
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000, // 10 seconds
-      socketTimeout: 10000, // 10 seconds
-    });
+    const introMessage =
+      'Please find a copy of your previously signed service agreement below. This agreement is already legally binding and does not require any further action from you.';
 
-    // Create email content
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Signed Agreement - ${clientFirstName} ${clientLastName}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              line-height: 1.6;
-              margin: 0;
-              padding: 20px;
-              color: #333;
-              background: #f4f4f4;
-            }
-            .email-container {
-              max-width: 800px;
-              margin: 0 auto;
-              background: white;
-              border-radius: 8px;
-              overflow: hidden;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            .header {
-              background: #3d8560;
-              color: white;
-              padding: 30px;
-              text-align: center;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 24px;
-            }
-            .header p {
-              margin: 10px 0 0 0;
-              opacity: 0.9;
-            }
-            .content {
-              padding: 30px;
-            }
-            .agreement-content {
-              font-size: 14px;
-              line-height: 1.8;
-              margin-bottom: 30px;
-            }
-            .signature-info {
-              background: #f8fafc;
-              padding: 20px;
-              border-radius: 6px;
-              border-left: 4px solid #4a9e72;
-              margin: 20px 0;
-            }
-            .footer {
-              background: #f8fafc;
-              padding: 20px;
-              text-align: center;
-              font-size: 12px;
-              color: #666;
-            }
-            .button {
-              display: inline-block;
-              background: #3d8560 !important;
-              color: white !important;
-              padding: 18px 36px;
-              text-decoration: none;
-              border-radius: 6px;
-              margin: 10px 5px;
-              font-weight: 700;
-              font-size: 18px;
-              font-family: Arial, sans-serif;
-              text-align: center;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-              border: none;
-              transition: all 0.2s ease;
-              min-width: 220px;
-              text-shadow: none;
-              -webkit-font-smoothing: antialiased;
-              -moz-osx-font-smoothing: grayscale;
-              letter-spacing: 0.5px;
-            }
-            .button:hover {
-              background: #1d4ed8;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-              transform: translateY(-1px);
-            }
-          </style>
-        </head>
-        <body>
-          <div class="email-container">
-            <div class="header">
-              <h1>Photobooth Guys</h1>
-              <p>Your Signed Service Agreement</p>
-            </div>
-            
-            <div class="content">
-              <h2>Hello ${clientFirstName},</h2>
-              <p>Please find a copy of your previously signed service agreement below. This agreement is already legally binding and does not require any further action from you.</p>
-              
-              <div class="signature-info">
-                <h3>Agreement Details</h3>
-                <p><strong>Client:</strong> ${clientFirstName} ${clientLastName}</p>
-                <p><strong>Email:</strong> ${clientEmail}</p>
-                <p><strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}</p>
-                <p><strong>Agreement ID:</strong> ${agreement.id}</p>
-                <p><strong>Status:</strong> <span style="color: #4a9e72; font-weight: bold;">✓ Already Signed</span></p>
-              </div>
-              
-              <div class="agreement-content">
-                ${processedHtml}
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${baseUrl}/agreement/${validatedData.token}" class="button" style="color: white !important; background-color: #3d8560 !important;">View Online</a>
-                <a href="${baseUrl}/agreement/${validatedData.token}#download" class="button" style="color: white !important; background-color: #3d8560 !important;">Download PDF</a>
-              </div>
-            </div>
-            
-            <div class="footer">
-              <p>This document was digitally signed and is legally binding.</p>
-              <p>If you have any questions, please contact us at info@photoboothguys.ca</p>
-              <p>© ${new Date().getFullYear()} Photobooth Guys. All rights reserved.</p>
-            </div>
-          </div>
-        </body>
-      </html>
+    const detailsHtml = `
+      <strong>Client:</strong> ${clientFirstName} ${clientLastName}<br>
+      <strong>Email:</strong> ${clientEmail}<br>
+      <strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}<br>
+      <strong>Agreement ID:</strong> ${agreement.id}<br>
+      <strong>Status:</strong> Already Signed`;
+
+    const bodyHtml = `
+      <p style="margin:0 0 16px 0;">Hello ${clientFirstName},</p>
+      <p style="margin:0 0 16px 0;">${introMessage}</p>
+      ${renderCtaButton({ label: 'View Agreement', url: agreementUrl, tone: 'default' })}
+      ${renderNoticeBlock('Agreement Details', detailsHtml, 'default')}
+      ${renderContentPanel(processedHtml)}
+      <p style="margin:16px 0;">This document was digitally signed and is legally binding.</p>
+      <p style="margin:0 0 16px 0;">
+        You can also <a href="${downloadUrl}" style="color:#C0552F;text-decoration:underline;">download a PDF copy</a>.
+      </p>
+      <p style="margin:0 0 16px 0;">If you have any questions, please contact us at info@photoboothguys.ca</p>
     `;
 
-    // Send email with timeout and error handling
-    const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: validatedData.recipientEmail,
-      subject: `Copy of Your Signed Agreement - ${clientFirstName} ${clientLastName}`,
-      html: emailHtml,
-    };
+    const emailHtml = renderEmailLayout({
+      title: 'Your Signed Service Agreement',
+      preheader: introMessage,
+      bodyHtml,
+      tone: 'default',
+    });
 
     try {
-      // Verify connection first
-      await transporter.verify();
-      
-      // Send email with timeout
-      const info = await Promise.race([
-        transporter.sendMail(mailOptions),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email send timeout')), 15000)
-        )
-      ]);
+      const info = await sendEmail({
+        to: validatedData.recipientEmail,
+        subject: `Copy of Your Signed Agreement - ${clientFirstName} ${clientLastName}`,
+        html: emailHtml,
+      });
 
       devLog('Email sent successfully:', info);
 

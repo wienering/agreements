@@ -6,6 +6,7 @@ export type SendEmailOptions = {
   cc?: string | string[];
   subject: string;
   html: string;
+  text?: string;
 };
 
 let cachedTransporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo> | null = null;
@@ -48,6 +49,10 @@ export async function sendEmail(options: SendEmailOptions): Promise<SMTPTranspor
     subject: options.subject,
     html: options.html,
   };
+
+  if (options.text) {
+    mailOptions.text = options.text;
+  }
 
   if (options.cc) {
     mailOptions.cc = options.cc;
