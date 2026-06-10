@@ -299,6 +299,27 @@ enum LeadSource {
   MANUAL
 }
 
+model PortalOtpVerification {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  code           String
+  expiresAt      DateTime
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model OtpRequestLog {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+}
+
 model Lead {
   id               String     @id @default(cuid())
   source           LeadSource @default(QUOTE)

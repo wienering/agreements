@@ -1,96 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
-import { z } from 'zod';
+import { getClientIP } from '@/lib/client-ip';
 import nodemailer from 'nodemailer';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { verificationCodeStore } from '../shared/verification-codes';
 
-const requestAccessSchema = z.object({
-  email: z.string().email('Valid email is required'),
-});
+const RATE_LIMIT_MESSAGE = 'Too many attempts. Please try again in a few minutes.';
+const REQUEST_WINDOW_MS = 15 * 60 * 1000;
+const EMAIL_REQUEST_LIMIT = 3;
+const IP_REQUEST_LIMIT = 10;
+const LOG_RETENTION_MS = 24 * 60 * 60 * 1000;
 
-// Rate limiting store (in production, use Redis)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-// Rate limiting configuration
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per window per IP
-
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  const cfConnectingIP = request.headers.get('cf-connecting-ip');
-  
-  if (cfConnectingIP) return cfConnectingIP;
-  if (realIP) return realIP;
-  if (forwarded) return forwarded.split(',')[0].trim();
-  
-  return 'unknown';
-}
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetTime: number } {
-  const now = Date.now();
-  const key = `rate_limit_${ip}`;
-  const current = rateLimitStore.get(key);
-
-  if (!current || now > current.resetTime) {
-    // Reset or create new window
-    const resetTime = now + RATE_LIMIT_WINDOW;
-    rateLimitStore.set(key, { count: 1, resetTime });
-    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetTime };
-  }
-
-  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return { allowed: false, remaining: 0, resetTime: current.resetTime };
-  }
-
-  // Increment count
-  current.count++;
-  rateLimitStore.set(key, current);
-  
-  return { 
-    allowed: true, 
-    remaining: RATE_LIMIT_MAX_REQUESTS - current.count, 
-    resetTime: current.resetTime 
-  };
+function cleanupOldRequestLogs() {
+  const cutoff = new Date(Date.now() - LOG_RETENTION_MS);
+  prisma.otpRequestLog.deleteMany({
+    where: { createdAt: { lt: cutoff } },
+  }).catch((err) => {
+    console.error('Failed to clean up OtpRequestLog rows:', err);
+  });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIP = getClientIP(request);
-    
-    // Check rate limit
-    const rateLimit = checkRateLimit(clientIP);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({ 
-        error: 'Too many verification requests. Please try again later.',
-        rateLimit: {
-          remaining: rateLimit.remaining,
-          resetTime: new Date(rateLimit.resetTime).toISOString()
-        }
-      }, { 
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-          'X-RateLimit-Reset': new Date(rateLimit.resetTime).toISOString(),
-          'Retry-After': Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString()
-        }
-      });
-    }
-
     const body = await request.json();
     const { email } = body;
 
     if (!email || !email.includes('@')) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Valid email address is required',
         code: 'INVALID_EMAIL'
       }, { status: 400 });
     }
 
     const emailLower = email.toLowerCase();
+    const clientIP = getClientIP(request);
+    const windowStart = new Date(Date.now() - REQUEST_WINDOW_MS);
+
+    const [emailCount, ipCount] = await Promise.all([
+      prisma.otpRequestLog.count({
+        where: { email: emailLower, createdAt: { gte: windowStart } },
+      }),
+      prisma.otpRequestLog.count({
+        where: { ip: clientIP, createdAt: { gte: windowStart } },
+      }),
+    ]);
+
+    if (emailCount >= EMAIL_REQUEST_LIMIT || ipCount >= IP_REQUEST_LIMIT) {
+      return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
+    }
+
+    await prisma.otpRequestLog.create({
+      data: { email: emailLower, ip: clientIP },
+    });
+
+    cleanupOldRequestLogs();
 
     // Check if client exists by primary email...
     let client = await prisma.client.findFirst({
@@ -113,13 +77,9 @@ export async function POST(request: NextRequest) {
 
     if (!client) {
       // Don't reveal if email exists for security
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         message: 'If this email is associated with an agreement, you will receive a verification code.',
-        rateLimit: {
-          remaining: rateLimit.remaining,
-          resetTime: new Date(rateLimit.resetTime).toISOString()
-        }
       });
     }
 
@@ -127,8 +87,8 @@ export async function POST(request: NextRequest) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Store verification code temporarily (in production, use Redis or similar)
-    verificationCodeStore.set(emailLower, verificationCode, expiresAt);
+    // Store verification code; resets failedAttempts but preserves lockedUntil
+    await verificationCodeStore.set(emailLower, verificationCode, expiresAt);
 
     // Check SMTP configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
@@ -137,10 +97,6 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Email service is not configured. Please contact support.',
         ...(process.env.NODE_ENV === 'development' && { debugCode: verificationCode }),
-        rateLimit: {
-          remaining: rateLimit.remaining,
-          resetTime: new Date(rateLimit.resetTime).toISOString()
-        }
       });
     }
 
@@ -164,18 +120,14 @@ export async function POST(request: NextRequest) {
       html: emailHtml,
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Verification code sent to your email address.',
-      rateLimit: {
-        remaining: rateLimit.remaining,
-        resetTime: new Date(rateLimit.resetTime).toISOString()
-      }
     });
 
   } catch (error: any) {
     console.error('Error requesting portal access:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to send verification code. Please try again.',
       code: 'SERVER_ERROR'
     }, { status: 500 });
@@ -186,7 +138,7 @@ async function generateVerificationEmail(client: any, code: string): Promise<str
   const clientFirstName = escapeHtml(client.firstName);
   // Customizable email template
   const template = process.env.VERIFICATION_EMAIL_TEMPLATE || 'default';
-  
+
   if (template === 'minimal') {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -232,24 +184,24 @@ async function generateVerificationEmail(client: any, code: string): Promise<str
             <h1>Photobooth Guys</h1>
             <p>Client Portal Access</p>
           </div>
-          
+
           <div class="content">
             <h2 style="color: #1e293b; margin-top: 0;">Hello ${clientFirstName}!</h2>
             <p style="color: #475569; line-height: 1.6;">You requested access to your client portal. Use the verification code below to log in:</p>
-            
+
             <div class="code-container">
               <p style="margin: 0 0 10px 0; color: #64748b; font-weight: 600;">Your verification code:</p>
               <div class="code">${code}</div>
               <div class="expiry">⏰ Expires in 15 minutes</div>
             </div>
-            
+
             <div class="security-note">
               <p style="margin: 0; color: #92400e;"><strong>Security Notice:</strong> If you didn't request this code, please ignore this email. Never share this code with anyone.</p>
             </div>
-            
+
             <p style="color: #64748b;">Once logged in, you'll be able to view all your agreements and add any missing information.</p>
           </div>
-          
+
           <div class="footer">
             <p>This verification code is valid for 15 minutes only.</p>
             <p>Questions? Contact us at <a href="mailto:info@photoboothguys.ca">info@photoboothguys.ca</a></p>

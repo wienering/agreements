@@ -2,12 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
-import { verificationCodeStore } from '../shared/verification-codes';
 
 const verifyAccessSchema = z.object({
   email: z.string().email('Valid email is required'),
   code: z.string().length(6, 'Verification code must be 6 digits'),
 });
+
+const RATE_LIMIT_MESSAGE = 'Too many attempts. Please try again in a few minutes.';
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000;
+
+async function recordFailedAttempt(email: string) {
+  const updated = await prisma.portalOtpVerification.update({
+    where: { email },
+    data: { failedAttempts: { increment: 1 } },
+  });
+
+  if (updated.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+    await prisma.portalOtpVerification.update({
+      where: { email },
+      data: { lockedUntil: new Date(Date.now() + LOCKOUT_MS) },
+    });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,25 +34,37 @@ export async function POST(request: NextRequest) {
     const email = validatedData.email.toLowerCase();
     const code = validatedData.code;
 
-    // Check if verification code exists and is valid
-    const storedCode = verificationCodeStore.get(email);
-    
-    if (!storedCode) {
-      return NextResponse.json({ 
-        error: 'No verification code found for this email. Please request a new code.' 
-      }, { status: 400 });
+    const otpRecord = await prisma.portalOtpVerification.findUnique({
+      where: { email },
+    });
+
+    if (otpRecord?.lockedUntil && otpRecord.lockedUntil > new Date()) {
+      return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
     }
 
-    if (storedCode.code !== code) {
-      return NextResponse.json({ 
-        error: 'Invalid verification code. Please check and try again.' 
-      }, { status: 400 });
-    }
+    const isValidCode = otpRecord
+      && otpRecord.code === code
+      && otpRecord.expiresAt > new Date();
 
-    if (new Date() > storedCode.expiresAt) {
-      verificationCodeStore.delete(email);
-      return NextResponse.json({ 
-        error: 'Verification code has expired. Please request a new code.' 
+    if (!isValidCode) {
+      if (otpRecord) {
+        await recordFailedAttempt(email);
+      }
+
+      if (!otpRecord) {
+        return NextResponse.json({
+          error: 'No verification code found for this email. Please request a new code.',
+        }, { status: 400 });
+      }
+
+      if (otpRecord.code !== code) {
+        return NextResponse.json({
+          error: 'Invalid verification code. Please check and try again.',
+        }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        error: 'Verification code has expired. Please request a new code.',
       }, { status: 400 });
     }
 
@@ -79,8 +108,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (!client) {
-      return NextResponse.json({ 
-        error: 'Client not found' 
+      return NextResponse.json({
+        error: 'Client not found'
       }, { status: 404 });
     }
 
@@ -101,8 +130,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Clean up verification code
-    verificationCodeStore.delete(email);
+    // Clean up verification code and reset rate-limit counters
+    await prisma.portalOtpVerification.delete({ where: { email } });
 
     // Return session info and client data
     return NextResponse.json({
@@ -125,13 +154,13 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error verifying portal access:', error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
+      return NextResponse.json({
+        error: 'Validation failed',
+        details: error.errors
       }, { status: 400 });
     }
-    return NextResponse.json({ 
-      error: 'Failed to verify access code' 
+    return NextResponse.json({
+      error: 'Failed to verify access code'
     }, { status: 500 });
   }
 }
