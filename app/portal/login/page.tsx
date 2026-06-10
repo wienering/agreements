@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 interface VerifyResponse {
   success: boolean;
   message?: string;
+  error?: string;
   sessionToken: string;
   expiresAt: string;
   client: {
@@ -105,8 +106,10 @@ function PortalLoginContent() {
       if (response.ok) {
         setSuccess('Verification code sent to your email!');
         setStep('verify');
+      } else if (response.status === 429) {
+        setError(data.error || 'Too many attempts. Please try again in a few minutes.');
       } else {
-        setError(data.message || 'Failed to send verification code');
+        setError('Failed to send verification code');
       }
     } catch (error) {
       setError('Network error. Please try again.');
@@ -142,8 +145,10 @@ function PortalLoginContent() {
         
         // Redirect to dashboard
         router.push('/portal/dashboard');
+      } else if (response.status === 429) {
+        setError(data.error || 'Too many attempts. Please try again in a few minutes.');
       } else {
-        setError(data.message || 'Invalid verification code');
+        setError('Invalid verification code');
       }
     } catch (error) {
       setError('Network error. Please try again.');
