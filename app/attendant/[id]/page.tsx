@@ -846,7 +846,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               </div>
             </div>
 
-            {fileCount > 0 && (
+            {fileCount > 0 && attendantId && (
               <div
                 className="attendant-right-column"
                 style={{
@@ -854,7 +854,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   top: '24px',
                 }}
               >
-                <AttendantFilesSection agreementId={agreement.id} />
+                <AttendantFilesSection agreementId={agreement.id} attendantId={attendantId} />
               </div>
             )}
           </main>

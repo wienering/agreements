@@ -14,9 +14,10 @@ interface File {
 
 interface AttendantFilesSectionProps {
   agreementId: string;
+  attendantId: string;
 }
 
-export default function AttendantFilesSection({ agreementId }: AttendantFilesSectionProps) {
+export default function AttendantFilesSection({ agreementId, attendantId }: AttendantFilesSectionProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,8 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
     const fetchFiles = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/files/agreement/${agreementId}`);
+        const params = new URLSearchParams({ attendantId });
+        const response = await fetch(`/api/files/agreement/${agreementId}?${params}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch files');
@@ -41,7 +43,7 @@ export default function AttendantFilesSection({ agreementId }: AttendantFilesSec
     };
 
     fetchFiles();
-  }, [agreementId]);
+  }, [agreementId, attendantId]);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
