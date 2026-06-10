@@ -543,7 +543,7 @@ function drawFooter(ctx: PdfContext, startY: number): number {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const quoteData = await request.json();
     const payload = normalizeQuotePayload(quoteData);
 

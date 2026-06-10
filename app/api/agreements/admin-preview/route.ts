@@ -8,7 +8,7 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');

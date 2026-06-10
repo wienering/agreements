@@ -12,7 +12,7 @@ const templateDeleteSchema = z.object({
 export async function DELETE(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     devLog('Template delete request body:', body);
     
@@ -40,6 +40,8 @@ export async function DELETE(request: NextRequest) {
     devLog('Template deleted successfully:', validatedData.id);
     return NextResponse.json({ success: true, message: 'Template deleted successfully' });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Template delete error details:', error);
     if (error instanceof z.ZodError) {
       console.error('Zod validation errors:', error.issues);

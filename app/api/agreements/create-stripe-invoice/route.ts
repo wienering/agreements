@@ -189,7 +189,7 @@ function calculateInvoiceDetails(
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     // Check if Stripe API key is configured
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
@@ -445,6 +445,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error creating Stripe invoice:', error);
     
     if (error instanceof z.ZodError) {

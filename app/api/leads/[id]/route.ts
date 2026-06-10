@@ -27,7 +27,7 @@ export async function GET(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
 
     const lead = await prisma.lead.findUnique({
@@ -63,7 +63,7 @@ export async function PATCH(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
     const body = await request.json();
     const validated = updateLeadSchema.parse(body);
@@ -113,7 +113,7 @@ export async function DELETE(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
 
     const lead = await prisma.lead.findUnique({

@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -75,7 +76,7 @@ export default function TemplatesPage() {
       // Update order in database
       try {
         const templateIds = newTemplates.map(template => template.id);
-        await fetch('/api/templates/reorder', {
+        await adminFetch('/api/templates/reorder', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ export default function TemplatesPage() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/templates');
+      const response = await adminFetch('/api/templates');
       if (response.ok) {
         const data = await response.json();
         setTemplates(data);
@@ -157,7 +158,7 @@ export default function TemplatesPage() {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/templates', {
+      const response = await adminFetch('/api/templates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +190,7 @@ export default function TemplatesPage() {
     setLoading(true);
     
     try {
-      const response = await fetch(`/api/templates/update`, {
+      const response = await adminFetch(`/api/templates/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -230,7 +231,7 @@ export default function TemplatesPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/templates/delete`, {
+      const response = await adminFetch(`/api/templates/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

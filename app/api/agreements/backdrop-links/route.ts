@@ -13,10 +13,10 @@ const createBackdropLinkSchema = z.object({
 });
 
 // GET - List all backdrop links
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const backdropLinks = await prisma.backdropLink.findMany({
       orderBy: { displayOrder: 'asc' }
     });
@@ -40,7 +40,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = createBackdropLinkSchema.parse(body);
 

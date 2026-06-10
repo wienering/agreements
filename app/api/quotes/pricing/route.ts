@@ -20,10 +20,10 @@ const DEFAULT_PRICING = {
 };
 
 // GET - Fetch current pricing
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const settings = await prisma.settings.findUnique({
       where: { key: 'pricing' }
     });
@@ -46,7 +46,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const pricing = await request.json();
 
     // Validate pricing structure

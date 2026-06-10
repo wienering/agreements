@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -47,7 +48,7 @@ export default function AttendantGroupsPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch('/api/admin/attendant-groups');
+      const response = await adminFetch('/api/admin/attendant-groups');
       if (response.ok) {
         const data = await response.json();
         setGroups(data.groups || []);
@@ -94,7 +95,7 @@ export default function AttendantGroupsPage() {
       
       const method = editingGroup ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,7 +127,7 @@ export default function AttendantGroupsPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/attendant-groups/${id}`, {
+      const response = await adminFetch(`/api/admin/attendant-groups/${id}`, {
         method: 'DELETE'
       });
 

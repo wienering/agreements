@@ -21,7 +21,7 @@ const updateBackdropSelectionSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = updateBackdropSelectionSchema.parse(body);
 
@@ -185,6 +185,8 @@ export async function POST(request: NextRequest) {
       updatedAgreementIds,
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error updating backdrop selection:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(

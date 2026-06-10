@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const agreements = await prisma.agreement.findMany({
       where: {
         archived: true, // Only show archived agreements

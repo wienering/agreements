@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { AdminButton } from '../../../components/AdminButton';
@@ -64,7 +65,7 @@ export default function ArchivedAgreementsPage() {
   const fetchArchivedAgreements = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/agreements/archived');
+      const response = await adminFetch('/api/agreements/archived');
       if (response.ok) {
         const data = await response.json();
         setAgreements(data);
@@ -86,7 +87,7 @@ export default function ArchivedAgreementsPage() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/agreements/archive', {
+      const response = await adminFetch('/api/agreements/archive', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ export default function ArchivedAgreementsPage() {
 
     setDeletingAgreement(prev => ({ ...prev, [agreementId]: true }));
     try {
-      const response = await fetch(`/api/agreements/delete`, {
+      const response = await adminFetch(`/api/agreements/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

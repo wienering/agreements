@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { adminAuthResponse } from '@/lib/requireAdmin';
 
 export function formatZodDetails(error: z.ZodError) {
   return error.issues.map((issue) => ({
@@ -10,6 +11,11 @@ export function formatZodDetails(error: z.ZodError) {
 
 export function handleApiError(error: unknown, routeLabel?: string): NextResponse {
   const label = routeLabel ? `[${routeLabel}] ` : '';
+
+  const authResponse = adminAuthResponse(error);
+  if (authResponse) {
+    return authResponse;
+  }
 
   if (error instanceof z.ZodError) {
     console.error(`${label}Validation error:`, error);

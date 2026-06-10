@@ -20,7 +20,7 @@ const createLeadSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const stage = searchParams.get('stage');
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
 
     const body = await request.json();
     const validated = createLeadSchema.parse(body);

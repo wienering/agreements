@@ -263,7 +263,7 @@ function mapCsvRow(row: Record<string, string>): {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     // Get form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -579,6 +579,8 @@ export async function POST(request: NextRequest) {
     }, { status: 200 });
     
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('CSV import error:', error);
     return NextResponse.json(
       { error: 'Failed to process CSV file' },

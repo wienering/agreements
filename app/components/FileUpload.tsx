@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
 import { UIcon } from './UIcon';
 
@@ -81,7 +82,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         formData.append('eventId', eventId);
       }
 
-      const response = await fetch('/api/files/upload', {
+      const response = await adminFetch('/api/files/upload', {
         method: 'POST',
         body: formData,
       });
@@ -193,7 +194,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
     setError(null);
 
     try {
-      const response = await fetch(`/api/files/${fileId}`, {
+      const response = await adminFetch(`/api/files/${fileId}`, {
         method: 'DELETE',
       });
 
@@ -230,7 +231,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch(`/api/files/client/${clientId}`);
+        const response = await adminFetch(`/api/files/client/${clientId}`);
         if (response.ok) {
           const data = await response.json();
           setUploadedFiles(data.files || []);

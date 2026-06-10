@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -44,7 +45,7 @@ export default function BackdropLinksPage() {
 
   const fetchBackdropLinks = async () => {
     try {
-      const response = await fetch('/api/agreements/backdrop-links');
+      const response = await adminFetch('/api/agreements/backdrop-links');
       if (response.ok) {
         const data = await response.json();
         setBackdropLinks(data.backdropLinks || []);
@@ -85,7 +86,7 @@ export default function BackdropLinksPage() {
       
       const method = editingLink ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -111,7 +112,7 @@ export default function BackdropLinksPage() {
     if (!confirm('Are you sure you want to delete this backdrop link?')) return;
 
     try {
-      const response = await fetch(`/api/agreements/backdrop-links/${id}`, {
+      const response = await adminFetch(`/api/agreements/backdrop-links/${id}`, {
         method: 'DELETE'
       });
 
@@ -283,12 +284,12 @@ export default function BackdropLinksPage() {
     // Update display order for both links
     try {
       await Promise.all([
-        fetch(`/api/agreements/backdrop-links/${newOrder[currentIndex].id}`, {
+        adminFetch(`/api/agreements/backdrop-links/${newOrder[currentIndex].id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ displayOrder: currentIndex + 1 })
         }),
-        fetch(`/api/agreements/backdrop-links/${newOrder[newIndex].id}`, {
+        adminFetch(`/api/agreements/backdrop-links/${newOrder[newIndex].id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ displayOrder: newIndex + 1 })

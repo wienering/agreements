@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -92,7 +93,7 @@ export default function LeadsPage() {
   useEffect(() => {
     fetchLeads();
     fetchFollowUp();
-    fetch('/api/templates')
+    adminFetch('/api/templates')
       .then((r) => r.ok ? r.json() : [])
       .then((t) => setTemplates(t));
   }, [filterStage]);
@@ -101,7 +102,7 @@ export default function LeadsPage() {
     setLoading(true);
     try {
       const url = filterStage ? `/api/leads?stage=${filterStage}` : '/api/leads';
-      const res = await fetch(url);
+      const res = await adminFetch(url);
       if (res.ok) {
         const data = await res.json();
         setLeads(data);
@@ -115,7 +116,7 @@ export default function LeadsPage() {
 
   const fetchFollowUp = async () => {
     try {
-      const res = await fetch('/api/leads/follow-up');
+      const res = await adminFetch('/api/leads/follow-up');
       if (res.ok) {
         const data = await res.json();
         setFollowUpLeads(data);
@@ -127,7 +128,7 @@ export default function LeadsPage() {
 
   const handleMarkContacted = async (lead: Lead) => {
     try {
-      const res = await fetch(`/api/leads/${lead.id}/contacted`, {
+      const res = await adminFetch(`/api/leads/${lead.id}/contacted`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nextFollowUp ? { nextFollowUpAt: nextFollowUp } : {}),
@@ -145,7 +146,7 @@ export default function LeadsPage() {
 
   const handleStageChange = async (lead: Lead, newStage: string) => {
     try {
-      const res = await fetch(`/api/leads/${lead.id}`, {
+      const res = await adminFetch(`/api/leads/${lead.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage }),
@@ -162,7 +163,7 @@ export default function LeadsPage() {
   const handleDeleteLead = async (lead: Lead) => {
     if (!confirm(`Delete lead ${lead.firstName} ${lead.lastName}? This cannot be undone.`)) return;
     try {
-      const res = await fetch(`/api/leads/${lead.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/leads/${lead.id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchLeads();
         fetchFollowUp();
@@ -178,7 +179,7 @@ export default function LeadsPage() {
 
   const handleCreateAgreement = async (lead: Lead, templateId: string) => {
     try {
-      const res = await fetch(`/api/leads/${lead.id}/create-agreement`, {
+      const res = await adminFetch(`/api/leads/${lead.id}/create-agreement`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templateId }),
@@ -236,7 +237,7 @@ export default function LeadsPage() {
       else payload.quoteTotal = null;
       if (editLeadForm.notes !== undefined) payload.notes = editLeadForm.notes.trim() || null;
 
-      const res = await fetch(`/api/leads/${editLead.id}`, {
+      const res = await adminFetch(`/api/leads/${editLead.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -280,7 +281,7 @@ export default function LeadsPage() {
       if (newLead.quoteTotal) payload.quoteTotal = parseFloat(newLead.quoteTotal) || undefined;
       if (newLead.notes.trim()) payload.notes = newLead.notes.trim();
 
-      const res = await fetch('/api/leads', {
+      const res = await adminFetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

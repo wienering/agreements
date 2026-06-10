@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { eventId } = await params;
 
     // Verify event exists

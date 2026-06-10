@@ -8,7 +8,7 @@ const BACKDROP_TOOL_URL = process.env.BACKDROP_SELECTION_TOOL_URL || process.env
 export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const attendantId = searchParams.get('attendantId');
 
@@ -96,6 +96,8 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching backdrop options:', error);
     
     // Handle specific error types

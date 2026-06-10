@@ -33,10 +33,10 @@ function parseOptionalPackagePrice(value: unknown): number | null {
   return n;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const clients = await prisma.client.findMany({
       include: {
         events: {
@@ -88,7 +88,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const raw = await request.json();
     const parsed = createClientSchema.safeParse(raw);
     if (!parsed.success) {
@@ -220,6 +220,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(clientWithEvents, { status: 201 });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error creating client:', error);
     // Handle unique constraint error specifically
     if (error.code === 'P2002') {

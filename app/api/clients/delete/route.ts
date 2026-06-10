@@ -11,7 +11,7 @@ const clientDeleteSchema = z.object({
 export async function DELETE(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = clientDeleteSchema.parse(body);
 
@@ -61,6 +61,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Client deleted successfully' });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: formatZodDetails(error) },

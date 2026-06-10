@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { devLog } from '@/lib/logger';
 import { useDarkMode } from '../../contexts/DarkModeContext';
@@ -645,7 +646,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   const fetchAgreements = async () => {
     try {
-      const response = await fetch('/api/agreements');
+      const response = await adminFetch('/api/agreements');
       if (response.ok) {
         const data = await response.json();
         setAgreements(data);
@@ -657,7 +658,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   const fetchBackdropLinks = async () => {
     try {
-      const response = await fetch('/api/agreements/backdrop-links');
+      const response = await adminFetch('/api/agreements/backdrop-links');
       if (response.ok) {
         const data = await response.json();
         setBackdropLinks(data.backdropLinks || []);
@@ -669,7 +670,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch('/api/clients');
+      const response = await adminFetch('/api/clients');
       if (response.ok) {
         const data = await response.json();
         setClients(data);
@@ -681,7 +682,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/templates');
+      const response = await adminFetch('/api/templates');
       if (response.ok) {
         const data = await response.json();
         setTemplates(data);
@@ -693,7 +694,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   const fetchWarningData = async () => {
     try {
-      const response = await fetch('/api/analytics/warnings');
+      const response = await adminFetch('/api/analytics/warnings');
       if (response.ok) {
         const data = await response.json();
         setWarningData(data);
@@ -753,7 +754,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     setBackdropOptions([]); // Clear previous options while loading
     
     try {
-      const response = await fetch(`/api/agreements/backdrop-options?attendantId=${attendantIdParam}`);
+      const response = await adminFetch(`/api/agreements/backdrop-options?attendantId=${attendantIdParam}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -831,7 +832,7 @@ const normalizePaymentStatus = (value?: string | null) => {
       // do not need a separate "Update Portal Settings" save for the dropdown.
       let agreementAfterBackdropLinkSave: Record<string, unknown> | null = null;
       if (selectedBackdropLinkId) {
-        const linkResponse = await fetch('/api/agreements/set-backdrop-link', {
+        const linkResponse = await adminFetch('/api/agreements/set-backdrop-link', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -847,7 +848,7 @@ const normalizePaymentStatus = (value?: string | null) => {
         agreementAfterBackdropLinkSave = linkPayload.agreement ?? null;
       }
 
-      const response = await fetch('/api/agreements/update-backdrop-selection', {
+      const response = await adminFetch('/api/agreements/update-backdrop-selection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -904,7 +905,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     setSaving(true);
     try {
-      const response = await fetch('/api/agreements/update-backdrop-selection', {
+      const response = await adminFetch('/api/agreements/update-backdrop-selection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -943,7 +944,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/agreements', {
+      const response = await adminFetch('/api/agreements', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1049,7 +1050,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     
     setSaving(true);
     try {
-      const response = await fetch(`/api/agreements/update-agreement`, {
+      const response = await adminFetch(`/api/agreements/update-agreement`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1097,7 +1098,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     setSaving(true);
     try {
       // Update payment info
-      await fetch(`/api/agreements/update-payment-info`, {
+      await adminFetch(`/api/agreements/update-payment-info`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1109,7 +1110,7 @@ const normalizePaymentStatus = (value?: string | null) => {
       });
 
       // Update gallery links
-      await fetch(`/api/agreements/update-gallery-link`, {
+      await adminFetch(`/api/agreements/update-gallery-link`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1119,7 +1120,7 @@ const normalizePaymentStatus = (value?: string | null) => {
       });
 
       // Update next action
-      await fetch(`/api/agreements/update-next-action`, {
+      await adminFetch(`/api/agreements/update-next-action`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1129,7 +1130,7 @@ const normalizePaymentStatus = (value?: string | null) => {
       });
 
       // Update backdrop link
-      await fetch(`/api/agreements/set-backdrop-link`, {
+      await adminFetch(`/api/agreements/set-backdrop-link`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1156,7 +1157,7 @@ const normalizePaymentStatus = (value?: string | null) => {
   const handleSendToClient = async (agreement: Agreement) => {
     try {
       setSendingToClient(prev => ({ ...prev, [agreement.id]: true }));
-      const response = await fetch('/api/agreements/send', {
+      const response = await adminFetch('/api/agreements/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1212,7 +1213,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     try {
       setSendingReviewRequest(prev => ({ ...prev, [agreement.id]: true }));
-      const response = await fetch('/api/agreements/send-review-request', {
+      const response = await adminFetch('/api/agreements/send-review-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1285,7 +1286,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     
     try {
       setSendingGalleryEmail(true);
-      const response = await fetch('/api/agreements/send-gallery-ready-email', {
+      const response = await adminFetch('/api/agreements/send-gallery-ready-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1300,7 +1301,7 @@ const normalizePaymentStatus = (value?: string | null) => {
         // Update the galleryEmailSentAt timestamp
         setGalleryEmailSentAt(new Date());
         // Refresh the agreements list to get updated data
-        const refreshResponse = await fetch('/api/agreements');
+        const refreshResponse = await adminFetch('/api/agreements');
         if (refreshResponse.ok) {
           const refreshedAgreements = await refreshResponse.json();
           setAgreements(refreshedAgreements);
@@ -1327,7 +1328,7 @@ const normalizePaymentStatus = (value?: string | null) => {
   const handleResendEmail = async (agreement: Agreement) => {
     try {
       setSendingToClient(prev => ({ ...prev, [agreement.id]: true }));
-      const response = await fetch('/api/agreements/send', {
+      const response = await adminFetch('/api/agreements/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1377,7 +1378,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     setDeletingAgreement(prev => ({ ...prev, [agreementId]: true }));
     try {
-      const response = await fetch(`/api/agreements/delete`, {
+      const response = await adminFetch(`/api/agreements/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -1419,7 +1420,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     try {
       setSaving(true);
-      const response = await fetch('/api/agreements/update-expiration', {
+      const response = await adminFetch('/api/agreements/update-expiration', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1475,7 +1476,7 @@ const normalizePaymentStatus = (value?: string | null) => {
   const proceedWithStatusUpdate = async (agreementId: string, status: string) => {
     try {
       setSaving(true);
-      const response = await fetch('/api/agreements/update-status', {
+      const response = await adminFetch('/api/agreements/update-status', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1572,7 +1573,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     try {
       setCancelling(true);
-      const response = await fetch('/api/agreements/cancel', {
+      const response = await adminFetch('/api/agreements/cancel', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1657,7 +1658,7 @@ const normalizePaymentStatus = (value?: string | null) => {
         requestBody.customAmount = amount;
       }
 
-      const response = await fetch('/api/agreements/create-stripe-invoice', {
+      const response = await adminFetch('/api/agreements/create-stripe-invoice', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1717,7 +1718,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
     setArchivingAgreement(prev => ({ ...prev, [agreementId]: true }));
     try {
-      const response = await fetch('/api/agreements/archive', {
+      const response = await adminFetch('/api/agreements/archive', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -5459,7 +5460,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setUpdatingPhoneVisibility(true);
                       
                       try {
-                        const response = await fetch('/api/agreements/update-phone-visibility', {
+                        const response = await adminFetch('/api/agreements/update-phone-visibility', {
                           method: 'PUT',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
@@ -5565,7 +5566,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       setUpdatingVirtualGreenScreen(true);
                       
                       try {
-                        const response = await fetch('/api/agreements/update-virtual-green-screen', {
+                        const response = await adminFetch('/api/agreements/update-virtual-green-screen', {
                           method: 'PUT',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({

@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -204,7 +205,7 @@ export default function ClientsPage() {
 
   const fetchClients = async () => {
     try {
-      const response = await fetch('/api/clients');
+      const response = await adminFetch('/api/clients');
       if (response.ok) {
         const data = await response.json();
         setClients(data);
@@ -219,7 +220,7 @@ export default function ClientsPage() {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/clients', {
+      const response = await adminFetch('/api/clients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -258,7 +259,7 @@ export default function ClientsPage() {
     setLoading(true);
     
     try {
-      const response = await fetch(`/api/clients/update`, {
+      const response = await adminFetch(`/api/clients/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -327,7 +328,7 @@ export default function ClientsPage() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/clients/delete', {
+      const response = await adminFetch('/api/clients/delete', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -406,7 +407,7 @@ export default function ClientsPage() {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/events/update', {
+      const response = await adminFetch('/api/events/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -453,7 +454,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
     setLoading(true);
     
     try {
-      const response = await fetch('/api/events', {
+      const response = await adminFetch('/api/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -500,7 +501,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
 
     try {
       setLoading(true);
-      const response = await fetch('/api/events/archive', {
+      const response = await adminFetch('/api/events/archive', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -14,7 +14,7 @@ export async function POST(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id: leadId } = await params;
     const body = await request.json();
     const { templateId } = schema.parse(body);

@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDarkMode } from '../../contexts/DarkModeContext';
@@ -180,7 +181,7 @@ export default function QuotesPage() {
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const response = await fetch('/api/quotes/pricing');
+        const response = await adminFetch('/api/quotes/pricing');
         if (response.ok) {
           const data = await response.json();
           setPricing(data);
@@ -337,7 +338,7 @@ export default function QuotesPage() {
     setSavingPricing(true);
     setPricingMessage('');
     try {
-      const response = await fetch('/api/quotes/pricing', {
+      const response = await adminFetch('/api/quotes/pricing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editablePricing)
@@ -427,7 +428,7 @@ export default function QuotesPage() {
       const firstName = nameParts[0] || contactInfo.name;
       const lastName = nameParts.slice(1).join(' ') || '';
       try {
-        await fetch('/api/leads', {
+        await adminFetch('/api/leads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -448,7 +449,7 @@ export default function QuotesPage() {
         console.warn('Could not save quote as lead:', leadErr);
       }
 
-      const response = await fetch('/api/quotes/generate-pdf', {
+      const response = await adminFetch('/api/quotes/generate-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -13,7 +13,7 @@ export async function GET(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
     
     const group = await prisma.attendantGroup.findUnique({
@@ -32,6 +32,8 @@ export async function GET(
       group,
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching attendant group:', error);
     return NextResponse.json(
       { error: 'Failed to fetch attendant group' },
@@ -47,7 +49,7 @@ export async function PUT(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
     const body = await request.json();
     const { name, slug, attendantIds } = body;
@@ -93,6 +95,8 @@ export async function PUT(
       group,
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error updating attendant group:', error);
     return NextResponse.json(
       { error: 'Failed to update attendant group' },
@@ -108,7 +112,7 @@ export async function DELETE(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
 
     // Check if group exists
@@ -132,6 +136,8 @@ export async function DELETE(
       message: 'Attendant group deleted successfully',
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error deleting attendant group:', error);
     return NextResponse.json(
       { error: 'Failed to delete attendant group' },

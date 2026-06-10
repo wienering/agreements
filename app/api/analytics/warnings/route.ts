@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const now = new Date();
     const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
     const fiveDaysAgo = new Date(now.getTime() - (5 * 24 * 60 * 60 * 1000));

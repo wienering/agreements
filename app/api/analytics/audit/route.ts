@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
     const agreementId = searchParams.get('agreementId');

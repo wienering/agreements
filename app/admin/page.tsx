@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useCallback } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -107,7 +108,7 @@ export default function AdminHome() {
     try {
       setLoading(true);
       const periodParam = timePeriod === 'week' ? 'week' : timePeriod === 'month' ? 'month' : 'year';
-      const response = await fetch(`/api/analytics?days=7&period=${periodParam}`);
+      const response = await adminFetch(`/api/analytics?days=7&period=${periodParam}`);
       if (response.ok) {
         const data = await response.json();
         setStats(data.overview);
@@ -129,7 +130,7 @@ export default function AdminHome() {
   const fetchLoadForecast = async () => {
     try {
       setLoadingForecast(true);
-      const response = await fetch('/api/analytics/load-forecast?weeks=12');
+      const response = await adminFetch('/api/analytics/load-forecast?weeks=12');
       if (response.ok) {
         const data = await response.json();
         setLoadForecast(data.forecast || []);
@@ -143,7 +144,7 @@ export default function AdminHome() {
 
   const fetchWarnings = async () => {
     try {
-      const response = await fetch('/api/analytics/warnings');
+      const response = await adminFetch('/api/analytics/warnings');
       if (response.ok) {
         const data = await response.json();
         setWarnings(data);

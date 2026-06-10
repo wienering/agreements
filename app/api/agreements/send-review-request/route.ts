@@ -21,7 +21,7 @@ function reviewUrlForMarket(market: 'ontario' | 'calgary'): string {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = sendReviewRequestSchema.parse(body);
     const reviewMarket: 'ontario' | 'calgary' = validatedData.reviewMarket ?? 'ontario';
@@ -163,6 +163,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 503 });
     }
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {

@@ -148,7 +148,7 @@ function formatWeekLabel(weekStart: Date): string {
 export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { searchParams } = new URL(request.url);
     const weeks = parseInt(searchParams.get('weeks') || '12'); // Default to 12 weeks
     

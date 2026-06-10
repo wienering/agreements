@@ -3,10 +3,10 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const agreements = await prisma.agreement.findMany({
       where: {
         archived: false, // Only show non-archived agreements
@@ -61,7 +61,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const {
       clientId,

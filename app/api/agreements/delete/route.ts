@@ -12,7 +12,7 @@ const agreementDeleteSchema = z.object({
 export async function DELETE(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     devLog('Agreement delete request body:', body);
     
@@ -44,6 +44,8 @@ export async function DELETE(request: NextRequest) {
     devLog('Agreement deleted successfully:', validatedData.id);
     return NextResponse.json({ success: true, message: 'Agreement deleted successfully' });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Agreement delete error details:', error);
     if (error instanceof z.ZodError) {
       console.error('Zod validation errors:', error.issues);

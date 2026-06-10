@@ -3,10 +3,10 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 // GET - Fetch all attendant groups
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const groups = await prisma.attendantGroup.findMany({
       orderBy: {
         createdAt: 'desc',
@@ -18,6 +18,8 @@ export async function GET() {
       groups,
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error fetching attendant groups:', error);
     return NextResponse.json(
       { error: 'Failed to fetch attendant groups' },
@@ -30,7 +32,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const { name, slug, attendantIds } = body;
 
@@ -66,6 +68,8 @@ export async function POST(request: NextRequest) {
       group,
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error creating attendant group:', error);
     return NextResponse.json(
       { error: 'Failed to create attendant group' },

@@ -30,7 +30,7 @@ function isValidFileType(fileName: string, mimeType: string): boolean {
 export async function POST(request: NextRequest) {
   try {
 
-    const session = await requireAdmin();
+    const session = await requireAdmin(request);
 
     // Parse form data
     const formData = await request.formData();

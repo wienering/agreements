@@ -16,7 +16,7 @@ const templateUpdateSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     devLog('Template update request body:', body);
     
@@ -52,6 +52,8 @@ export async function PUT(request: NextRequest) {
     devLog('Updated template:', updatedTemplate);
     return NextResponse.json(updatedTemplate);
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Template update error details:', error);
     if (error instanceof z.ZodError) {
       console.error('Zod validation errors:', error.issues);

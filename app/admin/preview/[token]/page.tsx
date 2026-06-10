@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { UIcon } from '../../../components/UIcon';
@@ -61,7 +62,7 @@ export default function AdminPreviewPage() {
 
   const fetchAgreement = useCallback(async () => {
     try {
-      const response = await fetch(`/api/agreements/admin-preview?token=${token}`);
+      const response = await adminFetch(`/api/agreements/admin-preview?token=${token}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -110,7 +111,7 @@ export default function AdminPreviewPage() {
     
     setIsDownloading(true);
     try {
-      const response = await fetch('/api/agreements/pdf', {
+      const response = await adminFetch('/api/agreements/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +189,7 @@ export default function AdminPreviewPage() {
     setEmailError(null);
 
     try {
-      const response = await fetch('/api/agreements/email', {
+      const response = await adminFetch('/api/agreements/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

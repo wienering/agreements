@@ -13,7 +13,7 @@ const updateVirtualGreenScreenSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = updateVirtualGreenScreenSchema.parse(body);
 

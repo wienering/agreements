@@ -9,7 +9,7 @@ export async function DELETE(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
 
     const { fileId } = await params;
 
@@ -49,6 +49,8 @@ export async function DELETE(
       message: 'File deleted successfully',
     });
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Error deleting file:', error);
     return NextResponse.json(
       { error: 'Failed to delete file' },

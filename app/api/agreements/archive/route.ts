@@ -11,7 +11,7 @@ const archiveAgreementSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = archiveAgreementSchema.parse(body);
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     const validatedData = archiveAgreementSchema.parse(body);
 

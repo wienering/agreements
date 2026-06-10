@@ -24,7 +24,7 @@ const agreementUpdateSchema = z.object({
 export async function PUT(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json();
     devLog('Agreement update request body:', body);
     
@@ -102,6 +102,8 @@ export async function PUT(request: NextRequest) {
     devLog('Agreement updated successfully:', updatedAgreement.id);
     return NextResponse.json(updatedAgreement);
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('Agreement update error details:', error);
     if (error instanceof z.ZodError) {
       console.error('Zod validation errors:', error.issues);

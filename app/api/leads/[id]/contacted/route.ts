@@ -13,7 +13,7 @@ export async function POST(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
     const validated = contactedSchema.parse(body);

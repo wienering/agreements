@@ -1,5 +1,6 @@
 'use client';
 
+import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
@@ -84,7 +85,7 @@ export default function ImportEventsPage() {
         formData.append('endDate', endDate);
       }
 
-      const response = await fetch('/api/events/import-csv', {
+      const response = await adminFetch('/api/events/import-csv', {
         method: 'POST',
         body: formData,
       });

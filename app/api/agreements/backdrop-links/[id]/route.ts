@@ -18,7 +18,7 @@ export async function PUT(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
     const body = await request.json();
     const validatedData = updateBackdropLinkSchema.parse(body);
@@ -75,7 +75,7 @@ export async function DELETE(
 ) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const { id } = await params;
 
     // Check if backdrop link exists

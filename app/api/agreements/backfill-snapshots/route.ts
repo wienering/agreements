@@ -7,7 +7,7 @@ import { processHtmlContent } from '../portal/shared/agreement-utils';
 export async function POST(request: NextRequest) {
   try {
 
-    await requireAdmin();
+    await requireAdmin(request);
     const body = await request.json().catch(() => ({}));
     const { regenerateAll = false, onlyWithEvents = false } = body;
 
@@ -113,6 +113,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
+    const authResponse = adminAuthResponse(error);
+    if (authResponse) return authResponse;
     console.error('❌ Backfill error:', error);
     return NextResponse.json({
       success: false,
