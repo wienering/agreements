@@ -2,16 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { handleApiError } from '@/lib/handleApiError';
-
-function backdropLinkUrlConditionsForAttendant(attendantId: string) {
-  const encodedAttendantId = encodeURIComponent(attendantId);
-  return [
-    { url: { contains: `/select/${attendantId}` } },
-    { url: { contains: `attendantId=${attendantId}` } },
-    { url: { contains: `/select/${encodedAttendantId}` } },
-    { url: { contains: `attendantId=${encodedAttendantId}` } },
-  ];
-}
+import {
+  isValidAttendantCuid,
+  backdropLinkUrlConditionsForAttendant,
+  urlContainsBoundedAttendantId,
+} from '@/lib/attendantIdentity';
 
 async function getAgreementForAttendant(
   agreementId: string,
@@ -21,10 +16,12 @@ async function getAgreementForAttendant(
     where: {
       OR: backdropLinkUrlConditionsForAttendant(attendantId),
     },
-    select: { id: true },
+    select: { id: true, url: true },
   });
 
-  const backdropLinkIds = backdropLinks.map((link) => link.id);
+  const backdropLinkIds = backdropLinks
+    .filter((link) => urlContainsBoundedAttendantId(link.url, attendantId))
+    .map((link) => link.id);
   if (backdropLinkIds.length === 0) {
     return null;
   }
@@ -53,6 +50,12 @@ export async function GET(
     let agreement: { id: string; clientId: string; eventId: string | null } | null;
 
     if (attendantId) {
+      if (!isValidAttendantCuid(attendantId)) {
+        return NextResponse.json(
+          { error: 'Agreement not found' },
+          { status: 404 }
+        );
+      }
       agreement = await getAgreementForAttendant(agreementId, attendantId);
       if (!agreement) {
         return NextResponse.json(

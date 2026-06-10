@@ -1,5 +1,11 @@
 import { prisma } from '@/lib/prisma';
+import {
+  isValidAttendantCuid,
+  backdropLinkContainsAnyBoundedAttendantId,
+  backdropLinkUrlConditionsForAttendant,
+} from '@/lib/attendantIdentity';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '../../../components/UIcon';
 
@@ -13,9 +19,18 @@ export const revalidate = 0;
 
 export async function generateMetadata({ params }: AttendantHubPageProps): Promise<Metadata> {
   const { id } = await params;
-  
+
+  const group = await prisma.attendantGroup.findUnique({
+    where: { slug: id },
+    select: { name: true },
+  });
+
+  if (!group && !isValidAttendantCuid(id)) {
+    notFound();
+  }
+
   return {
-    title: `Attendant Hub - ${id}`,
+    title: group ? `Attendant Hub - ${group.name}` : 'Attendant Hub',
   };
 }
 
@@ -40,18 +55,13 @@ interface Metrics {
   completedEvents: number;
 }
 
-async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs: Job[]; metrics: Metrics }> {
+async function fetchJobsForAttendantIds(
+  attendantIds: string[]
+): Promise<{ jobs: Job[]; metrics: Metrics; validatedBackdropLinkCount: number }> {
   try {
-    // Find all BackdropLinks where URL contains any of the attendantIds
-    const backdropLinkConditions = attendantIds.flatMap((attendantId) => {
-      const encodedAttendantId = encodeURIComponent(attendantId);
-      return [
-        { url: { contains: `/select/${attendantId}` } },
-        { url: { contains: `attendantId=${attendantId}` } },
-        { url: { contains: `/select/${encodedAttendantId}` } },
-        { url: { contains: `attendantId=${encodedAttendantId}` } },
-      ];
-    });
+    const backdropLinkConditions = attendantIds.flatMap((attendantId) =>
+      backdropLinkUrlConditionsForAttendant(attendantId)
+    );
 
     const backdropLinks = await prisma.backdropLink.findMany({
       where: {
@@ -59,13 +69,22 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
       },
       select: {
         id: true,
+        url: true,
       },
     });
 
-    const backdropLinkIds = backdropLinks.map((link) => link.id);
+    const validatedLinks = backdropLinks.filter((link) =>
+      backdropLinkContainsAnyBoundedAttendantId(link.url, attendantIds)
+    );
+    const backdropLinkIds = validatedLinks.map((link) => link.id);
+    const validatedBackdropLinkCount = backdropLinkIds.length;
 
     if (backdropLinkIds.length === 0) {
-      return { jobs: [], metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 } };
+      return {
+        jobs: [],
+        metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 },
+        validatedBackdropLinkCount: 0,
+      };
     }
 
     // Find all Agreements that reference those BackdropLinks
@@ -185,33 +204,36 @@ async function fetchJobsForAttendantIds(attendantIds: string[]): Promise<{ jobs:
       completedEvents: 0, // Completed jobs are filtered out and not shown
     };
 
-    return { jobs, metrics };
+    return { jobs, metrics, validatedBackdropLinkCount };
   } catch (error) {
     console.error('Error fetching attendant jobs:', error);
-    return { jobs: [], metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 } };
+    return {
+      jobs: [],
+      metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 },
+      validatedBackdropLinkCount: 0,
+    };
   }
 }
 
-async function fetchAttendantJobs(attendantIdOrSlug: string): Promise<{ jobs: Job[]; metrics: Metrics; groupName?: string }> {
-  try {
-    // First, check if this matches a group slug
-    const group = await prisma.attendantGroup.findUnique({
-      where: { slug: attendantIdOrSlug },
-    });
+type AttendantGroupRecord = {
+  name: string;
+  attendantIds: string[];
+};
 
-    if (group) {
-      // It's a group - fetch jobs for all attendant IDs in the group
-      const result = await fetchJobsForAttendantIds(group.attendantIds);
-      return { ...result, groupName: group.name };
-    }
-
-    // Otherwise, treat as a single attendant ID
-    const result = await fetchJobsForAttendantIds([attendantIdOrSlug]);
-    return result;
-  } catch (error) {
-    console.error('Error fetching attendant jobs:', error);
-    return { jobs: [], metrics: { totalJobs: 0, upcomingEvents: 0, completedEvents: 0 } };
+async function fetchAttendantJobs(
+  attendantIdOrSlug: string,
+  group: AttendantGroupRecord | null
+): Promise<{ jobs: Job[]; metrics: Metrics; groupName?: string }> {
+  if (group) {
+    const result = await fetchJobsForAttendantIds(group.attendantIds);
+    return { jobs: result.jobs, metrics: result.metrics, groupName: group.name };
   }
+
+  const result = await fetchJobsForAttendantIds([attendantIdOrSlug]);
+  if (result.validatedBackdropLinkCount === 0) {
+    notFound();
+  }
+  return { jobs: result.jobs, metrics: result.metrics };
 }
 
 function formatEventDate(dateString: string | null): string {
@@ -345,13 +367,21 @@ function getMonthYearString(): string {
 
 
 export default async function AttendantHubPage({ params }: AttendantHubPageProps) {
-  try {
-    const { id: attendantIdOrSlug } = await params;
-    const { jobs, metrics, groupName } = await fetchAttendantJobs(attendantIdOrSlug);
-    
-    const nextUpcomingJob = jobs.length > 0 ? jobs[0] : null;
-    const displayName = groupName || attendantIdOrSlug;
+  const { id: attendantIdOrSlug } = await params;
 
+  const group = await prisma.attendantGroup.findUnique({
+    where: { slug: attendantIdOrSlug },
+    select: { name: true, attendantIds: true },
+  });
+
+  if (!group && !isValidAttendantCuid(attendantIdOrSlug)) {
+    notFound();
+  }
+
+  const { jobs, metrics, groupName } = await fetchAttendantJobs(attendantIdOrSlug, group);
+  const nextUpcomingJob = jobs.length > 0 ? jobs[0] : null;
+
+  try {
     return (
       <>
         <style dangerouslySetInnerHTML={{__html: `
@@ -485,7 +515,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         fontWeight: '500',
                       }}
                     >
-                      Hello {displayName}, welcome back!
+                      {groupName
+                        ? `Hello ${groupName}, welcome back!`
+                        : 'Hello, welcome back!'}
                     </p>
                   </div>
                 </div>
