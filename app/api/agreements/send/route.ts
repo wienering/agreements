@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
+import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
+import { sendEmail } from '@/lib/email/send';
 
 const sendAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -65,20 +66,6 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
     const clientLink = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
-    // Create email transporter
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    });
-
     // Get current send count for different messaging
     const currentSendCount = agreement.emailSendCount || 0;
     const newSendCount = currentSendCount + 1;
@@ -99,123 +86,70 @@ export async function POST(request: NextRequest) {
     
     // Different messaging based on send count
     let emailSubject, emailTitle, emailMessage, emailUrgency;
+    let noticeLabel: string;
+    let noticeTone: 'default' | 'alert' = 'default';
     
     if (newSendCount === 1) {
       emailSubject = `Service Agreement Ready - ${clientFirstName}`;
       emailTitle = "Service Agreement Ready for Review";
       emailMessage = "Your service agreement is ready for review and digital signature. Please click the button below to access your agreement.";
       emailUrgency = `This agreement expires on ${expirationDate}. Please review and sign before the expiration date.`;
+      noticeLabel = 'Important:';
     } else if (newSendCount === 2) {
       emailSubject = `Reminder: Service Agreement Pending - ${clientFirstName}`;
       emailTitle = "Reminder: Your Service Agreement is Waiting";
       emailMessage = "This is a friendly reminder that your service agreement is still waiting for your review and signature. We want to make sure everything is ready for your event.";
       emailUrgency = `Please review and sign your agreement to secure your booking. This agreement expires on ${expirationDate}.`;
+      noticeLabel = 'Reminder:';
     } else {
       emailSubject = `Final Notice: Service Agreement - ${clientFirstName}`;
       emailTitle = "Final Notice: Service Agreement Signature Required";
       emailMessage = "This is our final notice regarding your service agreement. We need your signature to proceed with your booking and ensure everything is ready for your event.";
       emailUrgency = `Please sign your agreement immediately to avoid any delays in your service. This agreement expires on ${expirationDate}.`;
+      noticeLabel = 'Final Notice:';
+      noticeTone = 'alert';
     }
 
-    // Create email content
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { color: #4a9e72; margin: 0; }
-          .content { margin-bottom: 30px; }
-          .agreement-preview { 
-            border: 1px solid #eee; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            background-color: #f9f9f9;
-          }
-          .button { 
-            display: inline-block; 
-            background-color: #3d8560 !important; 
-            color: white !important; 
-            padding: 18px 36px; 
-            text-decoration: none; 
-            border-radius: 6px; 
-            margin: 20px 5px;
-            font-weight: 700;
-            font-size: 18px;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            border: none;
-            transition: all 0.2s ease;
-            min-width: 220px;
-            text-shadow: none;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            letter-spacing: 0.5px;
-          }
-          .button:hover { 
-            background-color: #1d4ed8; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transform: translateY(-1px);
-          }
-          .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
-          .urgent { background-color: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; }
-          .reminder { background-color: #fef3cd; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; color: #92400e; }
-          .final-notice { background-color: #fef2f2; border: 2px solid #fca5a5; padding: 15px; border-radius: 6px; margin: 20px 0; color: #dc2626; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Photobooth Guys</h1>
-            <p>${emailTitle}</p>
-          </div>
-          
-          <div class="content">
-            <p>Dear ${clientFirstName} ${clientLastName},</p>
-            
-            <p>${emailMessage}</p>
-            
-            <div style="text-align: center; margin: 40px 0; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-              <a href="${clientLink}" class="button">Review & Sign Agreement</a>
-              <p style="margin-top: 15px; font-size: 14px; color: #64748b;">Click the button above to access your agreement</p>
-            </div>
-            
-            <div class="${newSendCount === 1 ? 'urgent' : newSendCount === 2 ? 'reminder' : 'final-notice'}">
-              <strong>${newSendCount === 1 ? '⏰ Important:' : newSendCount === 2 ? '📧 Reminder:' : '🚨 Final Notice:'}</strong> 
-              ${emailUrgency}
-              ${newSendCount > 1 ? `<br><br><strong>Previous emails sent:</strong> ${currentSendCount}` : ''}
-            </div>
-            
-            <h3>Agreement Preview:</h3>
-            <div class="agreement-preview">
-              ${processedHtml.substring(0, 500)}${processedHtml.length > 500 ? '...' : ''}
-            </div>
-            
-            <p>To view the complete agreement and sign it digitally, please click the button above.</p>
-            
-            <h3>What happens next?</h3>
-            <ul>
-              <li>Review the complete agreement terms and conditions</li>
-              <li>Verify all information is correct</li>
-              <li>Sign the agreement digitally using your email confirmation</li>
-              <li>Download a copy of your signed agreement</li>
-            </ul>
-            
-            <p>If you have any questions about this agreement, please contact us at info@photoboothguys.ca</p>
-          </div>
-          
-          <div class="footer">
-            <p>This email was sent by Photobooth Guys Agreement Management System</p>
-            <p>Agreement ID: ${agreement.id} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</p>
-          </div>
-        </div>
-      </body>
-      </html>
+    const urgencyContent =
+      emailUrgency +
+      (newSendCount > 1
+        ? `<br><br><strong>Previous emails sent:</strong> ${currentSendCount}`
+        : '');
+
+    const bodyHtml = `
+      <p style="margin:0 0 16px 0;">Dear ${clientFirstName} ${clientLastName},</p>
+      <p style="margin:0 0 16px 0;">${emailMessage}</p>
+      ${renderCtaButton({ label: 'Review & Sign Agreement', url: clientLink, tone: 'default' })}
+      ${renderNoticeBlock(noticeLabel, urgencyContent, noticeTone)}
+      <h2 style="margin:24px 0 12px 0;font-size:17px;font-weight:600;color:#2A2724;">Agreement Preview:</h2>
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 20px 0;">
+        <tr>
+          <td style="padding:16px 18px;background-color:#F2EBDD;border:1px solid #E5DDCF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#2A2724;">
+            ${processedHtml.substring(0, 500)}${processedHtml.length > 500 ? '...' : ''}
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0 0 16px 0;">To view the complete agreement and sign it digitally, please click the button above.</p>
+      <h2 style="margin:24px 0 12px 0;font-size:17px;font-weight:600;color:#2A2724;">What happens next?</h2>
+      <ul style="margin:0 0 16px 0;padding-left:20px;">
+        <li style="margin-bottom:6px;">Review the complete agreement terms and conditions</li>
+        <li style="margin-bottom:6px;">Verify all information is correct</li>
+        <li style="margin-bottom:6px;">Sign the agreement digitally using your email confirmation</li>
+        <li style="margin-bottom:6px;">Download a copy of your signed agreement</li>
+      </ul>
+      <p style="margin:0 0 16px 0;">If you have any questions about this agreement, please contact us at info@photoboothguys.ca</p>
+      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+        This email was sent by Photobooth Guys Agreement Management System<br>
+        Agreement ID: ${agreement.id} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      </p>
     `;
+
+    const emailHtml = renderEmailLayout({
+      title: emailTitle,
+      preheader: emailMessage,
+      bodyHtml,
+      tone: 'default',
+    });
 
     // Send email with timeout and error handling — CC second signer when enabled
     const secondSignerEnabled = Boolean((agreement as any).secondSignerEnabled);
@@ -229,27 +163,13 @@ export async function POST(request: NextRequest) {
       ccList.push(secondSignerEmail);
     }
 
-    const mailOptions: any = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: agreement.client.email,
-      subject: emailSubject,
-      html: emailHtml,
-    };
-    if (ccList.length > 0) {
-      mailOptions.cc = ccList;
-    }
-
     try {
-      // Verify connection first
-      await transporter.verify();
-      
-      // Send email with timeout
-      const info = await Promise.race([
-        transporter.sendMail(mailOptions),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email send timeout')), 15000)
-        )
-      ]);
+      const info = await sendEmail({
+        to: agreement.client.email,
+        cc: ccList.length > 0 ? ccList : undefined,
+        subject: emailSubject,
+        html: emailHtml,
+      });
 
       devLog('Agreement email sent successfully:', info);
 
