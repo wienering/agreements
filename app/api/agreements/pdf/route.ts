@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { handleApiError } from '@/lib/handleApiError';
 
 // Generate PDF using jsPDF (serverless-friendly)
 const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolean = false) => {
@@ -260,16 +261,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-  } catch (error: any) {
-    console.error('Error generating PDF:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to generate PDF' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/pdf');
   }
 }

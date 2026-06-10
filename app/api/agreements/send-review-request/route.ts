@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { escapeHtml } from '@/lib/htmlEscape';
+import { formatZodDetails } from '@/lib/handleApiError';
 
 const sendReviewRequestSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -162,9 +163,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 503 });
     }
   } catch (error: any) {
-    // Zod validation errors
-    if (error?.name === 'ZodError') {
-      return NextResponse.json({ error: error.errors?.[0]?.message || 'Invalid request' }, { status: 400 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: error.issues[0]?.message || 'Invalid request',
+          details: formatZodDetails(error),
+        },
+        { status: 400 },
+      );
     }
 
     console.error('Error sending review request:', error);

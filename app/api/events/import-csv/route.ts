@@ -559,7 +559,7 @@ export async function POST(request: NextRequest) {
         results.push({
           row: rowNumber,
           status: 'error',
-          error: error.message || 'Unknown error',
+          error: 'Row processing failed',
           csvData: row,
         });
         errorCount++;
@@ -581,10 +581,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('CSV import error:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to process CSV file',
-        message: error.message || 'Unknown error',
-      },
+      { error: 'Failed to process CSV file' },
       { status: 500 }
     );
   }

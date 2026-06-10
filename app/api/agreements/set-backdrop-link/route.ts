@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const setBackdropLinkSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -60,17 +61,8 @@ export async function PUT(request: NextRequest) {
       agreement: updatedAgreement
     });
 
-  } catch (error: any) {
-    console.error('Error setting backdrop link:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to set backdrop link' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/set-backdrop-link');
   }
 }
 

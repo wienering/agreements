@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { handleApiError } from '@/lib/handleApiError';
 
 const emailFallbackSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -87,16 +88,7 @@ Contact: info@photoboothguys.ca
       note: 'Email service is not configured. Use the shareable link above to access your agreement.'
     });
 
-  } catch (error: any) {
-    console.error('Error generating shareable link:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to generate shareable link' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/email-fallback');
   }
 }

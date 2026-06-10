@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const updatePaymentInfoSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -61,17 +62,8 @@ export async function PUT(request: NextRequest) {
       agreement: updatedAgreement
     });
 
-  } catch (error: any) {
-    console.error('Error updating payment info:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to update payment information' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/update-payment-info');
   }
 }
 

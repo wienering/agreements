@@ -4,6 +4,7 @@ import { devLog } from '@/lib/logger';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { handleApiError } from '@/lib/handleApiError';
 
 const addNoteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(1000, 'Note content must be less than 1000 characters'),
@@ -262,16 +263,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
-    console.error('Error adding note:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to add note' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/portal/add-note');
   }
 }

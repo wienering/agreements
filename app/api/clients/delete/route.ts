@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 
 const clientDeleteSchema = z.object({
   id: z.string().min(1, 'Client ID is required'),
@@ -61,7 +62,10 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: 'Client deleted successfully' });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: formatZodDetails(error) },
+        { status: 400 },
+      );
     }
     console.error('Error deleting client:', error);
     return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });

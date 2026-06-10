@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 
 const updateStatusSchema = z.object({
   id: z.string().min(1, 'Agreement ID is required'),
@@ -56,10 +57,10 @@ export async function PUT(request: NextRequest) {
   } catch (error: any) {
     console.error('Status update error details:', error);
     if (error instanceof z.ZodError) {
-      console.error('Zod validation errors:', error.errors);
+      console.error('Zod validation errors:', error.issues);
       return NextResponse.json({ 
         error: 'Validation failed', 
-        details: error.errors 
+        details: formatZodDetails(error),
       }, { status: 400 });
     }
     
@@ -67,15 +68,13 @@ export async function PUT(request: NextRequest) {
     if (error.code === 'P2002' || error.message?.includes('constraint')) {
       console.error('Database constraint error:', error);
       return NextResponse.json({ 
-        error: 'Database constraint error - status may not be valid', 
-        details: error.message 
+        error: 'Database constraint error - status may not be valid',
       }, { status: 400 });
     }
     
     console.error('Error updating agreement status:', error);
     return NextResponse.json({ 
-      error: 'Failed to update status', 
-      details: error.message 
+      error: 'Failed to update status',
     }, { status: 500 });
   }
 }

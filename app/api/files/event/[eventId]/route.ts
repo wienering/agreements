@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { handleApiError } from '@/lib/handleApiError';
 
 export async function GET(
   request: NextRequest,
@@ -39,12 +40,8 @@ export async function GET(
     });
 
     return NextResponse.json({ files });
-  } catch (error: any) {
-    console.error('Error fetching event files:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch files' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'files/event/[eventId]');
   }
 }
 

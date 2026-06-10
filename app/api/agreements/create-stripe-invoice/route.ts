@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 import Stripe from 'stripe';
 
 const createInvoiceSchema = z.object({
@@ -450,7 +451,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: error.errors,
+          details: formatZodDetails(error),
         },
         { status: 400 }
       );
@@ -461,7 +462,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Stripe API error',
-          message: error.message,
+          message: 'The Stripe request was invalid. Check the agreement and billing details.',
         },
         { status: 400 }
       );
@@ -470,7 +471,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to create invoice',
-        message: error.message || 'Unknown error',
+        message: 'Unable to create the invoice. Please try again or contact support.',
       },
       { status: 500 }
     );

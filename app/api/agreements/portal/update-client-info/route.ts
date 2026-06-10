@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const updateClientInfoSchema = z.object({
   phone: z.string().optional(),
@@ -121,16 +122,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
-    console.error('Error updating client info:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to update client information' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/portal/update-client-info');
   }
 }

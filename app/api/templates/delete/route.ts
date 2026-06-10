@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 
 const templateDeleteSchema = z.object({
   id: z.string().min(1, 'Template ID is required'),
@@ -41,8 +42,11 @@ export async function DELETE(request: NextRequest) {
   } catch (error: any) {
     console.error('Template delete error details:', error);
     if (error instanceof z.ZodError) {
-      console.error('Zod validation errors:', error.errors);
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      console.error('Zod validation errors:', error.issues);
+      return NextResponse.json(
+        { error: 'Validation failed', details: formatZodDetails(error) },
+        { status: 400 },
+      );
     }
     console.error('Error deleting template:', error);
     return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 });

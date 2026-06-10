@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 
 const updateBackdropSelectionSchema = z.object({
   agreementId: z.string().optional(), // If provided, use this directly
@@ -189,16 +190,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: error.errors,
+          details: formatZodDetails(error),
         },
         { status: 400 }
       );
     }
     return NextResponse.json(
-      {
-        error: 'Failed to update backdrop selection',
-        message: error.message,
-      },
+      { error: 'Failed to update backdrop selection' },
       { status: 500 }
     );
   }

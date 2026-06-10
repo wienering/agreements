@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
 import { escapeHtml } from '@/lib/htmlEscape';
+import { handleApiError } from '@/lib/handleApiError';
 
 const cancelAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -70,17 +71,8 @@ export async function POST(request: NextRequest) {
       message: 'Agreement cancelled and archived successfully',
       agreement: updatedAgreement
     });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    console.error('Error cancelling agreement:', error);
-    return NextResponse.json({ 
-      error: 'Failed to cancel agreement' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/cancel');
   }
 }
 

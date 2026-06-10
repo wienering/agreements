@@ -6,6 +6,7 @@ import nodemailer from 'nodemailer';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { handleApiError } from '@/lib/handleApiError';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -297,17 +298,8 @@ export async function POST(request: NextRequest) {
       isFinalSignature,
       signerRole,
     });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: error.errors
-      }, { status: 400 });
-    }
-    console.error('Error signing agreement:', error);
-    return NextResponse.json({
-      error: 'Failed to sign agreement'
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/sign');
   }
 }
 

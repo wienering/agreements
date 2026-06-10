@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const updateBackdropLinkSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200, 'Name must be 200 characters or less').optional(),
@@ -62,17 +63,8 @@ export async function PUT(
       backdropLink: updatedLink
     });
 
-  } catch (error: any) {
-    console.error('Error updating backdrop link:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to update backdrop link' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/backdrop-links/[id]');
   }
 }
 

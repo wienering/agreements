@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { sendViewAlertEmail } from '@/lib/view-alert-email';
+import { handleApiError } from '@/lib/handleApiError';
 
 // Helper function to get client IP
 function getClientIP(request: NextRequest): string {
@@ -105,7 +106,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error tracking agreement view:', error);
-    return NextResponse.json({ error: 'Failed to track view' }, { status: 500 });
+    return handleApiError(error, 'agreements/track-view');
   }
 }

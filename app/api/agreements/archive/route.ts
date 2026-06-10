@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const archiveAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -34,17 +35,8 @@ export async function POST(request: NextRequest) {
       message: 'Agreement archived successfully',
       agreement: updatedAgreement
     });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    console.error('Error archiving agreement:', error);
-    return NextResponse.json({ 
-      error: 'Failed to archive agreement' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/archive');
   }
 }
 
@@ -75,16 +67,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Agreement unarchived successfully',
       agreement: updatedAgreement
     });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    console.error('Error unarchiving agreement:', error);
-    return NextResponse.json({ 
-      error: 'Failed to unarchive agreement' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/archive');
   }
 }

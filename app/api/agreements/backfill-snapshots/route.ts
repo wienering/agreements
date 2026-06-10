@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           id: agreement.id,
           client: `${agreement.client.firstName} ${agreement.client.lastName}`,
           success: false,
-          error: error.message
+          error: 'Snapshot processing failed'
         });
       }
     }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     console.error('❌ Backfill error:', error);
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: 'Backfill operation failed',
     }, { status: 500 });
   }
 }

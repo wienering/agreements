@@ -121,10 +121,9 @@ export async function GET(request: NextRequest) {
     }
     
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch backdrop options',
-        message: error.message,
-        code: error.code
+        message: 'An unexpected error occurred while fetching backdrop options',
       },
       { status: 500 }
     );

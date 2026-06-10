@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const quoteInquirySchema = z.object({
   contactInfo: z.object({
@@ -99,16 +100,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, leadId: lead.id });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-    console.error('Quote inquiry webhook error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create lead' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'webhooks/quote-inquiry');
   }
 }

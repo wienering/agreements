@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const eventUpdateSchema = z.object({
   id: z.string().min(1, 'Event ID is required'),
@@ -65,15 +66,8 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json(updatedEvent);
-  } catch (error: any) {
-    console.error('Event update error details:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Failed to update event' }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'events/update');
   }
 }
 

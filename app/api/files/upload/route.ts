@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     if (authResponse) return authResponse;
     console.error('Error uploading file:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to upload file' },
+      { error: 'Failed to upload file' },
       { status: 500 }
     );
   }

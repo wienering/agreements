@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { handleApiError } from '@/lib/handleApiError';
 
 const sendAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -282,16 +283,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-  } catch (error: any) {
-    console.error('Error sending agreement:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to send agreement' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/send');
   }
 }

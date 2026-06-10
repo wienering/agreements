@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 
 const agreementDeleteSchema = z.object({
   id: z.string().min(1, 'Agreement ID is required'),
@@ -45,8 +46,11 @@ export async function DELETE(request: NextRequest) {
   } catch (error: any) {
     console.error('Agreement delete error details:', error);
     if (error instanceof z.ZodError) {
-      console.error('Zod validation errors:', error.errors);
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      console.error('Zod validation errors:', error.issues);
+      return NextResponse.json(
+        { error: 'Validation failed', details: formatZodDetails(error) },
+        { status: 400 },
+      );
     }
     console.error('Error deleting agreement:', error);
     return NextResponse.json({ error: 'Failed to delete agreement' }, { status: 500 });

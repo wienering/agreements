@@ -34,10 +34,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching attendant group:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to fetch attendant group',
-        message: error.message,
-      },
+      { error: 'Failed to fetch attendant group' },
       { status: 500 }
     );
   }
@@ -98,10 +95,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating attendant group:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to update attendant group',
-        message: error.message,
-      },
+      { error: 'Failed to update attendant group' },
       { status: 500 }
     );
   }
@@ -140,10 +134,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('Error deleting attendant group:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to delete attendant group',
-        message: error.message,
-      },
+      { error: 'Failed to delete attendant group' },
       { status: 500 }
     );
   }

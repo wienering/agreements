@@ -6,6 +6,7 @@ import { devLog } from '@/lib/logger';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { handleApiError } from '@/lib/handleApiError';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -262,16 +263,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-  } catch (error: any) {
-    console.error('Error sending email:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to send email' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/email');
   }
 }

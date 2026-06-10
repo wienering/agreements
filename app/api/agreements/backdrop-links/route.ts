@@ -4,6 +4,7 @@ import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
+import { handleApiError } from '@/lib/handleApiError';
 
 const createBackdropLinkSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200, 'Name must be 200 characters or less'),
@@ -70,17 +71,8 @@ export async function POST(request: NextRequest) {
       backdropLink
     }, { status: 201 });
 
-  } catch (error: any) {
-    console.error('Error creating backdrop link:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ 
-      error: 'Failed to create backdrop link' 
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/backdrop-links');
   }
 }
 

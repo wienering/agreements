@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
+import { formatZodDetails } from '@/lib/handleApiError';
 import { randomBytes } from 'crypto';
 import { createHmac } from 'crypto';
 
@@ -369,7 +370,7 @@ export async function POST(request: NextRequest) {
       console.error('❌ Invalid JSON payload:', error);
       console.error('❌ Raw body:', rawBody.substring(0, 500));
       return NextResponse.json(
-        { error: 'Invalid JSON payload', details: error instanceof Error ? error.message : 'Unknown error' },
+        { error: 'Invalid JSON payload' },
         { status: 400 }
       );
     }
@@ -529,7 +530,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: error.errors,
+          details: formatZodDetails(error),
         },
         { status: 400 }
       );
@@ -546,7 +547,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to process booking data',
-        message: error.message || 'Unknown error',
       },
       { status: 500 }
     );

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { handleApiError } from '@/lib/handleApiError';
 
 const eventCreateSchema = z.object({
   clientId: z.string().min(1, 'Client ID is required'),
@@ -54,15 +55,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(event, { status: 201 });
-  } catch (error: any) {
-    console.error('Event creation error details:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'events');
   }
 }
 

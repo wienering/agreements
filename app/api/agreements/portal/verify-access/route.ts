@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
+import { handleApiError } from '@/lib/handleApiError';
 
 const verifyAccessSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -151,16 +152,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
-    console.error('Error verifying portal access:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: error.errors
-      }, { status: 400 });
-    }
-    return NextResponse.json({
-      error: 'Failed to verify access code'
-    }, { status: 500 });
+  } catch (error) {
+    return handleApiError(error, 'agreements/portal/verify-access');
   }
 }

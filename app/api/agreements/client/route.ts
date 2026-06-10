@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
+import { handleApiError } from '@/lib/handleApiError';
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,7 +37,6 @@ export async function GET(request: NextRequest) {
     // Full agreement data is only returned after email verification via POST /api/agreements/verify-email
     return NextResponse.json({ exists: true, requiresVerification: true });
   } catch (error) {
-    console.error('Error fetching agreement:', error);
-    return NextResponse.json({ error: 'Failed to fetch agreement' }, { status: 500 });
+    return handleApiError(error, 'agreements/client');
   }
 }

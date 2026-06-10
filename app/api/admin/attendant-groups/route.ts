@@ -20,10 +20,7 @@ export async function GET() {
   } catch (error: any) {
     console.error('Error fetching attendant groups:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to fetch attendant groups',
-        message: error.message,
-      },
+      { error: 'Failed to fetch attendant groups' },
       { status: 500 }
     );
   }
@@ -71,10 +68,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating attendant group:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to create attendant group',
-        message: error.message,
-      },
+      { error: 'Failed to create attendant group' },
       { status: 500 }
     );
   }
