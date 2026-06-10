@@ -166,7 +166,7 @@ export default function ClientsPage() {
     setCurrentPage(1);
   }, [debouncedSearchTerm]);
 
-  // Filter clients â€” runs only when clients or debounced search term change
+  // Filter clients — runs only when clients or debounced search term change
   const filteredClients = useMemo(() => {
     if (!debouncedSearchTerm.trim()) return clients;
     const searchLower = debouncedSearchTerm.toLowerCase();
@@ -665,7 +665,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
           )}
         </div>
 
-        {/* Add/Edit Form â€” viewport modal */}
+        {/* Add/Edit Form — viewport modal */}
         {showAddForm && (
           <div
             style={{
@@ -910,7 +910,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         <span>Unlimited Prints</span>
                         {newEvent.unlimitedPrints && (
                           <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--accent)', fontWeight: '600' }}>
-                            âˆž Enabled
+                            ∞ Enabled
                           </span>
                         )}
                       </label>
@@ -1512,7 +1512,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                             )}
                             {event.unlimitedPrints && (
                               <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
-                                âˆž Unlimited Prints
+                                ∞ Unlimited Prints
                               </p>
                             )}
                             {event.notes && (
@@ -1673,7 +1673,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               gap: '12px',
             }}>
               <span style={{ fontSize: '14px', color: mutedText }}>
-                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}â€“{Math.min(currentPage * ITEMS_PER_PAGE, filteredClients.length)} of {filteredClients.length} clients
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredClients.length)} of {filteredClients.length} clients
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AdminButton
@@ -1681,7 +1681,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
-                  â† Prev
+                  ← Prev
                 </AdminButton>
                 <span style={{ fontSize: '14px', color: textColor, minWidth: '80px', textAlign: 'center' }}>
                   Page {currentPage} of {totalPages}
@@ -1691,7 +1691,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Next â†’
+                  Next →
                 </AdminButton>
               </div>
             </div>
