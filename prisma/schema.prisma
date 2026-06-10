@@ -81,6 +81,7 @@ model Agreement {
   emailSendCount     Int                   @default(0)
   firstViewedAt      DateTime?
   lastViewedAt       DateTime?
+  notesLastViewedAt  DateTime?
   viewCount          Int                   @default(0)
   
   // Portal enhancement fields

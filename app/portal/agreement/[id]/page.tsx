@@ -870,12 +870,11 @@ function AgreementDetailContent() {
       <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Notes</h2>
         
-        {/* Privacy Notice - Notes are personal and not sent to Photobooth Guys */}
         <div className="mb-6 rounded-md bg-slate-50 border border-slate-200 p-3 dark:bg-slate-800/50 dark:border-slate-700">
           <p className="text-xs text-slate-600 dark:text-slate-400">
             <span className="inline-flex items-center gap-1.5">
               <UIcon name="bulb" className="text-sm" />
-              <strong>Note:</strong> Your notes are personal and are not sent to Photobooth Guys.
+              <strong>Note:</strong> Have a question or detail to share? Leave a note here and we&apos;ll see it.
             </span>
           </p>
         </div>

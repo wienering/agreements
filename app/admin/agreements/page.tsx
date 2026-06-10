@@ -34,6 +34,7 @@ interface Agreement {
   viewCount?: number;
   firstViewedAt?: string;
   lastViewedAt?: string;
+  unreadNotesCount?: number;
   selectedBackdropName?: string;
   paymentStatus?: string;
   showPhoneNumberAlways?: boolean;
@@ -69,6 +70,44 @@ interface WarningData {
     daysSinceSent?: number;
     hoursUntilExpiry?: number;
   }>;
+}
+
+function UnreadNotesBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  const label = count > 9 ? '9+' : String(count);
+  return (
+    <span
+      title={`${count} unread client note${count === 1 ? '' : 's'}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: count > 9 ? '20px' : '18px',
+        height: '18px',
+        padding: count > 9 ? '0 5px' : '0',
+        borderRadius: '999px',
+        backgroundColor: '#ef4444',
+        color: '#ffffff',
+        fontSize: '10px',
+        fontWeight: 700,
+        lineHeight: 1,
+        flexShrink: 0,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function formatClientNoteTimestamp(createdAt: string): string {
+  return new Date(createdAt).toLocaleString('en-CA', {
+    timeZone: 'America/Toronto',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): string {
@@ -260,7 +299,11 @@ export default function AgreementsPage() {
     secondSigner: boolean;
     portal: boolean;
     attendant: boolean;
-  }>({ content: false, secondSigner: false, portal: true, attendant: false });
+    clientNotes: boolean;
+  }>({ content: false, secondSigner: false, portal: true, attendant: false, clientNotes: false });
+  const [clientNotes, setClientNotes] = useState<Array<{ id: string; content: string; createdAt: string }>>([]);
+  const [clientNotesAgreementId, setClientNotesAgreementId] = useState<string | null>(null);
+  const [loadingClientNotes, setLoadingClientNotes] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Second signer editing state (for currently selected agreement)
@@ -397,7 +440,10 @@ const normalizePaymentStatus = (value?: string | null) => {
   // Reset Edit Agreement modal sections to default whenever a different agreement is opened
   useEffect(() => {
     if (selectedAgreement?.id) {
-      setEditModalSections({ content: false, secondSigner: false, portal: true, attendant: false });
+      setEditModalSections({ content: false, secondSigner: false, portal: true, attendant: false, clientNotes: false });
+      setClientNotes([]);
+      setClientNotesAgreementId(null);
+      setLoadingClientNotes(false);
     }
   }, [selectedAgreement?.id]);
 
@@ -1043,6 +1089,58 @@ const normalizePaymentStatus = (value?: string | null) => {
         setBackdropOptions([]);
       }
     }, 100);
+  };
+
+  const clearUnreadNotesCount = (agreementId: string) => {
+    setAgreements((prev) =>
+      prev.map((a) => (a.id === agreementId ? { ...a, unreadNotesCount: 0 } : a))
+    );
+    setSelectedAgreement((prev) =>
+      prev?.id === agreementId ? { ...prev, unreadNotesCount: 0 } : prev
+    );
+  };
+
+  const handleToggleClientNotesSection = async () => {
+    const willExpand = !editModalSections.clientNotes;
+    setEditModalSections((s) => ({ ...s, clientNotes: willExpand }));
+
+    if (!willExpand || !selectedAgreement) return;
+
+    if (clientNotesAgreementId !== selectedAgreement.id) {
+      setLoadingClientNotes(true);
+      try {
+        const response = await adminFetch(
+          `/api/agreements/client-notes?agreementId=${encodeURIComponent(selectedAgreement.id)}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setClientNotes(data.notes || []);
+          setClientNotesAgreementId(selectedAgreement.id);
+        } else {
+          setClientNotes([]);
+        }
+      } catch (error) {
+        console.error('Error fetching client notes:', error);
+        setClientNotes([]);
+      } finally {
+        setLoadingClientNotes(false);
+      }
+    }
+
+    if ((selectedAgreement.unreadNotesCount ?? 0) > 0) {
+      try {
+        const response = await adminFetch('/api/agreements/mark-notes-viewed', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agreementId: selectedAgreement.id }),
+        });
+        if (response.ok) {
+          clearUnreadNotesCount(selectedAgreement.id);
+        }
+      } catch (error) {
+        console.error('Error marking notes as viewed:', error);
+      }
+    }
   };
 
   const handleSaveAgreement = async () => {
@@ -2423,7 +2521,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                         if (tooltip) tooltip.remove();
                       }}
                     >
-                      {agreement.client.firstName} {agreement.client.lastName}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', maxWidth: '100%' }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {agreement.client.firstName} {agreement.client.lastName}
+                        </span>
+                        <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
+                      </span>
                     </div>
                     {attendantName && (
                       <div style={{
@@ -2772,7 +2875,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 if (tooltip) tooltip.remove();
                               }}
                             >
-                              {agreement.client.firstName} {agreement.client.lastName}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                {agreement.client.firstName} {agreement.client.lastName}
+                                <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
+                              </span>
                             </h3>
                           </div>
                           <div style={{ 
@@ -3765,6 +3871,58 @@ const normalizePaymentStatus = (value?: string | null) => {
                 )}
 
                 {/* Update Portal Fields Button (relocated to Section 3 above) */}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 5: Client Notes */}
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+                <button
+                  type="button"
+                  onClick={handleToggleClientNotesSection}
+                  aria-expanded={editModalSections.clientNotes}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    Client Notes
+                    <UnreadNotesBadge count={selectedAgreement.unreadNotesCount ?? 0} />
+                  </span>
+                  <span aria-hidden="true" style={{ display: 'inline-block', transition: prefersReducedMotion ? 'none' : 'transform 200ms ease', transform: editModalSections.clientNotes ? 'rotate(90deg)' : 'rotate(0deg)', color: mutedText, fontSize: '12px' }}>▶</span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: editModalSections.clientNotes ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '0 16px 12px 16px' }}>
+                      {loadingClientNotes ? (
+                        <p style={{ margin: 0, fontSize: '13px', color: mutedText, fontStyle: 'italic' }}>
+                          Loading notes...
+                        </p>
+                      ) : clientNotes.length === 0 ? (
+                        <p style={{ margin: 0, fontSize: '13px', color: mutedText }}>
+                          No notes from this client yet.
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {clientNotes.map((note) => (
+                            <div
+                              key={note.id}
+                              style={{
+                                padding: '12px',
+                                borderRadius: '6px',
+                                border: `1px solid ${borderColor}`,
+                                backgroundColor: cardBg,
+                              }}
+                            >
+                              <p style={{ margin: 0, fontSize: '14px', color: textColor, whiteSpace: 'pre-wrap' }}>
+                                {note.content}
+                              </p>
+                              <p style={{ margin: '8px 0 0', fontSize: '12px', color: mutedText }}>
+                                {formatClientNoteTimestamp(note.createdAt)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

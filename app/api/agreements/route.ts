@@ -7,27 +7,49 @@ export async function GET(request: NextRequest) {
   try {
 
     await requireAdmin(request);
-    const agreements = await prisma.agreement.findMany({
-      where: {
-        archived: false, // Only show non-archived agreements
-      },
-      include: {
-        client: true,
-        template: true,
-        event: true,
-        backdropLink: {
-          select: {
-            id: true,
-            name: true,
+    const [agreements, unreadNoteCounts] = await Promise.all([
+      prisma.agreement.findMany({
+        where: {
+          archived: false, // Only show non-archived agreements
+        },
+        include: {
+          client: true,
+          template: true,
+          event: true,
+          backdropLink: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' } // Will be sorted by event date on frontend
-    });
+        orderBy: { createdAt: 'desc' }, // Will be sorted by event date on frontend
+      }),
+      prisma.$queryRaw<Array<{ agreementId: string; unreadNotesCount: number }>>`
+        SELECT
+          a.id AS "agreementId",
+          COUNT(cn.id)::int AS "unreadNotesCount"
+        FROM "Agreement" a
+        LEFT JOIN "ClientNote" cn
+          ON cn."agreementId" = a.id
+          AND (a."notesLastViewedAt" IS NULL OR cn."createdAt" > a."notesLastViewedAt")
+        WHERE a.archived = false
+        GROUP BY a.id
+      `,
+    ]);
+
+    const unreadCountByAgreementId = new Map(
+      unreadNoteCounts.map((row) => [row.agreementId, row.unreadNotesCount])
+    );
+
+    const agreementsWithUnreadCounts = agreements.map((agreement) => ({
+      ...agreement,
+      unreadNotesCount: unreadCountByAgreementId.get(agreement.id) ?? 0,
+    }));
     
     // Sort by event date (closest upcoming first), then by creation date
     // Use event.eventDate if available, otherwise fall back to client.eventDate (deprecated)
-    const sortedAgreements = agreements.sort((a, b) => {
+    const sortedAgreements = agreementsWithUnreadCounts.sort((a, b) => {
       const aEventDate = a.event?.eventDate || a.client.eventDate;
       const bEventDate = b.event?.eventDate || b.client.eventDate;
       const aDate = aEventDate ? new Date(aEventDate).getTime() : Infinity;
