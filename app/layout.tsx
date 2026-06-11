@@ -34,8 +34,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    /* Stage 3: remove className="dark" once portal/client pages drop dark: Tailwind pairs */
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className={`${inter.className} ${fraunces.variable} ${montserrat.variable}`}>
         <Providers>
           {children}

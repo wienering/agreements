@@ -160,21 +160,21 @@ function PortalLoginContent() {
   // Show loading state while processing magic link
   if (magicLinkProcessing) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white text-2xl font-bold animate-pulse">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white text-2xl font-bold animate-pulse">
               PG
             </div>
           </div>
-          <h2 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
+          <h2 className="mt-6 text-2xl font-bold text-ink">
             Logging you in...
           </h2>
-          <p className="text-slate-600 dark:text-slate-300">
+          <p className="text-muted">
             Please wait while we verify your access.
           </p>
           <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral"></div>
           </div>
         </div>
       </div>
@@ -182,27 +182,28 @@ function PortalLoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white text-2xl font-bold">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white text-2xl font-bold">
               PG
             </div>
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-slate-900 dark:text-white">
+          <h2 className="client-page-title mt-6 text-3xl font-bold text-ink">
             Client Portal Access
           </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <div className="client-title-rule mx-auto" aria-hidden="true" />
+          <p className="mt-3 text-sm text-muted">
             Enter your email to receive a verification code
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-xl rounded-lg sm:px-10 border border-slate-200 dark:border-slate-700">
+        <div className="bg-panel py-8 px-4 shadow-xl rounded-lg sm:px-10 border border-hairline">
           {step === 'email' ? (
             <form className="space-y-6" onSubmit={handleRequestCode}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                <label htmlFor="email" className="block text-sm font-medium text-ink">
                   Email Address
                 </label>
                 <div className="mt-1">
@@ -214,21 +215,21 @@ function PortalLoginContent() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md placeholder-slate-400 dark:placeholder-slate-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                    className="appearance-none block w-full px-3 py-2 border border-hairline rounded-md placeholder:text-muted bg-panel text-ink focus:outline-none focus:ring-coral focus:border-coral sm:text-sm"
                     placeholder="Enter your email address"
                   />
                 </div>
               </div>
 
               {error && (
-                <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-                  <div className="text-sm text-red-800 dark:text-red-200">{error}</div>
+                <div className="rounded-md bg-panel p-4">
+                  <div className="text-sm text-alert">{error}</div>
                 </div>
               )}
 
               {success && (
-                <div className="rounded-md bg-emerald-50 dark:bg-emerald-900/20 p-4">
-                  <div className="text-sm text-emerald-800 dark:text-emerald-200">{success}</div>
+                <div className="rounded-md bg-panel border border-success p-4">
+                  <div className="text-sm font-medium text-success">{success}</div>
                 </div>
               )}
 
@@ -236,7 +237,7 @@ function PortalLoginContent() {
                 <button
                   type="submit"
                   disabled={loading || !email.trim()}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-coral hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Verification Code'}
                 </button>
@@ -245,7 +246,7 @@ function PortalLoginContent() {
           ) : (
             <form className="space-y-6" onSubmit={handleVerifyCode}>
               <div>
-                <label htmlFor="code" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                <label htmlFor="code" className="block text-sm font-medium text-ink">
                   Verification Code
                 </label>
                 <div className="mt-1">
@@ -256,19 +257,19 @@ function PortalLoginContent() {
                     required
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md placeholder-slate-400 dark:placeholder-slate-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-center text-lg tracking-widest"
+                    className="appearance-none block w-full px-3 py-2 border border-hairline rounded-md placeholder:text-muted bg-panel text-ink focus:outline-none focus:ring-coral focus:border-coral sm:text-sm text-center text-lg tracking-widest"
                     placeholder="Enter 6-digit code"
                     maxLength={6}
                   />
                 </div>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-2 text-sm text-muted">
                   Check your email for the verification code
                 </p>
               </div>
 
               {error && (
-                <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-                  <div className="text-sm text-red-800 dark:text-red-200">{error}</div>
+                <div className="rounded-md bg-panel p-4">
+                  <div className="text-sm text-alert">{error}</div>
                 </div>
               )}
 
@@ -281,14 +282,14 @@ function PortalLoginContent() {
                     setError('');
                     setSuccess('');
                   }}
-                  className="flex-1 py-2 px-4 border border-slate-300 dark:border-slate-600 rounded-md text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                  className="flex-1 py-2 px-4 border border-hairline rounded-md text-sm font-medium text-ink bg-panel hover:bg-paper focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !verificationCode.trim()}
-                  className="flex-1 py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-coral hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Verifying...' : 'Verify Code'}
                 </button>
@@ -298,7 +299,7 @@ function PortalLoginContent() {
         </div>
 
         <div className="text-center">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted">
             Having trouble? Contact us for assistance.
           </p>
         </div>
@@ -310,21 +311,21 @@ function PortalLoginContent() {
 // Loading component for magic link processing
 function MagicLinkLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 text-center">
         <div className="flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white text-2xl font-bold animate-pulse">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white text-2xl font-bold animate-pulse">
             PG
           </div>
         </div>
-        <h2 className="mt-6 text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="mt-6 text-2xl font-bold text-ink">
           Logging you in...
         </h2>
-        <p className="text-slate-600 dark:text-slate-300">
+        <p className="text-muted">
           Please wait while we verify your access.
         </p>
         <div className="flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral"></div>
         </div>
       </div>
     </div>

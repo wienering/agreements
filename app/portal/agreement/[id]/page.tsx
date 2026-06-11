@@ -220,16 +220,16 @@ function AgreementDetailContent() {
     switch (status) {
       case 'SIGNED':
       case 'COMPLETED':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200';
+        return 'bg-panel text-success border border-hairline';
       case 'LIVE':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200';
+        return 'bg-panel text-ink border border-hairline';
       case 'DRAFT':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200';
+        return 'bg-panel text-warn border border-hairline';
       case 'CANCELLED':
       case 'VOID':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200';
+        return 'bg-panel text-alert border border-hairline';
       default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-200';
+        return 'bg-panel text-muted border border-hairline';
     }
   };
 
@@ -356,8 +356,8 @@ function AgreementDetailContent() {
     return (
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">Loading agreement...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted">Loading agreement...</p>
         </div>
       </div>
     );
@@ -367,18 +367,18 @@ function AgreementDetailContent() {
     return (
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="rounded-lg bg-red-50 border border-red-200 p-6 dark:bg-red-900/20 dark:border-red-800">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+          <div className="rounded-lg bg-panel border border-alert p-6">
+            <p className="text-alert">{error}</p>
             <div className="mt-4 flex gap-3 justify-center">
               <button
                 onClick={fetchAgreementData}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                className="rounded-md bg-alert px-4 py-2 text-sm font-semibold text-white hover:bg-alert"
               >
                 Try Again
               </button>
               <Link
                 href="/portal/dashboard"
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
               >
                 Back to Dashboard
               </Link>
@@ -397,20 +397,20 @@ function AgreementDetailContent() {
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Admin Preview Banner */}
       {isAdminPreview && (
-        <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
+        <div className="mb-6 rounded-lg bg-panel border border-warn p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-200">
+              <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-warn">
                 <UIcon name="search" className="text-xl" />
                 Admin Preview Mode
               </h2>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
+              <p className="text-sm text-warn">
                 Viewing agreement as admin
               </p>
             </div>
             <Link
               href={`/portal/admin-preview?${searchParams.get('email') ? `email=${encodeURIComponent(searchParams.get('email')!)}` : `clientId=${encodeURIComponent(searchParams.get('clientId')!)}`}`}
-              className="rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+              className="rounded-md bg-warn px-4 py-2 text-sm font-semibold text-white hover:bg-warn"
             >
               Back to Portal Preview
             </Link>
@@ -422,10 +422,11 @@ function AgreementDetailContent() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            <h1 className="client-page-title text-3xl font-bold text-ink">
               {agreement.templateName}
             </h1>
-            <p className="mt-2 text-slate-600 dark:text-slate-300">
+            <div className="client-title-rule" aria-hidden="true" />
+            <p className="mt-3 text-muted">
               Agreement ID: {agreement.id}
             </p>
           </div>
@@ -436,14 +437,14 @@ function AgreementDetailContent() {
             {isAdminPreview ? (
               <Link
                 href={`/portal/admin-preview?${searchParams.get('email') ? `email=${encodeURIComponent(searchParams.get('email')!)}` : `clientId=${encodeURIComponent(searchParams.get('clientId')!)}`}`}
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
               >
                 Back to Portal Preview
               </Link>
             ) : (
               <Link
                 href="/portal/dashboard"
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
               >
                 Back to Dashboard
               </Link>
@@ -453,13 +454,13 @@ function AgreementDetailContent() {
       </div>
 
       {/* Action Buttons Section */}
-      <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h2>
+      <div className="mb-8 rounded-lg border border-hairline bg-panel p-6">
+        <h2 className="text-lg font-semibold text-ink mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">
           <a
             href={`/api/agreements/portal/pdf/${agreement.id}`}
             download
-            className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            className="inline-flex items-center gap-2 rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             <UIcon name="file-download" className="text-base" />
             Download PDF
@@ -470,7 +471,7 @@ function AgreementDetailContent() {
               href={`/agreement/${agreement.uniqueToken}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
             >
               <UIcon name="check" className="text-base" />
               View Signed Version
@@ -482,7 +483,7 @@ function AgreementDetailContent() {
               href={agreement.stripePaymentLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="inline-flex items-center gap-2 rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral"
             >
               <UIcon name="credit-card" className="text-base" />
               Make Payment
@@ -494,7 +495,7 @@ function AgreementDetailContent() {
               href={agreement.stripeReceiptLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
             >
               <UIcon name="receipt" className="text-base" />
               View Receipt
@@ -505,7 +506,7 @@ function AgreementDetailContent() {
             href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex items-center gap-2 rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
           >
             <UIcon name="palette" className="text-base" />
             Choose Template
@@ -516,7 +517,7 @@ function AgreementDetailContent() {
               href={`${agreement.backdropLink.url}${agreement.backdropLink.url.includes('?') ? '&' : '?'}agreementId=${agreement.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
             >
               <UIcon name="camera" className="text-base" />
               Choose Your Backdrop
@@ -527,16 +528,16 @@ function AgreementDetailContent() {
 
       {/* Gallery Delivery Section */}
       {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
-        <div className="mb-8 rounded-lg border-2 border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-900/10">
+        <div className="mb-8 rounded-lg border-2 border-hairline bg-panel p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="text-3xl text-emerald-700 dark:text-emerald-300">
+            <div className="text-3xl text-coral">
               <UIcon name="camera" className="text-3xl" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">
+              <h2 className="text-xl font-semibold text-ink">
                 Your Event {agreement.galleryLinks && agreement.galleryLinks.length > 1 ? 'Galleries Are' : 'Gallery is'} Ready!
               </h2>
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+              <p className="text-sm text-muted">
                 View and download your event photos
               </p>
             </div>
@@ -551,7 +552,7 @@ function AgreementDetailContent() {
                 href={g.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-700"
+                className="inline-flex items-center gap-2 rounded-md bg-coral px-6 py-3 text-base font-semibold text-white hover:opacity-90"
               >
                 View {g.title || 'Gallery'} →
               </a>
@@ -561,29 +562,29 @@ function AgreementDetailContent() {
       )}
 
       {/* Activity Timeline */}
-      <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Activity Timeline</h2>
+      <div className="mb-8 rounded-lg border border-hairline bg-panel p-6">
+        <h2 className="text-xl font-semibold text-ink mb-6">Activity Timeline</h2>
         <div className="space-y-4">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-coral">
               <UIcon name="paper-plane" className="text-lg" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-slate-900 dark:text-white">Agreement Sent</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(agreement.createdAt)}</p>
+              <p className="font-medium text-ink">Agreement Sent</p>
+              <p className="text-sm text-muted">{formatDate(agreement.createdAt)}</p>
             </div>
           </div>
 
           {agreement.firstViewedAt && (
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                <UIcon name="eye" className="text-lg" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-coral">
+              <UIcon name="eye" className="text-lg" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-slate-900 dark:text-white">First Viewed</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(agreement.firstViewedAt)}</p>
+                <p className="font-medium text-ink">First Viewed</p>
+                <p className="text-sm text-muted">{formatDate(agreement.firstViewedAt)}</p>
                 {agreement.viewCount > 1 && (
-                  <p className="text-xs text-slate-500 dark:text-slate-500">Viewed {agreement.viewCount} times total</p>
+                  <p className="text-xs text-muted">Viewed {agreement.viewCount} times total</p>
                 )}
               </div>
             </div>
@@ -591,12 +592,12 @@ function AgreementDetailContent() {
 
           {agreement.signedAt && (
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
-                <UIcon name="check" className="text-lg" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-success">
+              <UIcon name="check" className="text-lg" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-slate-900 dark:text-white">Agreement Signed</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{formatDate(agreement.signedAt)}</p>
+                <p className="font-medium text-ink">Agreement Signed</p>
+                <p className="text-sm text-muted">{formatDate(agreement.signedAt)}</p>
               </div>
             </div>
           )}
@@ -604,21 +605,18 @@ function AgreementDetailContent() {
           {/* Payment Status / Balance Due */}
           {agreement.paymentStatus && (
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                <UIcon name="credit-card" className="text-lg" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-coral">
+              <UIcon name="credit-card" className="text-lg" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-slate-900 dark:text-white mb-2">Payment Status</p>
+                <p className="font-medium text-ink mb-2">Payment Status</p>
                 {agreement.paymentStatus.toLowerCase().includes('balance due') || agreement.paymentStatus.toLowerCase().includes('balance') ? (
-                  <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-amber-500 dark:text-amber-400 drop-shadow-md" style={{
-                    color: '#d97706',
-                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)'
-                  }}>
+                  <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-warn bg-panel border border-warn">
                     <UIcon name="credit-card" className="text-sm" />
                     {agreement.paymentStatus}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                  <span className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium bg-panel text-ink">
                     <UIcon name="credit-card" className="text-sm" />
                     {agreement.paymentStatus}
                   </span>
@@ -633,13 +631,13 @@ function AgreementDetailContent() {
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Agreement Content</h2>
+          <div className="rounded-lg border border-hairline bg-panel p-6">
+            <h2 className="text-xl font-semibold text-ink mb-4">Agreement Content</h2>
             {agreement.mergedHtml ? (
               <div>
                 <div 
                   ref={contentRef}
-                  className={`prose max-w-none dark:prose-invert transition-all duration-300 ${
+                  className={`prose max-w-none text-ink transition-all duration-300 ${
                     !isAgreementExpanded && hasMoreContent ? 'max-h-[30rem] overflow-hidden' : ''
                   }`}
                   style={!isAgreementExpanded && hasMoreContent ? {
@@ -649,10 +647,10 @@ function AgreementDetailContent() {
                   dangerouslySetInnerHTML={{ __html: sanitizeAgreementHtml(agreement.mergedHtml ?? '') }}
                 />
                 {hasMoreContent && (
-                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="mt-4 pt-4 border-t border-hairline">
                     <button
                       onClick={() => setIsAgreementExpanded(!isAgreementExpanded)}
-                      className="flex items-center justify-center gap-2 w-full rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+                      className="flex items-center justify-center gap-2 w-full rounded-md bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-hairline transition-colors"
                     >
                       <span>{isAgreementExpanded ? 'Show Less' : 'Show More'}</span>
                       <svg
@@ -668,7 +666,7 @@ function AgreementDetailContent() {
                 )}
               </div>
             ) : (
-              <p className="text-slate-600 dark:text-slate-300">No content available for this agreement.</p>
+              <p className="text-muted">No content available for this agreement.</p>
             )}
           </div>
         </div>
@@ -676,59 +674,59 @@ function AgreementDetailContent() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Agreement Info */}
-          <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Agreement Details</h3>
+          <div className="rounded-lg border border-hairline bg-panel p-6">
+            <h3 className="text-lg font-semibold text-ink mb-4">Agreement Details</h3>
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Status</p>
+                <p className="text-sm font-medium text-ink">Status</p>
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(agreement.status)}`}>
                   {agreement.status}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Created</p>
-                <p className="text-sm text-slate-900 dark:text-white">{formatDate(agreement.createdAt)}</p>
+                <p className="text-sm font-medium text-ink">Created</p>
+                <p className="text-sm text-ink">{formatDate(agreement.createdAt)}</p>
               </div>
               {agreement.signedAt && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Signed</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{formatDate(agreement.signedAt)}</p>
+                  <p className="text-sm font-medium text-ink">Signed</p>
+                  <p className="text-sm text-ink">{formatDate(agreement.signedAt)}</p>
                 </div>
               )}
               {agreement.expiresAt && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Expires</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{formatDate(agreement.expiresAt)}</p>
+                  <p className="text-sm font-medium text-ink">Expires</p>
+                  <p className="text-sm text-ink">{formatDate(agreement.expiresAt)}</p>
                 </div>
               )}
               {agreement.cancelledAt && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Cancelled</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{formatDate(agreement.cancelledAt)}</p>
+                  <p className="text-sm font-medium text-ink">Cancelled</p>
+                  <p className="text-sm text-ink">{formatDate(agreement.cancelledAt)}</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Export Options */}
-          <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Export</h3>
+          <div className="rounded-lg border border-hairline bg-panel p-6">
+            <h3 className="text-lg font-semibold text-ink mb-4">Export</h3>
             <div className="space-y-2">
               <button
                 onClick={() => handleExport('pdf')}
-                className="w-full rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                className="w-full rounded-md bg-coral px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
               >
                 Export as PDF
               </button>
               <button
                 onClick={() => handleExport('json')}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="w-full rounded-md border border-hairline bg-panel px-3 py-2 text-sm font-medium text-ink hover:bg-paper"
               >
                 Export as JSON
               </button>
               <button
                 onClick={() => handleExport('csv')}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="w-full rounded-md border border-hairline bg-panel px-3 py-2 text-sm font-medium text-ink hover:bg-paper"
               >
                 Export as CSV
               </button>
@@ -736,39 +734,39 @@ function AgreementDetailContent() {
           </div>
 
           {/* Client Info */}
-          <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Client Information</h3>
+          <div className="rounded-lg border border-hairline bg-panel p-6">
+            <h3 className="text-lg font-semibold text-ink mb-4">Client Information</h3>
             <div className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Name</p>
-                <p className="text-sm text-slate-900 dark:text-white">{client.firstName} {client.lastName}</p>
+                <p className="text-sm font-medium text-ink">Name</p>
+                <p className="text-sm text-ink">{client.firstName} {client.lastName}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Email</p>
-                <p className="text-sm text-slate-900 dark:text-white">{client.email}</p>
+                <p className="text-sm font-medium text-ink">Email</p>
+                <p className="text-sm text-ink">{client.email}</p>
               </div>
               {client.phone && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Phone</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{client.phone}</p>
+                  <p className="text-sm font-medium text-ink">Phone</p>
+                  <p className="text-sm text-ink">{client.phone}</p>
                 </div>
               )}
               {client.address && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Address</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{client.address}</p>
+                  <p className="text-sm font-medium text-ink">Address</p>
+                  <p className="text-sm text-ink">{client.address}</p>
                 </div>
               )}
               {client.eventDate && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Event Date</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{formatDate(client.eventDate)}</p>
+                  <p className="text-sm font-medium text-ink">Event Date</p>
+                  <p className="text-sm text-ink">{formatDate(client.eventDate)}</p>
                 </div>
               )}
               {client.eventPackage && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Package</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{client.eventPackage}</p>
+                  <p className="text-sm font-medium text-ink">Package</p>
+                  <p className="text-sm text-ink">{client.eventPackage}</p>
                 </div>
               )}
             </div>
@@ -777,12 +775,12 @@ function AgreementDetailContent() {
       </div>
 
       {/* Resource Center Section */}
-      <div className="mb-8 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-4 inline-flex items-center gap-2 text-xl font-semibold text-slate-900 dark:text-white">
+      <div className="mb-8 rounded-lg border border-hairline bg-panel p-6">
+        <h2 className="mb-4 inline-flex items-center gap-2 text-xl font-semibold text-ink">
           <UIcon name="books" className="text-xl" />
           Resources & Links
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+        <p className="text-sm text-muted mb-6">
           Helpful resources for your photobooth event
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -790,26 +788,26 @@ function AgreementDetailContent() {
             href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
+            className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-coral hover:bg-panel transition"
           >
-            <div className="text-2xl text-slate-600 dark:text-slate-300">
+            <div className="text-2xl text-muted">
               <UIcon name="palette" className="text-2xl" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">Template Chooser</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Browse and select your print template design</p>
+              <h3 className="font-semibold text-ink">Template Chooser</h3>
+              <p className="text-sm text-muted">Browse and select your print template design</p>
             </div>
           </a>
 
           {agreement.selectedBackdropName ? (
-            <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-emerald-500 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-900/20">
-              <div className="text-2xl text-emerald-700 dark:text-emerald-300">
+            <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-coral bg-panel">
+              <div className="text-2xl text-coral">
                 <UIcon name="check" className="text-2xl" />
               </div>
               <div>
-                <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">Selected Backdrop</h3>
-                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mt-1">{agreement.selectedBackdropName}</p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Your backdrop selection has been confirmed</p>
+                <h3 className="font-semibold text-ink">Selected Backdrop</h3>
+                <p className="text-sm font-medium text-coral mt-1">{agreement.selectedBackdropName}</p>
+                <p className="text-xs text-muted mt-1">Your backdrop selection has been confirmed</p>
               </div>
             </div>
           ) : agreement.backdropLink ? (
@@ -817,24 +815,24 @@ function AgreementDetailContent() {
               href={`${agreement.backdropLink.url}${agreement.backdropLink.url.includes('?') ? '&' : '?'}agreementId=${agreement.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
+              className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-coral hover:bg-panel transition"
             >
-              <div className="text-2xl text-slate-600 dark:text-slate-300">
+              <div className="text-2xl text-muted">
                 <UIcon name="camera" className="text-2xl" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">Choose Your Backdrop For Your Event</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Browse our backdrop options and make your selection</p>
+                <h3 className="font-semibold text-ink">Choose Your Backdrop For Your Event</h3>
+                <p className="text-sm text-muted">Browse our backdrop options and make your selection</p>
               </div>
             </a>
           ) : (
-            <div className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-              <div className="text-2xl text-slate-500 dark:text-slate-400">
+            <div className="flex items-start gap-3 p-4 rounded-lg border border-hairline bg-paper">
+              <div className="text-2xl text-muted">
                 <UIcon name="camera" className="text-2xl" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">Choose Your Backdrop</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Contact us for backdrop selection options</p>
+                <h3 className="font-semibold text-ink">Choose Your Backdrop</h3>
+                <p className="text-sm text-muted">Contact us for backdrop selection options</p>
               </div>
             </div>
           )}
@@ -843,35 +841,35 @@ function AgreementDetailContent() {
             href="https://www.photoboothguys.ca/photobooth-questions/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition dark:border-slate-700 dark:hover:border-emerald-600 dark:hover:bg-emerald-900/10"
+            className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-coral hover:bg-panel transition"
           >
-            <div className="text-2xl text-slate-600 dark:text-slate-300">
+            <div className="text-2xl text-muted">
               <UIcon name="question" className="text-2xl" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">FAQ</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Frequently asked questions about our service</p>
+              <h3 className="font-semibold text-ink">FAQ</h3>
+              <p className="text-sm text-muted">Frequently asked questions about our service</p>
             </div>
           </a>
 
-          <div className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
-            <div className="text-2xl text-slate-600 dark:text-slate-300">
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-hairline bg-paper">
+            <div className="text-2xl text-muted">
               <UIcon name="clipboard" className="text-2xl" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">Photo Booth Tips</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Tips for getting the best photos at your event</p>
+              <h3 className="font-semibold text-ink">Photo Booth Tips</h3>
+              <p className="text-sm text-muted">Tips for getting the best photos at your event</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Notes Section */}
-      <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Notes</h2>
+      <div className="rounded-lg border border-hairline bg-panel p-6">
+        <h2 className="text-xl font-semibold text-ink mb-6">Notes</h2>
         
-        <div className="mb-6 rounded-md bg-slate-50 border border-slate-200 p-3 dark:bg-slate-800/50 dark:border-slate-700">
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+        <div className="mb-6 rounded-md bg-paper border border-hairline p-3">
+          <p className="text-xs text-muted">
             <span className="inline-flex items-center gap-1.5">
               <UIcon name="bulb" className="text-sm" />
               <strong>Note:</strong> Have a question or detail to share? Leave a note here and we&apos;ll see it.
@@ -884,7 +882,7 @@ function AgreementDetailContent() {
         <form onSubmit={handleAddNote} className="mb-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="note" className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+              <label htmlFor="note" className="block text-sm font-medium text-ink mb-2">
                 Add a Note
               </label>
               <textarea
@@ -893,13 +891,13 @@ function AgreementDetailContent() {
                 onChange={(e) => setNewNote(e.target.value)}
                 placeholder="Add your note here..."
                 rows={3}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:border-emerald-400 dark:focus:ring-emerald-400"
+                className="w-full rounded-md border border-hairline bg-panel px-3 py-2 text-sm placeholder:text-muted focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               />
             </div>
             <button
               type="submit"
               disabled={addingNote || !newNote.trim()}
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {addingNote ? 'Adding Note...' : 'Add Note'}
             </button>
@@ -911,17 +909,17 @@ function AgreementDetailContent() {
         {agreement.notes.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">📝</div>
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No Notes Yet</h3>
-            <p className="text-slate-600 dark:text-slate-300">
+            <h3 className="text-lg font-medium text-ink mb-2">No Notes Yet</h3>
+            <p className="text-muted">
               Add your first note using the form above.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {agreement.notes.map((note) => (
-              <div key={note.id} className="rounded-md bg-slate-50 p-4 dark:bg-slate-800">
-                <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">{note.content}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+              <div key={note.id} className="rounded-md bg-paper p-4">
+                <p className="text-sm text-ink mb-2">{note.content}</p>
+                <p className="text-xs text-muted">
                   Added on {formatDate(note.createdAt)}
                 </p>
               </div>
@@ -938,8 +936,8 @@ export default function AgreementDetail() {
     <Suspense fallback={
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">Loading...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted">Loading...</p>
         </div>
       </div>
     }>

@@ -25,11 +25,24 @@
   --warn: #b07d2a;
   --alert: #b3392b;
 
+  font-family: var(--font-ui), system-ui, sans-serif;
+
   /* Legacy brand alias — ~158 usages pick up Coral without file edits */
   --accent: var(--coral);
   --accent-rgb: 192, 85, 47;
   --accent-soft: #d4785a;
   --accent-faint: #e8b5a3;
+}
+
+[data-surface='client'] .client-page-title {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+[data-surface='client'] .client-title-rule {
+  height: 2px;
+  width: 4rem;
+  background-color: var(--coral);
+  margin-top: 0.75rem;
 }
 
 [data-surface='admin'] {

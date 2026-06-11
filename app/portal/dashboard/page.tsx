@@ -172,16 +172,16 @@ export default function PortalDashboard() {
     switch (status) {
       case 'SIGNED':
       case 'COMPLETED':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200';
+        return 'bg-panel text-success border border-hairline';
       case 'LIVE':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200';
+        return 'bg-panel text-ink border border-hairline';
       case 'DRAFT':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200';
+        return 'bg-panel text-warn border border-hairline';
       case 'CANCELLED':
       case 'VOID':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200';
+        return 'bg-panel text-alert border border-hairline';
       default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-200';
+        return 'bg-panel text-muted border border-hairline';
     }
   };
 
@@ -202,8 +202,8 @@ export default function PortalDashboard() {
     return (
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">Loading dashboard...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -212,11 +212,11 @@ export default function PortalDashboard() {
   if (error && !data) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="rounded-lg bg-red-50 border border-red-200 p-6 dark:bg-red-900/20 dark:border-red-800">
-          <p className="text-red-800 dark:text-red-200">{error}</p>
+        <div className="rounded-lg bg-panel border border-alert p-6">
+          <p className="text-alert">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="mt-4 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+            className="mt-4 rounded-md bg-alert px-4 py-2 text-sm font-semibold text-white hover:bg-alert"
           >
             Try Again
           </button>
@@ -232,10 +232,11 @@ export default function PortalDashboard() {
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 className="client-page-title text-3xl font-bold text-ink">
           Welcome to your Client Portal
         </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
+        <div className="client-title-rule" aria-hidden="true" />
+        <p className="mt-3 text-muted">
           Here are all your agreements with Photobooth Guys
         </p>
       </div>
@@ -243,25 +244,25 @@ export default function PortalDashboard() {
       {data && (
         <>
           {/* Client Overview Section */}
-          <div className="mb-8 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-8 rounded-lg border border-hairline bg-panel">
             <button
               onClick={() => setOverviewCollapsed(!overviewCollapsed)}
-              className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              className="w-full flex items-center justify-between p-6 text-left hover:bg-paper transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="text-2xl">👤</div>
+                <UIcon name="user" className="text-2xl text-coral" />
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-ink">
                     Your Event Overview
                   </h2>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm text-muted">
                     {data.client.firstName} {data.client.lastName}
                     {data.client.eventDate && ` • ${new Date(data.client.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`}
                   </p>
                 </div>
               </div>
               <svg
-                className={`h-5 w-5 text-slate-400 transition-transform ${overviewCollapsed ? '' : 'rotate-180'}`}
+                className={`h-5 w-5 text-muted transition-transform ${overviewCollapsed ? '' : 'rotate-180'}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -271,18 +272,18 @@ export default function PortalDashboard() {
             </button>
 
             {!overviewCollapsed && (
-              <div className="border-t border-slate-200 dark:border-slate-800 p-6">
+              <div className="border-t border-hairline p-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {/* Package Booked */}
                   {data.client.eventPackage && (
                     <div>
-                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
                         <UIcon name="box" className="text-base" />
                         Package Booked
                       </h3>
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{data.client.eventPackage}</p>
+                      <p className="text-lg font-semibold text-ink">{data.client.eventPackage}</p>
                       {data.client.packagePrice && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400">${data.client.packagePrice.toFixed(2)}</p>
+                        <p className="text-sm text-muted">${data.client.packagePrice.toFixed(2)}</p>
                       )}
                     </div>
                   )}
@@ -290,11 +291,11 @@ export default function PortalDashboard() {
                   {/* Payment Status */}
                   {relevantAgreement?.paymentStatus && (
                     <div>
-                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
                         <UIcon name="credit-card" className="text-base" />
                         Payment Status
                       </h3>
-                      <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                      <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-panel text-ink">
                         {relevantAgreement.paymentStatus}
                       </span>
                       {relevantAgreement.stripePaymentLink && (
@@ -302,7 +303,7 @@ export default function PortalDashboard() {
                           href={relevantAgreement.stripePaymentLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 block text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                          className="mt-2 block text-sm text-coral hover:text-coral"
                         >
                           Make Payment →
                         </a>
@@ -312,17 +313,17 @@ export default function PortalDashboard() {
 
                   {/* Contact Method */}
                   <div>
-                    <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
                       <UIcon name="phone-call" className="text-base" />
                       Contact Method
                     </h3>
                     <div className="space-y-1">
-                      <p className="flex items-center gap-2 text-sm text-slate-900 dark:text-white">
+                      <p className="flex items-center gap-2 text-sm text-ink">
                         <UIcon name="envelope" className="text-sm shrink-0" />
                         {data.client.email}
                       </p>
                       {data.client.phone && (
-                        <p className="flex items-center gap-2 text-sm text-slate-900 dark:text-white">
+                        <p className="flex items-center gap-2 text-sm text-ink">
                           <UIcon name="smartphone" className="text-sm shrink-0" />
                           {data.client.phone}
                         </p>
@@ -333,13 +334,13 @@ export default function PortalDashboard() {
                   {/* Event Location */}
                   {data.client.eventLocation && (
                     <div>
-                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
                         <UIcon name="marker" className="text-base" />
                         Event Location
                       </h3>
-                      <p className="text-sm text-slate-900 dark:text-white">{data.client.eventLocation}</p>
+                      <p className="text-sm text-ink">{data.client.eventLocation}</p>
                       {data.client.eventType && (
-                        <p className="text-xs text-slate-600 dark:text-slate-400">{data.client.eventType}</p>
+                        <p className="text-xs text-muted">{data.client.eventType}</p>
                       )}
                     </div>
                   )}
@@ -347,12 +348,12 @@ export default function PortalDashboard() {
                   {/* Next Action - Full width */}
                   {relevantAgreement?.nextAction && (
                     <div className="md:col-span-2 lg:col-span-3">
-                      <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 dark:bg-amber-900/10 dark:border-amber-800">
-                        <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-amber-900 dark:text-amber-200">
+                      <div className="rounded-lg bg-panel border border-warn p-4">
+                        <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-warn">
                           <UIcon name="bolt" className="text-base" />
                           Next Action
                         </h3>
-                        <p className="text-base font-semibold text-amber-900 dark:text-amber-100">{relevantAgreement.nextAction}</p>
+                        <p className="text-base font-semibold text-warn">{relevantAgreement.nextAction}</p>
                       </div>
                     </div>
                   )}
@@ -368,8 +369,8 @@ export default function PortalDashboard() {
                 onClick={() => setStatusFilter('all')}
                 className={`rounded-md px-4 py-2 text-sm font-medium ${
                   statusFilter === 'all'
-                    ? 'bg-emerald-600 text-white'
-                    : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-coral text-white'
+                    : 'border border-hairline bg-panel text-ink hover:bg-paper'
                 }`}
               >
                 All ({data.pagination.totalCount})
@@ -380,8 +381,8 @@ export default function PortalDashboard() {
                   onClick={() => setStatusFilter(status)}
                   className={`rounded-md px-4 py-2 text-sm font-medium ${
                     statusFilter === status
-                      ? 'bg-emerald-600 text-white'
-                      : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                      ? 'bg-coral text-white'
+                      : 'border border-hairline bg-panel text-ink hover:bg-paper'
                   }`}
                 >
                   {status} ({data.filters.statusSummary[status] || 0})
@@ -397,11 +398,11 @@ export default function PortalDashboard() {
                 placeholder="Search agreements..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:border-emerald-400 dark:focus:ring-emerald-400"
+                className="rounded-md border border-hairline bg-panel px-3 py-2 text-sm placeholder:text-muted focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               />
               <button
                 type="submit"
-                className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                className="rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
               >
                 Search
               </button>
@@ -410,14 +411,14 @@ export default function PortalDashboard() {
 
           {/* Agreements List */}
           {data.agreements.length === 0 ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-4 flex justify-center text-4xl text-slate-400">
+            <div className="rounded-lg border border-hairline bg-panel p-12 text-center">
+              <div className="mb-4 flex justify-center text-4xl text-muted">
                 <UIcon name="clipboard" className="text-4xl" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+              <h3 className="text-lg font-medium text-ink mb-2">
                 No Agreements Found
               </h3>
-              <p className="text-slate-600 dark:text-slate-300">
+              <p className="text-muted">
                 {statusFilter !== 'all' || searchQuery
                   ? 'Try adjusting your filters or search terms.'
                   : "You don't have any agreements yet."}
@@ -428,17 +429,17 @@ export default function PortalDashboard() {
               {data.agreements.map((agreement) => (
                 <div
                   key={agreement.id}
-                  className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                  className="rounded-lg border border-hairline bg-panel"
                 >
                   <Link
                     href={`/portal/agreement/${agreement.id}`}
-                    className="block p-6 transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    className="block p-6 transition hover:bg-paper"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="mb-3">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                            <h3 className="text-lg font-semibold text-ink">
                               {agreement.summary.templateTitle}
                             </h3>
                             <span
@@ -453,7 +454,7 @@ export default function PortalDashboard() {
                           {/* Event Date - Prominently displayed right below title */}
                           {(agreement.event?.eventDate || data.client.eventDate) && (
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-2 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                              <span className="inline-flex items-center gap-2 text-base font-semibold text-coral">
                                 <UIcon name="calendar" className="text-base" />
                                 {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                               </span>
@@ -464,7 +465,7 @@ export default function PortalDashboard() {
                         {/* Event Name */}
                         {agreement.event?.eventName && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <span className="inline-flex items-center gap-2 text-sm font-medium text-ink">
                               <UIcon name="star" className="text-sm" />
                               {agreement.event.eventName}
                             </span>
@@ -474,7 +475,7 @@ export default function PortalDashboard() {
                         {/* Whitelabel Client Information */}
                         {data.client.isWhitelabelClient && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200">
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-panel text-ink">
                               <UIcon name="building" className="text-xs" />
                               Whitelabel Client
                             </span>
@@ -482,7 +483,7 @@ export default function PortalDashboard() {
                         )}
 
                         {/* Activity Timeline */}
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400 mb-3">
+                        <div className="flex flex-wrap gap-3 text-sm text-muted mb-3">
                           <span className="inline-flex items-center gap-1.5">
                             <UIcon name="paper-plane" className="text-sm" />
                             Sent: {formatDate(agreement.createdAt)}
@@ -505,15 +506,12 @@ export default function PortalDashboard() {
                         {agreement.paymentStatus && (
                           <div className="mb-2">
                             {agreement.paymentStatus.toLowerCase().includes('balance due') || agreement.paymentStatus.toLowerCase().includes('balance') ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold drop-shadow-md" style={{
-                                color: '#d97706',
-                                textShadow: '0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)'
-                              }}>
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-warn bg-panel border border-warn">
                                 <UIcon name="credit-card" className="text-xs" />
                                 {agreement.paymentStatus}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-panel text-ink">
                                 <UIcon name="credit-card" className="text-xs" />
                                 {agreement.paymentStatus}
                               </span>
@@ -524,7 +522,7 @@ export default function PortalDashboard() {
                         {/* Gallery Link */}
                         {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1.5 text-sm text-coral">
                               <UIcon name="camera" className="text-sm" />
                               Gallery Available
                             </span>
@@ -533,7 +531,7 @@ export default function PortalDashboard() {
                       </div>
                       <div className="ml-4">
                         <svg
-                          className="h-5 w-5 text-slate-400"
+                          className="h-5 w-5 text-muted"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -550,11 +548,11 @@ export default function PortalDashboard() {
                   </Link>
 
                   {/* Quick Actions */}
-                  <div className="border-t border-slate-200 dark:border-slate-800 px-6 py-4 bg-slate-50 dark:bg-slate-800/50">
+                  <div className="border-t border-hairline px-6 py-4 bg-paper">
                     <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/portal/agreement/${agreement.id}`}
-                        className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                        className="inline-flex items-center gap-1 rounded-md bg-coral px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
                       >
                         <UIcon name="file" className="text-xs" />
                         View Details
@@ -565,7 +563,7 @@ export default function PortalDashboard() {
                           href={`/agreement/${agreement.uniqueToken}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                          className="inline-flex items-center gap-1 rounded-md border border-hairline bg-panel px-3 py-1.5 text-xs font-medium text-ink hover:bg-paper"
                         >
                           <UIcon name="check" className="text-xs" />
                           View Signed Version
@@ -577,7 +575,7 @@ export default function PortalDashboard() {
                           href={agreement.stripePaymentLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200 dark:hover:bg-blue-900/30"
+                          className="inline-flex items-center gap-1 rounded-md border border-hairline bg-panel px-3 py-1.5 text-xs font-medium text-coral hover:bg-paper"
                         >
                           <UIcon name="credit-card" className="text-xs" />
                           Make Payment
@@ -589,7 +587,7 @@ export default function PortalDashboard() {
                           href={agreement.stripeReceiptLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                          className="inline-flex items-center gap-1 rounded-md border border-hairline bg-panel px-3 py-1.5 text-xs font-medium text-ink hover:bg-paper"
                         >
                           <UIcon name="receipt" className="text-xs" />
                           View Receipt
@@ -600,7 +598,7 @@ export default function PortalDashboard() {
                         href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        className="inline-flex items-center gap-1 rounded-md border border-hairline bg-panel px-3 py-1.5 text-xs font-medium text-ink hover:bg-paper"
                       >
                         <UIcon name="palette" className="text-xs" />
                         Choose Template
@@ -617,16 +615,16 @@ export default function PortalDashboard() {
             <div className="mt-8 flex items-center justify-center gap-2">
               <button
                 disabled={!data.pagination.hasPrev}
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              <span className="text-sm text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-muted">
                 Page {data.pagination.page} of {data.pagination.totalPages}
               </span>
               <button
                 disabled={!data.pagination.hasNext}
-                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>

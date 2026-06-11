@@ -119,23 +119,23 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
 
   // Don't show layout for login page or landing page
   if (typeof window !== 'undefined' && (window.location.pathname === '/portal/login' || window.location.pathname === '/portal')) {
-    return <div data-surface="client">{children}</div>;
+    return <div data-surface="client" className="min-h-screen bg-paper">{children}</div>;
   }
 
   return (
-    <div data-surface="client" className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950">
+    <div data-surface="client" className="min-h-screen bg-paper">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-emerald-200/70 bg-white/70 backdrop-blur dark:border-emerald-800 dark:bg-slate-900/70">
+      <header className="sticky top-0 z-10 border-b border-hairline bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-500 text-white font-bold">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-coral text-white font-bold">
               PG
             </div>
             <div className="leading-tight">
-              <p className="text-sm text-emerald-600 dark:text-emerald-400">Photobooth Guys</p>
-              <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                Client Portal{clientFirstName ? ` - ${clientFirstName}` : ''}
-              </h1>
+              <p className="text-sm font-semibold tracking-wide text-muted uppercase">Photobooth Guys</p>
+              <p className="text-base font-semibold text-ink">
+                Client Portal{clientFirstName ? ` — ${clientFirstName}` : ''}
+              </p>
             </div>
           </div>
           
@@ -144,8 +144,8 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
             {isLoggedIn && (
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
-                  <span className="text-slate-600 dark:text-slate-300">
+                  <div className="h-2 w-2 rounded-full bg-coral"></div>
+                  <span className="text-muted">
                     Session Active
                   </span>
                 </div>
@@ -157,13 +157,13 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
               <nav className="flex items-center gap-4">
                 <Link
                   href="/portal/dashboard"
-                  className="text-sm font-medium text-slate-700 hover:text-emerald-600 dark:text-slate-200 dark:hover:text-emerald-400"
+                  className="text-sm font-medium text-ink hover:text-coral"
                 >
                   Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-offset-slate-900"
+                  className="rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 focus:ring-offset-paper"
                 >
                   Logout
                 </button>
@@ -179,13 +179,13 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-emerald-200 bg-white py-6 dark:border-emerald-800 dark:bg-slate-900">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-slate-500 dark:text-slate-400">
+      <footer className="border-t border-hairline bg-panel py-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-muted">
           <span>© {new Date().getFullYear()} Photobooth Guys • Client Portal</span>
           <div className="flex items-center gap-4">
             <span className="text-xs">Secure • Encrypted</span>
             {!isLoggedIn && (
-              <Link href="/portal/login" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs font-medium">
+              <Link href="/portal/login" className="text-xs font-medium text-coral underline-offset-2 hover:underline">
                 Login
               </Link>
             )}
