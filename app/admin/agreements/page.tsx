@@ -2497,6 +2497,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               };
               const showFollowUpPad = agreement.status === 'LIVE' && agreement.lastEmailedAt &&
                 torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date()) >= 3;
+              const statusHint = buildAgreementStatusHint(agreement);
               return (
               <div key={agreement.id} style={{
                 backgroundColor: cardBg,
@@ -2577,12 +2578,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
+                    alignItems: isMobile ? 'flex-start' : 'center',
+                    gap: isMobile ? '10px' : '12px',
                     padding: '14px 16px',
                     paddingTop: showFollowUpPad ? '36px' : '14px',
                     cursor: 'pointer',
-                    flexWrap: isMobile ? 'wrap' : 'nowrap',
+                    flexWrap: 'nowrap',
                     minHeight: '56px',
                     userSelect: 'none'
                   }}
@@ -2594,12 +2595,13 @@ const normalizePaymentStatus = (value?: string | null) => {
                       fontSize: '14px',
                       color: mutedText,
                       flexShrink: 0,
+                      marginTop: isMobile ? '4px' : 0,
                       transition: prefersReducedMotion ? 'none' : 'transform 0.2s ease',
                       transform: isRowExpanded ? 'rotate(0deg)' : 'rotate(-90deg)'
                     }}
                   />
                   {/* Event date column */}
-                  <div style={{ minWidth: '92px', flexShrink: 0 }}>
+                  <div style={{ minWidth: '92px', flexShrink: 0, paddingTop: isMobile ? '2px' : 0 }}>
                     <div style={{ fontSize: '13px', color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
                       {eventDateObj
                         ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' })
@@ -2651,73 +2653,101 @@ const normalizePaymentStatus = (value?: string | null) => {
                         <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
                       </span>
                     </div>
-                    {attendantName && (
+                    {(attendantName || isMobile) && (
                       <div style={{
-                        fontSize: '12px',
-                        color: mutedText,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        marginTop: '2px'
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginTop: '2px',
+                        minWidth: 0,
                       }}>
-                        Attendant: {attendantName}
-                      </div>
-                    )}
-                  </div>
-                  {/* Engagement hint + email */}
-                  {(() => {
-                    const statusHint = buildAgreementStatusHint(agreement);
-                    return (
-                      <div
-                        style={{
-                          minWidth: isMobile ? '96px' : '120px',
-                          maxWidth: isMobile ? '140px' : '220px',
-                          flexShrink: 1,
-                          textAlign: 'right',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            lineHeight: 1.3,
-                            color: statusHint.urgency === 'danger'
-                              ? 'var(--alert)'
-                              : statusHint.urgency === 'warning'
-                                ? 'var(--warn)'
-                                : mutedText,
-                            fontWeight: statusHint.warn ? 600 : 400,
+                        {attendantName && (
+                          <div style={{
+                            flex: isMobile ? '1 1 0' : undefined,
+                            minWidth: 0,
+                            fontSize: '12px',
+                            color: mutedText,
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                          }}
-                          title={statusHint.text}
-                        >
-                          {statusHint.text}
-                        </div>
-                        {!isMobile && (
+                          }}>
+                            Attendant: {attendantName}
+                          </div>
+                        )}
+                        {isMobile && (
                           <div
                             style={{
+                              flexShrink: attendantName ? 0 : undefined,
                               fontSize: '11px',
                               lineHeight: 1.3,
-                              color: mutedText,
-                              marginTop: '2px',
+                              color: statusHint.urgency === 'danger'
+                                ? 'var(--alert)'
+                                : statusHint.urgency === 'warning'
+                                  ? 'var(--warn)'
+                                  : mutedText,
+                              fontWeight: statusHint.warn ? 600 : 400,
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
+                              maxWidth: attendantName ? '45%' : '100%',
                             }}
-                            title={agreement.client.email}
+                            title={statusHint.text}
                           >
-                            {agreement.client.email}
+                            {statusHint.text}
                           </div>
                         )}
                       </div>
-                    );
-                  })()}
+                    )}
+                  </div>
+                  {/* Engagement hint + email (desktop/tablet only) */}
+                  {!isMobile && (
+                    <div
+                      style={{
+                        minWidth: '120px',
+                        maxWidth: '220px',
+                        flexShrink: 1,
+                        textAlign: 'right',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          lineHeight: 1.3,
+                          color: statusHint.urgency === 'danger'
+                            ? 'var(--alert)'
+                            : statusHint.urgency === 'warning'
+                              ? 'var(--warn)'
+                              : mutedText,
+                          fontWeight: statusHint.warn ? 600 : 400,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                        title={statusHint.text}
+                      >
+                        {statusHint.text}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          lineHeight: 1.3,
+                          color: mutedText,
+                          marginTop: '2px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                        title={agreement.client.email}
+                      >
+                        {agreement.client.email}
+                      </div>
+                    </div>
+                  )}
                   {/* Status badge — click-to-edit; propagation stopped so row doesn't toggle */}
                   <span
                     onClick={(e) => e.stopPropagation()}
-                    style={{ display: 'inline-flex', flexShrink: 0 }}
+                    style={{ display: 'inline-flex', flexShrink: 0, paddingTop: isMobile ? '2px' : 0 }}
                   >
                     <StatusBadge
                       variant={agreementStatusToBadgeVariant(agreement.status)}
@@ -2727,6 +2757,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         setNewStatus(agreement.status);
                       }}
                       title="Click to edit status"
+                      style={isMobile ? { fontSize: '10px', padding: '2px 6px', gap: '3px' } : undefined}
                     >
                       {agreement.status}
                     </StatusBadge>
@@ -2735,8 +2766,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <StatusBadge
                       variant={paymentStatusToBadgeVariant(agreement.paymentStatus)}
                       title="Payment status"
+                      style={isMobile ? { fontSize: '10px', padding: '2px 6px', gap: '3px' } : undefined}
                     >
-                      <UIcon name="credit-card" style={{ fontSize: '12px' }} />
+                      <UIcon name="credit-card" style={{ fontSize: isMobile ? '10px' : '12px' }} />
                       {agreement.paymentStatus}
                     </StatusBadge>
                   )}
