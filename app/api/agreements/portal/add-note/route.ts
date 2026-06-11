@@ -10,6 +10,7 @@ import {
   renderNoticeBlock,
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { logAgreementActivity } from '@/lib/activityLog';
 
 const addNoteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(1000, 'Note content must be less than 1000 characters'),
@@ -182,6 +183,10 @@ export async function POST(request: NextRequest) {
     ).catch(error => {
       console.error('Error sending note notification email:', error);
     });
+
+    if (validatedData.agreementId) {
+      await logAgreementActivity(validatedData.agreementId, 'NOTE_ADDED');
+    }
 
     return NextResponse.json({
       success: true,

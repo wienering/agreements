@@ -8,6 +8,7 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 import { handleApiError } from '@/lib/handleApiError';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { logAgreementActivity } from '@/lib/activityLog';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -182,6 +183,9 @@ export async function POST(request: NextRequest) {
       : false;
 
     const isFinalSignature = requireBoth ? (primarySigned && secondarySigned) : true;
+    const signerMeta = {
+      signer: signerRole === 'primary' ? 'client' : 'secondSigner',
+    } as const;
 
     let updatedAgreement: any;
     if (isFinalSignature) {
@@ -247,6 +251,8 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error('Failed to send client thank you email:', emailError);
       }
+
+      await logAgreementActivity(agreement.id, 'SIGNED', signerMeta);
     } else {
       // Partial signature — agreement stays LIVE; record signedAt only if not yet set,
       // because mergedHtml will be finalized on the second signature.
@@ -276,6 +282,8 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error('Failed to send waiting-on-second-signer email:', emailError);
       }
+
+      await logAgreementActivity(agreement.id, 'SIGNED_SECOND', signerMeta);
     }
 
     // Reshape secondSigner into the same shape verify-email returns, so the

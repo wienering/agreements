@@ -7,6 +7,7 @@ import { escapeHtml } from '@/lib/htmlEscape';
 import { handleApiError } from '@/lib/handleApiError';
 import { renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { logAgreementActivity } from '@/lib/activityLog';
 
 const cancelAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -67,6 +68,8 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send cancellation email:', emailError);
       // Don't fail the cancellation process if email fails
     }
+
+    await logAgreementActivity(agreement.id, 'CANCELLED');
 
     return NextResponse.json({
       message: 'Agreement cancelled and archived successfully',

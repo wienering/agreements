@@ -9,6 +9,7 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 import { handleApiError } from '@/lib/handleApiError';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { logAgreementActivity } from '@/lib/activityLog';
 
 const sendAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -182,6 +183,8 @@ export async function POST(request: NextRequest) {
           emailSendCount: { increment: 1 }
         }
       });
+
+      await logAgreementActivity(agreement.id, 'SENT', { sendCount: newSendCount });
 
       return NextResponse.json({
         message: 'Agreement sent successfully',

@@ -115,8 +115,24 @@ model Agreement {
   signatures         Signature[]
   auditLogs          AuditLog[]
   notes              ClientNote[]
+  activities         AgreementActivity[]
+
+  chaserPaused       Boolean               @default(false)
+  reminderCount      Int                   @default(0)
+  lastReminderAt     DateTime?
 
   @@index([secondSignerEmail])
+}
+
+model AgreementActivity {
+  id          String                @id @default(cuid())
+  agreementId String
+  type        AgreementActivityType
+  meta        Json?
+  createdAt   DateTime              @default(now())
+  agreement   Agreement             @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@index([agreementId, createdAt])
 }
 
 model AgreementField {
@@ -284,6 +300,16 @@ enum AgreementStatus {
   LIVE
   COMPLETED
   CANCELLED
+}
+
+enum AgreementActivityType {
+  SENT
+  VIEWED
+  SIGNED
+  SIGNED_SECOND
+  REMINDER_SENT
+  CANCELLED
+  NOTE_ADDED
 }
 
 enum LeadStage {

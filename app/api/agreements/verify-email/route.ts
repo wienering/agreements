@@ -9,6 +9,7 @@ import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
+import { logAgreementActivity } from '@/lib/activityLog';
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
           devLog('[verify-email] First view - sending view alert email...');
           const sent = await sendViewAlertEmail(agreement, getClientIP(request), request.headers.get('user-agent') || 'Unknown');
           devLog('[verify-email] View alert email result:', sent ? 'SENT' : 'FAILED');
+          await logAgreementActivity(agreement.id, 'VIEWED');
         }
       } catch (viewErr) {
         console.error('[verify-email] View tracking/email failed (non-blocking):', viewErr);
