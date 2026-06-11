@@ -18,13 +18,11 @@ export interface AgreementTemplate {
 
 export function SmartFieldItem({
   field,
-  isDark,
   textColor,
   isCopied,
   onCopy,
 }: {
   field: string;
-  isDark: boolean;
   textColor: string;
   isCopied: boolean;
   onCopy: (field: string) => void;
@@ -34,7 +32,7 @@ export function SmartFieldItem({
       onClick={() => onCopy(field)}
       style={{
         padding: '8px 12px',
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        backgroundColor: 'var(--admin-bg)',
         borderRadius: '4px',
         fontSize: '14px',
         fontFamily: 'monospace',
@@ -48,10 +46,10 @@ export function SmartFieldItem({
         justifyContent: 'space-between',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
+        e.currentTarget.style.backgroundColor = 'var(--admin-surface)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = isDark ? '#080c08' : '#f8fafc';
+        e.currentTarget.style.backgroundColor = 'var(--admin-bg)';
       }}
       title="Click to copy to clipboard"
     >
@@ -88,7 +86,6 @@ export function SortableTemplateItem({
   isExpanded,
   onTogglePreview,
   isMobile,
-  isDark,
   cardBg,
   borderColor,
   textColor,
@@ -102,7 +99,6 @@ export function SortableTemplateItem({
   isExpanded: boolean;
   onTogglePreview: (templateId: string) => void;
   isMobile: boolean;
-  isDark: boolean;
   cardBg: string;
   borderColor: string;
   textColor: string;
@@ -144,7 +140,7 @@ export function SortableTemplateItem({
       onMouseEnter={(e) => {
         if (!isDragging) {
           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-          e.currentTarget.style.borderColor = isDark ? '#4b5563' : '#cbd5e1';
+          e.currentTarget.style.borderColor = 'var(--admin-hairline)';
         }
       }}
       onMouseLeave={(e) => {
@@ -167,8 +163,8 @@ export function SortableTemplateItem({
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'grab',
-          color: isDark ? '#8f9a8f' : '#64748b',
-          backgroundColor: isDark ? '#374151' : '#f1f5f9',
+          color: 'var(--admin-muted)',
+          backgroundColor: 'var(--admin-surface-raised)',
           borderRadius: '4px',
           border: `1px solid ${borderColor}`,
           fontSize: '14px',
@@ -177,12 +173,12 @@ export function SortableTemplateItem({
           zIndex: 10,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = isDark ? '#4b5563' : '#e2e8f0';
-          e.currentTarget.style.color = isDark ? '#ffffff' : '#1e293b';
+          e.currentTarget.style.backgroundColor = 'var(--admin-hairline)';
+          e.currentTarget.style.color = 'var(--admin-text)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f1f5f9';
-          e.currentTarget.style.color = isDark ? '#8f9a8f' : '#64748b';
+          e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
+          e.currentTarget.style.color = 'var(--admin-muted)';
         }}
         title="Drag to reorder"
       >
@@ -220,7 +216,7 @@ export function SortableTemplateItem({
           style={{
             fontSize: '12px',
             color: mutedText,
-            backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
+            backgroundColor: 'var(--admin-surface)',
             padding: '4px 8px',
             borderRadius: '4px',
             alignSelf: isMobile ? 'flex-start' : 'auto',
@@ -235,7 +231,7 @@ export function SortableTemplateItem({
         style={{
           marginBottom: '12px',
           padding: '12px',
-          backgroundColor: isDark ? '#080c08' : '#f8fafc',
+          backgroundColor: 'var(--admin-bg)',
           borderRadius: '6px',
           border: `1px solid ${borderColor}`,
         }}
@@ -249,7 +245,6 @@ export function SortableTemplateItem({
               ? template.htmlContent
               : template.htmlContent.substring(0, 200) + (template.htmlContent.length > 200 ? '...' : '')
           }
-          isDark={isDark}
           style={{
             backgroundColor: 'transparent',
             border: 'none',
@@ -264,7 +259,7 @@ export function SortableTemplateItem({
             onClick={() => onTogglePreview(template.id)}
             style={{
               backgroundColor: 'transparent',
-              color: isDark ? '#82a894' : 'var(--accent)',
+              color: 'var(--gold)',
               border: 'none',
               padding: '8px 0',
               cursor: 'pointer',
@@ -277,10 +272,10 @@ export function SortableTemplateItem({
               gap: '4px',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = isDark ? '#9cb8aa' : 'var(--accent)';
+              e.currentTarget.style.color = 'var(--gold)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = isDark ? '#82a894' : 'var(--accent)';
+              e.currentTarget.style.color = 'var(--gold)';
             }}
           >
             {isExpanded ? (

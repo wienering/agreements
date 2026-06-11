@@ -2,7 +2,6 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
-import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '../../components/AdminButton';
 import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
@@ -30,14 +29,13 @@ export default function BackdropLinksPage() {
   const [formData, setFormData] = useState({ name: '', url: '', displayOrder: 0 });
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const { isDark } = useDarkMode();
   const router = useRouter();
 
-  const mainBg = isDark ? '#080c08' : '#f8fafc';
-  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? '#8f9a8f' : '#64748b';
-  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
+  const mainBg = 'var(--admin-bg)';
+  const cardBg = 'var(--admin-surface)';
+  const textColor = 'var(--admin-text)';
+  const mutedText = 'var(--admin-muted)';
+  const borderColor = 'var(--admin-hairline)';
 
   useEffect(() => {
     fetchBackdropLinks();
@@ -349,16 +347,17 @@ export default function BackdropLinksPage() {
             >
               ← Back
             </button>
-            <h1 style={{ 
-              margin: '0 0 8px 0', 
+            <h1 className="admin-page-title" style={{ 
+              margin: '0', 
               fontSize: '32px', 
               fontWeight: '700', 
               color: textColor 
             }}>
               Backdrop Links Management
             </h1>
-            <p style={{ 
-              margin: '0', 
+            <div className="admin-title-rule" aria-hidden="true" />
+            <p style={{
+              margin: '8px 0 0 0', 
               color: mutedText, 
               fontSize: '16px' 
             }}>
@@ -408,7 +407,7 @@ export default function BackdropLinksPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{
-                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      backgroundColor: 'var(--admin-bg)',
                       borderBottom: `1px solid ${borderColor}`,
                     }}>
                       <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, width: '60px' }}>Order</th>
@@ -423,7 +422,7 @@ export default function BackdropLinksPage() {
                       <tr
                         key={link.id}
                         style={{ borderBottom: `1px solid ${borderColor}`, transition: 'background-color 0.2s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f8fafc'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--admin-surface)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
                         <td style={{ padding: '16px' }}>
@@ -581,7 +580,7 @@ export default function BackdropLinksPage() {
                     padding: '10px',
                     borderRadius: '6px',
                     border: `1px solid ${borderColor}`,
-                    backgroundColor: isDark ? '#080c08' : '#ffffff',
+                    backgroundColor: 'var(--admin-bg)',
                     color: textColor,
                     fontSize: '14px',
                     boxSizing: 'border-box'
@@ -609,7 +608,7 @@ export default function BackdropLinksPage() {
                     padding: '10px',
                     borderRadius: '6px',
                     border: `1px solid ${borderColor}`,
-                    backgroundColor: isDark ? '#080c08' : '#ffffff',
+                    backgroundColor: 'var(--admin-bg)',
                     color: textColor,
                     fontSize: '14px',
                     boxSizing: 'border-box'
@@ -637,7 +636,7 @@ export default function BackdropLinksPage() {
                     padding: '10px',
                     borderRadius: '6px',
                     border: `1px solid ${borderColor}`,
-                    backgroundColor: isDark ? '#080c08' : '#ffffff',
+                    backgroundColor: 'var(--admin-bg)',
                     color: textColor,
                     fontSize: '14px',
                     boxSizing: 'border-box'

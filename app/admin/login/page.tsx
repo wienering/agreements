@@ -13,10 +13,9 @@ export default function AdminLogin() {
   const [canResend, setCanResend] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
   const [environment, setEnvironment] = useState('Production');
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
-  // Set page title
   useEffect(() => {
     document.title = 'Admin Login | Photobooth Guys';
   }, []);
@@ -27,7 +26,6 @@ export default function AdminLogin() {
     }
   }, [status, router]);
 
-  // Detect environment
   useEffect(() => {
     const hostname = window.location.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -39,7 +37,6 @@ export default function AdminLogin() {
     }
   }, []);
 
-  // Resend countdown timer
   useEffect(() => {
     if (resendCountdown > 0) {
       const timer = setTimeout(() => {
@@ -55,15 +52,10 @@ export default function AdminLogin() {
     setIsLoading(true);
     try {
       await signIn('email', { email });
-      // Show success toast
       setShowSuccessToast(true);
       setCanResend(false);
-      setResendCountdown(30); // 30 second cooldown
-      
-      // Hide toast after 5 seconds
-      setTimeout(() => {
-        setShowSuccessToast(false);
-      }, 5000);
+      setResendCountdown(30);
+      setTimeout(() => setShowSuccessToast(false), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -71,28 +63,38 @@ export default function AdminLogin() {
 
   const handleResend = async () => {
     if (!canResend) return;
-    
     setIsLoading(true);
     try {
       await signIn('email', { email });
       setShowSuccessToast(true);
       setCanResend(false);
       setResendCountdown(30);
-      
-      setTimeout(() => {
-        setShowSuccessToast(false);
-      }, 5000);
+      setTimeout(() => setShowSuccessToast(false), 5000);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const envPillClass =
+    environment === 'Production'
+      ? 'bg-admin-surface-raised text-success border border-admin-border'
+      : environment === 'Staging'
+        ? 'bg-admin-surface-raised text-warn border border-admin-border'
+        : 'bg-admin-surface-raised text-alert border border-admin-border';
+
+  const envDotClass =
+    environment === 'Production'
+      ? 'bg-success'
+      : environment === 'Staging'
+        ? 'bg-warn'
+        : 'bg-alert';
+
   if (status === 'loading') {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-admin-bg dark:to-admin-sidebar flex items-center justify-center">
+      <main className="min-h-screen bg-admin-bg flex items-center justify-center text-admin-text">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-admin-accent border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">Loading...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gold border-t-transparent mx-auto mb-4" />
+          <p className="text-admin-muted">Loading...</p>
         </div>
       </main>
     );
@@ -100,101 +102,75 @@ export default function AdminLogin() {
 
   if (status === 'authenticated') {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-admin-bg dark:to-admin-sidebar flex items-center justify-center">
+      <main className="min-h-screen bg-admin-bg flex items-center justify-center text-admin-text">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-admin-accent border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300">Redirecting...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gold border-t-transparent mx-auto mb-4" />
+          <p className="text-admin-muted">Redirecting...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-admin-bg dark:to-admin-sidebar">
-      {/* Success Toast */}
+    <main className="min-h-screen bg-admin-bg text-admin-text">
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
-          <div className="rounded-lg bg-green-50 border border-green-200 p-4 shadow-lg dark:bg-green-900/20 dark:border-green-800">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Magic link sent securely!
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-300">
-                  Check your email for the login link
-                </p>
+        <div className="fixed top-4 right-4 z-50">
+          <div className="rounded-lg border border-admin-border bg-admin-surface p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <UIcon name="check" className="text-success text-lg" />
+              <div>
+                <p className="text-sm font-medium text-admin-text">Magic link sent securely!</p>
+                <p className="text-xs text-admin-muted">Check your email for the login link</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Environment Indicator */}
       <div className="fixed top-4 left-4 z-40">
-        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-          environment === 'Production' 
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200' 
-            : environment === 'Staging'
-            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200'
-            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200'
-        }`}>
-          <div className={`w-2 h-2 rounded-full mr-2 ${
-            environment === 'Production' 
-              ? 'bg-green-400' 
-              : environment === 'Staging'
-              ? 'bg-yellow-400'
-              : 'bg-red-400'
-          }`}></div>
+        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${envPillClass}`}>
+          <div className={`w-2 h-2 rounded-full mr-2 ${envDotClass}`} />
           {environment} Ready
         </div>
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/70 backdrop-blur dark:border-admin-border dark:bg-admin-card/80">
+      <header className="sticky top-0 z-10 border-b border-admin-border bg-admin-surface/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-admin-accent bg-admin-accent/15 font-bold text-admin-accent">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gold font-bold text-[#2A2724]">
               PG
             </div>
             <div className="leading-tight">
-              <p className="text-sm text-slate-500 dark:text-admin-muted">Photobooth Guys</p>
-              <h1 className="text-base font-semibold text-slate-900 dark:text-admin-accent">Agreements</h1>
+              <p className="text-sm text-admin-muted">Photobooth Guys</p>
+              <p className="text-base font-semibold text-gold">Agreements</p>
             </div>
           </div>
           <Link
             href="/"
-            className="rounded-md bg-admin-accent px-4 py-2 text-sm font-semibold text-admin-bg shadow hover:bg-admin-accent-hover focus:outline-none focus:ring-2 focus:ring-admin-accent dark:focus:ring-offset-admin-bg"
+            className="rounded-md bg-gold px-4 py-2 text-sm font-semibold text-[#2A2724] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-admin-bg"
           >
             Back to Home
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Login Card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-lg dark:border-admin-border dark:bg-admin-card">
+          <div className="rounded-xl border border-admin-border bg-admin-surface p-8 shadow-lg">
             <div className="text-center mb-8">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-admin-accent/10">
-                <svg className="h-8 w-8 text-emerald-600 dark:text-admin-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gold/15 border border-gold/30">
+                <UIcon name="lock" className="text-2xl text-gold" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Login</h1>
-              <p className="mt-2 text-sm text-slate-600 dark:text-admin-muted">
+              <h1 className="admin-page-title text-2xl font-bold text-admin-text">Admin Login</h1>
+              <div className="admin-title-rule mx-auto" aria-hidden="true" />
+              <p className="mt-3 text-sm text-admin-muted">
                 We&apos;ll send a magic link to your email address
               </p>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleSignIn(); }} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-white mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-admin-text mb-2">
                   Email Address
                 </label>
                 <input
@@ -203,7 +179,7 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@photoboothguys.ca"
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm placeholder-slate-400 focus:border-admin-accent focus:outline-none focus:ring-1 focus:ring-admin-accent dark:border-admin-border dark:bg-admin-bg dark:text-white dark:placeholder-admin-muted dark:focus:border-admin-accent dark:focus:ring-admin-accent"
+                  className="w-full rounded-md border border-admin-border bg-admin-bg px-3 py-3 text-sm text-admin-text placeholder-admin-muted focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                   required
                 />
               </div>
@@ -211,11 +187,11 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-md bg-admin-accent px-4 py-3 text-sm font-semibold text-admin-bg shadow hover:bg-admin-accent-hover focus:outline-none focus:ring-2 focus:ring-admin-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-admin-bg"
+                className="w-full rounded-md bg-gold px-4 py-3 text-sm font-semibold text-[#2A2724] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2A2724] border-t-transparent mr-2" />
                     Sending Magic Link...
                   </div>
                 ) : (
@@ -223,10 +199,9 @@ export default function AdminLogin() {
                 )}
               </button>
 
-              {/* Resend Button */}
               {!canResend && resendCountdown > 0 && (
                 <div className="text-center">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-admin-muted">
                     Resend available in {resendCountdown}s
                   </p>
                 </div>
@@ -237,11 +212,11 @@ export default function AdminLogin() {
                   type="button"
                   onClick={handleResend}
                   disabled={isLoading}
-                  className="w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-admin-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:border-admin-border dark:bg-admin-card dark:text-slate-200 dark:hover:bg-admin-border dark:focus:ring-offset-admin-bg"
+                  className="w-full rounded-md border border-admin-border bg-transparent px-4 py-2 text-sm font-medium text-admin-text hover:bg-admin-surface-raised focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-transparent mr-2"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-admin-muted border-t-transparent mr-2" />
                       Resending...
                     </div>
                   ) : (
@@ -252,42 +227,37 @@ export default function AdminLogin() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-admin-muted">
                 Check your email for the magic link to access the admin dashboard
               </p>
             </div>
           </div>
 
-          {/* Features */}
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-2 flex justify-center text-slate-600 dark:text-admin-muted">
+            <div className="rounded-lg border border-admin-border bg-admin-surface p-4 text-center">
+              <div className="mb-2 flex justify-center text-admin-muted">
                 <UIcon name="lock" className="text-2xl" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Secure Access</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300">Passwordless authentication</p>
+              <h3 className="text-sm font-semibold text-admin-text">Secure Access</h3>
+              <p className="text-xs text-admin-muted">Passwordless authentication</p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-2 flex justify-center text-slate-600 dark:text-admin-muted">
+            <div className="rounded-lg border border-admin-border bg-admin-surface p-4 text-center">
+              <div className="mb-2 flex justify-center text-admin-muted">
                 <UIcon name="bolt" className="text-2xl" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Quick Login</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300">No passwords to remember</p>
+              <h3 className="text-sm font-semibold text-admin-text">Quick Login</h3>
+              <p className="text-xs text-admin-muted">No passwords to remember</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-slate-500 dark:text-slate-400">
+      <footer className="border-t border-admin-border bg-admin-surface py-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-admin-muted">
           <span>© {new Date().getFullYear()} Photobooth Guys • Agreements</span>
-          <Link href="/" className="hover:text-slate-700 dark:hover:text-slate-200">Back to Home</Link>
+          <Link href="/" className="hover:text-gold">Back to Home</Link>
         </div>
       </footer>
     </main>
   );
 }
-
-
-

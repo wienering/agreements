@@ -9,13 +9,15 @@ interface ToastProps {
   onClose?: () => void;
 }
 
+const INK = '#2A2724';
+
 export default function Toast({ message, type = 'success', duration = 3000, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(() => onClose?.(), 300); // Wait for fade out animation
+      setTimeout(() => onClose?.(), 300);
     }, duration);
 
     return () => clearTimeout(timer);
@@ -29,10 +31,9 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
       zIndex: 9999,
       padding: '12px 20px',
       borderRadius: '8px',
-      color: 'white',
       fontSize: '14px',
       fontWeight: '500',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
       transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
       transition: 'transform 0.3s ease-in-out',
       maxWidth: '300px',
@@ -41,13 +42,13 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
 
     switch (type) {
       case 'success':
-        return { ...baseStyles, backgroundColor: 'var(--accent)' };
+        return { ...baseStyles, backgroundColor: 'var(--gold)', color: INK };
       case 'error':
-        return { ...baseStyles, backgroundColor: '#ef4444' };
+        return { ...baseStyles, backgroundColor: 'var(--alert)', color: '#fff' };
       case 'info':
-        return { ...baseStyles, backgroundColor: 'var(--accent)' };
+        return { ...baseStyles, backgroundColor: 'var(--admin-surface-raised)', color: 'var(--admin-text)', border: '1px solid var(--admin-hairline)' };
       default:
-        return { ...baseStyles, backgroundColor: 'var(--accent)' };
+        return { ...baseStyles, backgroundColor: 'var(--gold)', color: INK };
     }
   };
 
@@ -58,7 +59,6 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
   );
 }
 
-// Hook for managing toasts
 export function useToast() {
   const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: 'success' | 'error' | 'info' }>>([]);
 

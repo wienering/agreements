@@ -1,6 +1,6 @@
 /**
  * Admin warm-charcoal palette — values from docs/design-direction.md.
- * Dark branch is the only active surface (Light Mode removed in stage 2).
+ * Dark-only surface (Light Mode removed in stage 2).
  *
  * Literal accentTokens remain for SVG/chart attributes that cannot use CSS vars.
  */
@@ -12,18 +12,6 @@ export const accentTokens = {
 
 export const adminTheme = {
   dark: {
-    bg: 'var(--admin-bg)',
-    sidebar: 'var(--admin-surface)',
-    card: 'var(--admin-surface)',
-    text: 'var(--admin-text)',
-    muted: 'var(--admin-muted)',
-    border: 'var(--admin-hairline)',
-    surfaceHover: 'var(--admin-surface-raised)',
-    accent: 'var(--accent)',
-    accentHover: 'var(--accent)',
-    accentOn: '#2A2724',
-  },
-  light: {
     bg: 'var(--admin-bg)',
     sidebar: 'var(--admin-surface)',
     card: 'var(--admin-surface)',

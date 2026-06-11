@@ -255,25 +255,25 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          border: `2px dashed ${isDragging ? 'var(--accent)' : '#cbd5e1'}`,
+          border: `2px dashed ${isDragging ? 'var(--gold)' : 'var(--admin-hairline)'}`,
           borderRadius: '8px',
           padding: isMobile ? '24px 16px' : '32px',
           textAlign: 'center',
           cursor: 'pointer',
-          backgroundColor: isDragging ? '#eff6ff' : '#f8fafc',
+          backgroundColor: isDragging ? 'var(--admin-surface-raised)' : 'var(--admin-bg)',
           transition: 'all 0.2s',
           marginBottom: '16px',
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
-            e.currentTarget.style.borderColor = 'var(--accent)';
-            e.currentTarget.style.backgroundColor = '#eff6ff';
+            e.currentTarget.style.borderColor = 'var(--gold)';
+            e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
           }
         }}
         onMouseLeave={(e) => {
           if (!isDragging) {
-            e.currentTarget.style.borderColor = '#cbd5e1';
-            e.currentTarget.style.backgroundColor = '#f8fafc';
+            e.currentTarget.style.borderColor = 'var(--admin-hairline)';
+            e.currentTarget.style.backgroundColor = 'var(--admin-bg)';
           }
         }}
       >
@@ -285,14 +285,14 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
           style={{ display: 'none' }}
           disabled={isUploading}
         />
-                <UIcon name="upload" style={{ fontSize: isMobile ? '36px' : '48px', marginBottom: '12px', color: '#64748b' }} />
-        <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
+                <UIcon name="upload" style={{ fontSize: isMobile ? '36px' : '48px', marginBottom: '12px', color: 'var(--admin-muted)' }} />
+        <div style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '600', marginBottom: '8px', color: 'var(--admin-text)' }}>
           {isUploading ? 'Uploading...' : 'Drag and drop files here'}
         </div>
-        <div style={{ fontSize: isMobile ? '13px' : '14px', color: '#64748b', marginBottom: '12px' }}>
+        <div style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--admin-muted)', marginBottom: '12px' }}>
           or click to browse
         </div>
-        <div style={{ fontSize: isMobile ? '11px' : '12px', color: '#94a3b8' }}>
+        <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--admin-muted)' }}>
           ZIP, JPG, PNG, GIF, WEBP (max 4MB)
         </div>
         {isUploading && (
@@ -300,14 +300,14 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
             <div style={{
               width: '100%',
               height: '8px',
-              backgroundColor: '#e2e8f0',
+              backgroundColor: 'var(--admin-hairline)',
               borderRadius: '4px',
               overflow: 'hidden',
             }}>
               <div style={{
                 width: `${uploadProgress}%`,
                 height: '100%',
-                backgroundColor: 'var(--accent)',
+                backgroundColor: 'var(--gold)',
                 transition: 'width 0.3s',
               }} />
             </div>
@@ -319,10 +319,10 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
       {error && (
         <div style={{
           padding: '12px',
-          backgroundColor: '#fee2e2',
-          border: '1px solid #fecaca',
+          backgroundColor: 'var(--admin-surface)',
+          border: '1px solid var(--alert)',
           borderRadius: '6px',
-          color: '#991b1b',
+          color: 'var(--alert)',
           fontSize: '14px',
           marginBottom: '16px',
         }}>
@@ -333,7 +333,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
       {/* Uploaded Files List */}
       {uploadedFiles.length > 0 && (
         <div style={{ marginTop: '16px' }}>
-          <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#1e293b' }}>
+          <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: 'var(--admin-text)' }}>
             Uploaded Files:
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -345,17 +345,17 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   alignItems: 'center',
                   gap: '12px',
                   padding: '12px',
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--admin-surface)',
+                  border: '1px solid var(--admin-hairline)',
                   borderRadius: '6px',
                 }}
               >
-                <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '24px', color: '#1e293b' }} />
+                <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '24px', color: 'var(--admin-text)' }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: 'var(--admin-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {file.fileName}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--admin-muted)' }}>
                     {formatFileSize(file.fileSize)}
                   </div>
                 </div>
@@ -365,8 +365,8 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   rel="noopener noreferrer"
                   style={{
                     padding: isMobile ? '8px 12px' : '6px 12px',
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
+                    backgroundColor: 'var(--gold)',
+                    color: '#2A2724',
                     borderRadius: '6px',
                     fontSize: isMobile ? '13px' : '12px',
                     fontWeight: '500',
@@ -375,10 +375,10 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                     whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
+                    e.currentTarget.style.backgroundColor = 'var(--gold)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
+                    e.currentTarget.style.backgroundColor = 'var(--gold)';
                   }}
                 >
                   Open
@@ -391,9 +391,9 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   disabled={deletingFileId === file.id}
                   style={{
                     padding: isMobile ? '8px 12px' : '6px 12px',
-                    backgroundColor: deletingFileId === file.id ? '#9ca3af' : '#dc2626',
-                    color: 'white',
-                    border: 'none',
+                    backgroundColor: deletingFileId === file.id ? 'var(--admin-hairline)' : 'transparent',
+                    color: deletingFileId === file.id ? 'var(--admin-muted)' : 'var(--alert)',
+                    border: deletingFileId === file.id ? 'none' : '1px solid var(--alert)',
                     borderRadius: '6px',
                     fontSize: isMobile ? '13px' : '12px',
                     fontWeight: '500',
@@ -403,12 +403,12 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   }}
                   onMouseEnter={(e) => {
                     if (deletingFileId !== file.id) {
-                      e.currentTarget.style.backgroundColor = '#b91c1c';
+                      e.currentTarget.style.backgroundColor = 'rgba(179, 57, 43, 0.08)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (deletingFileId !== file.id) {
-                      e.currentTarget.style.backgroundColor = '#dc2626';
+                      e.currentTarget.style.backgroundColor = 'transparent';
                     }
                   }}
                   title="Delete file from Google Drive"

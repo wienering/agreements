@@ -86,10 +86,10 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           width: '100%',
           minHeight: '200px',
           padding: '12px',
-          border: `1px solid ${isFocused ? 'var(--accent)' : '#d1d5db'}`,
+          border: `1px solid ${isFocused ? 'var(--gold)' : 'var(--admin-hairline)'}`,
           borderRadius: '6px',
-          backgroundColor: '#ffffff',
-          color: '#1f2937',
+          backgroundColor: 'var(--admin-bg)',
+          color: 'var(--admin-text)',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           fontSize: '14px',
           lineHeight: '1.5',
@@ -105,7 +105,7 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
         top: '8px',
         right: '8px',
         fontSize: '12px',
-        color: '#6b7280',
+        color: 'var(--admin-muted)',
         pointerEvents: 'none'
       }}>
         Press Enter for new lines
@@ -122,7 +122,6 @@ export function RichTextPreview({
   agreementId,
   eventData,
   secondSigner,
-  isDark = false
 }: {
   html: string;
   style?: React.CSSProperties;
@@ -130,6 +129,7 @@ export function RichTextPreview({
   agreementId?: string;
   eventData?: any;
   secondSigner?: { enabled?: boolean; firstName?: string; lastName?: string; email?: string; phone?: string } | null;
+  /** @deprecated ignored — always uses admin surface tokens */
   isDark?: boolean;
 }) {
   // Replace smart fields with actual data, showing nothing for blank fields
@@ -226,11 +226,11 @@ export function RichTextPreview({
         padding: '12px',
         border: '1px solid #d1d5db',
         borderRadius: '6px',
-        backgroundColor: isDark ? '#1a1d1a' : '#f9fafb',
+        backgroundColor: 'var(--admin-surface)',
         fontFamily: 'Georgia, serif',
         lineHeight: '1.6',
         fontSize: '16px',
-        color: isDark ? '#ffffff' : '#1f2937',
+        color: 'var(--admin-text)',
         height: '200px', // Fixed height like the text input
         overflowY: 'auto', // Make it scrollable
         whiteSpace: 'pre-wrap', // Preserve line breaks

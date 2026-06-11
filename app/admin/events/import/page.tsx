@@ -2,7 +2,6 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
-import { useDarkMode } from '../../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../components/Toast';
 import Link from 'next/link';
@@ -49,7 +48,6 @@ export default function ImportEventsPage() {
   const [importing, setImporting] = useState(false);
   const [results, setResults] = useState<ImportResponse | null>(null);
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
 
@@ -176,26 +174,27 @@ export default function ImportEventsPage() {
     showToast('Duplicate report exported', 'success');
   };
 
-  const bgColor = isDark ? 'bg-gray-900' : 'bg-white';
-  const textColor = isDark ? 'text-gray-100' : 'text-gray-900';
-  const borderColor = isDark ? 'border-gray-700' : 'border-gray-300';
-  const inputBg = isDark ? 'bg-gray-800' : 'bg-white';
-  const cardBg = isDark ? 'bg-gray-800' : 'bg-gray-50';
+  const bgColor = 'bg-admin-bg';
+  const textColor = 'text-admin-text';
+  const borderColor = 'border-admin-border';
+  const inputBg = 'bg-admin-surface';
+  const cardBg = 'bg-admin-surface';
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} p-4 md:p-8`}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold">Import Events from CSV</h1>
+            <h1 className="admin-page-title text-3xl font-bold text-admin-text">Import Events from CSV</h1>
+            <div className="admin-title-rule" aria-hidden="true" />
             <Link
               href="/admin/clients"
-              className={`px-4 py-2 rounded-lg ${isDark ? 'bg-gray-800 text-gray-100 hover:bg-gray-700' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'} transition-colors`}
+              className={`px-4 py-2 rounded-lg ${'bg-gray-800 text-gray-100 hover:bg-gray-700'} transition-colors`}
             >
               Back to Clients
             </Link>
           </div>
-          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`${'text-admin-muted'}`}>
             Upload a CSV file exported from Bookly to import events. Duplicate events (same client email and event date) will be skipped.
           </p>
         </div>
@@ -206,22 +205,20 @@ export default function ImportEventsPage() {
           
           <div className="space-y-4">
             <div>
-              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              <label className={`block text-sm font-medium mb-2 ${'text-admin-text'}`}>
                 CSV File
               </label>
               <input
                 type="file"
                 accept=".csv"
                 onChange={handleFileChange}
-                className={`block w-full text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
-                  isDark
-                    ? 'file:bg-gray-700 file:text-gray-100 hover:file:bg-gray-600'
-                    : 'file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                className={`block w-full text-sm ${'text-admin-text'} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
+                  'file:bg-gray-700 file:text-gray-100 hover:file:bg-gray-600'
                 }`}
                 disabled={importing}
               />
               {file && (
-                <p className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`mt-2 text-sm ${'text-admin-muted'}`}>
                   Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
                 </p>
               )}
@@ -229,7 +226,7 @@ export default function ImportEventsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium mb-2 ${'text-admin-text'}`}>
                   Start Date (Optional)
                 </label>
                 <input
@@ -239,13 +236,13 @@ export default function ImportEventsPage() {
                   className={`w-full px-4 py-2 rounded-lg ${inputBg} ${borderColor} border ${textColor}`}
                   disabled={importing}
                 />
-                <p className={`mt-1 text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                <p className={`mt-1 text-xs ${'text-admin-muted'}`}>
                   Only import events on or after this date
                 </p>
               </div>
 
               <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium mb-2 ${'text-admin-text'}`}>
                   End Date (Optional)
                 </label>
                 <input
@@ -255,7 +252,7 @@ export default function ImportEventsPage() {
                   className={`w-full px-4 py-2 rounded-lg ${inputBg} ${borderColor} border ${textColor}`}
                   disabled={importing}
                 />
-                <p className={`mt-1 text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                <p className={`mt-1 text-xs ${'text-admin-muted'}`}>
                   Only import events on or before this date
                 </p>
               </div>
@@ -264,11 +261,7 @@ export default function ImportEventsPage() {
             <button
               onClick={handleImport}
               disabled={!file || importing}
-              className={`w-full md:w-auto px-6 py-3 rounded-lg font-semibold transition-colors ${
-                !file || importing
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+              className={`w-full md:w-auto px-6 py-3 rounded-lg font-semibold transition-colors ${!file || importing ? 'bg-admin-hairline text-admin-muted cursor-not-allowed' : 'bg-gold text-[#2A2724] hover:brightness-95'}`}
             >
               {importing ? 'Importing...' : 'Import Events'}
             </button>
@@ -283,20 +276,20 @@ export default function ImportEventsPage() {
               <h2 className="text-xl font-semibold mb-4">Import Summary</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className={`${bgColor} rounded-lg p-4 ${borderColor} border`}>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total Rows</div>
+                  <div className={`text-sm ${'text-admin-muted'}`}>Total Rows</div>
                   <div className="text-2xl font-bold mt-1">{results.summary.total}</div>
                 </div>
                 <div className={`${bgColor} rounded-lg p-4 ${borderColor} border`}>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Imported</div>
-                  <div className="text-2xl font-bold mt-1 text-green-600">{results.summary.imported}</div>
+                  <div className={`text-sm ${'text-admin-muted'}`}>Imported</div>
+                  <div className="text-2xl font-bold mt-1 text-success">{results.summary.imported}</div>
                 </div>
                 <div className={`${bgColor} rounded-lg p-4 ${borderColor} border`}>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Skipped</div>
-                  <div className="text-2xl font-bold mt-1 text-yellow-600">{results.summary.skipped}</div>
+                  <div className={`text-sm ${'text-admin-muted'}`}>Skipped</div>
+                  <div className="text-2xl font-bold mt-1 text-warn">{results.summary.skipped}</div>
                 </div>
                 <div className={`${bgColor} rounded-lg p-4 ${borderColor} border`}>
-                  <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Errors</div>
-                  <div className="text-2xl font-bold mt-1 text-red-600">{results.summary.errors}</div>
+                  <div className={`text-sm ${'text-admin-muted'}`}>Errors</div>
+                  <div className="text-2xl font-bold mt-1 text-alert">{results.summary.errors}</div>
                 </div>
               </div>
             </div>
@@ -312,9 +305,7 @@ export default function ImportEventsPage() {
                 <button
                   onClick={exportDuplicateReport}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isDark
-                      ? 'bg-gray-700 text-gray-100 hover:bg-gray-600'
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                    'bg-gray-700 text-gray-100 hover:bg-gray-600'
                   }`}
                 >
                   Export Report
@@ -322,9 +313,7 @@ export default function ImportEventsPage() {
                 <button
                   onClick={() => setShowDuplicates(!showDuplicates)}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isDark
-                      ? 'bg-gray-700 text-gray-100 hover:bg-gray-600'
-                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                    'bg-gray-700 text-gray-100 hover:bg-gray-600'
                   }`}
                 >
                   {showDuplicates ? 'Hide' : 'Show'} Details
@@ -332,7 +321,7 @@ export default function ImportEventsPage() {
               </div>
             </div>
             
-            <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className={`text-sm mb-4 ${'text-admin-muted'}`}>
               These events already existed (same client email and event date) and were updated with data from the CSV.
               Review the comparison below to see what changed.
             </p>
@@ -347,7 +336,7 @@ export default function ImportEventsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold">Row {dup.row}</h3>
                       <span className={`text-xs px-2 py-1 rounded ${
-                        isDark ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800'
+                        'bg-yellow-900 text-yellow-200'
                       }`}>
                         Duplicate
                       </span>
@@ -356,38 +345,38 @@ export default function ImportEventsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* CSV Data */}
                       <div>
-                        <h4 className={`font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <h4 className={`font-medium mb-2 ${'text-admin-text'}`}>
                           CSV Data (Import File)
                         </h4>
                         <div className={`${cardBg} rounded p-3 space-y-1 text-sm`}>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Email:</span> {dup.csvData.email || dup.csvData.Email || dup.csvData['Customer Email'] || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Event Date:</span> {dup.csvData['Event Date'] || dup.csvData['Booking Date'] || dup.csvData.date || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Event Type:</span> {dup.csvData['Event Type'] || dup.csvData.Service || dup.csvData.type || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Location:</span> {dup.csvData.Location || dup.csvData['Event Location'] || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Package:</span> {dup.csvData.Package || dup.csvData['Event Package'] || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Price:</span> {dup.csvData.Price || dup.csvData['Package Price'] || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Email:</span> {dup.csvData.email || dup.csvData.Email || dup.csvData['Customer Email'] || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Event Date:</span> {dup.csvData['Event Date'] || dup.csvData['Booking Date'] || dup.csvData.date || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Event Type:</span> {dup.csvData['Event Type'] || dup.csvData.Service || dup.csvData.type || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Location:</span> {dup.csvData.Location || dup.csvData['Event Location'] || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Package:</span> {dup.csvData.Package || dup.csvData['Event Package'] || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Price:</span> {dup.csvData.Price || dup.csvData['Package Price'] || 'N/A'}</div>
                         </div>
                       </div>
                       
                       {/* Existing Event */}
                       <div>
-                        <h4 className={`font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <h4 className={`font-medium mb-2 ${'text-admin-text'}`}>
                           Existing Event (Database)
                         </h4>
                         <div className={`${cardBg} rounded p-3 space-y-1 text-sm`}>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Event ID:</span> {dup.existingEvent.id}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Client:</span> {dup.existingEvent.client ? `${dup.existingEvent.client.firstName} ${dup.existingEvent.client.lastName}`.trim() || dup.existingEvent.client.email : 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Event Date:</span> {dup.existingEvent.eventDate ? new Date(dup.existingEvent.eventDate).toLocaleDateString() : 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Event Type:</span> {dup.existingEvent.eventType || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Location:</span> {dup.existingEvent.eventLocation || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Package:</span> {dup.existingEvent.eventPackage || 'N/A'}</div>
-                          <div><span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Price:</span> {dup.existingEvent.packagePrice || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Event ID:</span> {dup.existingEvent.id}</div>
+                          <div><span className={'text-admin-muted'}>Client:</span> {dup.existingEvent.client ? `${dup.existingEvent.client.firstName} ${dup.existingEvent.client.lastName}`.trim() || dup.existingEvent.client.email : 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Event Date:</span> {dup.existingEvent.eventDate ? new Date(dup.existingEvent.eventDate).toLocaleDateString() : 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Event Type:</span> {dup.existingEvent.eventType || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Location:</span> {dup.existingEvent.eventLocation || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Package:</span> {dup.existingEvent.eventPackage || 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Price:</span> {dup.existingEvent.packagePrice || 'N/A'}</div>
                         </div>
                       </div>
                     </div>
                     
                     <div className={`mt-3 pt-3 ${borderColor} border-t`}>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      <p className={`text-xs ${'text-admin-muted'}`}>
                         <strong>Match Reason:</strong> {dup.matchReason}
                       </p>
                     </div>
@@ -401,7 +390,7 @@ export default function ImportEventsPage() {
             {/* Errors Section */}
             {results.summary.errors > 0 && (
               <div className={`${cardBg} rounded-lg p-6 ${borderColor} border`}>
-                <h2 className="text-xl font-semibold mb-4 text-red-600">Errors ({results.summary.errors})</h2>
+                <h2 className="text-xl font-semibold mb-4 text-alert">Errors ({results.summary.errors})</h2>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {results.details
                     .filter(d => d.status === 'error')
@@ -413,7 +402,7 @@ export default function ImportEventsPage() {
                         <div className="flex items-start justify-between">
                           <div>
                             <span className="font-medium">Row {detail.row}:</span>
-                            <span className={`ml-2 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                            <span className={`ml-2 ${'text-alert'}`}>
                               {detail.error}
                             </span>
                           </div>
@@ -427,7 +416,7 @@ export default function ImportEventsPage() {
             {/* Imported Events Section */}
             {results.summary.imported > 0 && (
               <div className={`${cardBg} rounded-lg p-6 ${borderColor} border`}>
-                <h2 className="text-xl font-semibold mb-4 text-green-600">
+                <h2 className="text-xl font-semibold mb-4 text-success">
                   Successfully Imported ({results.summary.imported})
                 </h2>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -442,12 +431,12 @@ export default function ImportEventsPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="font-medium">Row {detail.row}:</span>
-                            <span className={`ml-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <span className={`ml-2 ${'text-admin-text'}`}>
                               {detail.clientEmail} - {detail.eventDate ? new Date(detail.eventDate).toLocaleDateString() : 'No date'}
                             </span>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded ${
-                            isDark ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
+                            'bg-green-900 text-green-200'
                           }`}>
                             Imported
                           </span>
@@ -455,7 +444,7 @@ export default function ImportEventsPage() {
                       </div>
                     ))}
                   {results.summary.imported > 50 && (
-                    <p className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-sm mt-2 ${'text-admin-muted'}`}>
                       ... and {results.summary.imported - 50} more
                     </p>
                   )}

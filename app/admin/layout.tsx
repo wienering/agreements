@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { useDarkMode } from '../contexts/DarkModeContext';
 import { useState, useEffect } from 'react';
 import { adminTheme } from '../lib/adminTheme';
 import { UIcon } from '../components/UIcon';
 import { AdminButton } from '../components/AdminButton';
+
+const theme = adminTheme.dark;
+const INK = '#2A2724';
 
 export default function AdminLayout({
   children,
@@ -16,12 +18,10 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const { isDark } = useDarkMode();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileHeaderPressed, setIsMobileHeaderPressed] = useState(false);
 
-  // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -29,7 +29,7 @@ export default function AdminLayout({
         setIsMobileMenuOpen(false);
       }
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -47,43 +47,36 @@ export default function AdminLayout({
     { id: 'attendant-groups', label: 'Attendant Hubs', iconName: 'users-alt', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
   ];
 
-  // Show loading state
   if (status === 'loading') {
     return (
       <div
         data-surface="admin"
         style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        backgroundColor: adminTheme.dark.bg,
-        color: adminTheme.dark.text,
-      }}>
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          backgroundColor: theme.bg,
+          color: theme.text,
+        }}
+      >
         <div style={{ textAlign: 'center' }}>
-          <UIcon name="spinner" className="animate-spin text-2xl text-[#8f9a8f]" style={{ marginBottom: '16px', display: 'inline-flex' }} />
+          <UIcon name="spinner" className="animate-spin text-2xl" style={{ marginBottom: '16px', display: 'inline-flex', color: 'var(--admin-muted)' }} />
           <p style={{ fontSize: '16px' }}>Loading...</p>
         </div>
       </div>
     );
   }
 
-  // If not authenticated, show login page without sidebar
   if (status === 'unauthenticated') {
     return <div data-surface="admin">{children}</div>;
   }
 
-  const sidebarBg = isDark ? adminTheme.dark.sidebar : '#1e293b';
-  const mainBg = isDark ? adminTheme.dark.bg : adminTheme.light.bg;
-  const textColor = isDark ? adminTheme.dark.text : '#0f172a';
-  const cardBg = isDark ? adminTheme.dark.card : '#ffffff';
-  const borderColor = isDark ? adminTheme.dark.border : '#e2e8f0';
   const navActiveBg = 'rgba(var(--accent-rgb), 0.14)';
-  const navHoverBg = adminTheme.dark.surfaceHover;
+  const navHoverBg = theme.surfaceHover;
 
   return (
-    <div data-surface="admin" style={{ display: 'flex', minHeight: '100vh', backgroundColor: mainBg }}>
-      {/* Mobile Menu Overlay */}
+    <div data-surface="admin" style={{ display: 'flex', minHeight: '100vh', backgroundColor: theme.bg }}>
       {isMobile && isMobileMenuOpen && (
         <div
           style={{
@@ -99,13 +92,12 @@ export default function AdminLayout({
         />
       )}
 
-      {/* Sidebar */}
-      <div style={{ 
-        width: isMobile ? '280px' : '250px', 
-        backgroundColor: sidebarBg, 
-        color: 'white', 
+      <div style={{
+        width: isMobile ? '280px' : '250px',
+        backgroundColor: theme.sidebar,
+        color: theme.text,
         padding: '24px 0',
-        boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
+        boxShadow: '2px 0 4px rgba(0,0,0,0.2)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -115,32 +107,31 @@ export default function AdminLayout({
         zIndex: 999,
         transform: isMobile ? (isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
         transition: 'transform 0.3s ease-in-out',
-        overflow: 'hidden'
+        overflow: 'hidden',
       }}>
         <div style={{ padding: '0 24px', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              backgroundColor: 'rgba(var(--accent-rgb), 0.14)', 
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: 'var(--gold)',
               borderRadius: '8px',
-              border: `1px solid ${adminTheme.dark.accent}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '18px',
               fontWeight: 'bold',
-              color: adminTheme.dark.accent
+              color: INK,
             }}>
               PG
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: adminTheme.dark.accent }}>Photobooth Guys</h1>
-              <p style={{ margin: 0, color: adminTheme.dark.muted, fontSize: '12px' }}>Agreements Admin</p>
+              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: 'var(--gold)' }}>Photobooth Guys</h1>
+              <p style={{ margin: 0, color: theme.muted, fontSize: '12px' }}>Agreements Admin</p>
             </div>
           </div>
         </div>
-        
+
         <nav style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -158,7 +149,7 @@ export default function AdminLayout({
                   display: 'flex',
                   padding: '12px 24px',
                   backgroundColor: isActive ? navActiveBg : 'transparent',
-                  color: isActive ? adminTheme.dark.accent : 'rgba(255, 255, 255, 0.88)',
+                  color: isActive ? 'var(--gold)' : theme.text,
                   textDecoration: 'none',
                   alignItems: 'center',
                   gap: '12px',
@@ -184,14 +175,12 @@ export default function AdminLayout({
           })}
         </nav>
 
-        {/* Bottom Actions */}
-        <div style={{ 
-          padding: '16px 24px 32px 24px', 
+        <div style={{
+          padding: '16px 24px 32px 24px',
           marginTop: 'auto',
           flexShrink: 0,
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+          borderTop: `1px solid ${theme.border}`,
         }}>
-          {/* Logout Button */}
           <div>
             <AdminButton
               variant="danger"
@@ -203,7 +192,7 @@ export default function AdminLayout({
               Logout
             </AdminButton>
           </div>
-          <p style={{ margin: '12px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.35 }}>
+          <p style={{ margin: '12px 0 0', fontSize: '10px', color: theme.muted, lineHeight: 1.35 }}>
             <a
               href="https://www.flaticon.com/uicons"
               target="_blank"
@@ -216,21 +205,19 @@ export default function AdminLayout({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ 
-        flex: 1, 
-        backgroundColor: mainBg,
+      <div style={{
+        flex: 1,
+        backgroundColor: theme.bg,
         marginLeft: isMobile ? '0' : '250px',
-        width: isMobile ? '100%' : 'auto'
+        width: isMobile ? '100%' : 'auto',
       }}>
-        {/* Mobile Header */}
         {isMobile && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
             padding: '16px 20px',
-            backgroundColor: cardBg,
-            borderBottom: `1px solid ${borderColor}`,
+            backgroundColor: theme.card,
+            borderBottom: `1px solid ${theme.border}`,
             position: 'sticky',
             top: 0,
             zIndex: 997,
@@ -246,7 +233,7 @@ export default function AdminLayout({
                 minWidth: '48px',
                 backgroundColor: 'transparent',
                 border: 'none',
-                color: textColor,
+                color: theme.text,
                 cursor: 'pointer',
                 padding: '12px',
                 borderRadius: '8px',
@@ -284,20 +271,18 @@ export default function AdminLayout({
                 <div style={{
                   width: '32px',
                   height: '32px',
-                  backgroundColor: 'rgba(var(--accent-rgb), 0.14)',
+                  backgroundColor: 'var(--gold)',
                   borderRadius: '6px',
-                  border: `1px solid ${adminTheme.dark.accent}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  color: adminTheme.dark.accent,
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                  color: INK,
                 }}>
                   PG
                 </div>
-                <span style={{ fontSize: '16px', fontWeight: '600', color: adminTheme.dark.accent }}>
+                <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--gold)' }}>
                   Photobooth Guys
                 </span>
               </Link>

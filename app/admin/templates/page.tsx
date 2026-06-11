@@ -2,7 +2,6 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
-import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import { AdminButton } from '../../components/AdminButton';
@@ -50,7 +49,6 @@ export default function TemplatesPage() {
     htmlContent: '',
     fieldsSchema: {}
   });
-  const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
 
@@ -277,11 +275,11 @@ export default function TemplatesPage() {
     setViewingTemplate(null);
   };
 
-  const mainBg = isDark ? '#080c08' : '#f8fafc';
-  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? '#8f9a8f' : '#64748b';
-  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
+  const mainBg = 'var(--admin-bg)';
+  const cardBg = 'var(--admin-surface)';
+  const textColor = 'var(--admin-text)';
+  const mutedText = 'var(--admin-muted)';
+  const borderColor = 'var(--admin-hairline)';
 
   return (
     <div style={{ 
@@ -308,16 +306,17 @@ export default function TemplatesPage() {
           gap: isMobile ? '16px' : '0'
         }}>
           <div>
-            <h1 style={{ 
-              margin: '0 0 8px 0', 
+            <h1 className="admin-page-title" style={{ 
+              margin: '0', 
               fontSize: isMobile ? '24px' : '32px', 
               fontWeight: '700', 
               color: textColor 
             }}>
               Templates
             </h1>
+            <div className="admin-title-rule" aria-hidden="true" />
             <p style={{ 
-              margin: '0', 
+              margin: '8px 0 0 0', 
               color: mutedText, 
               fontSize: '16px' 
             }}>
@@ -394,7 +393,6 @@ export default function TemplatesPage() {
                 <SmartFieldItem
                   key={field}
                   field={field}
-                  isDark={isDark}
                   textColor={textColor}
                   isCopied={copiedField === field}
                   onCopy={copyToClipboard}
@@ -541,9 +539,8 @@ export default function TemplatesPage() {
                 </label>
                 <RichTextPreview 
                   html={newTemplate.htmlContent || '<p>Enter content above to see preview...</p>'}
-                  isDark={isDark}
                   style={{
-                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                    backgroundColor: 'var(--admin-bg)',
                     borderColor: borderColor
                   }}
                 />
@@ -597,7 +594,6 @@ export default function TemplatesPage() {
                     isExpanded={expandedPreviews.has(template.id)}
                     onTogglePreview={togglePreview}
                     isMobile={isMobile}
-                    isDark={isDark}
                     cardBg={cardBg}
                     borderColor={borderColor}
                     textColor={textColor}
@@ -692,13 +688,12 @@ export default function TemplatesPage() {
               }}>
                 <div style={{
                   padding: '16px',
-                  backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                  backgroundColor: 'var(--admin-bg)',
                   borderRadius: '6px',
                   border: `1px solid ${borderColor}`
                 }}>
                   <RichTextPreview 
                     html={viewingTemplate.htmlContent}
-                    isDark={isDark}
                     style={{
                       backgroundColor: 'transparent',
                       border: 'none',

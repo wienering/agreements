@@ -11,6 +11,13 @@ interface SearchableSelectProps {
   required?: boolean;
 }
 
+const ADMIN_BORDER = 'var(--admin-hairline)';
+const ADMIN_BG = 'var(--admin-bg)';
+const ADMIN_TEXT = 'var(--admin-text)';
+const ADMIN_MUTED = 'var(--admin-muted)';
+const ADMIN_RAISED = 'var(--admin-surface-raised)';
+const INK = '#2A2724';
+
 export default function SearchableSelect({ 
   options, 
   value, 
@@ -69,10 +76,10 @@ export default function SearchableSelect({
         style={{
           width: '100%',
           padding: '8px 12px',
-          border: `1px solid ${style?.borderColor || '#d1d5db'}`,
+          border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
           borderRadius: '4px',
-          backgroundColor: style?.backgroundColor || '#ffffff',
-          color: style?.color || '#1f2937',
+          backgroundColor: style?.backgroundColor || ADMIN_BG,
+          color: style?.color || ADMIN_TEXT,
           fontSize: '14px',
           cursor: 'pointer',
           display: 'flex',
@@ -83,14 +90,14 @@ export default function SearchableSelect({
         }}
       >
         <span style={{ 
-          color: value ? (style?.color || '#1f2937') : '#9ca3af',
+          color: value ? (style?.color || ADMIN_TEXT) : ADMIN_MUTED,
           fontSize: '14px'
         }}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <span style={{ 
           fontSize: '12px',
-          color: '#6b7280',
+          color: ADMIN_MUTED,
           transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
           transition: 'transform 0.2s'
         }}>
@@ -105,10 +112,10 @@ export default function SearchableSelect({
           top: '100%',
           left: 0,
           right: 0,
-          backgroundColor: style?.backgroundColor || '#ffffff',
-          border: `1px solid ${style?.borderColor || '#d1d5db'}`,
+          backgroundColor: style?.backgroundColor || ADMIN_BG,
+          border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
           borderRadius: '4px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.35)',
           zIndex: 1000,
           maxHeight: '200px',
           overflow: 'hidden'
@@ -124,12 +131,12 @@ export default function SearchableSelect({
               style={{
                 width: '100%',
                 padding: '6px 8px',
-                border: `1px solid ${style?.borderColor || '#d1d5db'}`,
+                border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
                 borderRadius: '4px',
                 fontSize: '14px',
                 outline: 'none',
-                backgroundColor: style?.backgroundColor || '#ffffff',
-                color: style?.color || '#1f2937'
+                backgroundColor: style?.backgroundColor || ADMIN_BG,
+                color: style?.color || ADMIN_TEXT
               }}
             />
           </div>
@@ -145,20 +152,20 @@ export default function SearchableSelect({
                     padding: '8px 12px',
                     cursor: 'pointer',
                     fontSize: '14px',
-                    color: style?.color || '#1f2937',
-                    backgroundColor: value === option.value ? '#f3f4f6' : 'transparent',
-                    borderBottom: '1px solid #f3f4f6'
+                    color: style?.color || ADMIN_TEXT,
+                    backgroundColor: value === option.value ? ADMIN_RAISED : 'transparent',
+                    borderBottom: `1px solid ${ADMIN_BORDER}`
                   }}
                   onMouseEnter={(e) => {
                     if (value !== option.value) {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                      e.currentTarget.style.color = '#ffffff';
+                      e.currentTarget.style.backgroundColor = 'var(--gold)';
+                      e.currentTarget.style.color = INK;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (value !== option.value) {
                       e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = style?.color || '#1f2937';
+                      e.currentTarget.style.color = style?.color || ADMIN_TEXT;
                     }
                   }}
                 >
@@ -169,7 +176,7 @@ export default function SearchableSelect({
               <div style={{
                 padding: '8px 12px',
                 fontSize: '14px',
-                color: '#6b7280',
+                color: ADMIN_MUTED,
                 textAlign: 'center'
               }}>
                 No clients found

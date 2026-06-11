@@ -57,11 +57,24 @@
   --warn: #b07d2a;
   --alert: #b3392b;
 
+  font-family: var(--font-ui), system-ui, sans-serif;
+
   /* Legacy brand alias — ~158 usages pick up Gold without file edits */
   --accent: var(--gold);
   --accent-rgb: 198, 160, 77;
   --accent-soft: #d4b96a;
   --accent-faint: #e5d4a8;
+}
+
+[data-surface='admin'] .admin-page-title {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+[data-surface='admin'] .admin-title-rule {
+  height: 2px;
+  width: 4rem;
+  background-color: var(--gold);
+  margin-top: 0.75rem;
 }
 
 :root {

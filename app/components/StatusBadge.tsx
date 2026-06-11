@@ -1,7 +1,6 @@
 'use client';
 
 import { CSSProperties, ReactNode } from 'react';
-import { useDarkMode } from '../contexts/DarkModeContext';
 import { adminTheme } from '../lib/adminTheme';
 
 export type StatusBadgeVariant = 'accent' | 'neutral' | 'warning' | 'danger';
@@ -32,32 +31,32 @@ export function paymentStatusToBadgeVariant(paymentStatus: string): StatusBadgeV
   return 'neutral';
 }
 
+const theme = adminTheme.dark;
+
 export function getStatusBadgeStyles(
   variant: StatusBadgeVariant,
-  isDark: boolean
+  _isDark?: boolean
 ): CSSProperties {
-  const theme = isDark ? adminTheme.dark : adminTheme.light;
-
   const variants: Record<StatusBadgeVariant, CSSProperties> = {
     accent: {
-      color: 'var(--accent)',
-      backgroundColor: isDark ? 'rgba(29, 158, 117, 0.14)' : 'rgba(29, 158, 117, 0.12)',
-      border: `1px solid ${isDark ? 'rgba(29, 158, 117, 0.28)' : 'rgba(29, 158, 117, 0.22)'}`,
+      color: 'var(--gold)',
+      backgroundColor: 'rgba(var(--accent-rgb), 0.14)',
+      border: '1px solid rgba(var(--accent-rgb), 0.28)',
     },
     neutral: {
       color: theme.muted,
-      backgroundColor: isDark ? '#2a322a' : '#f1f5f9',
+      backgroundColor: 'var(--admin-surface-raised)',
       border: `1px solid ${theme.border}`,
     },
     warning: {
-      color: isDark ? '#fbbf24' : '#b45309',
-      backgroundColor: isDark ? 'rgba(251, 191, 36, 0.12)' : 'rgba(245, 158, 11, 0.1)',
-      border: `1px solid ${isDark ? 'rgba(251, 191, 36, 0.28)' : 'rgba(245, 158, 11, 0.25)'}`,
+      color: 'var(--warn)',
+      backgroundColor: 'rgba(176, 125, 42, 0.12)',
+      border: '1px solid rgba(176, 125, 42, 0.28)',
     },
     danger: {
-      color: isDark ? '#f87171' : '#dc2626',
-      backgroundColor: isDark ? 'rgba(248, 113, 113, 0.1)' : 'rgba(220, 38, 38, 0.08)',
-      border: `1px solid ${isDark ? 'rgba(248, 113, 113, 0.25)' : 'rgba(220, 38, 38, 0.18)'}`,
+      color: 'var(--alert)',
+      backgroundColor: 'rgba(179, 57, 43, 0.1)',
+      border: '1px solid rgba(179, 57, 43, 0.25)',
     },
   };
 
@@ -82,8 +81,7 @@ export function StatusBadge({
   title,
   style,
 }: StatusBadgeProps) {
-  const { isDark } = useDarkMode();
-  const base = getStatusBadgeStyles(variant, isDark);
+  const base = getStatusBadgeStyles(variant, true);
   const Tag = onClick ? 'button' : 'span';
 
   return (
