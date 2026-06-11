@@ -2615,22 +2615,33 @@ const normalizePaymentStatus = (value?: string | null) => {
                   />
                   {/* Event date column */}
                   <div style={{
-                    minWidth: isMobile ? '72px' : '92px',
+                    minWidth: isMobile ? '54px' : '92px',
                     flexShrink: 0,
                     paddingTop: isMobile ? '2px' : 0,
                   }}>
                     {isMobile ? (
-                      <div style={{
-                        fontSize: '12px',
-                        color: textColor,
-                        fontWeight: 500,
-                        lineHeight: 1.2,
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {eventDateObj
-                          ? `${eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Toronto' })} · ${formatEventRelativeCompact(eventDateObj)}`
-                          : 'No date'}
-                      </div>
+                      <>
+                        <div style={{
+                          fontSize: '12px',
+                          color: textColor,
+                          fontWeight: 500,
+                          lineHeight: 1.2,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {eventDateObj
+                            ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Toronto' })
+                            : 'No date'}
+                        </div>
+                        <div style={{
+                          fontSize: '10px',
+                          color: mutedText,
+                          lineHeight: 1.2,
+                          marginTop: '2px',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {eventDateObj ? formatEventRelativeCompact(eventDateObj) : '—'}
+                        </div>
+                      </>
                     ) : (
                       <>
                         <div style={{ fontSize: '13px', color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
