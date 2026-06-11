@@ -24,6 +24,7 @@ export async function GET(
         cancelledAt: true,
         reminderCount: true,
         lastReminderAt: true,
+        chaserPaused: true,
         activities: {
           select: {
             id: true,
@@ -55,6 +56,7 @@ export async function GET(
         cancelledAt: legacyFields.cancelledAt,
         reminderCount: legacyFields.reminderCount,
         lastReminderAt: legacyFields.lastReminderAt,
+        chaserPaused: legacyFields.chaserPaused,
       },
     });
   } catch (error) {

@@ -43,6 +43,7 @@ interface Agreement {
   firstViewedAt?: string;
   lastViewedAt?: string;
   unreadNotesCount?: number;
+  chaserPaused?: boolean;
   selectedBackdropName?: string;
   paymentStatus?: string;
   showPhoneNumberAlways?: boolean;
@@ -313,6 +314,7 @@ export default function AgreementsPage() {
   const [trackingTimeline, setTrackingTimeline] = useState<AgreementTimelineEntry[]>([]);
   const [trackingAgreementId, setTrackingAgreementId] = useState<string | null>(null);
   const [loadingTracking, setLoadingTracking] = useState(false);
+  const [updatingChaserPaused, setUpdatingChaserPaused] = useState(false);
   const [clientNotes, setClientNotes] = useState<Array<{ id: string; content: string; createdAt: string }>>([]);
   const [clientNotesAgreementId, setClientNotesAgreementId] = useState<string | null>(null);
   const [loadingClientNotes, setLoadingClientNotes] = useState(false);
@@ -459,6 +461,7 @@ const normalizePaymentStatus = (value?: string | null) => {
       setTrackingTimeline([]);
       setTrackingAgreementId(null);
       setLoadingTracking(false);
+      setUpdatingChaserPaused(false);
     }
   }, [selectedAgreement?.id]);
 
@@ -1143,6 +1146,20 @@ const normalizePaymentStatus = (value?: string | null) => {
             }),
           );
           setTrackingAgreementId(selectedAgreement.id);
+          if (typeof data.legacy?.chaserPaused === 'boolean') {
+            setSelectedAgreement((prev) =>
+              prev?.id === selectedAgreement.id
+                ? { ...prev, chaserPaused: data.legacy.chaserPaused }
+                : prev,
+            );
+            setAgreements((prev) =>
+              prev.map((a) =>
+                a.id === selectedAgreement.id
+                  ? { ...a, chaserPaused: data.legacy.chaserPaused }
+                  : a,
+              ),
+            );
+          }
         } else {
           setTrackingTimeline([]);
         }
@@ -1152,6 +1169,42 @@ const normalizePaymentStatus = (value?: string | null) => {
       } finally {
         setLoadingTracking(false);
       }
+    }
+  };
+
+  const handleToggleChaserPaused = async (chaserPaused: boolean) => {
+    if (!selectedAgreement) return;
+
+    setUpdatingChaserPaused(true);
+    try {
+      const response = await adminFetch('/api/agreements/update-chaser-paused', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: selectedAgreement.id,
+          chaserPaused,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        showToast(data.error || 'Failed to update reminder settings', 'error');
+        return;
+      }
+
+      setSelectedAgreement((prev) =>
+        prev ? { ...prev, chaserPaused } : prev,
+      );
+      setAgreements((prev) =>
+        prev.map((a) =>
+          a.id === selectedAgreement.id ? { ...a, chaserPaused } : a,
+        ),
+      );
+    } catch (error) {
+      console.error('Error updating chaser pause:', error);
+      showToast('Failed to update reminder settings', 'error');
+    } finally {
+      setUpdatingChaserPaused(false);
     }
   };
 
@@ -3995,6 +4048,41 @@ const normalizePaymentStatus = (value?: string | null) => {
                 <div style={{ display: 'grid', gridTemplateRows: editModalSections.tracking ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
                   <div style={{ overflow: 'hidden' }}>
                     <div style={{ padding: '0 16px 12px 16px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                          marginBottom: '12px',
+                          paddingBottom: '12px',
+                          borderBottom: `1px solid ${borderColor}`,
+                        }}
+                      >
+                        <label
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '13px',
+                            color: textColor,
+                            cursor: updatingChaserPaused ? 'wait' : 'pointer',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={Boolean(selectedAgreement?.chaserPaused)}
+                            disabled={updatingChaserPaused}
+                            onChange={(e) => handleToggleChaserPaused(e.target.checked)}
+                          />
+                          Pause automatic reminders
+                        </label>
+                      </div>
+                      {selectedAgreement?.chaserPaused && (
+                        <p style={{ margin: '0 0 12px', fontSize: '13px', color: mutedText, fontStyle: 'italic' }}>
+                          Automatic reminders paused
+                        </p>
+                      )}
                       {loadingTracking ? (
                         <p style={{ margin: 0, fontSize: '13px', color: mutedText, fontStyle: 'italic' }}>
                           Loading activity...

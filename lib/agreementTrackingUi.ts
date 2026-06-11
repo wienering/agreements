@@ -91,8 +91,20 @@ export function getActivityTimelineLabel(
       if (m?.signer === 'client') return 'Client signed';
       if (m?.signer === 'secondSigner') return 'Second signer signed';
       return 'One signer signed';
-    case 'REMINDER_SENT':
-      return 'Reminder sent automatically';
+    case 'REMINDER_SENT': {
+      const recipient =
+        m?.recipient === 'secondSigner'
+          ? 'second signer'
+          : m?.recipient === 'client'
+            ? 'client'
+            : null;
+      const reminderNumber =
+        typeof m?.reminderNumber === 'number' ? m.reminderNumber : null;
+      const base = recipient
+        ? `Reminder sent automatically (to ${recipient})`
+        : 'Reminder sent automatically';
+      return reminderNumber ? `${base}, #${reminderNumber}` : base;
+    }
     case 'CANCELLED':
       return 'Cancelled';
     case 'NOTE_ADDED':
