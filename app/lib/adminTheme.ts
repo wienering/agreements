@@ -21,7 +21,7 @@ export const adminTheme = {
     surfaceHover: 'var(--admin-surface-raised)',
     accent: 'var(--accent)',
     accentHover: 'var(--accent)',
-    accentOn: '#2A2724',
+    accentOn: 'var(--ink)',
   },
 } as const;
 

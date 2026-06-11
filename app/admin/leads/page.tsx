@@ -2,7 +2,6 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
-import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { AdminButton, AdminLink } from '../../components/AdminButton';
 import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
@@ -43,7 +42,6 @@ export default function LeadsPage() {
     document.title = 'Leads | Admin | Photobooth Guys';
   }, []);
 
-  const { isDark } = useDarkMode();
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [followUpLeads, setFollowUpLeads] = useState<Lead[]>([]);
@@ -84,11 +82,11 @@ export default function LeadsPage() {
     notes: '',
   });
 
-  const mainBg = isDark ? '#080c08' : '#f8fafc';
-  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
-  const textColor = isDark ? '#f8fafc' : '#0f172a';
-  const mutedText = isDark ? '#8f9a8f' : '#64748b';
-  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
+  const mainBg = 'var(--admin-bg)';
+  const cardBg = 'var(--admin-surface)';
+  const textColor = 'var(--admin-text)';
+  const mutedText = 'var(--admin-muted)';
+  const borderColor = 'var(--admin-hairline)';
 
   useEffect(() => {
     fetchLeads();
@@ -333,7 +331,6 @@ export default function LeadsPage() {
               backgroundColor: cardBg,
               color: textColor,
               maxWidth: '100%',
-              ...(isDark ? { colorScheme: 'dark' as const } : {}),
             }}
           />
           <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
@@ -403,10 +400,11 @@ export default function LeadsPage() {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700', color: textColor }}>
+            <h1 className="admin-page-title" style={{ margin: '0', fontSize: '28px', fontWeight: '700', color: textColor }}>
               Lead Pipeline
             </h1>
-            <p style={{ margin: 0, color: mutedText, fontSize: '14px' }}>
+            <div className="admin-title-rule" aria-hidden="true" />
+            <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
               Track and nurture quote inquiries through to signed agreements
             </p>
           </div>
@@ -467,7 +465,7 @@ export default function LeadsPage() {
                         type="date"
                         value={nextFollowUp}
                         onChange={(e) => setNextFollowUp(e.target.value)}
-                        style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
+                        style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor }}
                       />
                       <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
                         Save
@@ -508,7 +506,7 @@ export default function LeadsPage() {
                 <div className="admin-table-desktop">
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: isDark ? '#2d3530' : '#f1f5f9' }}>
+                      <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: 'var(--admin-surface-raised)' }}>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Contact</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Event Date</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Stage</th>
@@ -658,7 +656,7 @@ export default function LeadsPage() {
               <h3 style={{ margin: '0 0 20px 0', color: textColor }}>Add Lead</h3>
               <form onSubmit={handleAddLead}>
                 {addLeadError && (
-                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '8px', fontSize: '14px' }}>
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--admin-surface-raised)', color: 'var(--alert)', borderRadius: '8px', fontSize: '14px' }}>
                     {addLeadError}
                   </div>
                 )}
@@ -710,7 +708,7 @@ export default function LeadsPage() {
                       type="date"
                       value={newLead.eventDate}
                       onChange={(e) => setNewLead({ ...newLead, eventDate: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
                     />
                   </div>
                   <div>
@@ -816,7 +814,7 @@ export default function LeadsPage() {
               <h3 style={{ margin: '0 0 20px 0', color: textColor }}>Edit Lead</h3>
               <form onSubmit={handleUpdateLead}>
                 {editLeadError && (
-                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#fef2f2', color: '#dc2626', borderRadius: '8px', fontSize: '14px' }}>
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--admin-surface-raised)', color: 'var(--alert)', borderRadius: '8px', fontSize: '14px' }}>
                     {editLeadError}
                   </div>
                 )}
@@ -868,7 +866,7 @@ export default function LeadsPage() {
                       type="date"
                       value={editLeadForm.eventDate}
                       onChange={(e) => setEditLeadForm({ ...editLeadForm, eventDate: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, ...(isDark ? { colorScheme: 'dark' as const } : {}) }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
                     />
                   </div>
                   <div>

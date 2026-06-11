@@ -2,7 +2,6 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useCallback } from 'react';
-import { useDarkMode } from '../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, Cell } from 'recharts';
 import { UIcon } from '../components/UIcon';
@@ -101,7 +100,6 @@ export default function AdminHome() {
   const [loading, setLoading] = useState(true);
   const [loadingForecast, setLoadingForecast] = useState(true);
   const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'year'>('month');
-  const { isDark } = useDarkMode();
   const router = useRouter();
 
   const fetchStats = useCallback(async () => {
@@ -154,11 +152,11 @@ export default function AdminHome() {
     }
   };
 
-  const mainBg = isDark ? '#080c08' : '#f8fafc';
-  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? '#8f9a8f' : '#64748b';
-  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
+  const mainBg = 'var(--admin-bg)';
+  const cardBg = 'var(--admin-surface)';
+  const textColor = 'var(--admin-text)';
+  const mutedText = 'var(--admin-muted)';
+  const borderColor = 'var(--admin-hairline)';
   // Literal hex (mirrors --accent in globals.css) — recharts passes this
   // through to SVG fill/stroke attributes, which don't resolve CSS vars.
   const accentGreen = accentTokens.accent;
@@ -168,13 +166,13 @@ export default function AdminHome() {
   // panels. Scoped to this page (not the shared cardBg/borderColor) so no
   // other admin page is affected. cardPad uses clamp so the roomier desktop
   // padding tightens on narrow phones, avoiding horizontal overflow at 375px.
-  const cardSurface = isDark ? '#1f241f' : '#ffffff';
-  const cardBorderStrong = isDark ? '#3a443d' : '#d3dce6';
-  const cardShadow = isDark ? '0 1px 3px rgba(0, 0, 0, 0.45)' : '0 1px 3px rgba(15, 23, 42, 0.10)';
+  const cardSurface = 'var(--admin-surface)';
+  const cardBorderStrong = 'var(--admin-hairline)';
+  const cardShadow = '0 1px 3px rgba(0, 0, 0, 0.45)';
   const cardPad = 'clamp(18px, 4vw, 26px)';
   // Neutral fill for prior-month / secondary chart series. Lightened a few
   // shades so history reads clearly against cardSurface; current month stays accent.
-  const neutralBar = isDark ? '#5e7065' : '#dce4ec';
+  const neutralBar = '#5c5650';
 
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
@@ -210,7 +208,7 @@ export default function AdminHome() {
               }}>
                 Photobooth Guys · Agreements admin
               </div>
-              <h1 style={{
+              <h1 className="admin-page-title" style={{
                 margin: 0,
                 fontSize: '22px',
                 fontWeight: 500,
@@ -219,6 +217,7 @@ export default function AdminHome() {
               }}>
                 Overview
               </h1>
+              <div className="admin-title-rule" aria-hidden="true" />
             </div>
 
             <div className="admin-overview-header-actions">
@@ -301,7 +300,7 @@ export default function AdminHome() {
                   // the neutral tail.
                   const SEGMENT_ORDER = ['COMPLETED', 'LIVE', 'SIGNED', 'DRAFT'] as const;
                   const segmentColor: Record<string, string> = {
-                    COMPLETED: 'var(--accent)',
+                    COMPLETED: 'var(--gold)',
                     LIVE: 'var(--accent-soft)',
                     SIGNED: 'var(--accent-faint)',
                     DRAFT: borderColor,
@@ -611,7 +610,7 @@ export default function AdminHome() {
                             transition: 'background-color 0.15s',
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
+                            e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.backgroundColor = 'transparent';
@@ -675,7 +674,7 @@ export default function AdminHome() {
                               <div style={{
                                 fontSize: '14px',
                                 fontWeight: 500,
-                                color: isSoonest ? 'var(--accent)' : textColor,
+                                color: isSoonest ? 'var(--gold)' : textColor,
                                 lineHeight: 1.2,
                                 fontVariantNumeric: 'tabular-nums',
                               }}>
@@ -750,9 +749,9 @@ export default function AdminHome() {
                     borderRadius: '6px',
                     border: 'none',
                     backgroundColor: timePeriod === period
-                      ? (isDark ? accentGreen : 'var(--accent)')
+                      ? 'var(--gold)'
                       : 'transparent',
-                    color: timePeriod === period ? '#ffffff' : mutedText,
+                    color: timePeriod === period ? 'var(--ink)' : mutedText,
                     fontSize: '13px',
                     fontWeight: '500',
                     cursor: 'pointer',
@@ -833,9 +832,9 @@ export default function AdminHome() {
                 </h3>
                 <div style={{
                   padding: '4px 12px',
-                  backgroundColor: warnings.summary.expirationWarnings > 0 ? '#dc2626' :
-                    warnings.summary.redWarnings > 0 ? '#dc2626' : '#f59e0b',
-                  color: 'white',
+                  backgroundColor: warnings.summary.expirationWarnings > 0 ? 'var(--alert)' :
+                    warnings.summary.redWarnings > 0 ? 'var(--alert)' : 'var(--warn)',
+                  color: 'var(--admin-text)',
                   borderRadius: '20px',
                   fontSize: '12px',
                   fontWeight: '600'
@@ -853,15 +852,15 @@ export default function AdminHome() {
                       padding: '12px',
                       borderRadius: '8px',
                       border: `1px solid ${borderColor}`,
-                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      backgroundColor: 'var(--admin-bg)',
                       cursor: 'pointer',
                       transition: 'all 0.2s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#f1f5f9';
+                      e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = isDark ? '#080c08' : '#f8fafc';
+                      e.currentTarget.style.backgroundColor = 'var(--admin-bg)';
                     }}
                   >
                     <div style={{
@@ -873,11 +872,11 @@ export default function AdminHome() {
                     }}>
                       <span style={{ fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}>
                         {warning.warningType === 'expiration' ? (
-                          <UIcon name="clock" style={{ color: '#f59e0b' }} />
+                          <UIcon name="clock" style={{ color: 'var(--warn)' }} />
                         ) : warning.warningType === 'critical' ? (
-                          <UIcon name="siren" style={{ color: '#dc2626' }} />
+                          <UIcon name="siren" style={{ color: 'var(--alert)' }} />
                         ) : (
-                          <UIcon name="circle-exclamation" style={{ color: '#f59e0b' }} />
+                          <UIcon name="circle-exclamation" style={{ color: 'var(--warn)' }} />
                         )}
                       </span>
                       <span style={{
@@ -889,9 +888,9 @@ export default function AdminHome() {
                       </span>
                       <span style={{
                         padding: '2px 6px',
-                        backgroundColor: warning.warningType === 'expiration' ? '#dc2626' :
-                          warning.warningType === 'critical' ? '#dc2626' : '#f59e0b',
-                        color: 'white',
+                        backgroundColor: warning.warningType === 'expiration' ? 'var(--alert)' :
+                          warning.warningType === 'critical' ? 'var(--alert)' : 'var(--warn)',
+                        color: 'var(--admin-text)',
                         borderRadius: '4px',
                         fontSize: '10px',
                         fontWeight: '600'

@@ -34,8 +34,7 @@ export function paymentStatusToBadgeVariant(paymentStatus: string): StatusBadgeV
 const theme = adminTheme.dark;
 
 export function getStatusBadgeStyles(
-  variant: StatusBadgeVariant,
-  _isDark?: boolean
+  variant: StatusBadgeVariant
 ): CSSProperties {
   const variants: Record<StatusBadgeVariant, CSSProperties> = {
     accent: {
@@ -81,7 +80,7 @@ export function StatusBadge({
   title,
   style,
 }: StatusBadgeProps) {
-  const base = getStatusBadgeStyles(variant, true);
+  const base = getStatusBadgeStyles(variant);
   const Tag = onClick ? 'button' : 'span';
 
   return (

@@ -21,12 +21,10 @@ type SharedProps = {
 };
 
 const theme = adminTheme.dark;
-const INK = '#2A2724';
 
 export function getAdminButtonStyles(
   variant: AdminButtonVariant,
   size: AdminButtonSize,
-  _isDark?: boolean,
   opts?: { fullWidth?: boolean; disabled?: boolean }
 ): CSSProperties {
   const height = size === 'compact' ? '30px' : '34px';
@@ -63,7 +61,7 @@ export function getAdminButtonStyles(
   const variants: Record<AdminButtonVariant, CSSProperties> = {
     primary: {
       backgroundColor: 'var(--gold)',
-      color: INK,
+      color: 'var(--ink)',
       border: '1px solid var(--gold)',
     },
     ghost: {
@@ -131,7 +129,7 @@ export function AdminButton({
       disabled={disabled}
       className={`admin-btn ${sizeClass} ${className}`.trim()}
       style={{
-        ...getAdminButtonStyles(variant, size, true, { fullWidth, disabled }),
+        ...getAdminButtonStyles(variant, size, { fullWidth, disabled }),
         ...style,
       }}
       onMouseEnter={(e) => {
@@ -171,7 +169,7 @@ export function AdminLink({
     <a
       className={`admin-btn ${sizeClass} ${className}`.trim()}
       style={{
-        ...getAdminButtonStyles(variant, size, true, { fullWidth }),
+        ...getAdminButtonStyles(variant, size, { fullWidth }),
         ...style,
       }}
       onMouseEnter={(e) => {

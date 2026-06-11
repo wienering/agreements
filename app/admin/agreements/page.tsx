@@ -2524,7 +2524,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         top: '8px',
                         left: '8px',
                         backgroundColor: needsPersonalFollowUp ? 'var(--alert)' : 'var(--warn)',
-                        color: '#2A2724',
+                        color: 'var(--ink)',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         fontSize: '12px',
@@ -3772,7 +3772,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           marginTop: '8px',
                           padding: '8px 16px',
                           backgroundColor: sendingGalleryEmail ? 'var(--admin-hairline)' : 'var(--gold)',
-                          color: '#2A2724',
+                          color: 'var(--ink)',
                           border: 'none',
                           borderRadius: '4px',
                           cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
@@ -3866,7 +3866,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   style={{
                     width: '100%',
                     backgroundColor: saving ? 'var(--admin-hairline)' : 'var(--gold)',
-                    color: '#2A2724',
+                    color: 'var(--ink)',
                     border: 'none',
                     padding: isMobile ? '8px' : '10px',
                     borderRadius: '6px',
@@ -3970,7 +3970,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             style={{
                               width: '100%',
                               backgroundColor: saving ? 'var(--admin-hairline)' : 'var(--gold)',
-                              color: '#2A2724',
+                              color: 'var(--ink)',
                               border: 'none',
                               padding: '8px 12px',
                               borderRadius: '4px',
@@ -5153,7 +5153,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               style={{
                                 display: 'inline-block',
                                 backgroundColor: 'var(--gold)',
-                                color: '#2A2724',
+                                color: 'var(--ink)',
                                 padding: '8px 16px',
                                 borderRadius: '4px',
                                 textDecoration: 'none',
@@ -5196,7 +5196,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       onClick={closeInvoiceModal}
                       style={{
                         backgroundColor: 'var(--gold)',
-                        color: '#2A2724',
+                        color: 'var(--ink)',
                         border: 'none',
                         padding: '12px 24px',
                         borderRadius: '4px',
@@ -5758,7 +5758,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     </p>
                     <div style={{
                       backgroundColor: 'var(--gold)',
-                      color: '#2A2724',
+                      color: 'var(--ink)',
                       padding: '12px 24px',
                       borderRadius: '6px',
                       display: 'inline-block',
@@ -6093,7 +6093,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                   style={{
                     backgroundColor: 'var(--gold)',
-                    color: '#2A2724',
+                    color: 'var(--ink)',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '6px',
@@ -6120,7 +6120,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                   style={{
                     backgroundColor: 'var(--gold)',
-                    color: '#2A2724',
+                    color: 'var(--ink)',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '6px',

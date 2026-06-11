@@ -2,7 +2,6 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import { UIcon } from '../../components/UIcon';
@@ -102,7 +101,6 @@ export default function ClientsPage() {
     eventPhone: '',
     unlimitedPrints: false
   });
-  const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
 
@@ -524,11 +522,11 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
     }
   };
 
-  const mainBg = isDark ? '#080c08' : '#f8fafc';
-  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? '#8f9a8f' : '#64748b';
-  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
+  const mainBg = 'var(--admin-bg)';
+  const cardBg = 'var(--admin-surface)';
+  const textColor = 'var(--admin-text)';
+  const mutedText = 'var(--admin-muted)';
+  const borderColor = 'var(--admin-hairline)';
 
   // Helper function to check if an event has no agreements
   const hasNoAgreements = (event: Event): boolean => {
@@ -553,16 +551,17 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
           gap: isMobile ? '16px' : '0'
         }}>
           <div>
-            <h1 style={{ 
-              margin: '0 0 8px 0', 
+            <h1 className="admin-page-title" style={{ 
+              margin: '0', 
               fontSize: isMobile ? '24px' : '32px', 
               fontWeight: '700', 
               color: textColor 
             }}>
               Clients
             </h1>
+            <div className="admin-title-rule" aria-hidden="true" />
             <p style={{ 
-              margin: '0', 
+              margin: '8px 0 0 0', 
               color: mutedText, 
               fontSize: '16px' 
             }}>
@@ -898,19 +897,19 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         color: textColor,
                         padding: '10px 12px',
                         borderRadius: '6px',
-                        border: `1px solid ${newEvent.unlimitedPrints ? 'var(--accent)' : borderColor}`,
-                        backgroundColor: newEvent.unlimitedPrints ? (isDark ? 'rgba(var(--accent-rgb),0.12)' : 'rgba(var(--accent-rgb),0.08)') : cardBg,
+                        border: `1px solid ${newEvent.unlimitedPrints ? 'var(--gold)' : borderColor}`,
+                        backgroundColor: newEvent.unlimitedPrints ? ('rgba(var(--accent-rgb),0.12)') : cardBg,
                         transition: 'all 0.2s',
                       }}>
                         <input
                           type="checkbox"
                           checked={newEvent.unlimitedPrints}
                           onChange={(e) => setNewEvent({ ...newEvent, unlimitedPrints: e.target.checked })}
-                          style={{ width: '16px', height: '16px', accentColor: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ width: '16px', height: '16px', accentColor: 'var(--gold)', cursor: 'pointer', flexShrink: 0 }}
                         />
                         <span>Unlimited Prints</span>
                         {newEvent.unlimitedPrints && (
-                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--accent)', fontWeight: '600' }}>
+                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--gold)', fontWeight: '600' }}>
                             ∞ Enabled
                           </span>
                         )}
@@ -1409,8 +1408,8 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                       </h3>
                       {client.isWhitelabelClient && (
                         <span style={{
-                          backgroundColor: 'var(--accent)',
-                          color: 'white',
+                          backgroundColor: 'var(--gold)',
+                          color: 'var(--ink)',
                           padding: '2px 8px',
                           borderRadius: '4px',
                           fontSize: '11px',
@@ -1458,8 +1457,8 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           <div key={event.id} style={{
                             marginBottom: '12px',
                             padding: '12px',
-                            backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
-                            border: noAgreements ? '2px solid #f77f00' : `1px solid ${borderColor}`,
+                            backgroundColor: 'var(--admin-surface)',
+                            border: noAgreements ? '2px solid var(--warn)' : `1px solid ${borderColor}`,
                             borderRadius: '6px',
                             boxShadow: noAgreements ? '0 0 8px rgba(247, 127, 0, 0.5), 0 0 16px rgba(247, 127, 0, 0.3)' : 'none'
                           }}>
@@ -1512,7 +1511,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               </p>
                             )}
                             {event.unlimitedPrints && (
-                              <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
+                              <p style={{ margin: '0 0 4px 0', color: 'var(--gold)', fontSize: '14px', fontWeight: '600' }}>
                                 ∞ Unlimited Prints
                               </p>
                             )}
@@ -1555,7 +1554,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                     </div>
                     {/* Fallback: show deprecated client event fields if no events exist */}
                     {(!client.events || client.events.length === 0) && client.eventDate && (
-                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
+                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--admin-surface)', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
                         <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
                           (Legacy event data - will be migrated)
                         </p>
@@ -1585,7 +1584,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                     <span style={{ 
                       fontSize: '12px', 
                       color: mutedText,
-                      backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
+                      backgroundColor: 'var(--admin-surface-raised)',
                       padding: '4px 8px',
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
@@ -1637,7 +1636,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   <div style={{
                     marginTop: '16px',
                     padding: '16px',
-                    backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
+                    backgroundColor: 'var(--admin-surface)',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '8px'
                   }}>

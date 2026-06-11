@@ -129,8 +129,6 @@ export function RichTextPreview({
   agreementId?: string;
   eventData?: any;
   secondSigner?: { enabled?: boolean; firstName?: string; lastName?: string; email?: string; phone?: string } | null;
-  /** @deprecated ignored — always uses admin surface tokens */
-  isDark?: boolean;
 }) {
   // Replace smart fields with actual data, showing nothing for blank fields
   const processPreviewHtml = (html: string) => {
