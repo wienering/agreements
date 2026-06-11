@@ -8,13 +8,18 @@ import {
 } from '@/lib/authorizeBackdropSelection';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { torontoDateKey } from '@/lib/dates';
+import { verifyBackdropSelectionOwnership } from '@/lib/backdropSelectionOwnership';
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_PER_AGREEMENT = 10;
 
+const SECRET_PATH_FAILURE_BODY = { ok: false } as const;
+
 const updateBackdropSelectionSchema = z
   .object({
     agreementId: z.string().min(1).max(64).optional(),
+    attendantId: z.string().min(1).max(64).optional(),
+    backdropId: z.string().min(1).max(64).optional(),
     clientEmail: z.string().email('Invalid email address').optional(),
     clientName: z.string().min(1).max(200).optional(),
     eventDate: z.string().min(1).max(64).optional(),
@@ -35,6 +40,18 @@ const updateBackdropSelectionSchema = z
   );
 
 type BackdropWriteVia = BackdropSelectionAuthVia | 'fallback';
+
+function secretPathRejection(reason: string, context?: Record<string, unknown>): NextResponse {
+  console.warn('[update-backdrop-selection] secret-path rejection', {
+    reason,
+    ...context,
+  });
+  return NextResponse.json(SECRET_PATH_FAILURE_BODY, { status: 400 });
+}
+
+function secretPathSuccess(updatedCount: number): NextResponse {
+  return NextResponse.json({ ok: true, updatedCount }, { status: 200 });
+}
 
 async function isRateLimited(agreementId: string): Promise<boolean> {
   const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
@@ -93,6 +110,25 @@ function writableAgreementWhere(agreementId: string) {
   };
 }
 
+function parseBackdropSelectionBody(
+  body: unknown,
+  via: BackdropSelectionAuthVia,
+): { ok: true; data: z.infer<typeof updateBackdropSelectionSchema> } | { ok: false; response: NextResponse } {
+  try {
+    return { ok: true, data: updateBackdropSelectionSchema.parse(body) };
+  } catch (error) {
+    if (via === 'client' && error instanceof z.ZodError) {
+      return {
+        ok: false,
+        response: secretPathRejection('validation_error', {
+          issues: error.issues.map((issue) => issue.path.join('.')),
+        }),
+      };
+    }
+    throw error;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await authorizeBackdropSelectionUpdate(request);
@@ -101,7 +137,55 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = updateBackdropSelectionSchema.parse(body);
+    const parsed = parseBackdropSelectionBody(body, auth.via);
+    if (!parsed.ok) {
+      return parsed.response;
+    }
+    const validatedData = parsed.data;
+
+    if (auth.via === 'client') {
+      if (!validatedData.agreementId) {
+        return secretPathRejection('legacy_fallback_rejected');
+      }
+
+      if (!validatedData.attendantId) {
+        return secretPathRejection('missing_attendant_id', {
+          agreementId: validatedData.agreementId,
+        });
+      }
+
+      if (!validatedData.clientEmail) {
+        return secretPathRejection('missing_client_email', {
+          agreementId: validatedData.agreementId,
+        });
+      }
+
+      const ownership = await verifyBackdropSelectionOwnership({
+        agreementId: validatedData.agreementId,
+        attendantId: validatedData.attendantId,
+        clientEmail: validatedData.clientEmail,
+      });
+
+      if (!ownership.ok) {
+        return secretPathRejection(ownership.reason, {
+          agreementId: validatedData.agreementId,
+        });
+      }
+
+      const result = await persistBackdropSelection(
+        [ownership.agreementId],
+        validatedData.backdropName,
+        auth.via,
+      );
+
+      if (result.rateLimited) {
+        return secretPathRejection('rate_limited', {
+          agreementId: ownership.agreementId,
+        });
+      }
+
+      return secretPathSuccess(result.updatedCount);
+    }
 
     if (validatedData.agreementId) {
       const agreement = await prisma.agreement.findFirst({
