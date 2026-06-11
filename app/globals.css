@@ -77,6 +77,10 @@
   margin-top: 0.75rem;
 }
 
+[data-surface='admin'] .admin-section-title {
+  font-family: var(--font-display), Georgia, serif;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

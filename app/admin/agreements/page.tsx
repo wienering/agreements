@@ -3,7 +3,6 @@
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { devLog } from '@/lib/logger';
-import { useDarkMode } from '../../contexts/DarkModeContext';
 import { useRouter } from 'next/navigation';
 import { useLockBodyScroll } from '@/lib/useLockBodyScroll';
 import { useToast } from '../../components/Toast';
@@ -95,7 +94,7 @@ function UnreadNotesBadge({ count }: { count: number }) {
         height: '18px',
         padding: count > 9 ? '0 5px' : '0',
         borderRadius: '999px',
-        backgroundColor: '#ef4444',
+        backgroundColor: 'var(--alert)',
         color: '#ffffff',
         fontSize: '10px',
         fontWeight: 700,
@@ -119,7 +118,7 @@ function formatClientNoteTimestamp(createdAt: string): string {
   });
 }
 
-function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): string {
+function buildEngagementTooltipHtml(agreement: Agreement): string {
   const daysSinceEmailed = agreement.lastEmailedAt
     ? Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24))
     : null;
@@ -130,24 +129,24 @@ function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): stri
 
   const statusColor =
     agreement.status === 'SIGNED'
-      ? 'var(--accent)'
+      ? 'var(--success)'
       : agreement.status === 'LIVE'
-        ? 'var(--accent)'
+        ? 'var(--gold)'
         : agreement.status === 'DRAFT'
-          ? '#f59e0b'
+          ? 'var(--warn)'
           : agreement.status === 'COMPLETED'
-            ? '#8b5cf6'
+            ? 'var(--success)'
             : agreement.status === 'CANCELLED'
-              ? '#ef4444'
-              : '#6b7280';
+              ? 'var(--alert)'
+              : 'var(--admin-muted)';
 
   const needsFollowUp = agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3;
   const notViewed = viewCount === 0;
-  const bgColor = isDark ? '#1a1d1a' : '#ffffff';
-  const borderCol = isDark ? '#2d3530' : '#e2e8f0';
-  const textCol = isDark ? '#ffffff' : '#1e293b';
-  const mutedCol = isDark ? '#8f9a8f' : '#64748b';
-  const iconBg = isDark ? '#2d3530' : '#e2e8f0';
+  const bgColor = 'var(--admin-surface)';
+  const borderCol = 'var(--admin-hairline)';
+  const textCol = 'var(--admin-text)';
+  const mutedCol = 'var(--admin-muted)';
+  const iconBg = 'var(--admin-surface-raised)';
 
   const lastEmailText = agreement.lastEmailedAt
     ? 'Last: ' +
@@ -158,7 +157,7 @@ function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): stri
   let followUpHtml = '';
   if (needsFollowUp) {
     followUpHtml =
-      '<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px; display: flex; align-items: center;"><i class="fi fi-rr-bell" aria-hidden="true"></i></span><div><div style="font-weight: 600; font-size: 12px; color: #92400e;">Follow-up needed</div><div style="font-size: 11px; color: #a16207;">' +
+      '<div style="background: var(--admin-surface-raised); border: 1px solid var(--warn); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px;"><span style="font-size: 14px; display: flex; align-items: center;"><i class="fi fi-rr-bell" aria-hidden="true"></i></span><div><div style="font-weight: 600; font-size: 12px; color: var(--warn);">Follow-up needed</div><div style="font-size: 11px; color: var(--admin-muted);">' +
       escapeHtml(String(daysSinceEmailed)) +
       ' days since last email</div></div></div>';
   }
@@ -233,14 +232,14 @@ function buildEngagementTooltipHtml(agreement: Agreement, isDark: boolean): stri
     (needsFollowUp || notViewed ? '12px' : '0') +
     ';">' +
     '<div style="width: 32px; height: 32px; background: ' +
-    (notViewed ? '#fef3c7' : iconBg) +
+    (notViewed ? 'rgba(176, 125, 42, 0.15)' : iconBg) +
     '; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">' +
     (notViewed
       ? '<i class="fi fi-rr-circle-exclamation" aria-hidden="true"></i>'
       : '<i class="fi fi-rr-eye" aria-hidden="true"></i>') +
     '</div>' +
     '<div style="flex: 1;"><div style="font-weight: 600; font-size: 14px; color: ' +
-    (notViewed ? '#f59e0b' : textCol) +
+    (notViewed ? 'var(--warn)' : textCol) +
     ';">' +
     viewCount +
     ' view' +
@@ -422,7 +421,6 @@ const normalizePaymentStatus = (value?: string | null) => {
     secondSignerPhone: '',
     requireBothSignatures: false,
   });
-  const { isDark } = useDarkMode();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
 
@@ -1947,11 +1945,11 @@ const normalizePaymentStatus = (value?: string | null) => {
     }
   };
 
-  const mainBg = isDark ? '#080c08' : '#f8fafc';
-  const cardBg = isDark ? '#1a1d1a' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? '#8f9a8f' : '#64748b';
-  const borderColor = isDark ? '#2d3530' : '#e2e8f0';
+  const mainBg = 'var(--admin-bg)';
+  const cardBg = 'var(--admin-surface)';
+  const textColor = 'var(--admin-text)';
+  const mutedText = 'var(--admin-muted)';
+  const borderColor = 'var(--admin-hairline)';
 
   return (
     <div style={{ 
@@ -1971,16 +1969,17 @@ const normalizePaymentStatus = (value?: string | null) => {
           gap: isMobile ? '16px' : '0'
         }}>
           <div>
-            <h1 style={{ 
-              margin: '0 0 8px 0', 
+            <h1 className="admin-page-title" style={{ 
+              margin: '0', 
               fontSize: isMobile ? '24px' : '32px', 
               fontWeight: '700', 
               color: textColor 
             }}>
               Agreements
             </h1>
+            <div className="admin-title-rule" aria-hidden="true" />
             <p style={{ 
-              margin: '0 0 12px 0', 
+              margin: '8px 0 12px 0', 
               color: mutedText, 
               fontSize: '16px' 
             }}>
@@ -2064,7 +2063,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   outline: 'none'
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--accent)';
+                  e.currentTarget.style.borderColor = 'var(--gold)';
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = borderColor;
@@ -2097,8 +2096,8 @@ const normalizePaymentStatus = (value?: string | null) => {
           {['ALL', 'DRAFT', 'LIVE', 'SENT', 'SIGNED', 'COMPLETED', 'CANCELLED'].map((status) => {
             const isActive = statusFilter === status;
             const filterStyle = isActive
-              ? { ...getStatusBadgeStyles('accent', isDark), borderRadius: '6px', fontWeight: 600 }
-              : { ...getStatusBadgeStyles('neutral', isDark), borderRadius: '6px' };
+              ? { ...getStatusBadgeStyles('accent'), borderRadius: '6px', fontWeight: 600 }
+              : { ...getStatusBadgeStyles('neutral'), borderRadius: '6px' };
 
             return (
               <AdminButton
@@ -2246,7 +2245,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 padding: '16px',
                 border: `1px solid ${borderColor}`,
                 borderRadius: '6px',
-                backgroundColor: isDark ? '#0f1310' : '#f8fafc'
+                backgroundColor: 'var(--admin-bg)'
               }}>
                 <label style={{
                   display: 'flex',
@@ -2450,11 +2449,11 @@ const normalizePaymentStatus = (value?: string | null) => {
               const warningType = getAgreementWarningType(agreement);
               const getWarningBorderStyle = () => {
                 if (warningType === 'expiration') {
-                  return '3px solid #dc2626'; // Red for expiring
+                  return '3px solid var(--alert)'; // Red for expiring
                 } else if (warningType === 'critical') {
-                  return '3px solid #dc2626'; // Red for critical (5+ days)
+                  return '3px solid var(--alert)'; // Red for critical (5+ days)
                 } else if (warningType === 'warning') {
-                  return '3px solid #f59e0b'; // Yellow for warning (3+ days)
+                  return '3px solid var(--warn)'; // Yellow for warning (3+ days)
                 }
                 return `1px solid ${borderColor}`;
               };
@@ -2501,11 +2500,11 @@ const normalizePaymentStatus = (value?: string | null) => {
                     zIndex: 1
                   }}>
                     {warningType === 'expiration' ? (
-                      <UIcon name="clock" style={{ color: '#f59e0b' }} />
+                      <UIcon name="clock" style={{ color: 'var(--warn)' }} />
                     ) : warningType === 'critical' ? (
-                      <UIcon name="siren" style={{ color: '#dc2626' }} />
+                      <UIcon name="siren" style={{ color: 'var(--alert)' }} />
                     ) : (
-                      <UIcon name="circle-exclamation" style={{ color: '#f59e0b' }} />
+                      <UIcon name="circle-exclamation" style={{ color: 'var(--warn)' }} />
                     )}
                   </div>
                 )}
@@ -2524,8 +2523,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                         position: 'absolute',
                         top: '8px',
                         left: '8px',
-                        backgroundColor: needsPersonalFollowUp ? '#dc2626' : '#f59e0b',
-                        color: 'white',
+                        backgroundColor: needsPersonalFollowUp ? 'var(--alert)' : 'var(--warn)',
+                        color: '#2A2724',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         fontSize: '12px',
@@ -2610,9 +2609,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                         document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
                         const tooltip = document.createElement('div');
                         tooltip.className = 'engagement-tooltip';
-                        const bgColor = isDark ? '#1a1d1a' : '#ffffff';
-                        const borderCol = isDark ? '#2d3530' : '#e2e8f0';
-                        const textCol = isDark ? '#ffffff' : '#1e293b';
+                        const bgColor = 'var(--admin-surface)';
+                        const borderCol = 'var(--admin-hairline)';
+                        const textCol = 'var(--admin-text)';
                         tooltip.style.cssText =
                           'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
                           bgColor +
@@ -2621,7 +2620,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
                           textCol +
                           '; overflow: hidden;';
-                        tooltip.innerHTML = buildEngagementTooltipHtml(agreement, isDark);
+                        tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
                         e.currentTarget.appendChild(tooltip);
                       }}
                       onMouseLeave={(e) => {
@@ -2667,9 +2666,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                             fontSize: '11px',
                             lineHeight: 1.3,
                             color: statusHint.urgency === 'danger'
-                              ? '#dc2626'
+                              ? 'var(--alert)'
                               : statusHint.urgency === 'warning'
-                                ? '#f59e0b'
+                                ? 'var(--warn)'
                                 : mutedText,
                             fontWeight: statusHint.warn ? 600 : 400,
                             whiteSpace: 'nowrap',
@@ -2755,13 +2754,13 @@ const normalizePaymentStatus = (value?: string | null) => {
                           </span>
                         )}
                         {attendantName && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent)', fontWeight: 500 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--gold)', fontWeight: 500 }}>
                             <UIcon name="link" style={{ fontSize: '12px' }} />
                             Attendant: {attendantName}
                           </span>
                         )}
                         {agreement.selectedBackdropName && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent)', fontWeight: 500 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--gold)', fontWeight: 500 }}>
                             <UIcon name="camera" style={{ fontSize: '12px' }} />
                             Selected Backdrop: {agreement.selectedBackdropName}
                           </span>
@@ -2906,7 +2905,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         onClick={() => setActivePage(p => Math.max(1, p - 1))}
                         disabled={activePage === 1}
                         style={{
-                          backgroundColor: activePage === 1 ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
+                          backgroundColor: activePage === 1 ? ('var(--admin-hairline)') : 'var(--gold)',
                           color: activePage === 1 ? mutedText : 'white',
                           border: 'none', padding: '6px 14px', borderRadius: '4px',
                           cursor: activePage === 1 ? 'not-allowed' : 'pointer',
@@ -2920,7 +2919,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         onClick={() => setActivePage(p => Math.min(activeTotalPages, p + 1))}
                         disabled={activePage === activeTotalPages}
                         style={{
-                          backgroundColor: activePage === activeTotalPages ? (isDark ? '#2d3530' : '#e2e8f0') : 'var(--accent)',
+                          backgroundColor: activePage === activeTotalPages ? ('var(--admin-hairline)') : 'var(--gold)',
                           color: activePage === activeTotalPages ? mutedText : 'white',
                           border: 'none', padding: '6px 14px', borderRadius: '4px',
                           cursor: activePage === activeTotalPages ? 'not-allowed' : 'pointer',
@@ -2943,17 +2942,17 @@ const normalizePaymentStatus = (value?: string | null) => {
                     gap: '10px',
                     width: '100%',
                     padding: '14px 16px',
-                    backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
-                    border: `1px solid #7c3aed`,
+                    backgroundColor: 'var(--admin-surface)',
+                    border: `1px solid var(--admin-hairline)`,
                     borderRadius: completedExpanded ? '8px 8px 0 0' : '8px',
                     cursor: 'pointer',
-                    color: '#7c3aed',
+                    color: 'var(--success)',
                     fontSize: '15px',
                     fontWeight: '600',
                     textAlign: 'left',
                   }}
                 >
-                  <UIcon name="check" style={{ fontSize: '16px', color: '#7c3aed' }} />
+                  <UIcon name="check" style={{ fontSize: '16px', color: 'var(--success)' }} />
                   Completed Agreements
                   <span style={{ fontSize: '13px', fontWeight: '400', color: mutedText }}>
                     ({completedAgreements.length})
@@ -2964,7 +2963,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 </button>
                 {completedExpanded && (
                   <div style={{
-                    border: `1px solid #7c3aed`,
+                    border: `1px solid var(--admin-hairline)`,
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
                     padding: '16px',
@@ -2974,9 +2973,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                       {paginatedCompleted.map(agreement => {
                         const warningType = getAgreementWarningType(agreement);
                         const getWarningBorderStyle = () => {
-                          if (warningType === 'expiration') return '3px solid #dc2626';
-                          if (warningType === 'critical') return '3px solid #dc2626';
-                          if (warningType === 'warning') return '3px solid #f59e0b';
+                          if (warningType === 'expiration') return '3px solid var(--alert)';
+                          if (warningType === 'critical') return '3px solid var(--alert)';
+                          if (warningType === 'warning') return '3px solid var(--warn)';
                           return `1px solid ${borderColor}`;
                         };
 
@@ -3014,9 +3013,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
                                 const tooltip = document.createElement('div');
                                 tooltip.className = 'engagement-tooltip';
-                                const bgColor = isDark ? '#1a1d1a' : '#ffffff';
-                                const borderCol = isDark ? '#2d3530' : '#e2e8f0';
-                                const textCol = isDark ? '#ffffff' : '#1e293b';
+                                const bgColor = 'var(--admin-surface)';
+                                const borderCol = 'var(--admin-hairline)';
+                                const textCol = 'var(--admin-text)';
                                 tooltip.style.cssText =
                                   'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
                                   bgColor +
@@ -3025,7 +3024,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                                   '; border-radius: 12px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
                                   textCol +
                                   '; overflow: hidden;';
-                                tooltip.innerHTML = buildEngagementTooltipHtml(agreement, isDark);
+                                tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
                                 e.currentTarget.appendChild(tooltip);
                               }}
                               onMouseLeave={(e) => {
@@ -3220,7 +3219,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     transition: 'background-color 0.2s, color 0.2s'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = isDark ? '#374151' : '#f3f4f6';
+                    e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
                     e.currentTarget.style.color = textColor;
                   }}
                   onMouseLeave={(e) => {
@@ -3234,11 +3233,12 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               {/* Section 1: Agreement Content */}
-              <div style={{ marginTop: '8px', marginBottom: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+              <div style={{ marginTop: '8px', marginBottom: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--admin-surface)' }}>
                 <button
                   type="button"
                   onClick={() => setEditModalSections(s => ({ ...s, content: !s.content }))}
                   aria-expanded={editModalSections.content}
+                  className="admin-section-title"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
                 >
                   <span>Agreement Content</span>
@@ -3263,7 +3263,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   onChange={setEditingContent}
                   placeholder="Enter agreement content here..."
                   style={{
-                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                    backgroundColor: 'var(--admin-bg)',
                     color: textColor,
                     borderColor: borderColor
                   }}
@@ -3283,7 +3283,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                   fontWeight: '500', 
 
-                  color: '$' + '{textColor}',
+                  color: textColor,
 
                   fontSize: '14px'
 
@@ -3359,7 +3359,7 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                         border: '1px solid ' + borderColor,
 
-                        backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+                        backgroundColor: 'var(--admin-surface)',
 
                         color: textColor,
 
@@ -3371,13 +3371,13 @@ const normalizePaymentStatus = (value?: string | null) => {
 
                       onMouseEnter={(e) => {
 
-                        e.currentTarget.style.backgroundColor = isDark ? '#2d3530' : '#f1f5f9';
+                        e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
 
                       }}
 
                       onMouseLeave={(e) => {
 
-                        e.currentTarget.style.backgroundColor = isDark ? '#1a1d1a' : '#ffffff';
+                        e.currentTarget.style.backgroundColor = 'var(--admin-surface)';
 
                       }}
 
@@ -3418,9 +3418,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     email: (selectedAgreement as any)?.secondSignerEmail || '',
                     phone: (selectedAgreement as any)?.secondSignerPhone || '',
                   } : null}
-                  isDark={isDark}
                   style={{
-                    backgroundColor: isDark ? '#080c08' : '#fafafa',
+                    backgroundColor: 'var(--admin-bg)',
                     borderColor: borderColor
                   }}
                 />
@@ -3431,11 +3430,12 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               {/* Section 2: Second Signer */}
-              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--admin-surface)' }}>
                 <button
                   type="button"
                   onClick={() => setEditModalSections(s => ({ ...s, secondSigner: !s.secondSigner }))}
                   aria-expanded={editModalSections.secondSigner}
+                  className="admin-section-title"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
                 >
                   <span>Second Signer</span>
@@ -3585,11 +3585,12 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               {/* Section 3: Client Portal Settings */}
-              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--admin-surface)' }}>
                 <button
                   type="button"
                   onClick={() => setEditModalSections(s => ({ ...s, portal: !s.portal }))}
                   aria-expanded={editModalSections.portal}
+                  className="admin-section-title"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
                 >
                   <span>Client Portal Settings</span>
@@ -3676,7 +3677,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     Event Gallery Links
                   </label>
                   {galleryLinks.map((g, i) => (
-                    <div key={i} style={{ marginBottom: '12px', padding: '12px', border: `1px solid ${borderColor}`, borderRadius: '6px', backgroundColor: isDark ? '#080c08' : '#ffffff' }}>
+                    <div key={i} style={{ marginBottom: '12px', padding: '12px', border: `1px solid ${borderColor}`, borderRadius: '6px', backgroundColor: 'var(--admin-bg)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <span style={{ fontSize: '12px', color: mutedText }}>Gallery {i + 1}</span>
                         {galleryLinks.length > 1 && (
@@ -3689,7 +3690,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             style={{
                               background: 'none',
                               border: 'none',
-                              color: '#ef4444',
+                              color: 'var(--alert)',
                               cursor: 'pointer',
                               fontSize: '12px',
                               padding: '2px 6px'
@@ -3770,8 +3771,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                         style={{
                           marginTop: '8px',
                           padding: '8px 16px',
-                          backgroundColor: sendingGalleryEmail ? '#9ca3af' : 'var(--accent)',
-                          color: 'white',
+                          backgroundColor: sendingGalleryEmail ? 'var(--admin-hairline)' : 'var(--gold)',
+                          color: '#2A2724',
                           border: 'none',
                           borderRadius: '4px',
                           cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
@@ -3809,17 +3810,17 @@ const normalizePaymentStatus = (value?: string | null) => {
                           style={{
                             marginTop: '8px',
                             padding: '10px 12px',
-                            backgroundColor: '#dbeafe',
-                            border: '1px solid #93c5fd',
+                            backgroundColor: 'var(--admin-surface-raised)',
+                            border: '1px solid var(--admin-hairline)',
                             borderRadius: '6px',
                             fontSize: '12px',
-                            color: '#1e40af',
+                            color: 'var(--admin-text)',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px'
                           }}
                         >
-                          <UIcon name="check" style={{ fontSize: '16px', color: '#1e40af' }} />
+                          <UIcon name="check" style={{ fontSize: '16px', color: 'var(--success)' }} />
                           <span>
                             <strong>Email sent to client</strong> on {galleryEmailSentAt.toLocaleDateString('en-CA', {
                               year: 'numeric',
@@ -3864,8 +3865,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                   disabled={saving}
                   style={{
                     width: '100%',
-                    backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
-                    color: 'white',
+                    backgroundColor: saving ? 'var(--admin-hairline)' : 'var(--gold)',
+                    color: '#2A2724',
                     border: 'none',
                     padding: isMobile ? '8px' : '10px',
                     borderRadius: '6px',
@@ -3883,11 +3884,12 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               {/* Section 4: Attendant & Backdrop */}
-              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--admin-surface)' }}>
                 <button
                   type="button"
                   onClick={() => setEditModalSections(s => ({ ...s, attendant: !s.attendant }))}
                   aria-expanded={editModalSections.attendant}
+                  className="admin-section-title"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
                 >
                   <span>Attendant &amp; Backdrop</span>
@@ -3967,8 +3969,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                             disabled={saving}
                             style={{
                               width: '100%',
-                              backgroundColor: saving ? '#9ca3af' : 'var(--accent)',
-                              color: 'white',
+                              backgroundColor: saving ? 'var(--admin-hairline)' : 'var(--gold)',
+                              color: '#2A2724',
                               border: 'none',
                               padding: '8px 12px',
                               borderRadius: '4px',
@@ -3995,11 +3997,11 @@ const normalizePaymentStatus = (value?: string | null) => {
                       <div style={{ 
                         marginTop: '8px',
                         padding: '8px 12px',
-                        backgroundColor: isDark ? '#1e3a5f' : '#dbeafe',
-                        border: `1px solid ${isDark ? 'var(--accent)' : 'var(--accent)'}`,
+                        backgroundColor: 'var(--admin-surface-raised)',
+                        border: '1px solid var(--admin-hairline)',
                         borderRadius: '4px',
                         fontSize: '13px',
-                        color: isDark ? '#93c5fd' : '#1e40af',
+                        color: 'var(--admin-text)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
@@ -4010,8 +4012,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                           disabled={saving}
                           style={{
                             backgroundColor: 'transparent',
-                            color: isDark ? '#f87171' : '#dc2626',
-                            border: `1px solid ${isDark ? '#f87171' : '#dc2626'}`,
+                            color: 'var(--alert)',
+                            border: `1px solid ${'var(--alert)'}`,
                             padding: '4px 8px',
                             borderRadius: '4px',
                             cursor: saving ? 'not-allowed' : 'pointer',
@@ -4035,11 +4037,12 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               {/* Section 5: Tracking */}
-              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--admin-surface)' }}>
                 <button
                   type="button"
                   onClick={handleToggleTrackingSection}
                   aria-expanded={editModalSections.tracking}
+                  className="admin-section-title"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
                 >
                   <span>Tracking</span>
@@ -4109,7 +4112,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                                     width: '8px',
                                     height: '8px',
                                     borderRadius: '50%',
-                                    backgroundColor: entry.fromLegacy ? mutedText : 'var(--accent)',
+                                    backgroundColor: entry.fromLegacy ? mutedText : (entry.type === 'SIGNED' || entry.type === 'SIGNED_SECOND' ? 'var(--success)' : 'var(--gold)'),
                                     marginTop: '5px',
                                     flexShrink: 0,
                                   }}
@@ -4151,11 +4154,12 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               {/* Section 6: Client Notes */}
-              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--admin-surface)' }}>
                 <button
                   type="button"
                   onClick={handleToggleClientNotesSection}
                   aria-expanded={editModalSections.clientNotes}
+                  className="admin-section-title"
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -4501,7 +4505,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <UIcon name="circle-exclamation" style={{ color: '#dc2626', fontSize: '20px' }} />
+                <UIcon name="circle-exclamation" style={{ color: 'var(--alert)', fontSize: '20px' }} />
                 Cancel Agreement - Step {cancellationStep} of 4
               </h3>
 
@@ -4604,17 +4608,17 @@ const normalizePaymentStatus = (value?: string | null) => {
               {cancellationStep === 3 && (
                 <div>
                   <div style={{
-                    backgroundColor: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    backgroundColor: 'var(--admin-surface-raised)',
+                    border: '1px solid var(--alert)',
                     borderRadius: '6px',
                     padding: '16px',
                     marginBottom: '16px'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: 'var(--alert)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <UIcon name="circle-exclamation" style={{ fontSize: '18px' }} />
                       Final Confirmation Required
                     </h4>
-                    <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
+                    <p style={{ margin: '0', color: 'var(--alert)', fontSize: '14px' }}>
                       This action will permanently cancel the agreement, move it to the archived section, and notify the client via email. 
                       This cannot be undone.
                     </p>
@@ -4670,18 +4674,18 @@ const normalizePaymentStatus = (value?: string | null) => {
               {cancellationStep === 4 && (
                 <div>
                   <div style={{
-                    backgroundColor: '#fef2f2',
-                    border: '2px solid #dc2626',
+                    backgroundColor: 'var(--admin-surface-raised)',
+                    border: '2px solid var(--alert)',
                     borderRadius: '6px',
                     padding: '20px',
                     marginBottom: '16px',
                     textAlign: 'center'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: 'var(--alert)', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                       <UIcon name="siren" style={{ fontSize: '20px' }} />
                       FINAL WARNING
                     </h4>
-                    <p style={{ margin: '0', color: '#991b1b', fontSize: '16px', fontWeight: '500' }}>
+                    <p style={{ margin: '0', color: 'var(--alert)', fontSize: '16px', fontWeight: '500' }}>
                       You are about to permanently cancel this signed agreement. It will be moved to the archived section.
                     </p>
                   </div>
@@ -4766,7 +4770,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <UIcon name="circle-exclamation" style={{ color: '#f59e0b', fontSize: '20px' }} />
+                <UIcon name="circle-exclamation" style={{ color: 'var(--warn)', fontSize: '20px' }} />
                 Payment Warning
               </h3>
 
@@ -4777,8 +4781,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                 
                 <div style={{
                   padding: '12px',
-                  backgroundColor: isDark ? '#1a1d1a' : '#fef3c7',
-                  border: `1px solid ${isDark ? '#2d3530' : '#fde68a'}`,
+                  backgroundColor: 'var(--admin-surface-raised)',
+                  border: '1px solid var(--admin-hairline)',
                   borderRadius: '6px',
                   marginBottom: '16px'
                 }}>
@@ -4792,7 +4796,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <strong>Template:</strong> {completingAgreement.template.title}
                   </p>
                   <p style={{ margin: '0', color: textColor, fontSize: '14px' }}>
-                    <strong>Current Payment Status:</strong> <span style={{ color: '#f59e0b', fontWeight: '600' }}>{completingAgreement.paymentStatus || 'Not Set'}</span>
+                    <strong>Current Payment Status:</strong> <span style={{ color: 'var(--warn)', fontWeight: '600' }}>{completingAgreement.paymentStatus || 'Not Set'}</span>
                   </p>
                 </div>
 
@@ -4861,7 +4865,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   alignItems: 'center',
                   gap: '8px'
                 }}>
-                  <UIcon name="star" style={{ fontSize: '18px', color: '#f59e0b' }} />
+                  <UIcon name="star" style={{ fontSize: '18px', color: 'var(--warn)' }} />
                   Request Google Review
                 </h3>
                 <button
@@ -4886,7 +4890,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 </p>
                 <div style={{
                   padding: '12px',
-                  backgroundColor: isDark ? '#0b1220' : '#f8fafc',
+                  backgroundColor: 'var(--admin-surface-raised)',
                   border: `1px solid ${borderColor}`,
                   borderRadius: '8px'
                 }}>
@@ -4902,7 +4906,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <div style={{
                 marginBottom: '20px',
                 padding: '12px 16px',
-                backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
+                backgroundColor: 'var(--admin-surface-raised)',
                 border: `1px solid ${borderColor}`,
                 borderRadius: '8px'
               }}>
@@ -4938,7 +4942,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: reviewRequestUseCalgary ? 'var(--accent)' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: reviewRequestUseCalgary ? 'var(--gold)' : ('var(--admin-hairline)'),
                       border: 'none',
                       cursor: sendingReviewRequest[reviewRequestAgreement.id] ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -5065,24 +5069,24 @@ const normalizePaymentStatus = (value?: string | null) => {
               {!creatingInvoice && invoiceResult && invoiceResult.success && (
                 <div>
                   <div style={{
-                    backgroundColor: '#f0fdf4',
-                    border: '1px solid #9cb8aa',
+                    backgroundColor: 'var(--admin-surface-raised)',
+                    border: '1px solid var(--success)',
                     borderRadius: '6px',
                     padding: '16px',
                     marginBottom: '24px'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#16a34a', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: 'var(--success)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <UIcon name="check" style={{ fontSize: '20px' }} />
                       Invoice Created Successfully!
                     </h4>
-                    <p style={{ margin: '0', color: '#166534', fontSize: '14px' }}>
+                    <p style={{ margin: '0', color: 'var(--admin-text)', fontSize: '14px' }}>
                       {invoiceResult.message || `Successfully created ${invoiceResult.invoices?.length || 1} invoice(s). The invoice(s) have been sent to the client via email.`}
                     </p>
                   </div>
 
                   {invoiceResult.invoices && invoiceResult.invoices.length > 0 && (
                     <div style={{
-                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      backgroundColor: 'var(--admin-bg)',
                       border: `1px solid ${borderColor}`,
                       borderRadius: '8px',
                       padding: '20px',
@@ -5111,8 +5115,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                             marginBottom: '12px'
                           }}>
                             <span style={{
-                              backgroundColor: invoice.type === 'deposit' ? '#fef3c7' : invoice.type === 'remaining' ? '#dbeafe' : '#e0e7ff',
-                              color: invoice.type === 'deposit' ? '#92400e' : invoice.type === 'remaining' ? '#1e40af' : '#3730a3',
+                              backgroundColor: 'var(--admin-surface-raised)',
+                              color: invoice.type === 'deposit' ? 'var(--warn)' : 'var(--admin-text)',
                               padding: '4px 12px',
                               borderRadius: '12px',
                               fontSize: '12px',
@@ -5148,8 +5152,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                               rel="noopener noreferrer"
                               style={{
                                 display: 'inline-block',
-                                backgroundColor: 'var(--accent)',
-                                color: 'white',
+                                backgroundColor: 'var(--gold)',
+                                color: '#2A2724',
                                 padding: '8px 16px',
                                 borderRadius: '4px',
                                 textDecoration: 'none',
@@ -5158,10 +5162,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 marginTop: '8px'
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--accent)';
+                                e.currentTarget.style.backgroundColor = 'var(--gold)';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--accent)';
+                                e.currentTarget.style.backgroundColor = 'var(--gold)';
                               }}
                             >
                               View Invoice →
@@ -5191,8 +5195,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <button
                       onClick={closeInvoiceModal}
                       style={{
-                        backgroundColor: 'var(--accent)',
-                        color: 'white',
+                        backgroundColor: 'var(--gold)',
+                        color: '#2A2724',
                         border: 'none',
                         padding: '12px 24px',
                         borderRadius: '4px',
@@ -5211,17 +5215,17 @@ const normalizePaymentStatus = (value?: string | null) => {
               {!creatingInvoice && invoiceError && (
                 <div>
                   <div style={{
-                    backgroundColor: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    backgroundColor: 'var(--admin-surface-raised)',
+                    border: '1px solid var(--alert)',
                     borderRadius: '6px',
                     padding: '16px',
                     marginBottom: '24px'
                   }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: 'var(--alert)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <UIcon name="circle-xmark" style={{ fontSize: '20px' }} />
                       Error Creating Invoice
                     </h4>
-                    <p style={{ margin: '0', color: '#991b1b', fontSize: '14px' }}>
+                    <p style={{ margin: '0', color: 'var(--alert)', fontSize: '14px' }}>
                       {invoiceError}
                     </p>
                   </div>
@@ -5242,7 +5246,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               {!creatingInvoice && !invoiceResult && !invoiceError && (
                 <div>
                   <div style={{
-                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                    backgroundColor: 'var(--admin-bg)',
                     border: `1px solid ${borderColor}`,
                     borderRadius: '8px',
                     padding: '20px',
@@ -5266,7 +5270,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--admin-muted)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -5287,7 +5291,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--admin-muted)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -5308,7 +5312,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--admin-muted)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -5329,7 +5333,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           display: 'block',
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--admin-muted)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.5px',
                           marginBottom: '4px'
@@ -5357,7 +5361,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '8px'
@@ -5435,7 +5439,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         display: 'block',
                         fontSize: '12px',
                         fontWeight: '600',
-                        color: isDark ? '#8f9a8f' : '#64748b',
+                        color: 'var(--admin-muted)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         marginBottom: '8px'
@@ -5473,15 +5477,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                   )}
 
                   <div style={{
-                    backgroundColor: '#fffbeb',
-                    border: '1px solid #fde68a',
+                    backgroundColor: 'var(--admin-surface-raised)',
+                    border: '1px solid var(--admin-hairline)',
                     borderRadius: '6px',
                     padding: '16px',
                     marginBottom: '24px'
                   }}>
                     <p style={{
                       margin: '0',
-                      color: '#92400e',
+                      color: 'var(--admin-text)',
                       fontSize: '14px',
                       lineHeight: '1.6'
                     }}>
@@ -5598,7 +5602,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               <div style={{
-                backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                backgroundColor: 'var(--admin-bg)',
                 border: `1px solid ${borderColor}`,
                 borderRadius: '8px',
                 padding: '24px',
@@ -5623,7 +5627,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -5644,7 +5648,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -5665,7 +5669,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -5691,7 +5695,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       display: 'block',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '4px'
@@ -5711,7 +5715,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               </div>
 
               <div style={{
-                backgroundColor: isDark ? '#080c08' : '#ffffff',
+                backgroundColor: 'var(--admin-bg)',
                 border: `1px solid ${borderColor}`,
                 borderRadius: '8px',
                 padding: '24px',
@@ -5726,7 +5730,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   Email Content Preview
                 </h3>
                 <div style={{
-                  backgroundColor: isDark ? '#1a1d1a' : '#f8fafc',
+                  backgroundColor: 'var(--admin-surface)',
                   border: `1px solid ${borderColor}`,
                   borderRadius: '6px',
                   padding: '20px',
@@ -5753,8 +5757,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                       Your photo booth agreement is ready for review and signature. Please click the link below to view and sign your agreement.
                     </p>
                     <div style={{
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
+                      backgroundColor: 'var(--gold)',
+                      color: '#2A2724',
                       padding: '12px 24px',
                       borderRadius: '6px',
                       display: 'inline-block',
@@ -5764,7 +5768,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }}>
                       View & Sign Agreement →
                     </div>
-                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: isDark ? '#8f9a8f' : '#64748b' }}>
+                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--admin-muted)' }}>
                       This agreement expires on {new Date(previewAgreement.expiresAt).toLocaleDateString('en-CA', {
                         timeZone: 'America/Toronto',
                         year: 'numeric',
@@ -5860,7 +5864,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <div style={{
                 marginBottom: '20px',
                 padding: '16px',
-                backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
+                backgroundColor: 'var(--admin-surface-raised)',
                 borderRadius: '6px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -5931,7 +5935,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: phoneVisibilityToggle ? 'var(--accent)' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: phoneVisibilityToggle ? 'var(--gold)' : ('var(--admin-hairline)'),
                       border: 'none',
                       cursor: updatingPhoneVisibility ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -5966,7 +5970,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <div style={{
                 marginBottom: '20px',
                 padding: '16px',
-                backgroundColor: isDark ? '#1a1d1a' : '#f1f5f9',
+                backgroundColor: 'var(--admin-surface-raised)',
                 borderRadius: '6px',
                 border: `1px solid ${borderColor}`
               }}>
@@ -6037,7 +6041,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       width: '44px',
                       height: '24px',
                       borderRadius: '12px',
-                      backgroundColor: virtualGreenScreenToggle ? 'var(--accent)' : (isDark ? '#475569' : '#cbd5e1'),
+                      backgroundColor: virtualGreenScreenToggle ? 'var(--gold)' : ('var(--admin-hairline)'),
                       border: 'none',
                       cursor: updatingVirtualGreenScreen ? 'not-allowed' : 'pointer',
                       transition: 'background-color 0.2s',
@@ -6088,8 +6092,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
+                    backgroundColor: 'var(--gold)',
+                    color: '#2A2724',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '6px',
@@ -6115,8 +6119,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }
                   }}
                   style={{
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
+                    backgroundColor: 'var(--gold)',
+                    color: '#2A2724',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '6px',
