@@ -26,7 +26,7 @@ import {
   type AgreementTimelineEntry,
 } from '@/lib/agreementTrackingUi';
 import {
-  addTorontoCalendarDays,
+  addTorontoCalendarDaysFrom,
   formatDateTimeToronto,
   formatDateToronto,
   fromTorontoDateTimeLocalInput,
@@ -409,14 +409,9 @@ const normalizePaymentStatus = (value?: string | null) => {
   return value; // fall back to original to avoid losing data
 };
   
-  // Calculate 2 weeks from today for default expiration (Toronto local for datetime-local input)
-  const getDefaultExpirationDate = () => {
-    const input = toTorontoDateTimeLocalInput(new Date());
-    const [datePart, timePart] = input.split('T');
-    const [y, m, d] = datePart.split('-').map(Number);
-    const end = addTorontoCalendarDays(y, m - 1, d, 14);
-    return `${end.year}-${String(end.month + 1).padStart(2, '0')}-${String(end.day).padStart(2, '0')}T${timePart}`;
-  };
+  // Default expiration: two Toronto calendar weeks from now, same local time-of-day
+  const getDefaultExpirationDate = () =>
+    toTorontoDateTimeLocalInput(addTorontoCalendarDaysFrom(new Date(), 14));
 
   const [newAgreement, setNewAgreement] = useState({
     clientId: '',
@@ -1012,8 +1007,15 @@ const normalizePaymentStatus = (value?: string | null) => {
 
   const handleCreateAgreement = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const expiresAtUtc = fromTorontoDateTimeLocalInput(newAgreement.expiresAt);
+    if (Number.isNaN(expiresAtUtc.getTime())) {
+      showToast('Invalid expiration date — please re-select a date and time', 'error');
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
       const response = await adminFetch('/api/agreements', {
         method: 'POST',
@@ -1022,7 +1024,7 @@ const normalizePaymentStatus = (value?: string | null) => {
         },
         body: JSON.stringify({
           ...newAgreement,
-          expiresAt: fromTorontoDateTimeLocalInput(newAgreement.expiresAt).toISOString(),
+          expiresAt: expiresAtUtc.toISOString(),
         }),
       });
 
@@ -1634,6 +1636,12 @@ const normalizePaymentStatus = (value?: string | null) => {
       return;
     }
 
+    const expiresAtUtc = fromTorontoDateTimeLocalInput(newExpirationDate);
+    if (Number.isNaN(expiresAtUtc.getTime())) {
+      showToast('Invalid expiration date — please re-select a date and time', 'error');
+      return;
+    }
+
     try {
       setSaving(true);
       const response = await adminFetch('/api/agreements/update-expiration', {
@@ -1641,9 +1649,9 @@ const normalizePaymentStatus = (value?: string | null) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          id: agreementId, 
-          expiresAt: fromTorontoDateTimeLocalInput(newExpirationDate).toISOString(),
+        body: JSON.stringify({
+          id: agreementId,
+          expiresAt: expiresAtUtc.toISOString(),
         }),
       });
 

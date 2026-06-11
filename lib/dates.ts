@@ -2,6 +2,15 @@
 export const TORONTO_TZ = 'America/Toronto';
 
 const MS_PER_DAY = 86_400_000;
+const INVALID_DATE_FALLBACK = '—';
+
+function coerceDate(input: Date | string | number): Date {
+  return input instanceof Date ? new Date(input.getTime()) : new Date(input);
+}
+
+function isValidDate(date: Date): boolean {
+  return !Number.isNaN(date.getTime());
+}
 
 export type TorontoDateParts = {
   year: number;
@@ -12,7 +21,12 @@ export type TorontoDateParts = {
 
 /** YYYY-MM-DD in Toronto — for comparisons and grouping keys. */
 export function torontoDateKey(date: Date | string | number): string {
-  return new Date(date).toLocaleDateString('en-CA', { timeZone: TORONTO_TZ });
+  const d = coerceDate(date);
+  if (!isValidDate(d)) {
+    console.error('[dates] torontoDateKey: invalid date input', date);
+    return '';
+  }
+  return d.toLocaleDateString('en-CA', { timeZone: TORONTO_TZ });
 }
 
 export function torontoTodayKey(): string {
@@ -46,7 +60,12 @@ export function formatDateToronto(
   date: Date | string | number,
   options: Intl.DateTimeFormatOptions = {},
 ): string {
-  return new Date(date).toLocaleDateString('en-CA', {
+  const d = coerceDate(date);
+  if (!isValidDate(d)) {
+    console.error('[dates] formatDateToronto: invalid date input', date);
+    return INVALID_DATE_FALLBACK;
+  }
+  return d.toLocaleDateString('en-CA', {
     timeZone: TORONTO_TZ,
     ...options,
   });
@@ -57,7 +76,12 @@ export function formatDateTimeToronto(
   date: Date | string | number,
   options: Intl.DateTimeFormatOptions = {},
 ): string {
-  return new Date(date).toLocaleString('en-CA', {
+  const d = coerceDate(date);
+  if (!isValidDate(d)) {
+    console.error('[dates] formatDateTimeToronto: invalid date input', date);
+    return INVALID_DATE_FALLBACK;
+  }
+  return d.toLocaleString('en-CA', {
     timeZone: TORONTO_TZ,
     ...options,
   });
@@ -108,6 +132,11 @@ export function torontoDaysUntil(date: Date | string | number, now = new Date())
 
 /** Toronto calendar components for a UTC instant. */
 export function getTorontoDateParts(date: Date): TorontoDateParts {
+  if (!isValidDate(date)) {
+    console.error('[dates] getTorontoDateParts: invalid date input', date);
+    return getTorontoDateParts(new Date());
+  }
+
   const formatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: TORONTO_TZ,
     year: 'numeric',
@@ -210,6 +239,12 @@ export function torontoStartOfTodayUtc(now = new Date()): Date {
 
 /** datetime-local input value (YYYY-MM-DDTHH:mm) representing Toronto wall clock. */
 export function toTorontoDateTimeLocalInput(date: Date | string | number): string {
+  const d = coerceDate(date);
+  if (!isValidDate(d)) {
+    console.error('[dates] toTorontoDateTimeLocalInput: invalid date input', date);
+    return '';
+  }
+
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: TORONTO_TZ,
     year: 'numeric',
@@ -218,24 +253,40 @@ export function toTorontoDateTimeLocalInput(date: Date | string | number): strin
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).formatToParts(new Date(date));
+  }).formatToParts(d);
 
   const get = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((p) => p.type === type)!.value;
 
-  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+  const hour = get('hour') === '24' ? '00' : get('hour');
+
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}`;
 }
 
 /** Parse datetime-local as Toronto wall clock → UTC instant for storage. */
 export function fromTorontoDateTimeLocalInput(value: string): Date {
+  if (!value?.includes('T')) {
+    console.error('[dates] fromTorontoDateTimeLocalInput: invalid value', value);
+    return new Date(NaN);
+  }
+
   const [datePart, timePart] = value.split('T');
   const [year, month, day] = datePart.split('-').map(Number);
   const [hour, minute] = timePart.split(':').map(Number);
 
-  let candidate = new Date(Date.UTC(year, month - 1, day, hour + 5, minute));
-  let attempts = 0;
+  if (![year, month, day, hour, minute].every((n) => Number.isFinite(n))) {
+    console.error('[dates] fromTorontoDateTimeLocalInput: could not parse components', value);
+    return new Date(NaN);
+  }
 
-  while (attempts < 12) {
+  let candidate = new Date(Date.UTC(year, month - 1, day, hour + 5, minute));
+
+  for (let attempts = 0; attempts < 12; attempts++) {
+    if (!isValidDate(candidate)) {
+      console.error('[dates] fromTorontoDateTimeLocalInput: iteration produced invalid date', value);
+      return new Date(NaN);
+    }
+
     const p = getTorontoDateParts(candidate);
     const h = parseInt(
       candidate.toLocaleString('en-US', { timeZone: TORONTO_TZ, hour: 'numeric', hour12: false }),
@@ -252,8 +303,11 @@ export function fromTorontoDateTimeLocalInput(value: string): Date {
 
     const targetMs = Date.UTC(year, month - 1, day, hour, minute);
     const actualMs = Date.UTC(p.year, p.month, p.day, h, m);
-    candidate = new Date(candidate.getTime() + (targetMs - actualMs) * 60_000);
-    attempts++;
+    candidate = new Date(candidate.getTime() + (targetMs - actualMs));
+  }
+
+  if (!isValidDate(candidate)) {
+    console.error('[dates] fromTorontoDateTimeLocalInput: failed to converge', value);
   }
 
   return candidate;

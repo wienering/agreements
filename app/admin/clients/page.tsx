@@ -7,7 +7,31 @@ import { useToast } from '../../components/Toast';
 import { UIcon } from '../../components/UIcon';
 import FileUpload from '../../components/FileUpload';
 import { AdminButton } from '../../components/AdminButton';
-import { formatDateToronto } from '@/lib/dates';
+import {
+  formatDateToronto,
+  fromTorontoDateTimeLocalInput,
+  toTorontoDateTimeLocalInput,
+} from '@/lib/dates';
+
+/** Stored UTC ISO → datetime-local value in Toronto wall time. */
+function eventDateLocalFromStored(iso: string | undefined | null): string {
+  if (!iso) return '';
+  return toTorontoDateTimeLocalInput(iso);
+}
+
+/** datetime-local picker value → UTC ISO for API, or null when empty. */
+function eventDateIsoForApi(
+  localValue: string,
+): { ok: true; iso: string | null } | { ok: false } {
+  if (!localValue?.trim()) {
+    return { ok: true, iso: null };
+  }
+  const parsed = fromTorontoDateTimeLocalInput(localValue);
+  if (Number.isNaN(parsed.getTime())) {
+    return { ok: false };
+  }
+  return { ok: true, iso: parsed.toISOString() };
+}
 
 interface Event {
   id: string;
@@ -216,15 +240,25 @@ export default function ClientsPage() {
 
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const eventDateResult = eventDateIsoForApi(newClient.eventDate);
+    if (!eventDateResult.ok) {
+      showToast('Invalid event date — please re-select a date and time', 'error');
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
       const response = await adminFetch('/api/clients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newClient),
+        body: JSON.stringify({
+          ...newClient,
+          eventDate: eventDateResult.iso,
+        }),
       });
 
       if (response.ok) {
@@ -254,16 +288,26 @@ export default function ClientsPage() {
   const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingClient) return;
-    
+
+    const eventDateResult = eventDateIsoForApi(newClient.eventDate);
+    if (!eventDateResult.ok) {
+      showToast('Invalid event date — please re-select a date and time', 'error');
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
       const response = await adminFetch(`/api/clients/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...newClient, id: editingClient.id }),
+        body: JSON.stringify({
+          ...newClient,
+          id: editingClient.id,
+          eventDate: eventDateResult.iso,
+        }),
       });
 
       if (response.ok) {
@@ -298,7 +342,7 @@ export default function ClientsPage() {
       lastName: client.lastName,
       email: client.email,
       phone: client.phone || '',
-      eventDate: client.eventDate ? new Date(client.eventDate).toISOString().slice(0, 16) : '',
+      eventDate: eventDateLocalFromStored(client.eventDate),
       eventType: client.eventType || '',
       eventLocation: client.eventLocation || '',
       eventStartTime: client.eventStartTime || '',
@@ -384,7 +428,7 @@ export default function ClientsPage() {
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
     setNewEvent({
-      eventDate: event.eventDate ? new Date(event.eventDate).toISOString().slice(0, 16) : '',
+      eventDate: eventDateLocalFromStored(event.eventDate),
       eventType: event.eventType || '',
       eventLocation: event.eventLocation || '',
       eventStartTime: event.eventStartTime || '',
@@ -402,16 +446,26 @@ export default function ClientsPage() {
   const handleUpdateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingEvent) return;
-    
+
+    const eventDateResult = eventDateIsoForApi(newEvent.eventDate);
+    if (!eventDateResult.ok) {
+      showToast('Invalid event date — please re-select a date and time', 'error');
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
       const response = await adminFetch('/api/events/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...newEvent, id: editingEvent.id }),
+        body: JSON.stringify({
+          ...newEvent,
+          id: editingEvent.id,
+          eventDate: eventDateResult.iso,
+        }),
       });
 
       if (response.ok) {
@@ -449,16 +503,26 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addingEventToClient) return;
-    
+
+    const eventDateResult = eventDateIsoForApi(newEvent.eventDate);
+    if (!eventDateResult.ok) {
+      showToast('Invalid event date — please re-select a date and time', 'error');
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
       const response = await adminFetch('/api/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...newEvent, clientId: addingEventToClient.id }),
+        body: JSON.stringify({
+          ...newEvent,
+          clientId: addingEventToClient.id,
+          eventDate: eventDateResult.iso,
+        }),
       });
 
       if (response.ok) {
