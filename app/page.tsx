@@ -42,9 +42,9 @@ export default function Home() {
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-hairline bg-panel px-3 py-1 text-xs font-medium text-muted">
               <span className="h-2 w-2 rounded-full bg-success" /> Live • Production Ready
             </p>
-            <h2 className="client-page-title mb-4 text-4xl font-extrabold tracking-tight text-ink md:text-5xl">
+            <h1 className="client-page-title mb-4 text-4xl font-extrabold tracking-tight text-ink md:text-5xl">
               Streamlined Client Agreements
-            </h2>
+            </h1>
             <div className="client-title-rule" aria-hidden="true" />
             <p className="mb-8 mt-4 max-w-prose text-muted">
               Create templates, personalize with smart fields, send for e‑signature, and deliver PDFs — all under the Photobooth Guys brand.

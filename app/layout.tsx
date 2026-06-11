@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
-import { Fraunces, Inter, Montserrat } from 'next/font/google'
+import { Fraunces, Montserrat } from 'next/font/google'
 import { Providers } from './providers'
 import '@flaticon/flaticon-uicons/css/regular/rounded.css'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -35,7 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${fraunces.variable} ${montserrat.variable}`}>
+      <body className={`${montserrat.className} ${fraunces.variable} ${montserrat.variable}`}>
         <Providers>
           {children}
         </Providers>

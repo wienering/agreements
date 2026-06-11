@@ -13,7 +13,7 @@ export default function Error({
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#080c08',
+        backgroundColor: 'var(--admin-bg)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -23,10 +23,10 @@ export default function Error({
     >
       <div
         style={{
-          backgroundColor: '#1a1d1a',
+          backgroundColor: 'var(--admin-surface)',
           padding: '48px',
           borderRadius: '12px',
-          border: '1px solid #2d3530',
+          border: '1px solid var(--admin-hairline)',
           textAlign: 'center',
           maxWidth: '600px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -36,7 +36,7 @@ export default function Error({
           style={{
             width: '64px',
             height: '64px',
-            backgroundColor: '#dc2626',
+            backgroundColor: 'var(--alert)',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -45,11 +45,12 @@ export default function Error({
             fontSize: '28px',
           }}
         >
-          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: '#ffffff' }} title="Error" />
+          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--admin-text)' }} title="Error" />
         </div>
         <h1
+          className="admin-page-title"
           style={{
-            color: '#ffffff',
+            color: 'var(--admin-text)',
             fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700',
@@ -59,7 +60,7 @@ export default function Error({
         </h1>
         <p
           style={{
-            color: '#8f9a8f',
+            color: 'var(--admin-muted)',
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.6',
@@ -72,15 +73,15 @@ export default function Error({
             style={{
               marginBottom: '24px',
               textAlign: 'left',
-              backgroundColor: '#080c08',
+              backgroundColor: 'var(--admin-bg)',
               padding: '16px',
               borderRadius: '8px',
-              border: '1px solid #2d3530',
+              border: '1px solid var(--admin-hairline)',
             }}
           >
             <summary
               style={{
-                color: '#8f9a8f',
+                color: 'var(--admin-muted)',
                 cursor: 'pointer',
                 marginBottom: '8px',
               }}
@@ -89,7 +90,7 @@ export default function Error({
             </summary>
             <pre
               style={{
-                color: '#dc2626',
+                color: 'var(--alert)',
                 fontSize: '12px',
                 overflow: 'auto',
                 whiteSpace: 'pre-wrap',
@@ -104,8 +105,8 @@ export default function Error({
           onClick={reset}
           style={{
             padding: '12px 24px',
-            backgroundColor: 'var(--accent)',
-            color: '#ffffff',
+            backgroundColor: 'var(--gold)',
+            color: 'var(--ink)',
             border: 'none',
             borderRadius: '8px',
             fontSize: '16px',
@@ -114,10 +115,10 @@ export default function Error({
             transition: 'background-color 0.2s',
           }}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--accent)';
+            e.currentTarget.style.backgroundColor = 'var(--gold)';
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--accent)';
+            e.currentTarget.style.backgroundColor = 'var(--gold)';
           }}
         >
           Try Again

@@ -299,7 +299,7 @@ export default function PortalDashboard() {
                           href={relevantAgreement.stripePaymentLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 block text-sm text-coral hover:text-coral"
+                          className="mt-2 block text-sm font-semibold text-ink underline underline-offset-2 hover:text-coral"
                         >
                           Make Payment →
                         </a>
@@ -518,7 +518,7 @@ export default function PortalDashboard() {
                         {/* Gallery Link */}
                         {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
                           <div className="mb-2">
-                            <span className="inline-flex items-center gap-1.5 text-sm text-coral">
+                            <span className="inline-flex items-center gap-1.5 text-sm text-muted">
                               <UIcon name="camera" className="text-sm" />
                               Gallery Available
                             </span>

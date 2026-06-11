@@ -64,10 +64,10 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
       <div
         className="attendant-card"
         style={{
-          backgroundColor: '#1a1d1a',
+          backgroundColor: 'var(--admin-surface)',
           padding: '32px',
           borderRadius: '12px',
-          border: '1px solid #2d3530',
+          border: '1px solid var(--admin-hairline)',
           marginBottom: '24px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}
@@ -77,14 +77,14 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
             margin: '0 0 24px 0',
             fontSize: '20px',
             fontWeight: '700',
-            color: '#ffffff',
+            color: 'var(--admin-text)',
             paddingBottom: '16px',
-            borderBottom: '1px solid #2d3530',
+            borderBottom: '1px solid var(--admin-hairline)',
           }}
         >
           Event Files
         </h2>
-        <p style={{ margin: '0', color: '#8f9a8f', fontSize: '14px' }}>Loading files...</p>
+        <p style={{ margin: '0', color: 'var(--admin-muted)', fontSize: '14px' }}>Loading files...</p>
       </div>
     );
   }
@@ -94,10 +94,10 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
       <div
         className="attendant-card"
         style={{
-          backgroundColor: '#1a1d1a',
+          backgroundColor: 'var(--admin-surface)',
           padding: '32px',
           borderRadius: '12px',
-          border: '1px solid #2d3530',
+          border: '1px solid var(--admin-hairline)',
           marginBottom: '24px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}
@@ -107,14 +107,14 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
             margin: '0 0 24px 0',
             fontSize: '20px',
             fontWeight: '700',
-            color: '#ffffff',
+            color: 'var(--admin-text)',
             paddingBottom: '16px',
-            borderBottom: '1px solid #2d3530',
+            borderBottom: '1px solid var(--admin-hairline)',
           }}
         >
           Event Files
         </h2>
-        <p style={{ margin: '0', color: '#ef4444', fontSize: '14px' }}>{error}</p>
+        <p style={{ margin: '0', color: 'var(--alert)', fontSize: '14px' }}>{error}</p>
       </div>
     );
   }
@@ -123,10 +123,10 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
     <div
       className="attendant-card"
       style={{
-        backgroundColor: '#1a1d1a',
+        backgroundColor: 'var(--admin-surface)',
         padding: '32px',
         borderRadius: '12px',
-        border: '1px solid #2d3530',
+        border: '1px solid var(--admin-hairline)',
         marginBottom: '24px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       }}
@@ -136,15 +136,15 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
           margin: '0 0 24px 0',
           fontSize: '20px',
           fontWeight: '700',
-          color: '#ffffff',
+          color: 'var(--admin-text)',
           paddingBottom: '16px',
-          borderBottom: '1px solid #2d3530',
+          borderBottom: '1px solid var(--admin-hairline)',
         }}
       >
         Event Files
       </h2>
       {files.length === 0 ? (
-        <p style={{ margin: '0', color: '#8f9a8f', fontSize: '14px' }}>
+        <p style={{ margin: '0', color: 'var(--admin-muted)', fontSize: '14px' }}>
           No files have been uploaded for this event.
         </p>
       ) : (
@@ -163,27 +163,27 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                 alignItems: 'center',
                 gap: '12px',
                 padding: '16px',
-                backgroundColor: '#080c08',
-                border: '1px solid #2d3530',
+                backgroundColor: 'var(--admin-bg)',
+                border: '1px solid var(--admin-hairline)',
                 borderRadius: '8px',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--accent)';
-                e.currentTarget.style.backgroundColor = '#1a1d1a';
+                e.currentTarget.style.borderColor = 'var(--gold)';
+                e.currentTarget.style.backgroundColor = 'var(--admin-surface)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#2d3530';
-                e.currentTarget.style.backgroundColor = '#080c08';
+                e.currentTarget.style.borderColor = 'var(--admin-hairline)';
+                e.currentTarget.style.backgroundColor = 'var(--admin-bg)';
               }}
             >
-              <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '32px', color: '#8f9a8f' }} />
+              <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '32px', color: 'var(--admin-muted)' }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: '16px',
                     fontWeight: '600',
-                    color: '#f1f5f9',
+                    color: 'var(--admin-text)',
                     marginBottom: '4px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -192,7 +192,7 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                 >
                   {file.fileName}
                 </div>
-                <div style={{ fontSize: '12px', color: '#8f9a8f' }}>
+                <div style={{ fontSize: '12px', color: 'var(--admin-muted)' }}>
                   {formatFileSize(file.fileSize)}
                 </div>
               </div>
@@ -202,8 +202,8 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                 rel="noopener noreferrer"
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: 'var(--accent)',
-                  color: 'white',
+                  backgroundColor: 'var(--gold)',
+                  color: 'var(--ink)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   fontWeight: '500',
@@ -212,10 +212,10 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--accent)';
+                  e.currentTarget.style.backgroundColor = 'var(--gold)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--accent)';
+                  e.currentTarget.style.backgroundColor = 'var(--gold)';
                 }}
               >
                 Open in Drive

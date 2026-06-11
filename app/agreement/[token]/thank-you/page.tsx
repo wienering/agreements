@@ -358,7 +358,8 @@ export default function ThankYouPage() {
             color: 'var(--ink)', 
             fontSize: '24px',
             margin: '0 0 16px 0',
-            fontWeight: '700'
+            fontWeight: '700',
+            fontFamily: 'var(--font-display), Georgia, serif',
           }}>
             Agreement Not Found
           </h1>

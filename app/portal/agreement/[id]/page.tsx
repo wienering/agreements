@@ -806,7 +806,7 @@ function AgreementDetailContent() {
               </div>
               <div>
                 <h3 className="font-semibold text-ink">Selected Backdrop</h3>
-                <p className="text-sm font-medium text-coral mt-1">{agreement.selectedBackdropName}</p>
+                <p className="text-sm font-medium text-ink mt-1">{agreement.selectedBackdropName}</p>
                 <p className="text-xs text-muted mt-1">Your backdrop selection has been confirmed</p>
               </div>
             </div>

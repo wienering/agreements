@@ -22,7 +22,7 @@
   --hairline: #e5ddcf;
   --muted: #6e655a;
   --success: #3f6f4f;
-  --warn: #b07d2a;
+  --warn: #8a6220;
   --alert: #b3392b;
 
   font-family: var(--font-ui), system-ui, sans-serif;
@@ -55,7 +55,8 @@
   --ink: #2a2724;
   --gold: #c6a04d;
   --success: #3f6f4f;
-  --warn: #b07d2a;
+  /* Lightened vs client warn: same hue family, readable on dark admin surfaces */
+  --warn: #b4862a;
   --alert: #b3392b;
 
   font-family: var(--font-ui), system-ui, sans-serif;
@@ -82,28 +83,8 @@
   font-family: var(--font-display), Georgia, serif;
 }
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 30, 27, 24;
-    --background-end-rgb: 42, 39, 36;
-  }
-}
-
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: var(--font-ui), system-ui, sans-serif;
 }
 
 /* Admin overview: active agreements + upcoming events */

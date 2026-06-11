@@ -39,7 +39,7 @@ function buildSignatureBlockHtml(
         ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' })
         : '';
       return `
-        <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #4a9e72; background-color: #f8fafc;">
+        <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #3f6f4f; background-color: #faf6ef;">
           <p style="margin: 0; font-weight: 600;">${escapeHtml(s.signerName)}</p>
           <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">${escapeHtml(s.signerEmail)}</p>
           <p style="margin: 4px 0 0 0; font-size: 12px; color: #777;">Signed: ${escapeHtml(when)}${s.ip ? ` &middot; IP: ${escapeHtml(s.ip)}` : ''}</p>

@@ -6,6 +6,10 @@ import { AdminButton } from '../../../components/AdminButton';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../components/Toast';
 import { UIcon } from '../../../components/UIcon';
+import {
+  StatusBadge,
+  agreementStatusToBadgeVariant,
+} from '../../../components/StatusBadge';
 
 interface Agreement {
   id: string;
@@ -32,7 +36,6 @@ interface Agreement {
 }
 
 export default function ArchivedAgreementsPage() {
-  // Set page title
   useEffect(() => {
     document.title = 'Archived Agreements | Admin | Photobooth Guys';
   }, []);
@@ -40,22 +43,21 @@ export default function ArchivedAgreementsPage() {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [unarchivingId, setUnarchivingId] = useState<string | null>(null);
   const [deletingAgreement, setDeletingAgreement] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
 
-  // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch archived agreements
   useEffect(() => {
     fetchArchivedAgreements();
   }, []);
@@ -84,7 +86,7 @@ export default function ArchivedAgreementsPage() {
     }
 
     try {
-      setLoading(true);
+      setUnarchivingId(agreementId);
       const response = await adminFetch('/api/agreements/archive', {
         method: 'DELETE',
         headers: {
@@ -95,7 +97,7 @@ export default function ArchivedAgreementsPage() {
 
       if (response.ok) {
         showToast('Agreement unarchived successfully', 'success');
-        fetchArchivedAgreements(); // Refresh the list
+        fetchArchivedAgreements();
       } else {
         const errorData = await response.json();
         showToast(errorData.error || 'Failed to unarchive agreement', 'error');
@@ -104,7 +106,7 @@ export default function ArchivedAgreementsPage() {
       console.error('Error unarchiving agreement:', error);
       showToast('Error unarchiving agreement', 'error');
     } finally {
-      setLoading(false);
+      setUnarchivingId(null);
     }
   };
 
@@ -138,40 +140,6 @@ export default function ArchivedAgreementsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'DRAFT':
-        return 'bg-red-100 text-red-800';
-      case 'LIVE':
-        return 'bg-green-100 text-green-800';
-      case 'SIGNED':
-        return 'bg-blue-100 text-blue-800';
-      case 'COMPLETED':
-        return 'bg-purple-100 text-purple-800';
-      case 'CANCELLED':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case 'DRAFT':
-        return 'Draft';
-      case 'LIVE':
-        return 'Live';
-      case 'SIGNED':
-        return 'Signed';
-      case 'COMPLETED':
-        return 'Completed';
-      case 'CANCELLED':
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
-  };
-
   const mainBg = 'var(--admin-bg)';
   const cardBg = 'var(--admin-surface)';
   const textColor = 'var(--admin-text)';
@@ -179,36 +147,35 @@ export default function ArchivedAgreementsPage() {
   const borderColor = 'var(--admin-hairline)';
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
+    <div style={{
+      minHeight: '100vh',
       backgroundColor: mainBg,
-      padding: isMobile ? '16px' : '24px'
+      padding: isMobile ? '16px' : '24px',
     }}>
       <ToastContainer />
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '24px',
           flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? '16px' : '0'
+          gap: isMobile ? '16px' : '0',
         }}>
           <div>
-            <h1 className="admin-page-title" style={{ 
-              margin: '0', 
-              fontSize: isMobile ? '24px' : '32px', 
-              fontWeight: '700', 
-              color: textColor 
+            <h1 className="admin-page-title" style={{
+              margin: '0',
+              fontSize: isMobile ? '24px' : '32px',
+              fontWeight: '700',
+              color: textColor,
             }}>
               Archived Agreements
             </h1>
             <div className="admin-title-rule" aria-hidden="true" />
-            <p style={{ 
-              margin: '8px 0 0 0', 
-              color: mutedText, 
-              fontSize: '16px' 
+            <p style={{
+              margin: '8px 0 0 0',
+              color: mutedText,
+              fontSize: '16px',
             }}>
               View completed and cancelled agreements
             </p>
@@ -223,14 +190,13 @@ export default function ArchivedAgreementsPage() {
           </AdminButton>
         </div>
 
-        {/* Archived Agreements List */}
         {loading ? (
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
             borderRadius: '8px',
             padding: '48px 24px',
-            textAlign: 'center'
+            textAlign: 'center',
           }}>
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
               <UIcon name="spinner" className="animate-spin" style={{ fontSize: '24px', color: textColor }} />
@@ -243,7 +209,7 @@ export default function ArchivedAgreementsPage() {
             border: `1px solid ${borderColor}`,
             borderRadius: '8px',
             padding: '48px 24px',
-            textAlign: 'center'
+            textAlign: 'center',
           }}>
             <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
               No archived agreements found.
@@ -256,15 +222,15 @@ export default function ArchivedAgreementsPage() {
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,
                 borderRadius: '8px',
-                padding: '20px'
+                padding: '20px',
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'start',
                   marginBottom: '12px',
                   flexDirection: isMobile ? 'column' : 'row',
-                  gap: isMobile ? '12px' : '0'
+                  gap: isMobile ? '12px' : '0',
                 }}>
                   <div>
                     <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: textColor, fontWeight: '600' }}>
@@ -277,107 +243,41 @@ export default function ArchivedAgreementsPage() {
                       Archived: {new Date(agreement.archivedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                     </p>
                   </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '8px',
-                    flexDirection: isMobile ? 'column' : 'row'
-                  }}>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: mutedText,
-                      backgroundColor: 'var(--admin-surface)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      alignSelf: isMobile ? 'flex-start' : 'auto'
-                    }}>
-                      {getStatusDisplay(agreement.status)}
-                    </span>
-                  </div>
+                  <StatusBadge variant={agreementStatusToBadgeVariant(agreement.status)}>
+                    {agreement.status.charAt(0) + agreement.status.slice(1).toLowerCase()}
+                  </StatusBadge>
                 </div>
-                <div style={{ 
-                  display: 'flex', 
+                <div style={{
+                  display: 'flex',
                   gap: '8px',
-                  flexWrap: 'wrap'
+                  flexWrap: 'wrap',
                 }}>
-                  <button
+                  <AdminButton
+                    variant="primary"
+                    size="compact"
                     onClick={() => window.open(`/agreement/${agreement.uniqueToken}`, '_blank')}
-                    style={{
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    }}
                     title="View agreement"
                   >
                     View
-                  </button>
-                  <button
+                  </AdminButton>
+                  <AdminButton
+                    variant="primary"
+                    size="compact"
+                    disabled={unarchivingId === agreement.id}
                     onClick={() => handleUnarchiveAgreement(agreement.id)}
-                    disabled={loading}
-                    style={{
-                      backgroundColor: loading ? '#9ca3af' : 'var(--accent)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = '#047857';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!loading) {
-                        e.currentTarget.style.backgroundColor = 'var(--accent)';
-                      }
-                    }}
                     title="Unarchive this agreement"
                   >
-                    {loading ? 'Unarchiving...' : 'Unarchive'}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteAgreement(agreement.id)}
+                    {unarchivingId === agreement.id ? 'Unarchiving...' : 'Unarchive'}
+                  </AdminButton>
+                  <AdminButton
+                    variant="danger"
+                    size="compact"
                     disabled={deletingAgreement[agreement.id]}
-                    style={{
-                      backgroundColor: deletingAgreement[agreement.id] ? '#9ca3af' : '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '4px',
-                      cursor: deletingAgreement[agreement.id] ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!deletingAgreement[agreement.id]) {
-                        e.currentTarget.style.backgroundColor = '#b91c1c';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!deletingAgreement[agreement.id]) {
-                        e.currentTarget.style.backgroundColor = '#dc2626';
-                      }
-                    }}
+                    onClick={() => handleDeleteAgreement(agreement.id)}
                     title="Permanently delete this archived agreement"
                   >
                     {deletingAgreement[agreement.id] ? 'Deleting...' : 'Delete'}
-                  </button>
+                  </AdminButton>
                 </div>
               </div>
             ))}

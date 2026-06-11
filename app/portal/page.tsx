@@ -197,7 +197,7 @@ export default function PortalLandingPage() {
             </p>
             <a
               href="mailto:info@photoboothguys.ca"
-              className="text-coral hover:text-coral font-medium"
+              className="font-semibold text-ink underline underline-offset-2 hover:text-coral"
             >
               Contact Support →
             </a>
@@ -212,7 +212,7 @@ export default function PortalLandingPage() {
             <span>© {new Date().getFullYear()} Photobooth Guys • Client Portal</span>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
               <span>Secure • Encrypted</span>
-              <Link href="/portal/login" className="text-coral hover:text-coral">
+              <Link href="/portal/login" className="font-medium text-ink hover:text-coral hover:underline underline-offset-2">
                 Login
               </Link>
             </div>

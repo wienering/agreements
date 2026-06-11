@@ -35,6 +35,8 @@ export default function AdminLayout({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const isPreviewRoute = pathname?.startsWith('/admin/preview/');
+
   const navItems = [
     { id: 'overview', label: 'Overview', iconName: 'chart-line-up', href: '/admin', tooltip: 'Dashboard overview and statistics' },
     { id: 'clients', label: 'Clients', iconName: 'users', href: '/admin/clients', tooltip: 'Manage client information' },
@@ -70,6 +72,14 @@ export default function AdminLayout({
 
   if (status === 'unauthenticated') {
     return <div data-surface="admin">{children}</div>;
+  }
+
+  if (isPreviewRoute) {
+    return (
+      <div data-surface="client" className="min-h-screen bg-paper">
+        {children}
+      </div>
+    );
   }
 
   const navActiveBg = 'rgba(var(--accent-rgb), 0.14)';
