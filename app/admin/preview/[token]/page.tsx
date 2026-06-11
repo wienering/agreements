@@ -52,7 +52,6 @@ export default function AdminPreviewPage() {
   const [agreement, setAgreement] = useState<AgreementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDark, setIsDark] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isEmailing, setIsEmailing] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -220,27 +219,27 @@ export default function AdminPreviewPage() {
 
   if (loading) {
     return (
-      <div style={{ 
+      <div data-surface="client" style={{ 
         minHeight: '100vh', 
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        backgroundColor: 'var(--paper)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
         gap: '24px',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: 'var(--font-ui), system-ui, sans-serif'
       }}>
         <div style={{
           width: '48px',
           height: '48px',
-          border: `4px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
-          borderTop: '4px solid #3b82f6',
+          border: `4px solid var(--hairline)`,
+          borderTop: '4px solid var(--coral)',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }} />
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ 
-            color: isDark ? '#ffffff' : '#1e293b', 
+            color: 'var(--ink)', 
             fontSize: '20px',
             margin: '0 0 8px 0',
             fontWeight: '600'
@@ -248,7 +247,7 @@ export default function AdminPreviewPage() {
             Loading Agreement Preview
           </h2>
           <p style={{ 
-            color: isDark ? '#8f9a8f' : '#64748b', 
+            color: 'var(--muted)', 
             fontSize: '16px',
             margin: '0'
           }}>
@@ -261,30 +260,30 @@ export default function AdminPreviewPage() {
 
   if (error) {
     return (
-      <div style={{ 
+      <div data-surface="client" style={{ 
         minHeight: '100vh', 
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        backgroundColor: 'var(--paper)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
         gap: '24px',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: 'var(--font-ui), system-ui, sans-serif',
         padding: '24px'
       }}>
         <div style={{
-          backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+          backgroundColor: 'var(--panel)',
           padding: '40px',
           borderRadius: '12px',
-          border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+          border: `1px solid var(--hairline)`,
           textAlign: 'center',
           maxWidth: '500px',
-          boxShadow: isDark ? '0 10px 25px rgba(0, 0, 0, 0.3)' : '0 10px 25px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{
             width: '64px',
             height: '64px',
-            backgroundColor: isDark ? '#dc2626' : '#fef2f2',
+            backgroundColor: 'var(--panel)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -292,10 +291,10 @@ export default function AdminPreviewPage() {
             margin: '0 auto 24px auto',
             fontSize: '24px'
           }}>
-            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: isDark ? '#fca5a5' : '#dc2626' }} title="Warning" />
+            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--alert)' }} title="Warning" />
           </div>
           <h1 style={{ 
-            color: isDark ? '#ffffff' : '#1e293b', 
+            color: 'var(--ink)', 
             fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700'
@@ -303,7 +302,7 @@ export default function AdminPreviewPage() {
             {error.includes('Authentication') || error.includes('Admin access') ? 'Access Denied' : 'Agreement Not Found'}
           </h1>
           <p style={{ 
-            color: isDark ? '#8f9a8f' : '#64748b', 
+            color: 'var(--muted)', 
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.5'
@@ -312,14 +311,14 @@ export default function AdminPreviewPage() {
           </p>
           <div style={{
             padding: '16px',
-            backgroundColor: isDark ? '#080c08' : '#f8fafc',
+            backgroundColor: 'var(--paper)',
             borderRadius: '8px',
-            border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`
+            border: `1px solid var(--hairline)`
           }}>
             <p style={{
               margin: '0',
               fontSize: '14px',
-              color: isDark ? '#8f9a8f' : '#64748b'
+              color: 'var(--muted)'
             }}>
               Please contact support if you believe this is an error.
             </p>
@@ -355,18 +354,18 @@ export default function AdminPreviewPage() {
           100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
         }
       `}</style>
-      <div style={{ 
+      <div data-surface="client" style={{ 
         minHeight: '100vh', 
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        backgroundColor: 'var(--paper)',
+        fontFamily: 'var(--font-ui), system-ui, sans-serif'
       }}>
         {/* Admin Preview Banner */}
         <div style={{
-          backgroundColor: 'var(--accent)',
+          backgroundColor: 'var(--coral)',
           color: 'white',
           padding: '12px 0',
           textAlign: 'center',
-          borderBottom: '3px solid #1d4ed8'
+          borderBottom: '3px solid var(--hairline)'
         }}>
           <div style={{
             maxWidth: '1200px',
@@ -393,8 +392,8 @@ export default function AdminPreviewPage() {
           }}>
             {/* Professional Header */}
             <div style={{
-              backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
-              borderBottom: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+              backgroundColor: 'var(--panel)',
+              borderBottom: `1px solid var(--hairline)`,
               padding: '20px 0',
               marginBottom: '32px'
             }}>
@@ -412,7 +411,7 @@ export default function AdminPreviewPage() {
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: 'var(--coral)',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -428,14 +427,14 @@ export default function AdminPreviewPage() {
                       margin: '0',
                       fontSize: '20px',
                       fontWeight: '700',
-                      color: isDark ? '#ffffff' : '#1e293b'
+                      color: 'var(--ink)'
                     }}>
                       Photobooth Guys
                     </h1>
                     <p style={{
                       margin: '0',
                       fontSize: '14px',
-                      color: isDark ? '#8f9a8f' : '#64748b'
+                      color: 'var(--muted)'
                     }}>
                       Service Agreement
                     </p>
@@ -449,15 +448,15 @@ export default function AdminPreviewPage() {
                 }}>
                   <div style={{
                     padding: '12px 16px',
-                    backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                    backgroundColor: 'var(--paper)',
                     borderRadius: '8px',
-                    border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+                    border: `1px solid var(--hairline)`,
                     minWidth: '200px'
                   }}>
                     <p style={{
                       margin: '0 0 8px 0',
                       fontSize: '11px',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--muted)',
                       fontWeight: '600',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px'
@@ -467,7 +466,7 @@ export default function AdminPreviewPage() {
                     <p style={{
                       margin: '0 0 4px 0',
                       fontSize: '16px',
-                      color: isDark ? '#ffffff' : '#1e293b',
+                      color: 'var(--ink)',
                       fontWeight: '700'
                     }}>
                       {agreement.client.firstName} {agreement.client.lastName}
@@ -476,7 +475,7 @@ export default function AdminPreviewPage() {
                       <p style={{
                         margin: '0 0 4px 0',
                         fontSize: '12px',
-                        color: isDark ? '#8f9a8f' : '#64748b',
+                        color: 'var(--muted)',
                         fontWeight: '500'
                       }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -488,7 +487,7 @@ export default function AdminPreviewPage() {
                     <p style={{
                       margin: '0',
                       fontSize: '12px',
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--muted)',
                       fontWeight: '500'
                     }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -502,15 +501,15 @@ export default function AdminPreviewPage() {
                   {(agreement.client.eventDate || agreement.client.eventType || agreement.client.eventLocation) && (
                     <div style={{
                       padding: '12px 16px',
-                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      backgroundColor: 'var(--paper)',
                       borderRadius: '8px',
-                      border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+                      border: `1px solid var(--hairline)`,
                       minWidth: '200px'
                     }}>
                       <p style={{
                         margin: '0 0 8px 0',
                         fontSize: '11px',
-                        color: isDark ? '#8f9a8f' : '#64748b',
+                        color: 'var(--muted)',
                         fontWeight: '600',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
@@ -521,7 +520,7 @@ export default function AdminPreviewPage() {
                         <p style={{
                           margin: '0 0 4px 0',
                           fontSize: '14px',
-                          color: isDark ? '#ffffff' : '#1e293b',
+                          color: 'var(--ink)',
                           fontWeight: '600'
                         }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -540,7 +539,7 @@ export default function AdminPreviewPage() {
                         <p style={{
                           margin: '0 0 4px 0',
                           fontSize: '12px',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--muted)',
                           fontWeight: '500'
                         }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -553,7 +552,7 @@ export default function AdminPreviewPage() {
                         <p style={{
                           margin: '0 0 4px 0',
                           fontSize: '12px',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--muted)',
                           fontWeight: '500'
                         }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -566,7 +565,7 @@ export default function AdminPreviewPage() {
                         <p style={{
                           margin: '0 0 4px 0',
                           fontSize: '12px',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--muted)',
                           fontWeight: '500'
                         }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -579,7 +578,7 @@ export default function AdminPreviewPage() {
                         <p style={{
                           margin: '0',
                           fontSize: '12px',
-                          color: isDark ? '#8f9a8f' : '#64748b',
+                          color: 'var(--muted)',
                           fontWeight: '500'
                         }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -595,15 +594,15 @@ export default function AdminPreviewPage() {
                   {agreement.client.eventPackage && (
                     <div style={{
                       padding: '12px 16px',
-                      backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                      backgroundColor: 'var(--paper)',
                       borderRadius: '8px',
-                      border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+                      border: `1px solid var(--hairline)`,
                       minWidth: '150px'
                     }}>
                       <p style={{
                         margin: '0 0 8px 0',
                         fontSize: '11px',
-                        color: isDark ? '#8f9a8f' : '#64748b',
+                        color: 'var(--muted)',
                         fontWeight: '600',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
@@ -613,7 +612,7 @@ export default function AdminPreviewPage() {
                       <p style={{
                         margin: '0',
                         fontSize: '14px',
-                        color: isDark ? '#ffffff' : '#1e293b',
+                        color: 'var(--ink)',
                         fontWeight: '600'
                       }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -626,16 +625,16 @@ export default function AdminPreviewPage() {
                   {agreement && agreement.status === 'SIGNED' && (
                     <div style={{
                       padding: '8px 16px',
-                      backgroundColor: '#065f46',
+                      backgroundColor: 'var(--panel)',
                       borderRadius: '6px',
-                      border: '1px solid var(--accent)',
+                      border: '1px solid var(--hairline)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px'
                     }}>
-                      <UIcon name="check" style={{ fontSize: '16px', color: '#6ee7b7' }} />
+                      <UIcon name="check" style={{ fontSize: '16px', color: 'var(--success)' }} />
                       <span style={{
-                        color: '#6ee7b7',
+                        color: 'var(--success)',
                         fontSize: '14px',
                         fontWeight: '600'
                       }}>
@@ -649,26 +648,28 @@ export default function AdminPreviewPage() {
 
             {/* Agreement Header */}
             <div style={{
-              backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+              backgroundColor: 'var(--panel)',
               padding: '40px',
               borderRadius: '12px',
-              border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+              border: `1px solid var(--hairline)`,
               marginBottom: '32px',
               textAlign: 'center',
-              boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.05)'
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
             }}>
               <h1 style={{ 
-                margin: '0 0 16px 0', 
+                margin: '0', 
                 fontSize: '32px', 
                 fontWeight: '800',
-                color: isDark ? '#ffffff' : '#1e293b',
-                lineHeight: '1.2'
+                color: 'var(--ink)',
+                lineHeight: '1.2',
+                fontFamily: 'var(--font-display), Georgia, serif'
               }}>
                 {agreement.template.title}
               </h1>
+              <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px auto 16px' }} aria-hidden="true" />
               <p style={{ 
                 margin: '0 0 24px 0', 
-                color: isDark ? '#8f9a8f' : '#64748b', 
+                color: 'var(--muted)', 
                 fontSize: '18px',
                 lineHeight: '1.4'
               }}>
@@ -679,9 +680,9 @@ export default function AdminPreviewPage() {
                 <div style={{ 
                   marginTop: '24px',
                   padding: '20px',
-                  backgroundColor: '#065f46',
+                  backgroundColor: 'var(--panel)',
                   borderRadius: '8px',
-                  border: '1px solid var(--accent)',
+                  border: '1px solid var(--hairline)',
                   display: 'inline-block'
                 }}>
                   <div style={{
@@ -691,9 +692,9 @@ export default function AdminPreviewPage() {
                     gap: '12px',
                     marginBottom: '8px'
                   }}>
-                    <UIcon name="check" style={{ fontSize: '20px', color: '#6ee7b7' }} />
+                    <UIcon name="check" style={{ fontSize: '20px', color: 'var(--success)' }} />
                     <span style={{ 
-                      color: '#6ee7b7',
+                      color: 'var(--success)',
                       fontSize: '16px',
                       fontWeight: '600'
                     }}>
@@ -702,7 +703,7 @@ export default function AdminPreviewPage() {
                   </div>
                   <p style={{
                     margin: '0',
-                    color: '#a7f3d0',
+                    color: 'var(--muted)',
                     fontSize: '14px'
                   }}>
                     This agreement has been digitally signed and is legally binding.
@@ -713,16 +714,20 @@ export default function AdminPreviewPage() {
 
             {/* Agreement Content */}
             <div style={{
-              backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
-              padding: '40px',
+              backgroundColor: 'var(--panel)',
+              padding: '24px',
               borderRadius: '12px',
-              border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+              border: `1px solid var(--hairline)`,
               marginBottom: '32px',
-              boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.05)'
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
             }}>
               <div 
                 style={{
-                  color: isDark ? '#ffffff' : '#1e293b',
+                  backgroundColor: '#fff',
+                  padding: '32px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--hairline)',
+                  color: 'var(--ink)',
                   lineHeight: '1.7',
                   fontSize: '16px',
                   fontFamily: 'Georgia, serif'
@@ -736,12 +741,12 @@ export default function AdminPreviewPage() {
             {/* Signature Details (if signed) */}
             {agreement && agreement.status === 'SIGNED' && (
               <div style={{
-                backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+                backgroundColor: 'var(--panel)',
                 padding: '32px',
                 borderRadius: '12px',
-                border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+                border: `1px solid var(--hairline)`,
                 marginBottom: '32px',
-                boxShadow: isDark ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.05)'
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
               }}>
                 <div style={{
                   display: 'flex',
@@ -752,19 +757,19 @@ export default function AdminPreviewPage() {
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    backgroundColor: '#065f46',
+                    backgroundColor: 'var(--panel)',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '18px'
                   }}>
-                    <UIcon name="signature" style={{ fontSize: '18px', color: '#a7f3d0' }} />
+                    <UIcon name="signature" style={{ fontSize: '18px', color: 'var(--muted)' }} />
                   </div>
                   <h3 style={{ 
                     margin: '0', 
                     fontSize: '20px', 
-                    color: isDark ? '#ffffff' : '#1e293b',
+                    color: 'var(--ink)',
                     fontWeight: '700'
                   }}>
                     Digital Signature Details
@@ -779,7 +784,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0 0 4px 0', 
                       fontSize: '12px', 
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--muted)',
                       fontWeight: '500'
                     }}>
                       SIGNED BY
@@ -787,7 +792,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0', 
                       fontSize: '14px', 
-                      color: isDark ? '#ffffff' : '#1e293b' 
+                      color: 'var(--ink)' 
                     }}>
                       {agreement.client.firstName} {agreement.client.lastName}
                     </p>
@@ -796,7 +801,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0 0 4px 0', 
                       fontSize: '12px', 
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--muted)',
                       fontWeight: '500'
                     }}>
                       EMAIL
@@ -804,7 +809,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0', 
                       fontSize: '14px', 
-                      color: isDark ? '#ffffff' : '#1e293b' 
+                      color: 'var(--ink)' 
                     }}>
                       {agreement.client.email}
                     </p>
@@ -813,7 +818,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0 0 4px 0', 
                       fontSize: '12px', 
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--muted)',
                       fontWeight: '500'
                     }}>
                       DATE & TIME SIGNED
@@ -821,7 +826,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0', 
                       fontSize: '14px', 
-                      color: isDark ? '#ffffff' : '#1e293b' 
+                      color: 'var(--ink)' 
                     }}>
                       {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
                     </p>
@@ -830,7 +835,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0 0 4px 0', 
                       fontSize: '12px', 
-                      color: isDark ? '#8f9a8f' : '#64748b',
+                      color: 'var(--muted)',
                       fontWeight: '500'
                     }}>
                       IP ADDRESS
@@ -838,7 +843,7 @@ export default function AdminPreviewPage() {
                     <p style={{ 
                       margin: '0', 
                       fontSize: '14px', 
-                      color: isDark ? '#ffffff' : '#1e293b' 
+                      color: 'var(--ink)' 
                     }}>
                       {agreement.signedFromIP || 'N/A'}
                     </p>
@@ -859,37 +864,24 @@ export default function AdminPreviewPage() {
                 onClick={handleDownloadPDF}
                 disabled={isDownloading}
                 style={{
-                  backgroundColor: 'var(--accent)',
-                  color: 'white',
+                  backgroundColor: isDownloading ? 'var(--hairline)' : 'var(--coral)',
+                  color: isDownloading ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '16px 32px',
                   borderRadius: '8px',
                   cursor: isDownloading ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
-                  opacity: isDownloading ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)',
+                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center'
                 }}
-                onMouseEnter={(e) => {
-                  if (!isDownloading) {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDownloading) {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
-                  }
-                }}
+                onMouseEnter={(e) => { if (!isDownloading) { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
+                onMouseLeave={(e) => { if (!isDownloading) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; } }}
               >
                 {isDownloading ? (
                   <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
@@ -903,38 +895,25 @@ export default function AdminPreviewPage() {
                 onClick={handleEmailAgreement}
                 disabled={isEmailing}
                 style={{
-                  backgroundColor: 'var(--accent)',
-                  color: 'white',
+                  backgroundColor: isEmailing ? 'var(--hairline)' : 'var(--coral)',
+                  color: isEmailing ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '16px 32px',
                   borderRadius: '8px',
                   cursor: isEmailing ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
-                  opacity: isEmailing ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
                   position: 'relative',
-                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)',
+                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center'
                 }}
-                onMouseEnter={(e) => {
-                  if (!isEmailing) {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isEmailing) {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
-                  }
-                }}
+                onMouseEnter={(e) => { if (!isEmailing) { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
+                onMouseLeave={(e) => { if (!isEmailing) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; } }}
               >
                 {isEmailing ? (
                   <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
@@ -948,7 +927,7 @@ export default function AdminPreviewPage() {
                     right: '-80px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: 'var(--coral)',
                     color: 'white',
                     padding: '6px 12px',
                     borderRadius: '6px',
@@ -978,17 +957,17 @@ export default function AdminPreviewPage() {
                 zIndex: 1000
               }}>
                 <div style={{
-                  backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+                  backgroundColor: 'var(--panel)',
                   padding: '32px',
                   borderRadius: '8px',
-                  border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+                  border: `1px solid var(--hairline)`,
                   maxWidth: '400px',
                   width: '90%'
                 }}>
                   <h2 style={{ 
                     margin: '0 0 24px 0', 
                     fontSize: '20px', 
-                    color: isDark ? '#ffffff' : '#1e293b' 
+                    color: 'var(--ink)' 
                   }}>
                     Email Agreement
                   </h2>
@@ -999,7 +978,7 @@ export default function AdminPreviewPage() {
                       marginBottom: '8px', 
                       fontSize: '14px', 
                       fontWeight: '500',
-                      color: isDark ? '#ffffff' : '#1e293b'
+                      color: 'var(--ink)'
                     }}>
                       Email Address
                     </label>
@@ -1010,10 +989,10 @@ export default function AdminPreviewPage() {
                       style={{
                         width: '100%',
                         padding: '12px',
-                        border: `1px solid ${isDark ? '#2d3530' : '#d1d5db'}`,
+                        border: `1px solid var(--hairline)`,
                         borderRadius: '6px',
-                        backgroundColor: isDark ? '#080c08' : '#ffffff',
-                        color: isDark ? '#ffffff' : '#1e293b',
+                        backgroundColor: 'var(--panel)',
+                        color: 'var(--ink)',
                         fontSize: '14px'
                       }}
                       placeholder="Enter email address"
@@ -1024,10 +1003,10 @@ export default function AdminPreviewPage() {
                     <div style={{
                       marginBottom: '16px',
                       padding: '12px',
-                      backgroundColor: '#fef2f2',
-                      border: '1px solid #fecaca',
-                      borderRadius: '6px',
-                      color: '#dc2626',
+                      backgroundColor: 'var(--panel)',
+                border: '1px solid var(--alert)',
+                borderRadius: '8px',
+                color: 'var(--alert)',
                       fontSize: '14px'
                     }}>
                       {emailError}
@@ -1047,8 +1026,8 @@ export default function AdminPreviewPage() {
                       }}
                       style={{
                         backgroundColor: 'transparent',
-                        color: isDark ? '#8f9a8f' : '#64748b',
-                        border: `1px solid ${isDark ? '#2d3530' : '#d1d5db'}`,
+                        color: 'var(--muted)',
+                        border: `1px solid var(--hairline)`,
                         padding: '12px 24px',
                         borderRadius: '6px',
                         cursor: 'pointer',
@@ -1061,7 +1040,7 @@ export default function AdminPreviewPage() {
                       onClick={handleSendEmail}
                       disabled={isEmailing}
                       style={{
-                        backgroundColor: 'var(--accent)',
+                        backgroundColor: 'var(--coral)',
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
@@ -1080,8 +1059,8 @@ export default function AdminPreviewPage() {
 
             {/* Professional Footer */}
             <div style={{
-              backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
-              borderTop: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+              backgroundColor: 'var(--panel)',
+              borderTop: `1px solid var(--hairline)`,
               padding: '32px 0',
               marginTop: '60px'
             }}>
@@ -1101,7 +1080,7 @@ export default function AdminPreviewPage() {
                   <div style={{
                     width: '32px',
                     height: '32px',
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: 'var(--coral)',
                     borderRadius: '6px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1116,7 +1095,7 @@ export default function AdminPreviewPage() {
                     margin: '0',
                     fontSize: '18px',
                     fontWeight: '700',
-                    color: isDark ? '#ffffff' : '#1e293b'
+                    color: 'var(--ink)'
                   }}>
                     Photobooth Guys
                   </h3>
@@ -1124,7 +1103,7 @@ export default function AdminPreviewPage() {
                 <p style={{
                   margin: '0 0 16px 0',
                   fontSize: '14px',
-                  color: isDark ? '#8f9a8f' : '#64748b'
+                  color: 'var(--muted)'
                 }}>
                   Professional photo booth services for your special events
                 </p>
@@ -1135,7 +1114,7 @@ export default function AdminPreviewPage() {
                   gap: '24px',
                   flexWrap: 'wrap',
                   fontSize: '12px',
-                  color: isDark ? '#64748b' : '#94a3b8'
+                  color: 'var(--muted)'
                 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <UIcon name="envelope" style={{ fontSize: '12px' }} />
@@ -1153,11 +1132,11 @@ export default function AdminPreviewPage() {
                 <div style={{
                   marginTop: '16px',
                   padding: '12px',
-                  backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                  backgroundColor: 'var(--paper)',
                   borderRadius: '6px',
-                  border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+                  border: `1px solid var(--hairline)`,
                   fontSize: '12px',
-                  color: isDark ? '#8f9a8f' : '#64748b'
+                  color: 'var(--muted)'
                 }}>
                   <p style={{ margin: '0' }}>
                     This agreement was generated and signed using our secure digital platform. 

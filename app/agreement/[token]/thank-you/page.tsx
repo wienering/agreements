@@ -51,7 +51,6 @@ export default function ThankYouPage() {
   const [needsEmail, setNeedsEmail] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isDark, setIsDark] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isEmailing, setIsEmailing] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -201,24 +200,24 @@ export default function ThankYouPage() {
     return (
       <div style={{ 
         minHeight: '100vh', 
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        backgroundColor: 'var(--paper)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
         gap: '24px',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: 'var(--font-ui), system-ui, sans-serif'
       }}>
         <div style={{
           width: '48px',
           height: '48px',
-          border: `4px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
-          borderTop: '4px solid var(--accent)',
+          border: `4px solid var(--hairline)`,
+          borderTop: '4px solid var(--coral)',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
         }} />
         <p style={{ 
-          color: isDark ? '#8f9a8f' : '#64748b',
+          color: 'var(--muted)',
           fontSize: '16px'
         }}>
           Loading your agreement...
@@ -231,31 +230,33 @@ export default function ThankYouPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        backgroundColor: 'var(--paper)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: 'var(--font-ui), system-ui, sans-serif',
         padding: '24px',
       }}>
         <div style={{
-          backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+          backgroundColor: 'var(--panel)',
           padding: '40px',
           borderRadius: '12px',
-          border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+          border: `1px solid var(--hairline)`,
           maxWidth: '420px',
           width: '100%',
         }}>
           <h1 style={{
-            color: isDark ? '#ffffff' : '#1e293b',
+            color: 'var(--ink)',
             fontSize: '24px',
-            margin: '0 0 12px 0',
+            margin: '0',
             fontWeight: '700',
+            fontFamily: 'var(--font-display), Georgia, serif',
           }}>
             Confirm Your Email
           </h1>
+          <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px 0 16px' }} aria-hidden="true" />
           <p style={{
-            color: isDark ? '#8f9a8f' : '#64748b',
+            color: 'var(--muted)',
             fontSize: '16px',
             margin: '0 0 24px 0',
             lineHeight: '1.5',
@@ -266,10 +267,10 @@ export default function ThankYouPage() {
             <div style={{
               marginBottom: '16px',
               padding: '12px',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '6px',
-              color: '#dc2626',
+              backgroundColor: 'var(--panel)',
+                border: '1px solid var(--alert)',
+                borderRadius: '8px',
+                color: 'var(--alert)',
               fontSize: '14px',
             }}>
               {error}
@@ -280,7 +281,7 @@ export default function ThankYouPage() {
             marginBottom: '8px',
             fontSize: '14px',
             fontWeight: '500',
-            color: isDark ? '#ffffff' : '#1e293b',
+            color: 'var(--ink)',
           }}>
             Email Address
           </label>
@@ -294,10 +295,10 @@ export default function ThankYouPage() {
             style={{
               width: '100%',
               padding: '12px',
-              border: `1px solid ${isDark ? '#2d3530' : '#d1d5db'}`,
+              border: '1px solid var(--hairline)',
               borderRadius: '6px',
-              backgroundColor: isDark ? '#080c08' : '#ffffff',
-              color: isDark ? '#ffffff' : '#1e293b',
+              backgroundColor: '#fff',
+              color: 'var(--ink)',
               fontSize: '14px',
               marginBottom: '20px',
               boxSizing: 'border-box',
@@ -309,15 +310,15 @@ export default function ThankYouPage() {
             disabled={isVerifying || !verificationEmail.trim()}
             style={{
               width: '100%',
-              backgroundColor: 'var(--accent)',
-              color: 'white',
+              backgroundColor: isVerifying || !verificationEmail.trim() ? 'var(--hairline)' : 'var(--coral)',
+              color: isVerifying || !verificationEmail.trim() ? 'var(--muted)' : 'white',
               border: 'none',
               padding: '12px 24px',
               borderRadius: '6px',
               cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               fontWeight: '600',
-              opacity: isVerifying || !verificationEmail.trim() ? 0.7 : 1,
+              opacity: isVerifying ? 0.7 : 1,
             }}
           >
             {isVerifying ? 'Loading...' : 'Continue'}
@@ -331,17 +332,17 @@ export default function ThankYouPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
+        backgroundColor: 'var(--paper)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: 'var(--font-ui), system-ui, sans-serif'
       }}>
         <div style={{
-          backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+          backgroundColor: 'var(--panel)',
           padding: '40px',
           borderRadius: '12px',
-          border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+          border: `1px solid var(--hairline)`,
           textAlign: 'center',
           maxWidth: '500px'
         }}>
@@ -349,12 +350,12 @@ export default function ThankYouPage() {
             marginBottom: '16px',
             display: 'flex',
             justifyContent: 'center',
-            color: '#f59e0b',
+            color: 'var(--warn)',
           }}>
             <UIcon name="circle-exclamation" style={{ fontSize: '48px' }} title="Warning" />
           </div>
           <h1 style={{ 
-            color: isDark ? '#ffffff' : '#1e293b', 
+            color: 'var(--ink)', 
             fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700'
@@ -362,7 +363,7 @@ export default function ThankYouPage() {
             Agreement Not Found
           </h1>
           <p style={{ 
-            color: isDark ? '#8f9a8f' : '#64748b', 
+            color: 'var(--muted)', 
             fontSize: '16px',
             margin: '0'
           }}>
@@ -400,28 +401,28 @@ export default function ThankYouPage() {
         @keyframes checkmarkPulse {
           0% {
             transform: scale(0.8);
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            box-shadow: 0 0 0 0 rgba(63, 111, 79, 0.7);
           }
           50% {
             transform: scale(1.1);
-            box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+            box-shadow: 0 0 0 20px rgba(63, 111, 79, 0);
           }
           100% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            box-shadow: 0 0 0 0 rgba(63, 111, 79, 0);
           }
         }
         
       `}</style>
       <div style={{ 
         minHeight: '100vh', 
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        backgroundColor: 'var(--paper)',
+        fontFamily: 'var(--font-ui), system-ui, sans-serif'
       }}>
         {/* Success Header */}
         <div style={{
-          backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
-          borderBottom: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+          backgroundColor: 'var(--panel)',
+          borderBottom: `1px solid var(--hairline)`,
           padding: '40px 0',
           textAlign: 'center',
           animation: 'fadeIn 0.6s ease-out'
@@ -435,7 +436,7 @@ export default function ThankYouPage() {
             <div style={{
               width: '100px',
               height: '100px',
-              backgroundColor: 'var(--accent)',
+              backgroundColor: 'var(--success)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -444,25 +445,26 @@ export default function ThankYouPage() {
               fontSize: '48px',
               color: 'white',
               animation: 'checkmarkPulse 1s ease-in-out',
-              boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)'
+              boxShadow: '0 0 0 0 rgba(63, 111, 79, 0.7)'
             }}>
               <UIcon name="check" style={{ fontSize: '48px', color: 'white' }} title="Success" />
             </div>
             
             <h1 style={{
-              margin: '0 0 16px 0',
+              margin: '0',
               fontSize: '48px',
               fontWeight: '800',
-              color: isDark ? '#ffffff' : '#1e293b',
+              color: 'var(--ink)',
+              fontFamily: 'var(--font-display), Georgia, serif',
               animation: 'slideIn 0.8s ease-out'
             }}>
               Thank You!
             </h1>
-            
+            <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px auto 16px' }} aria-hidden="true" />
             <p style={{
               margin: '0 0 24px 0',
               fontSize: '20px',
-              color: isDark ? '#8f9a8f' : '#64748b',
+              color: 'var(--muted)',
               lineHeight: '1.6'
             }}>
               Your agreement has been successfully signed and is now binding.
@@ -473,11 +475,11 @@ export default function ThankYouPage() {
               alignItems: 'center',
               gap: '8px',
               padding: '12px 24px',
-              backgroundColor: isDark ? '#080c08' : '#f8fafc',
+              backgroundColor: 'var(--paper)',
               borderRadius: '8px',
-              border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+              border: `1px solid var(--hairline)`,
               fontSize: '16px',
-              color: isDark ? '#ffffff' : '#1e293b',
+              color: 'var(--ink)',
               fontWeight: '600'
             }}>
               <UIcon name="envelope" style={{ flexShrink: 0 }} />
@@ -493,10 +495,10 @@ export default function ThankYouPage() {
         }}>
           {/* Agreement Summary */}
           <div style={{
-            backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+            backgroundColor: 'var(--panel)',
             padding: '32px',
             borderRadius: '12px',
-            border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+            border: `1px solid var(--hairline)`,
             marginBottom: '32px',
             animation: 'fadeIn 0.8s ease-out 0.2s both'
           }}>
@@ -504,7 +506,7 @@ export default function ThankYouPage() {
               margin: '0 0 24px 0',
               fontSize: '24px',
               fontWeight: '700',
-              color: isDark ? '#ffffff' : '#1e293b'
+              color: 'var(--ink)'
             }}>
               Agreement Summary
             </h2>
@@ -520,7 +522,7 @@ export default function ThankYouPage() {
                   margin: '0 0 8px 0',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
                 }}>
@@ -529,7 +531,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0 0 4px 0',
                   fontSize: '16px',
-                  color: isDark ? '#ffffff' : '#1e293b',
+                  color: 'var(--ink)',
                   fontWeight: '500'
                 }}>
                   {agreement.client.firstName} {agreement.client.lastName}
@@ -537,7 +539,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0',
                   fontSize: '14px',
-                  color: isDark ? '#8f9a8f' : '#64748b'
+                  color: 'var(--muted)'
                 }}>
                   {agreement.client.email}
                 </p>
@@ -548,7 +550,7 @@ export default function ThankYouPage() {
                   margin: '0 0 8px 0',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
                 }}>
@@ -557,7 +559,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0 0 4px 0',
                   fontSize: '16px',
-                  color: isDark ? '#ffffff' : '#1e293b',
+                  color: 'var(--ink)',
                   fontWeight: '500'
                 }}>
                   {(agreement.event?.eventType ?? agreement.client.eventType) || 'Not specified'}
@@ -566,7 +568,7 @@ export default function ThankYouPage() {
                   <p style={{
                     margin: '0 0 4px 0',
                     fontSize: '14px',
-                    color: isDark ? '#8f9a8f' : '#64748b'
+                    color: 'var(--muted)'
                   }}>
                     {new Date(agreement.event?.eventDate ?? agreement.client.eventDate!).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                   </p>
@@ -574,7 +576,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0',
                   fontSize: '14px',
-                  color: isDark ? '#8f9a8f' : '#64748b'
+                  color: 'var(--muted)'
                 }}>
                   {(agreement.event?.eventLocation ?? agreement.client.eventLocation) || 'Location TBD'}
                 </p>
@@ -585,7 +587,7 @@ export default function ThankYouPage() {
                   margin: '0 0 8px 0',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
                 }}>
@@ -594,7 +596,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0 0 4px 0',
                   fontSize: '16px',
-                  color: isDark ? '#ffffff' : '#1e293b',
+                  color: 'var(--ink)',
                   fontWeight: '500'
                 }}>
                   {(agreement.event?.eventPackage ?? agreement.client.eventPackage) || 'Standard Package'}
@@ -603,7 +605,7 @@ export default function ThankYouPage() {
                   <p style={{
                     margin: '0',
                     fontSize: '14px',
-                    color: isDark ? '#8f9a8f' : '#64748b'
+                    color: 'var(--muted)'
                   }}>
                     ${typeof (agreement.event?.packagePrice ?? agreement.client.packagePrice) === 'number' 
                       ? Number(agreement.event?.packagePrice ?? agreement.client.packagePrice).toFixed(2) 
@@ -617,7 +619,7 @@ export default function ThankYouPage() {
                   margin: '0 0 8px 0',
                   fontSize: '14px',
                   fontWeight: '600',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
                 }}>
@@ -626,7 +628,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0',
                   fontSize: '16px',
-                  color: isDark ? '#ffffff' : '#1e293b',
+                  color: 'var(--ink)',
                   fontWeight: '500'
                 }}>
                   {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { 
@@ -655,37 +657,24 @@ export default function ThankYouPage() {
               onClick={handleDownloadPDF}
               disabled={isDownloading}
               style={{
-                backgroundColor: 'var(--accent)',
-                color: 'white',
+                backgroundColor: isDownloading ? 'var(--hairline)' : 'var(--coral)',
+                color: isDownloading ? 'var(--muted)' : 'white',
                 border: 'none',
                 padding: '16px 32px',
                 borderRadius: '8px',
                 cursor: isDownloading ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
                 fontWeight: '600',
-                opacity: isDownloading ? 0.7 : 1,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)',
+                boxShadow: 'none',
                 transition: 'all 0.2s ease',
                 minWidth: '180px',
                 justifyContent: 'center'
               }}
-              onMouseEnter={(e) => {
-                if (!isDownloading) {
-                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isDownloading) {
-                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
-                }
-              }}
+              onMouseEnter={(e) => { if (!isDownloading) { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
+              onMouseLeave={(e) => { if (!isDownloading) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; } }}
             >
               {isDownloading ? (
                 <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
@@ -699,37 +688,24 @@ export default function ThankYouPage() {
               onClick={handleEmailAgreement}
               disabled={isEmailing}
               style={{
-                backgroundColor: 'var(--accent)',
-                color: 'white',
+                backgroundColor: isEmailing ? 'var(--hairline)' : 'var(--coral)',
+                color: isEmailing ? 'var(--muted)' : 'white',
                 border: 'none',
                 padding: '16px 32px',
                 borderRadius: '8px',
                 cursor: isEmailing ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
                 fontWeight: '600',
-                opacity: isEmailing ? 0.7 : 1,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                boxShadow: '0 4px 6px rgba(16, 185, 129, 0.3)',
+                boxShadow: 'none',
                 transition: 'all 0.2s ease',
                 minWidth: '180px',
                 justifyContent: 'center'
               }}
-              onMouseEnter={(e) => {
-                if (!isEmailing) {
-                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isEmailing) {
-                  e.currentTarget.style.backgroundColor = 'var(--accent)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)';
-                }
-              }}
+              onMouseEnter={(e) => { if (!isEmailing) { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
+              onMouseLeave={(e) => { if (!isEmailing) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; } }}
             >
               {isEmailing ? (
                 <UIcon name="spinner" className="animate-spin" style={{ fontSize: '18px' }} />
@@ -742,10 +718,10 @@ export default function ThankYouPage() {
 
           {/* Next Steps */}
           <div style={{
-            backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+            backgroundColor: 'var(--panel)',
             padding: '32px',
             borderRadius: '12px',
-            border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+            border: `1px solid var(--hairline)`,
             marginBottom: '32px',
             animation: 'fadeIn 1.2s ease-out 0.6s both'
           }}>
@@ -753,7 +729,7 @@ export default function ThankYouPage() {
               margin: '0 0 24px 0',
               fontSize: '24px',
               fontWeight: '700',
-              color: isDark ? '#ffffff' : '#1e293b'
+              color: 'var(--ink)'
             }}>
               What&apos;s Next?
             </h2>
@@ -765,15 +741,15 @@ export default function ThankYouPage() {
             }}>
               <div style={{
                 padding: '20px',
-                backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                backgroundColor: 'var(--paper)',
                 borderRadius: '8px',
-                border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`
+                border: `1px solid var(--hairline)`
               }}>
                 <h3 style={{
                   margin: '0 0 12px 0',
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: isDark ? '#ffffff' : '#1e293b'
+                  color: 'var(--ink)'
                 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <UIcon name="link" />
@@ -783,7 +759,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0 0 16px 0',
                   fontSize: '14px',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   lineHeight: '1.5'
                 }}>
                   View all your agreements, track payment status, access your event gallery, and manage your event details in one convenient place.
@@ -797,7 +773,7 @@ export default function ThankYouPage() {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '12px 20px',
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: 'var(--coral)',
                     color: 'white',
                     textDecoration: 'none',
                     borderRadius: '6px',
@@ -806,11 +782,11 @@ export default function ThankYouPage() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
+                    e.currentTarget.style.opacity = '0.9';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
+                    e.currentTarget.style.opacity = '1';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
@@ -820,15 +796,15 @@ export default function ThankYouPage() {
               
               <div style={{
                 padding: '20px',
-                backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                backgroundColor: 'var(--paper)',
                 borderRadius: '8px',
-                border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`
+                border: `1px solid var(--hairline)`
               }}>
                 <h3 style={{
                   margin: '0 0 12px 0',
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: isDark ? '#ffffff' : '#1e293b'
+                  color: 'var(--ink)'
                 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <UIcon name="camera" />
@@ -838,7 +814,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0 0 16px 0',
                   fontSize: '14px',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   lineHeight: '1.5'
                 }}>
                   Select from our collection of professional photo booth templates to match your event theme.
@@ -852,7 +828,7 @@ export default function ThankYouPage() {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '12px 20px',
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: 'var(--coral)',
                     color: 'white',
                     textDecoration: 'none',
                     borderRadius: '6px',
@@ -861,11 +837,11 @@ export default function ThankYouPage() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
+                    e.currentTarget.style.opacity = '0.9';
                     e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--accent)';
+                    e.currentTarget.style.opacity = '1';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
@@ -875,15 +851,15 @@ export default function ThankYouPage() {
               
               <div style={{
                 padding: '20px',
-                backgroundColor: isDark ? '#080c08' : '#f8fafc',
+                backgroundColor: 'var(--paper)',
                 borderRadius: '8px',
-                border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`
+                border: `1px solid var(--hairline)`
               }}>
                 <h3 style={{
                   margin: '0 0 12px 0',
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: isDark ? '#ffffff' : '#1e293b'
+                  color: 'var(--ink)'
                 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     <UIcon name="phone-call" />
@@ -893,7 +869,7 @@ export default function ThankYouPage() {
                 <p style={{
                   margin: '0 0 16px 0',
                   fontSize: '14px',
-                  color: isDark ? '#8f9a8f' : '#64748b',
+                  color: 'var(--muted)',
                   lineHeight: '1.5'
                 }}>
                   Have questions about your event? Our team is here to help make your day perfect.
@@ -903,7 +879,7 @@ export default function ThankYouPage() {
                   flexDirection: 'column',
                   gap: '8px',
                   fontSize: '14px',
-                  color: isDark ? '#ffffff' : '#1e293b'
+                  color: 'var(--ink)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <UIcon name="envelope" style={{ flexShrink: 0, opacity: 0.85 }} />
@@ -935,23 +911,23 @@ export default function ThankYouPage() {
             zIndex: 1000
           }}>
             <div style={{
-              backgroundColor: isDark ? '#1a1d1a' : '#ffffff',
+              backgroundColor: 'var(--panel)',
               padding: '32px',
               borderRadius: '8px',
-              border: `1px solid ${isDark ? '#2d3530' : '#e2e8f0'}`,
+              border: `1px solid var(--hairline)`,
               maxWidth: '400px',
               width: '90%'
             }}>
               <h2 style={{ 
                 margin: '0 0 24px 0', 
                 fontSize: '20px', 
-                color: isDark ? '#ffffff' : '#1e293b' 
+                color: 'var(--ink)' 
               }}>
                 Email Agreement Copy
               </h2>
               <p style={{ 
                 margin: '0 0 24px 0', 
-                color: isDark ? '#8f9a8f' : '#64748b', 
+                color: 'var(--muted)', 
                 fontSize: '14px' 
               }}>
                 Enter the email address where you&apos;d like to receive a copy of the signed agreement.
@@ -962,7 +938,7 @@ export default function ThankYouPage() {
                   marginBottom: '8px', 
                   fontSize: '14px', 
                   fontWeight: '500',
-                  color: isDark ? '#ffffff' : '#1e293b'
+                  color: 'var(--ink)'
                 }}>
                   Recipient Email
                 </label>
@@ -973,10 +949,10 @@ export default function ThankYouPage() {
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: `1px solid ${isDark ? '#2d3530' : '#d1d5db'}`,
+                    border: `1px solid var(--hairline)`,
                     borderRadius: '6px',
-                    backgroundColor: isDark ? '#080c08' : '#ffffff',
-                    color: isDark ? '#ffffff' : '#1e293b',
+                    backgroundColor: 'var(--panel)',
+                    color: 'var(--ink)',
                     fontSize: '14px'
                   }}
                   placeholder="Enter recipient email"
@@ -986,10 +962,10 @@ export default function ThankYouPage() {
                 <div style={{
                   marginBottom: '16px',
                   padding: '12px',
-                  backgroundColor: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  borderRadius: '6px',
-                  color: '#dc2626',
+                  backgroundColor: 'var(--panel)',
+                border: '1px solid var(--alert)',
+                borderRadius: '8px',
+                color: 'var(--alert)',
                   fontSize: '14px'
                 }}>
                   {emailError}
@@ -1004,8 +980,8 @@ export default function ThankYouPage() {
                   }}
                   style={{
                     backgroundColor: 'transparent',
-                    color: isDark ? '#8f9a8f' : '#64748b',
-                    border: `1px solid ${isDark ? '#2d3530' : '#d1d5db'}`,
+                    color: 'var(--muted)',
+                    border: `1px solid var(--hairline)`,
                     padding: '12px 24px',
                     borderRadius: '6px',
                     cursor: 'pointer',
@@ -1018,7 +994,7 @@ export default function ThankYouPage() {
                   onClick={handleSendEmail}
                   disabled={isEmailing}
                   style={{
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: 'var(--coral)',
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
