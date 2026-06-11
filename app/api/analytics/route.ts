@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import {
+  addTorontoCalendarDays,
+  addTorontoCalendarDaysFrom,
+  formatDateToronto,
+  getTorontoDateParts,
+  torontoCalendarDaysBetween,
+  torontoDateKey,
+  torontoMidnightUtc,
+  torontoMonthKey,
+  torontoStartOfTodayUtc,
+} from '@/lib/dates';
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,9 +43,8 @@ export async function GET(request: NextRequest) {
     // Calculate conversion rate
     const conversionRate = totalAgreements > 0 ? Math.round((signedAgreements / totalAgreements) * 100) : 0;
 
-    // Get recent agreements (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Get recent agreements (last 30 Toronto calendar days)
+    const thirtyDaysAgo = addTorontoCalendarDaysFrom(new Date(), -30);
     
     const recentAgreements = await prisma.agreement.findMany({
       where: {
@@ -57,102 +67,98 @@ export async function GET(request: NextRequest) {
     let startDate: Date;
     
     if (period === 'week') {
-      // Last 7 days
-      startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
+      startDate = addTorontoCalendarDaysFrom(new Date(), -7);
       
-      const weeklyData = await prisma.agreement.groupBy({
-        by: ['createdAt'],
+      const weeklyData = await prisma.agreement.findMany({
         where: {
           createdAt: {
             gte: startDate
           }
         },
-        _count: {
-          id: true
-        }
+        select: { createdAt: true },
       });
 
       chartData = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (6 - i));
-        date.setHours(0, 0, 0, 0);
+        const bucketDate = addTorontoCalendarDaysFrom(new Date(), -(6 - i));
+        const bucketKey = torontoDateKey(bucketDate);
         
-        const dayData = weeklyData.filter(item => {
-          const itemDate = new Date(item.createdAt);
-          itemDate.setHours(0, 0, 0, 0);
-          return itemDate.getTime() === date.getTime();
-        });
+        const dayData = weeklyData.filter(item => torontoDateKey(item.createdAt) === bucketKey);
         
         return {
-          month: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          count: dayData.reduce((sum, item) => sum + item._count.id, 0)
+          month: formatDateToronto(bucketDate, { month: 'short', day: 'numeric' }),
+          count: dayData.length
         };
       });
     } else if (period === 'year') {
-      // Last 12 months
-      startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 12);
+      const nowParts = getTorontoDateParts(new Date());
+      let startYear = nowParts.year;
+      let startMonth = nowParts.month - 11;
+      while (startMonth < 0) {
+        startMonth += 12;
+        startYear -= 1;
+      }
+      startDate = torontoMidnightUtc(startYear, startMonth, 1);
       
-      const yearlyData = await prisma.agreement.groupBy({
-        by: ['createdAt'],
+      const yearlyData = await prisma.agreement.findMany({
         where: {
           createdAt: {
             gte: startDate
           }
         },
-        _count: {
-          id: true
-        }
+        select: { createdAt: true },
       });
 
       chartData = Array.from({ length: 12 }, (_, i) => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - (11 - i));
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        let year = startYear;
+        let month = startMonth + i;
+        while (month > 11) {
+          month -= 12;
+          year += 1;
+        }
+        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+        const labelDate = torontoMidnightUtc(year, month, 1);
         
-        const monthData = yearlyData.filter(item => {
-          const itemDate = new Date(item.createdAt);
-          const itemMonthKey = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
-          return itemMonthKey === monthKey;
-        });
+        const monthData = yearlyData.filter(item => torontoMonthKey(item.createdAt) === monthKey);
         
         return {
-          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-          count: monthData.reduce((sum, item) => sum + item._count.id, 0)
+          month: formatDateToronto(labelDate, { month: 'short', year: 'numeric' }),
+          count: monthData.length
         };
       });
     } else {
-      // Default: last 6 months
-      startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 6);
+      const nowParts = getTorontoDateParts(new Date());
+      let startYear = nowParts.year;
+      let startMonth = nowParts.month - 5;
+      while (startMonth < 0) {
+        startMonth += 12;
+        startYear -= 1;
+      }
+      startDate = torontoMidnightUtc(startYear, startMonth, 1);
       
-      const monthlyData = await prisma.agreement.groupBy({
-        by: ['createdAt'],
+      const monthlyData = await prisma.agreement.findMany({
         where: {
           createdAt: {
             gte: startDate
           }
         },
-        _count: {
-          id: true
-        }
+        select: { createdAt: true },
       });
 
       chartData = Array.from({ length: 6 }, (_, i) => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - (5 - i));
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        let year = startYear;
+        let month = startMonth + i;
+        while (month > 11) {
+          month -= 12;
+          year += 1;
+        }
+        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+        const labelDate = torontoMidnightUtc(year, month, 1);
         
-        const monthData = monthlyData.filter(item => {
-          const itemDate = new Date(item.createdAt);
-          const itemMonthKey = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
-          return itemMonthKey === monthKey;
-        });
+        const monthData = monthlyData.filter(item => torontoMonthKey(item.createdAt) === monthKey);
         
         return {
-          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-          count: monthData.reduce((sum, item) => sum + item._count.id, 0)
+          month: formatDateToronto(labelDate, { month: 'short', year: 'numeric' }),
+          count: monthData.length
         };
       });
     }
@@ -202,11 +208,8 @@ export async function GET(request: NextRequest) {
 
     // Calculate trends (compare current period vs previous period)
     const daysNum = days ? parseInt(days) : 7;
-    const currentPeriodStart = new Date();
-    currentPeriodStart.setDate(currentPeriodStart.getDate() - daysNum);
-    
-    const previousPeriodStart = new Date(currentPeriodStart);
-    previousPeriodStart.setDate(previousPeriodStart.getDate() - daysNum);
+    const currentPeriodStart = addTorontoCalendarDaysFrom(new Date(), -daysNum);
+    const previousPeriodStart = addTorontoCalendarDaysFrom(currentPeriodStart, -daysNum);
     
     // Get agreements for current period
     const currentPeriodAgreements = await prisma.agreement.count({
@@ -277,16 +280,19 @@ export async function GET(request: NextRequest) {
       : currentPeriodClients > 0 ? 100 : 0;
 
     // Get upcoming events (next 14 calendar days including today) from agreements with DRAFT, LIVE, or SIGNED status
-    const now = new Date();
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfRange = new Date(startOfToday);
-    endOfRange.setDate(endOfRange.getDate() + 13);
-    endOfRange.setHours(23, 59, 59, 999);
+    const startOfToday = torontoStartOfTodayUtc();
+    const endOfRange = addTorontoCalendarDaysFrom(startOfToday, 13);
+    const endOfRangeParts = getTorontoDateParts(endOfRange);
+    const endOfRangeEnd = torontoMidnightUtc(
+      ...(() => {
+        const next = addTorontoCalendarDays(endOfRangeParts.year, endOfRangeParts.month, endOfRangeParts.day, 1);
+        return [next.year, next.month, next.day] as [number, number, number];
+      })(),
+    );
 
     const eventDateInWindow = {
       gte: startOfToday,
-      lte: endOfRange
+      lt: endOfRangeEnd,
     };
 
     // We check both event.eventDate and client.eventDate to capture all possible events
@@ -355,15 +361,18 @@ export async function GET(request: NextRequest) {
             : null;
         
         // Filter out past events and events without dates
-        if (!eventDate || eventDate < startOfToday || eventDate > endOfRange) {
+        if (!eventDate) {
           return null;
         }
 
-        const eventDay = new Date(eventDate);
-        eventDay.setHours(0, 0, 0, 0);
-        const daysUntil = Math.round(
-          (eventDay.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24)
-        );
+        const eventKey = torontoDateKey(eventDate);
+        const todayKey = torontoDateKey(startOfToday);
+        const endKey = torontoDateKey(endOfRange);
+        if (eventKey < todayKey || eventKey > endKey) {
+          return null;
+        }
+
+        const daysUntil = torontoCalendarDaysBetween(startOfToday, eventDate);
         
         // Use event data if available, otherwise fall back to client data
         const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;

@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { UIcon } from '../components/UIcon';
 import { accentTokens } from '../lib/adminTheme';
 import { AdminButton } from '../components/AdminButton';
+import { formatDateToronto } from '@/lib/dates';
 
 interface DashboardStats {
   totalClients: number;
@@ -572,8 +573,8 @@ export default function AdminHome() {
                   {upcomingEvents.length > 0 ? (
                     upcomingEvents.map((event, idx) => {
                       const eventDate = new Date(event.eventDate);
-                      const monthLabel = eventDate.toLocaleDateString('en-US', { month: 'short' });
-                      const dayLabel = eventDate.toLocaleDateString('en-US', { day: 'numeric' });
+                      const monthLabel = formatDateToronto(event.eventDate, { month: 'short' });
+                      const dayLabel = formatDateToronto(event.eventDate, { day: 'numeric' });
                       // Split out the "c/o ..." suffix so the lead-in name reads
                       // as the primary subject and the care-of contact recedes.
                       const coMatch = event.clientName.match(/^(.*?)(\s+c\/o\s+.*)$/i);

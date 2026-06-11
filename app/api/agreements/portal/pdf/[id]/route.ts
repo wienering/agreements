@@ -4,6 +4,7 @@ import { authenticateSession } from '../../shared/auth';
 import jsPDF from 'jspdf';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { formatDateToronto } from '@/lib/dates';
 
 // Generate PDF using jsPDF (serverless-friendly)
 const generatePDF = async (htmlContent: string, agreement: any): Promise<Buffer> => {
@@ -79,7 +80,7 @@ const generatePDF = async (htmlContent: string, agreement: any): Promise<Buffer>
   addText(`Client: ${agreement.client.firstName} ${agreement.client.lastName}`, 12, false);
   addText(`Agreement ID: ${agreement.id}`, 10, false);
   if (agreement.signedAt) {
-    addText(`Signed: ${new Date(agreement.signedAt).toLocaleDateString()}`, 10, false);
+    addText(`Signed: ${formatDateToronto(agreement.signedAt)}`, 10, false);
   }
   yPosition += 10;
 

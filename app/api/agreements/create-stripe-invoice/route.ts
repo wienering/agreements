@@ -5,6 +5,14 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
 import Stripe from 'stripe';
+import {
+  addTorontoCalendarDays,
+  formatEventDateToronto,
+  getTorontoDateParts,
+  torontoCalendarDaysBetween,
+  torontoMidnightUtc,
+  torontoStartOfTodayUtc,
+} from '@/lib/dates';
 
 const createInvoiceSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -32,19 +40,28 @@ const createInvoiceSchema = z.object({
  *   - If event date is ≤ 7 days in the future:
  *     - Entire amount: due today
  */
+function torontoDueDateSevenDaysBeforeEvent(eventDate: Date): Date {
+  const { year, month, day } = getTorontoDateParts(eventDate);
+  const due = addTorontoCalendarDays(year, month, day, -7);
+  return torontoMidnightUtc(due.year, due.month, due.day);
+}
+
 function calculateInvoiceDetails(
   eventDate: Date | null, 
   totalAmount: number, 
   invoiceType: 'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount' = 'default',
   customAmount?: number
 ) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = torontoStartOfTodayUtc();
+
+  const resolveDueDate = (event: Date): Date => {
+    const remainingDueDate = torontoDueDateSevenDaysBeforeEvent(event);
+    return remainingDueDate < today ? today : remainingDueDate;
+  };
 
   // Handle "Total Amount Only" invoice type
   if (invoiceType === 'total-only') {
     if (!eventDate) {
-      // No event date - due today
       return {
         depositAmount: 0,
         remainingAmount: totalAmount,
@@ -54,14 +71,7 @@ function calculateInvoiceDetails(
       };
     }
 
-    // Calculate 7 days before event date
-    const event = new Date(eventDate);
-    event.setHours(0, 0, 0, 0);
-    const remainingDueDate = new Date(event);
-    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
-
-    // If due date is in the past or less than 7 days away, use today
-    const finalDueDate = remainingDueDate < today ? today : remainingDueDate;
+    const finalDueDate = resolveDueDate(eventDate);
 
     return {
       depositAmount: 0,
@@ -74,10 +84,9 @@ function calculateInvoiceDetails(
 
   // Handle "Total Amount Minus $100 Deposit" invoice type
   if (invoiceType === 'total-minus-deposit') {
-    const invoiceAmount = Math.max(0, totalAmount - 100); // Deduct $100, but don't go below 0
+    const invoiceAmount = Math.max(0, totalAmount - 100);
     
     if (!eventDate) {
-      // No event date - due today
       return {
         depositAmount: 0,
         remainingAmount: invoiceAmount,
@@ -87,14 +96,7 @@ function calculateInvoiceDetails(
       };
     }
 
-    // Calculate 7 days before event date
-    const event = new Date(eventDate);
-    event.setHours(0, 0, 0, 0);
-    const remainingDueDate = new Date(event);
-    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
-
-    // If due date is in the past or less than 7 days away, use today
-    const finalDueDate = remainingDueDate < today ? today : remainingDueDate;
+    const finalDueDate = resolveDueDate(eventDate);
 
     return {
       depositAmount: 0,
@@ -112,7 +114,6 @@ function calculateInvoiceDetails(
     }
     
     if (!eventDate) {
-      // No event date - due today
       return {
         depositAmount: 0,
         remainingAmount: customAmount,
@@ -122,14 +123,7 @@ function calculateInvoiceDetails(
       };
     }
 
-    // Calculate 7 days before event date
-    const event = new Date(eventDate);
-    event.setHours(0, 0, 0, 0);
-    const remainingDueDate = new Date(event);
-    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
-
-    // If due date is in the past or less than 7 days away, use today
-    const finalDueDate = remainingDueDate < today ? today : remainingDueDate;
+    const finalDueDate = resolveDueDate(eventDate);
 
     return {
       depositAmount: 0,
@@ -142,7 +136,6 @@ function calculateInvoiceDetails(
 
   // Default invoice type logic (existing behavior)
   if (!eventDate) {
-    // No event date - due today
     return {
       depositAmount: 0,
       remainingAmount: totalAmount,
@@ -152,38 +145,29 @@ function calculateInvoiceDetails(
     };
   }
 
-  const event = new Date(eventDate);
-  event.setHours(0, 0, 0, 0);
-  
-  const daysUntilEvent = Math.floor((event.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntilEvent = torontoCalendarDaysBetween(today, eventDate);
 
   if (daysUntilEvent > 7) {
-    // Event is more than 7 days away
-    // Deposit is $100, but don't exceed the total amount
     const depositAmount = Math.min(100, totalAmount);
     const remainingAmount = totalAmount - depositAmount;
-    
-    // Calculate 7 days before event date
-    const remainingDueDate = new Date(event);
-    remainingDueDate.setDate(remainingDueDate.getDate() - 7);
+    const remainingDueDate = torontoDueDateSevenDaysBeforeEvent(eventDate);
     
     return {
       depositAmount,
       remainingAmount: remainingAmount > 0 ? remainingAmount : 0,
       depositDueDate: today,
       remainingDueDate,
-      needsTwoInvoices: remainingAmount > 0, // Only create two invoices if there's a remaining amount
-    };
-  } else {
-    // Event is 7 days or less away - everything due today
-    return {
-      depositAmount: 0,
-      remainingAmount: totalAmount,
-      depositDueDate: today,
-      remainingDueDate: today,
-      needsTwoInvoices: false,
+      needsTwoInvoices: remainingAmount > 0,
     };
   }
+
+  return {
+    depositAmount: 0,
+    remainingAmount: totalAmount,
+    depositDueDate: today,
+    remainingDueDate: today,
+    needsTwoInvoices: false,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -279,13 +263,7 @@ export async function POST(request: NextRequest) {
     } : undefined;
 
     // Format event date for display on invoice
-    const formattedEventDate = eventDate 
-      ? new Date(eventDate).toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })
-      : null;
+    const formattedEventDate = eventDate ? formatEventDateToronto(eventDate) : null;
 
     // Thank you memo
     const thankYouMemo = 'Thanks for choosing Photobooth Guys for your event! We appreciate your business.';

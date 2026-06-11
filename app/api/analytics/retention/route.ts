@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { addTorontoCalendarDaysFrom } from '@/lib/dates';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,8 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '365');
 
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const startDate = addTorontoCalendarDaysFrom(new Date(), -days);
 
     // Get client retention data (simplified for now)
     const retentionData: any[] = []; // Empty array until ClientRetention model is added

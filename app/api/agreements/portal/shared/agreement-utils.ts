@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { SessionWithClient } from './auth';
 import { applySignerSmartFields, type SecondSigner } from '@/lib/agreementSmartFields';
+import { formatDateToronto } from '@/lib/dates';
 
 /**
  * Verify that an agreement belongs to a client (by email)
@@ -185,7 +186,7 @@ export function processHtmlContent(
   // Replace event fields - use event data if available, otherwise client fields
   processedHtml = processedHtml.replace(
     /\{\{client\.eventDate\}\}/g,
-    esc(eventDate ? new Date(eventDate).toLocaleDateString() : ''),
+    esc(eventDate ? formatDateToronto(eventDate) : ''),
   );
   processedHtml = processedHtml.replace(/\{\{event\.type\}\}/g, esc(eventType));
   processedHtml = processedHtml.replace(/\{\{event\.location\}\}/g, esc(eventLocation));
@@ -198,7 +199,7 @@ export function processHtmlContent(
   );
 
   // Replace agreement fields
-  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, esc(new Date().toLocaleDateString()));
+  processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, esc(formatDateToronto(new Date())));
   processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, esc(agreementId || ''));
 
   return processedHtml;

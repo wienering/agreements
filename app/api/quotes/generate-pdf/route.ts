@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import jsPDF from 'jspdf';
+import { formatEventDateToronto } from '@/lib/dates';
 
 type NormalizedPackage =
   | { kind: 'standard'; hours: number; price: number }
@@ -301,11 +302,7 @@ function drawSharedHeader(ctx: PdfContext, contactInfo: ContactInfo): number {
   doc.setTextColor(INK[0], INK[1], INK[2]);
   doc.text('Quote', MARGIN, y);
 
-  const quoteDate = new Date().toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const quoteDate = formatEventDateToronto(new Date());
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);

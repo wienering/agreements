@@ -1,4 +1,5 @@
 import { AgreementActivityType } from '@prisma/client';
+import { formatDateTimeToronto, torontoCalendarDaysBetween } from '@/lib/dates';
 
 export type AgreementLegacyTrackingFields = {
   status: string;
@@ -27,17 +28,14 @@ export type AgreementTimelineEntry = {
   fromLegacy: boolean;
 };
 
-const TORONTO: Intl.DateTimeFormatOptions = {
-  timeZone: 'America/Toronto',
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-};
-
 export function formatActivityAbsoluteTime(createdAt: string): string {
-  return new Date(createdAt).toLocaleString('en-CA', TORONTO);
+  return formatDateTimeToronto(createdAt, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 export function formatRelativeTime(dateInput: string | Date, nowMs = Date.now()): string {
@@ -53,7 +51,7 @@ export function formatRelativeTime(dateInput: string | Date, nowMs = Date.now())
   const diffHr = Math.floor(diffMin / 60);
   if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
 
-  const diffDay = Math.floor(diffHr / 24);
+  const diffDay = Math.floor(diffMin / 60 / 24);
   if (diffDay < 30) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
 
   const diffMonth = Math.floor(diffDay / 30);
@@ -203,15 +201,11 @@ export function buildAgreementTimeline(
 
 function getUnsignedEventUrgency(
   eventDate: Date | null,
+  now = new Date(),
 ): 'none' | 'warning' | 'danger' {
   if (!eventDate || Number.isNaN(eventDate.getTime())) return 'none';
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const startOfEvent = new Date(eventDate);
-  startOfEvent.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((startOfEvent.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
-
+  const diffDays = torontoCalendarDaysBetween(now, eventDate);
   if (diffDays < 0 || diffDays > 14) return 'none';
   if (diffDays <= 3) return 'danger';
   return 'warning';

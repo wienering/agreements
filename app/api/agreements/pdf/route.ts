@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
+import { formatDateToronto, formatDateTimeToronto } from '@/lib/dates';
 
 // Generate PDF using jsPDF (serverless-friendly)
 const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolean = false) => {
@@ -106,7 +107,7 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
   addText(`Name: ${agreement.client.firstName} ${agreement.client.lastName}`);
   addText(`Email: ${agreement.client.email}`);
   addText(`Phone: ${agreement.client.phone || 'Not provided'}`);
-  addText(`Event Date: ${agreement.client.eventDate ? new Date(agreement.client.eventDate).toLocaleDateString() : 'Not specified'}`);
+  addText(`Event Date: ${agreement.client.eventDate ? formatDateToronto(agreement.client.eventDate) : 'Not specified'}`);
   yPosition += 8;
 
   // Agreement Content
@@ -161,19 +162,19 @@ const generatePDF = async (htmlContent: string, agreement: any, isSigned: boolea
       addText(`Name: ${s.signerName}`);
       addText(`Email: ${s.signerEmail}`);
       addText(
-        `Date & Time Signed: ${s.signedAt ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`
+        `Date & Time Signed: ${s.signedAt ? formatDateTimeToronto(s.signedAt) : 'N/A'}`
       );
       addText(`IP Address: ${s.ip || 'N/A'}`);
       yPosition += 3;
     });
 
     addText(`Agreement ID: ${agreement.id}`);
-    addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`);
+    addText(`Generated: ${formatDateTimeToronto(new Date())}`);
     yPosition += 8;
   } else {
     // For unsigned agreements, just show agreement ID and generation date
     addText(`Agreement ID: ${agreement.id}`, 10, false);
-    addText(`Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`, 10, false);
+    addText(`Generated: ${formatDateTimeToronto(new Date())}`, 10, false);
     yPosition += 8;
   }
 

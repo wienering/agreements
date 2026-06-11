@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '../../components/UIcon';
+import { formatDateToronto, formatEventDateToronto } from '@/lib/dates';
 
 interface Agreement {
   id: string;
@@ -185,13 +186,8 @@ export default function PortalDashboard() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  const formatDate = (dateString: string) =>
+    formatDateToronto(dateString, { year: 'numeric', month: 'short', day: 'numeric' });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -257,7 +253,7 @@ export default function PortalDashboard() {
                   </h2>
                   <p className="text-sm text-muted">
                     {data.client.firstName} {data.client.lastName}
-                    {data.client.eventDate && ` • ${new Date(data.client.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`}
+                    {data.client.eventDate && ` • ${formatEventDateToronto(data.client.eventDate)}`}
                   </p>
                 </div>
               </div>
@@ -456,7 +452,7 @@ export default function PortalDashboard() {
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center gap-2 text-base font-semibold text-coral">
                                 <UIcon name="calendar" className="text-base" />
-                                {new Date(agreement.event?.eventDate || data.client.eventDate!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                {formatEventDateToronto(agreement.event?.eventDate || data.client.eventDate!)}
                               </span>
                             </div>
                           )}

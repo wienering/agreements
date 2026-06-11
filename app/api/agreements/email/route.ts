@@ -13,6 +13,7 @@ import {
   renderNoticeBlock,
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { formatDateToronto } from '@/lib/dates';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     const detailsHtml = `
       <strong>Client:</strong> ${clientFirstName} ${clientLastName}<br>
       <strong>Email:</strong> ${clientEmail}<br>
-      <strong>Date Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}<br>
+      <strong>Date Signed:</strong> ${agreement.signedAt ? formatDateToronto(agreement.signedAt) : 'N/A'}<br>
       <strong>Agreement ID:</strong> ${agreement.id}<br>
       <strong>Status:</strong> Already Signed`;
 

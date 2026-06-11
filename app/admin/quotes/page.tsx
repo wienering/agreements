@@ -4,6 +4,7 @@ import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { UIcon } from '../../components/UIcon';
+import { formatEventDateToronto } from '@/lib/dates';
 
 interface ContactInfo {
   name: string;
@@ -237,12 +238,8 @@ export default function QuotesPage() {
 
   const formatEventDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(num => parseInt(num, 10));
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    return formatEventDateToronto(date);
   };
 
   const handleContactSubmit = (e: React.FormEvent) => {

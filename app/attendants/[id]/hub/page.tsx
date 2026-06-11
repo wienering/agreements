@@ -8,6 +8,12 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '../../../components/UIcon';
+import {
+  formatEventDateToronto,
+  formatEventDateTorontoShort,
+  formatDateToronto,
+  torontoDateKey,
+} from '@/lib/dates';
 
 interface AttendantHubPageProps {
   params: Promise<{ id: string }>;
@@ -236,58 +242,40 @@ async function fetchAttendantJobs(
   return { jobs: result.jobs, metrics: result.metrics };
 }
 
-function formatEventDate(dateString: string | null): string {
-  if (!dateString) return 'Date TBD';
-  
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      timeZone: 'America/Toronto',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  } catch {
-    return 'Date TBD';
-  }
-}
-
-function formatEventDateShort(dateString: string | null): string {
-  if (!dateString) return 'TBD';
-  
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      timeZone: 'America/Toronto',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return 'TBD';
-  }
-}
-
 function getEventTypeColor(eventType: string | null): string {
-  if (!eventType) return '#64748b';
+  if (!eventType) return 'var(--admin-muted)';
   const type = eventType.toLowerCase();
-  if (type.includes('wedding')) return '#ec4899';
-  if (type.includes('corporate') || type.includes('business')) return 'var(--accent)';
-  if (type.includes('birthday') || type.includes('party')) return 'var(--accent)';
-  if (type.includes('sport')) return '#f59e0b';
-  if (type.includes('music') || type.includes('concert')) return '#8b5cf6';
-  return '#64748b';
+  if (type.includes('sport')) return 'var(--warn)';
+  if (
+    type.includes('wedding') ||
+    type.includes('corporate') ||
+    type.includes('business') ||
+    type.includes('birthday') ||
+    type.includes('party') ||
+    type.includes('music') ||
+    type.includes('concert')
+  ) {
+    return 'var(--gold)';
+  }
+  return 'var(--admin-muted)';
 }
 
 function getEventTypeBgColor(eventType: string | null): string {
-  if (!eventType) return '#1a1d1a';
+  if (!eventType) return 'var(--admin-surface)';
   const type = eventType.toLowerCase();
-  if (type.includes('wedding')) return '#ec489920';
-  if (type.includes('corporate') || type.includes('business')) return 'var(--accent)20';
-  if (type.includes('birthday') || type.includes('party')) return 'var(--accent)20';
-  if (type.includes('sport')) return '#f59e0b20';
-  if (type.includes('music') || type.includes('concert')) return '#8b5cf620';
-  return '#1a1d1a';
+  if (type.includes('sport')) return 'color-mix(in srgb, var(--warn) 20%, transparent)';
+  if (
+    type.includes('wedding') ||
+    type.includes('corporate') ||
+    type.includes('business') ||
+    type.includes('birthday') ||
+    type.includes('party') ||
+    type.includes('music') ||
+    type.includes('concert')
+  ) {
+    return 'color-mix(in srgb, var(--gold) 20%, transparent)';
+  }
+  return 'var(--admin-surface)';
 }
 
 interface CalendarDay {
@@ -298,51 +286,35 @@ interface CalendarDay {
 }
 
 function getCalendarDays(jobs: Job[]): CalendarDay[] {
-  const timeZone = 'America/Toronto';
   const now = new Date();
+  const nowStr = torontoDateKey(now);
+  const [currentYear, currentMonth] = nowStr.split('-').map(Number);
   
-  // Get current date in Toronto timezone as YYYY-MM-DD
-  const nowStr = now.toLocaleDateString('en-CA', { timeZone });
-  const [currentYear, currentMonth, currentDay] = nowStr.split('-').map(Number);
-  
-  // Create first day of current month
   const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
-  
-  // Get day of week for first day (0 = Sunday, 6 = Saturday)
   const firstDayOfWeek = firstDayOfMonth.getDay();
   
-  // Calculate start date (Sunday of the week containing the first day)
   const startDate = new Date(firstDayOfMonth);
   startDate.setDate(startDate.getDate() - firstDayOfWeek);
   
-  // Extract job dates (normalize to YYYY-MM-DD format in Toronto timezone)
   const jobDates = new Set<string>();
   jobs.forEach(job => {
     if (job.eventDate) {
       try {
-        const date = new Date(job.eventDate);
-        const dateStr = date.toLocaleDateString('en-CA', { timeZone });
-        jobDates.add(dateStr);
+        jobDates.add(torontoDateKey(job.eventDate));
       } catch {
         // Skip invalid dates
       }
     }
   });
   
-  // Generate 42 days (6 weeks)
   const calendarDays: CalendarDay[] = [];
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     
-    // Get date components in Toronto timezone
-    const dateStr = date.toLocaleDateString('en-CA', { timeZone });
+    const dateStr = torontoDateKey(date);
     const [dateYear, dateMonth, day] = dateStr.split('-').map(Number);
-    
-    // Check if this date is in the current month
     const isCurrentMonth = dateYear === currentYear && dateMonth === currentMonth;
-    
-    // Check if this date has a job
     const hasJob = jobDates.has(dateStr);
     
     calendarDays.push({
@@ -357,12 +329,7 @@ function getCalendarDays(jobs: Job[]): CalendarDay[] {
 }
 
 function getMonthYearString(): string {
-  const now = new Date();
-  return now.toLocaleDateString('en-US', {
-    timeZone: 'America/Toronto',
-    month: 'long',
-    year: 'numeric',
-  });
+  return formatDateToronto(new Date(), { month: 'long', year: 'numeric' });
 }
 
 
@@ -438,7 +405,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
           .job-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            border-color: var(--accent) !important;
+            border-color: var(--gold) !important;
           }
           .metric-card {
             transition: all 0.2s ease;
@@ -448,23 +415,23 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
           }
           .view-details-button:hover {
-            background-color: var(--accent) !important;
+            background-color: var(--gold) !important;
           }
         `}} />
         <div
           style={{
             minHeight: '100vh',
-            backgroundColor: '#080c08',
+            backgroundColor: 'var(--admin-bg)',
             fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-            color: '#ffffff',
+            color: 'var(--admin-text)',
           }}
         >
           {/* Header */}
           <header
             className="hub-header"
             style={{
-              backgroundColor: '#1a1d1a',
-              borderBottom: '1px solid #2d3530',
+              backgroundColor: 'var(--admin-surface)',
+              borderBottom: '1px solid var(--admin-hairline)',
               padding: '32px 0',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
             }}
@@ -482,36 +449,29 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: 'var(--accent)',
+                      backgroundColor: 'var(--gold)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'white',
+                      color: 'var(--ink)',
                       fontSize: '24px',
                       fontWeight: '600',
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                      boxShadow: '0 4px 12px rgba(198, 160, 77, 0.3)',
                     }}
                   >
-                    <UIcon name="camera" style={{ fontSize: '24px', color: 'white' }} />
+                    <UIcon name="camera" style={{ fontSize: '24px', color: 'var(--ink)' }} />
                   </div>
                   <div>
-                    <h1
-                      style={{
-                        margin: '0',
-                        fontSize: '28px',
-                        fontWeight: '700',
-                        color: '#ffffff',
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
+                    <h1 className="admin-page-title" style={{ margin: '0' }}>
                       Attendant Hub
                     </h1>
+                    <div className="admin-title-rule" aria-hidden="true" />
                     <p
                       style={{
                         margin: '4px 0 0 0',
                         fontSize: '16px',
-                        color: '#8f9a8f',
+                        color: 'var(--admin-muted)',
                         fontWeight: '500',
                       }}
                     >
@@ -548,10 +508,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               <div
                 className="metric-card"
                 style={{
-                  backgroundColor: '#1a1d1a',
+                  backgroundColor: 'var(--admin-surface)',
                   padding: '32px',
                   borderRadius: '16px',
-                  border: '1px solid #2d3530',
+                  border: '1px solid var(--admin-hairline)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
@@ -561,7 +521,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       margin: '0',
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: '#8f9a8f',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                     }}
@@ -572,16 +532,16 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: 'var(--accent)',
+                      backgroundColor: 'var(--gold)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '24px',
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                      boxShadow: '0 4px 12px rgba(198, 160, 77, 0.2)',
                     }}
                   >
-                    <UIcon name="clipboard" style={{ fontSize: '24px', color: 'white' }} />
+                    <UIcon name="clipboard" style={{ fontSize: '24px', color: 'var(--ink)' }} />
                   </div>
                 </div>
                 <p
@@ -589,7 +549,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     margin: '0',
                     fontSize: '36px',
                     fontWeight: '700',
-                    color: '#ffffff',
+                    color: 'var(--admin-text)',
                     lineHeight: '1.2',
                   }}
                 >
@@ -601,10 +561,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               <div
                 className="metric-card"
                 style={{
-                  backgroundColor: '#1a1d1a',
+                  backgroundColor: 'var(--admin-surface)',
                   padding: '32px',
                   borderRadius: '16px',
-                  border: '1px solid #2d3530',
+                  border: '1px solid var(--admin-hairline)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
@@ -614,7 +574,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       margin: '0',
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: '#8f9a8f',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                     }}
@@ -625,16 +585,16 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: 'var(--accent)',
+                      backgroundColor: 'var(--gold)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '24px',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                      boxShadow: '0 4px 12px rgba(198, 160, 77, 0.2)',
                     }}
                   >
-                    <UIcon name="calendar" style={{ fontSize: '24px', color: 'white' }} />
+                    <UIcon name="calendar" style={{ fontSize: '24px', color: 'var(--ink)' }} />
                   </div>
                 </div>
                 <p
@@ -642,7 +602,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     margin: '0',
                     fontSize: '36px',
                     fontWeight: '700',
-                    color: '#ffffff',
+                    color: 'var(--admin-text)',
                     lineHeight: '1.2',
                   }}
                 >
@@ -654,10 +614,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               <div
                 className="metric-card"
                 style={{
-                  backgroundColor: '#1a1d1a',
+                  backgroundColor: 'var(--admin-surface)',
                   padding: '32px',
                   borderRadius: '16px',
-                  border: '1px solid #2d3530',
+                  border: '1px solid var(--admin-hairline)',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
@@ -667,7 +627,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       margin: '0',
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: '#8f9a8f',
+                      color: 'var(--admin-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                     }}
@@ -678,16 +638,16 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       width: '48px',
                       height: '48px',
-                      backgroundColor: '#8b5cf6',
+                      backgroundColor: 'var(--gold)',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '24px',
-                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
+                      boxShadow: '0 4px 12px rgba(198, 160, 77, 0.2)',
                     }}
                   >
-                    <UIcon name="camera" style={{ fontSize: '24px', color: 'white' }} />
+                    <UIcon name="camera" style={{ fontSize: '24px', color: 'var(--ink)' }} />
                   </div>
                 </div>
                 {jobs.length > 0 ? (
@@ -697,7 +657,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         margin: '0 0 16px 0',
                         fontSize: '36px',
                         fontWeight: '700',
-                        color: '#ffffff',
+                        color: 'var(--admin-text)',
                         lineHeight: '1.2',
                       }}
                     >
@@ -708,7 +668,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       style={{
                         width: '100%',
                         height: '8px',
-                        backgroundColor: '#2d3530',
+                        backgroundColor: 'var(--admin-hairline)',
                         borderRadius: '4px',
                         overflow: 'hidden',
                         marginBottom: '8px',
@@ -718,7 +678,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         style={{
                           width: `${jobs.length > 0 ? (jobs.filter(j => j.backdropSelected).length / jobs.length) * 100 : 0}%`,
                           height: '100%',
-                          backgroundColor: '#8b5cf6',
+                          backgroundColor: 'var(--gold)',
                           borderRadius: '4px',
                           transition: 'width 0.3s ease',
                         }}
@@ -729,7 +689,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         margin: '0',
                         fontSize: '14px',
                         fontWeight: '500',
-                        color: '#8f9a8f',
+                        color: 'var(--admin-muted)',
                       }}
                     >
                       {Math.round((jobs.filter(j => j.backdropSelected).length / jobs.length) * 100)}% Complete
@@ -741,7 +701,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       margin: '0',
                       fontSize: '36px',
                       fontWeight: '700',
-                      color: '#ffffff',
+                      color: 'var(--admin-text)',
                       lineHeight: '1.2',
                     }}
                   >
@@ -759,9 +719,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   style={{
                     flex: '1',
                     minWidth: '400px',
-                    backgroundColor: '#1a1d1a',
+                    backgroundColor: 'var(--admin-surface)',
                     borderRadius: '16px',
-                    border: '1px solid #2d3530',
+                    border: '1px solid var(--admin-hairline)',
                     overflow: 'hidden',
                     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
                   }}
@@ -770,7 +730,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   <div
                     style={{
                       height: '200px',
-                      background: `linear-gradient(135deg, ${getEventTypeBgColor(nextUpcomingJob.eventType)} 0%, #1a1d1a 100%)`,
+                      background: `linear-gradient(135deg, ${getEventTypeBgColor(nextUpcomingJob.eventType)} 0%, var(--admin-surface) 100%)`,
                       position: 'relative',
                       padding: '24px',
                       display: 'flex',
@@ -787,7 +747,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           fontSize: '12px',
                           fontWeight: '600',
                           backgroundColor: getEventTypeColor(nextUpcomingJob.eventType),
-                          color: '#ffffff',
+                          color: 'var(--admin-text)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -803,8 +763,8 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           borderRadius: '8px',
                           fontSize: '12px',
                           fontWeight: '600',
-                          backgroundColor: 'var(--accent)',
-                          color: '#ffffff',
+                          backgroundColor: 'var(--gold)',
+                          color: 'var(--ink)',
                         }}
                       >
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -822,7 +782,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         margin: '0 0 12px 0',
                         fontSize: '24px',
                         fontWeight: '700',
-                        color: '#ffffff',
+                        color: 'var(--admin-text)',
                         lineHeight: '1.3',
                       }}
                     >
@@ -830,23 +790,23 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     </h2>
                     
                     {nextUpcomingJob.eventLocation && (
-                      <p style={{ margin: '0 0 8px 0', color: '#8f9a8f', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <p style={{ margin: '0 0 8px 0', color: 'var(--admin-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <UIcon name="marker" style={{ fontSize: '14px' }} />
                         <span>{nextUpcomingJob.eventLocation}</span>
                       </p>
                     )}
                     
                     {nextUpcomingJob.eventDate && (
-                      <p style={{ margin: '0 0 16px 0', color: '#8f9a8f', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <p style={{ margin: '0 0 16px 0', color: 'var(--admin-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <UIcon name="calendar" style={{ fontSize: '14px' }} />
-                        <span>{formatEventDate(nextUpcomingJob.eventDate)}</span>
+                        <span>{formatEventDateToronto(nextUpcomingJob.eventDate)}</span>
                         {nextUpcomingJob.eventStartTime && <span style={{ marginLeft: '8px' }}>• {nextUpcomingJob.eventStartTime}</span>}
                       </p>
                     )}
                     
                     {nextUpcomingJob.backdropName && (
-                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #2d3530' }}>
-                        <p style={{ margin: '0', color: '#60a5fa', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--admin-hairline)' }}>
+                        <p style={{ margin: '0', color: 'var(--gold)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <UIcon name="camera" style={{ fontSize: '14px' }} />
                           <span>{nextUpcomingJob.backdropName}</span>
                         </p>
@@ -860,8 +820,8 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         display: 'inline-block',
                         marginTop: '20px',
                         padding: '12px 24px',
-                        backgroundColor: 'var(--accent)',
-                        color: '#ffffff',
+                        backgroundColor: 'var(--gold)',
+                        color: 'var(--ink)',
                         borderRadius: '8px',
                         textDecoration: 'none',
                         fontSize: '14px',
@@ -881,9 +841,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 style={{
                   flex: '0 0 auto',
                   width: '260px',
-                  backgroundColor: '#1a1d1a',
+                  backgroundColor: 'var(--admin-surface)',
                   borderRadius: '12px',
-                  border: '1px solid #2d3530',
+                  border: '1px solid var(--admin-hairline)',
                   padding: '14px',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
@@ -893,7 +853,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     margin: '0 0 10px 0',
                     fontSize: '14px',
                     fontWeight: '700',
-                    color: '#ffffff',
+                    color: 'var(--admin-text)',
                     textAlign: 'center',
                   }}
                 >
@@ -907,7 +867,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         textAlign: 'center',
                         fontSize: '10px',
                         fontWeight: '600',
-                        color: '#64748b',
+                        color: 'var(--admin-muted)',
                         padding: '2px 0',
                       }}
                     >
@@ -918,8 +878,8 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
                   {getCalendarDays(jobs).map((calendarDay, index) => {
                     const today = new Date();
-                    const todayStr = today.toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
-                    const dayStr = calendarDay.date.toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+                    const todayStr = torontoDateKey(today);
+                    const dayStr = torontoDateKey(calendarDay.date);
                     const isToday = dayStr === todayStr;
                     
                     return (
@@ -935,15 +895,15 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           fontSize: '11px',
                           fontWeight: calendarDay.hasJob ? '700' : '400',
                           color: calendarDay.isCurrentMonth 
-                            ? (calendarDay.hasJob ? '#ffffff' : '#ffffff')
-                            : '#475569',
+                            ? 'var(--admin-text)'
+                            : 'var(--admin-hairline)',
                           backgroundColor: calendarDay.hasJob
-                            ? 'var(--accent)'
+                            ? 'var(--gold)'
                             : isToday
-                            ? '#2d3530'
+                            ? 'var(--admin-hairline)'
                             : 'transparent',
                           borderRadius: '4px',
-                          border: isToday && !calendarDay.hasJob ? '1px solid var(--accent)' : 'none',
+                          border: isToday && !calendarDay.hasJob ? '1px solid var(--gold)' : 'none',
                         }}
                       >
                         {calendarDay.day}
@@ -962,7 +922,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     margin: '0',
                     fontSize: '24px',
                     fontWeight: '700',
-                    color: '#ffffff',
+                    color: 'var(--admin-text)',
                   }}
                 >
                   All Jobs
@@ -970,7 +930,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 <span
                   style={{
                     fontSize: '14px',
-                    color: '#8f9a8f',
+                    color: 'var(--admin-muted)',
                     fontWeight: '500',
                   }}
                 >
@@ -981,10 +941,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               {jobs.length === 0 ? (
                 <div
                   style={{
-                    backgroundColor: '#1a1d1a',
+                    backgroundColor: 'var(--admin-surface)',
                     padding: '64px 48px',
                     borderRadius: '16px',
-                    border: '1px solid #2d3530',
+                    border: '1px solid var(--admin-hairline)',
                     textAlign: 'center',
                   }}
                 >
@@ -993,7 +953,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       marginBottom: '20px',
                       display: 'flex',
                       justifyContent: 'center',
-                      color: '#8f9a8f',
+                      color: 'var(--admin-muted)',
                     }}
                   >
                     <UIcon name="inbox" style={{ fontSize: '64px' }} />
@@ -1003,7 +963,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       margin: '0 0 12px 0',
                       fontSize: '24px',
                       fontWeight: '600',
-                      color: '#ffffff',
+                      color: 'var(--admin-text)',
                     }}
                   >
                     No Jobs Assigned
@@ -1012,7 +972,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     style={{
                       margin: '0',
                       fontSize: '16px',
-                      color: '#8f9a8f',
+                      color: 'var(--admin-muted)',
                       maxWidth: '500px',
                       marginLeft: 'auto',
                       marginRight: 'auto',
@@ -1045,9 +1005,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       <div
                         className="job-card"
                         style={{
-                          backgroundColor: '#1a1d1a',
+                          backgroundColor: 'var(--admin-surface)',
                           borderRadius: '16px',
-                          border: '1px solid #2d3530',
+                          border: '1px solid var(--admin-hairline)',
                           overflow: 'hidden',
                           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                           height: '100%',
@@ -1059,7 +1019,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                         <div
                           style={{
                             height: '120px',
-                            background: `linear-gradient(135deg, ${getEventTypeBgColor(job.eventType)} 0%, #1a1d1a 100%)`,
+                            background: `linear-gradient(135deg, ${getEventTypeBgColor(job.eventType)} 0%, var(--admin-surface) 100%)`,
                             position: 'relative',
                             padding: '16px',
                             display: 'flex',
@@ -1076,7 +1036,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                                 fontSize: '11px',
                                 fontWeight: '600',
                                 backgroundColor: getEventTypeColor(job.eventType),
-                                color: '#ffffff',
+                                color: 'var(--admin-text)',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.05em',
                               }}
@@ -1092,11 +1052,11 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                                 borderRadius: '6px',
                                 fontSize: '10px',
                                 fontWeight: '600',
-                                backgroundColor: 'var(--accent)',
-                                color: '#ffffff',
+                                backgroundColor: 'var(--gold)',
+                                color: 'var(--ink)',
                               }}
                             >
-                              <UIcon name="check" style={{ fontSize: '10px', color: '#ffffff' }} />
+                              <UIcon name="check" style={{ fontSize: '10px', color: 'var(--ink)' }} />
                             </span>
                           )}
                         </div>
@@ -1108,7 +1068,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                               margin: '0 0 12px 0',
                               fontSize: '18px',
                               fontWeight: '700',
-                              color: '#ffffff',
+                              color: 'var(--admin-text)',
                               lineHeight: '1.3',
                             }}
                           >
@@ -1118,8 +1078,8 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
                             {job.eventLocation && (
                               <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <UIcon name="marker" style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }} />
-                                <span style={{ color: '#ffffff', fontSize: '13px', lineHeight: '1.4' }}>
+                                <UIcon name="marker" style={{ color: 'var(--admin-muted)', fontSize: '14px', flexShrink: 0 }} />
+                                <span style={{ color: 'var(--admin-text)', fontSize: '13px', lineHeight: '1.4' }}>
                                   {job.eventLocation}
                                 </span>
                               </div>
@@ -1127,18 +1087,18 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
 
                             {job.eventDate && (
                               <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <UIcon name="calendar" style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }} />
-                                <span style={{ color: '#ffffff', fontSize: '13px', fontWeight: '500' }}>
-                                  {formatEventDateShort(job.eventDate)}
-                                  {job.eventStartTime && <span style={{ marginLeft: '6px', color: '#8f9a8f' }}>• {job.eventStartTime}</span>}
+                                <UIcon name="calendar" style={{ color: 'var(--admin-muted)', fontSize: '14px', flexShrink: 0 }} />
+                                <span style={{ color: 'var(--admin-text)', fontSize: '13px', fontWeight: '500' }}>
+                                  {formatEventDateTorontoShort(job.eventDate)}
+                                  {job.eventStartTime && <span style={{ marginLeft: '6px', color: 'var(--admin-muted)' }}>• {job.eventStartTime}</span>}
                                 </span>
                               </div>
                             )}
 
                             {job.backdropName && (
                               <div style={{ display: 'flex', alignItems: 'start', gap: '8px', marginTop: '4px' }}>
-                                <UIcon name="camera" style={{ color: '#8f9a8f', fontSize: '14px', flexShrink: 0 }} />
-                                <span style={{ color: '#60a5fa', fontSize: '13px', fontWeight: '500' }}>
+                                <UIcon name="camera" style={{ color: 'var(--admin-muted)', fontSize: '14px', flexShrink: 0 }} />
+                                <span style={{ color: 'var(--gold)', fontSize: '13px', fontWeight: '500' }}>
                                   {job.backdropName}
                                 </span>
                               </div>
@@ -1146,10 +1106,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           </div>
 
                           {/* View Details Link */}
-                          <div style={{ paddingTop: '12px', borderTop: '1px solid #2d3530' }}>
+                          <div style={{ paddingTop: '12px', borderTop: '1px solid var(--admin-hairline)' }}>
                             <span
                               style={{
-                                color: '#60a5fa',
+                                color: 'var(--gold)',
                                 fontSize: '13px',
                                 fontWeight: '600',
                                 display: 'inline-flex',
@@ -1177,7 +1137,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               padding: '48px 32px 32px 32px',
               marginTop: '64px',
               paddingTop: '32px',
-              borderTop: '1px solid #2d3530',
+              borderTop: '1px solid var(--admin-hairline)',
               textAlign: 'center',
             }}
           >
@@ -1193,24 +1153,24 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                 style={{
                   width: '32px',
                   height: '32px',
-                  backgroundColor: 'var(--accent)',
+                  backgroundColor: 'var(--gold)',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'white',
+                  color: 'var(--ink)',
                   fontSize: '16px',
                   fontWeight: '600',
                 }}
               >
-                <UIcon name="camera" style={{ fontSize: '16px', color: 'white' }} />
+                <UIcon name="camera" style={{ fontSize: '16px', color: 'var(--ink)' }} />
               </div>
               <h3
                 style={{
                   margin: '0',
                   fontSize: '16px',
                   fontWeight: '700',
-                  color: '#ffffff',
+                  color: 'var(--admin-text)',
                 }}
               >
                 Photobooth Guys
@@ -1220,7 +1180,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               style={{
                 margin: '0',
                 fontSize: '14px',
-                color: '#8f9a8f',
+                color: 'var(--admin-muted)',
               }}
             >
               Professional photo booth services for your special events
@@ -1235,9 +1195,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#080c08',
+          backgroundColor: 'var(--admin-bg)',
           fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-          color: '#ffffff',
+          color: 'var(--admin-text)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1246,10 +1206,10 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
       >
         <div
           style={{
-            backgroundColor: '#1a1d1a',
+            backgroundColor: 'var(--admin-surface)',
             padding: '48px',
             borderRadius: '12px',
-            border: '1px solid #2d3530',
+            border: '1px solid var(--admin-hairline)',
             textAlign: 'center',
             maxWidth: '520px',
           }}
@@ -1258,7 +1218,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             style={{
               width: '64px',
               height: '64px',
-              backgroundColor: '#dc2626',
+              backgroundColor: 'var(--alert)',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
@@ -1267,11 +1227,11 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               fontSize: '28px',
             }}
           >
-            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: '#ffffff' }} title="Error" />
+            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--admin-text)' }} title="Error" />
           </div>
           <h1
             style={{
-              color: '#ffffff',
+              color: 'var(--admin-text)',
               fontSize: '24px',
               margin: '0 0 16px 0',
               fontWeight: '700',
@@ -1281,7 +1241,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
           </h1>
           <p
             style={{
-              color: '#8f9a8f',
+              color: 'var(--admin-muted)',
               fontSize: '16px',
               margin: '0',
               lineHeight: '1.6',

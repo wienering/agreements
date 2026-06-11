@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 
 export async function GET(request: NextRequest) {
   try {
@@ -312,7 +313,7 @@ async function generatePDFResponse(data: any[], client: any): Promise<NextRespon
   yPosition += 5;
   addText(`Client: ${client.firstName} ${client.lastName}`, 14, true, 'center');
   yPosition += 5;
-  addText(`Generated: ${new Date().toLocaleString()}`, 10, false, 'center');
+  addText(`Generated: ${formatDateTimeToronto(new Date())}`, 10, false, 'center');
   yPosition += 10;
 
   // Process each agreement
@@ -327,12 +328,12 @@ async function generatePDFResponse(data: any[], client: any): Promise<NextRespon
     addText(`Agreement ID: ${item.id}`, 12, false);
     addText(`Status: ${item.status}`, 12, false);
     addText(`Template: ${item.templateTitle}`, 12, false);
-    addText(`Created: ${new Date(item.createdAt).toLocaleString()}`, 12, false);
+    addText(`Created: ${formatDateTimeToronto(item.createdAt)}`, 12, false);
     if (item.signedAt) {
-      addText(`Signed: ${new Date(item.signedAt).toLocaleString()}`, 12, false);
+      addText(`Signed: ${formatDateTimeToronto(item.signedAt)}`, 12, false);
     }
     if (item.expiresAt) {
-      addText(`Expires: ${new Date(item.expiresAt).toLocaleString()}`, 12, false);
+      addText(`Expires: ${formatDateTimeToronto(item.expiresAt)}`, 12, false);
     }
     yPosition += 8;
 

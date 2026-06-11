@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { addTorontoCalendarDaysFrom } from '@/lib/dates';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,8 +9,7 @@ export async function GET(request: NextRequest) {
     await requireAdmin(request);
 
     const now = new Date();
-    const threeDaysAgo = new Date(now);
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const threeDaysAgo = addTorontoCalendarDaysFrom(now, -3);
 
     // Leads needing follow-up: nextFollowUpAt past due, or no contact in 3+ days
     const leads = await prisma.lead.findMany({

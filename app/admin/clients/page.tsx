@@ -7,6 +7,7 @@ import { useToast } from '../../components/Toast';
 import { UIcon } from '../../components/UIcon';
 import FileUpload from '../../components/FileUpload';
 import { AdminButton } from '../../components/AdminButton';
+import { formatDateToronto } from '@/lib/dates';
 
 interface Event {
   id: string;
@@ -1471,7 +1472,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px', fontWeight: '500' }}>
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                   <UIcon name="calendar" style={{ fontSize: '14px' }} />
-                                  {new Date(event.eventDate).toLocaleDateString()}
+                                  {formatDateToronto(event.eventDate)}
                                 </span>
                               </p>
                             )}
@@ -1560,7 +1561,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         </p>
                         {client.eventDate && (
                           <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                            Event: {new Date(client.eventDate).toLocaleDateString()}
+                            Event: {formatDateToronto(client.eventDate)}
                           </p>
                         )}
                         {client.eventType && (
@@ -1589,7 +1590,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                       borderRadius: '4px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
-                      Added {new Date(client.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                      Added {formatDateToronto(client.createdAt)}
                     </span>
                   </div>
                 </div>

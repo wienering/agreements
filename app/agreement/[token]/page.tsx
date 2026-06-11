@@ -7,6 +7,7 @@ import { UIcon } from '../../components/UIcon';
 import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
+import { formatDateToronto } from '@/lib/dates';
 
 interface SignatureRecord {
   signerName: string;
@@ -142,7 +143,7 @@ export default function ClientAgreementPage() {
     const eventPackage = event?.eventPackage || client.eventPackage || '';
     const packagePrice = event?.packagePrice || client.packagePrice;
 
-    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, esc(eventDate ? new Date(eventDate).toLocaleDateString() : ''));
+    processedHtml = processedHtml.replace(/\{\{client\.eventDate\}\}/g, esc(eventDate ? formatDateToronto(eventDate) : ''));
     processedHtml = processedHtml.replace(/\{\{client\.address\}\}/g, esc(address));
     processedHtml = processedHtml.replace(/\{\{client\.notes\}\}/g, esc(notes || ''));
     
@@ -155,7 +156,7 @@ export default function ClientAgreementPage() {
     processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, esc(packagePrice ? `$${Number(packagePrice).toFixed(2)}` : ''));
     
     // Replace agreement fields
-    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, esc(new Date().toLocaleDateString()));
+    processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, esc(formatDateToronto(new Date())));
     processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, esc(agreementId || ''));
     
     return processedHtml;

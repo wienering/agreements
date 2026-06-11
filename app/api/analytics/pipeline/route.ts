@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { addTorontoCalendarDaysFrom } from '@/lib/dates';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,8 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
 
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const startDate = addTorontoCalendarDaysFrom(new Date(), -days);
 
     // Get agreement counts by status
     const statusCounts = await prisma.agreement.groupBy({
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         stage: 'Sent',
         count: liveCount,
         percentage: totalAgreements > 0 ? (liveCount / totalAgreements) * 100 : 0,
-        color: '#4a9e72',
+        color: '#c6a04d',
         description: 'Sent to clients for review',
         conversionRate: draftToLiveRate
       },
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
         stage: 'Signed',
         count: signedCount,
         percentage: totalAgreements > 0 ? (signedCount / totalAgreements) * 100 : 0,
-        color: '#4a9e72',
+        color: '#3f6f4f',
         description: 'Digitally signed by clients',
         conversionRate: liveToSignedRate
       },
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
         stage: 'Completed',
         count: completedCount,
         percentage: totalAgreements > 0 ? (completedCount / totalAgreements) * 100 : 0,
-        color: '#8b5cf6',
+        color: '#c6a04d',
         description: 'Events completed successfully',
         conversionRate: signedToCompletedRate
       }

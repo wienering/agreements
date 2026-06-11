@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
+import { formatDateToronto } from '@/lib/dates';
 
 const emailFallbackSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -65,7 +66,7 @@ Agreement Link: ${agreementUrl}
 Agreement Details:
 - Client: ${agreement.client.firstName} ${agreement.client.lastName}
 - Email: ${agreement.client.email}
-- Date Signed: ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : 'N/A'}
+- Date Signed: ${agreement.signedAt ? formatDateToronto(agreement.signedAt) : 'N/A'}
 - Agreement ID: ${agreement.id}
 
 You can:

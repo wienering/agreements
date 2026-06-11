@@ -25,6 +25,14 @@ import {
   getActivityTimelineLabel,
   type AgreementTimelineEntry,
 } from '@/lib/agreementTrackingUi';
+import {
+  addTorontoCalendarDays,
+  formatDateTimeToronto,
+  formatDateToronto,
+  fromTorontoDateTimeLocalInput,
+  toTorontoDateTimeLocalInput,
+  torontoCalendarDaysBetween,
+} from '@/lib/dates';
 
 interface Agreement {
   id: string;
@@ -108,8 +116,7 @@ function UnreadNotesBadge({ count }: { count: number }) {
 }
 
 function formatClientNoteTimestamp(createdAt: string): string {
-  return new Date(createdAt).toLocaleString('en-CA', {
-    timeZone: 'America/Toronto',
+  return formatDateTimeToronto(createdAt, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -120,11 +127,11 @@ function formatClientNoteTimestamp(createdAt: string): string {
 
 function buildEngagementTooltipHtml(agreement: Agreement): string {
   const daysSinceEmailed = agreement.lastEmailedAt
-    ? Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24))
+    ? torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date())
     : null;
   const viewCount = agreement.viewCount || 0;
   const lastViewed = agreement.lastViewedAt
-    ? new Date(agreement.lastViewedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+    ? formatDateToronto(agreement.lastViewedAt)
     : null;
 
   const statusColor =
@@ -402,11 +409,13 @@ const normalizePaymentStatus = (value?: string | null) => {
   return value; // fall back to original to avoid losing data
 };
   
-  // Calculate 2 weeks from today for default expiration
+  // Calculate 2 weeks from today for default expiration (Toronto local for datetime-local input)
   const getDefaultExpirationDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 14); // Add 2 weeks
-    return date.toISOString().slice(0, 16); // Format for datetime-local input
+    const input = toTorontoDateTimeLocalInput(new Date());
+    const [datePart, timePart] = input.split('T');
+    const [y, m, d] = datePart.split('-').map(Number);
+    const end = addTorontoCalendarDays(y, m - 1, d, 14);
+    return `${end.year}-${String(end.month + 1).padStart(2, '0')}-${String(end.day).padStart(2, '0')}T${timePart}`;
   };
 
   const [newAgreement, setNewAgreement] = useState({
@@ -1011,7 +1020,10 @@ const normalizePaymentStatus = (value?: string | null) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newAgreement),
+        body: JSON.stringify({
+          ...newAgreement,
+          expiresAt: fromTorontoDateTimeLocalInput(newAgreement.expiresAt).toISOString(),
+        }),
       });
 
       if (response.ok) {
@@ -1631,7 +1643,7 @@ const normalizePaymentStatus = (value?: string | null) => {
         },
         body: JSON.stringify({ 
           id: agreementId, 
-          expiresAt: newExpirationDate 
+          expiresAt: fromTorontoDateTimeLocalInput(newExpirationDate).toISOString(),
         }),
       });
 
@@ -2464,11 +2476,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               const attendantName = (agreement as any).backdropLink?.name as string | undefined;
               const formatEventRelative = (d: Date | null): string => {
                 if (!d || isNaN(d.getTime())) return '';
-                const startOfToday = new Date();
-                startOfToday.setHours(0, 0, 0, 0);
-                const startOfEvent = new Date(d);
-                startOfEvent.setHours(0, 0, 0, 0);
-                const diffDays = Math.round((startOfEvent.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
+                const diffDays = torontoCalendarDaysBetween(new Date(), d);
                 if (diffDays < 0) return 'past';
                 if (diffDays === 0) return 'today';
                 if (diffDays === 1) return 'tomorrow';
@@ -2480,7 +2488,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 return `in ${Math.round(diffDays / 365)} year${Math.round(diffDays / 365) === 1 ? '' : 's'}`;
               };
               const showFollowUpPad = agreement.status === 'LIVE' && agreement.lastEmailedAt &&
-                Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24)) >= 3;
+                torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date()) >= 3;
               return (
               <div key={agreement.id} style={{
                 backgroundColor: cardBg,
@@ -2512,7 +2520,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                 {/* Confidence Indicator for Unresponsive Clients */}
                 {(() => {
                   const daysSinceEmailed = agreement.status === 'LIVE' && agreement.lastEmailedAt 
-                    ? Math.floor((Date.now() - new Date(agreement.lastEmailedAt).getTime()) / (1000 * 60 * 60 * 24))
+                    ? torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date())
                     : null;
                   const isUnresponsive = daysSinceEmailed !== null && daysSinceEmailed >= 3;
                   const needsPersonalFollowUp = daysSinceEmailed !== null && daysSinceEmailed >= 5;
@@ -2745,7 +2753,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               e.stopPropagation();
                               setEditingExpiration(true);
                               setEditingAgreementId(agreement.id);
-                              setNewExpirationDate(new Date(agreement.expiresAt).toISOString().slice(0, 16));
+                              setNewExpirationDate(toTorontoDateTimeLocalInput(agreement.expiresAt));
                             }}
                             title="Click to edit expiration date"
                             style={{ cursor: 'pointer' }}
@@ -3822,12 +3830,12 @@ const normalizePaymentStatus = (value?: string | null) => {
                         >
                           <UIcon name="check" style={{ fontSize: '16px', color: 'var(--success)' }} />
                           <span>
-                            <strong>Email sent to client</strong> on {galleryEmailSentAt.toLocaleDateString('en-CA', {
+                            <strong>Email sent to client</strong> on {formatDateTimeToronto(galleryEmailSentAt, {
                               year: 'numeric',
                               month: 'short',
                               day: 'numeric',
                               hour: '2-digit',
-                              minute: '2-digit'
+                              minute: '2-digit',
                             })}
                           </span>
                         </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { addTorontoCalendarDaysFrom } from '@/lib/dates';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,8 +11,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30');
     const agreementId = searchParams.get('agreementId');
 
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const startDate = addTorontoCalendarDaysFrom(new Date(), -days);
 
     // Get audit logs
     const whereClause: any = {

@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '../../../components/UIcon';
 import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 
 interface Agreement {
   id: string;
@@ -233,15 +234,14 @@ function AgreementDetailContent() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString: string) =>
+    formatDateTimeToronto(dateString, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
-  };
 
   // Check content height after render to determine if accordion is needed
   useEffect(() => {

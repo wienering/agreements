@@ -1,4 +1,11 @@
 import type { Agreement, Client, Event, Signature } from '@prisma/client';
+import {
+  formatEventDateToronto,
+  formatEventDateTorontoShort,
+  isTorontoDateAfter,
+  torontoCalendarDaysBetween,
+  torontoDaysUntil,
+} from '@/lib/dates';
 
 export const NEXT_ACTION_REMINDERS_EXHAUSTED =
   'Automated reminders exhausted — manual follow-up needed';
@@ -18,17 +25,6 @@ export type ResolvedReminderRecipient = {
   greetingFirstName: string;
 };
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const TORONTO = 'America/Toronto';
-
-function torontoDateKey(date: Date): string {
-  return date.toLocaleDateString('en-CA', { timeZone: TORONTO });
-}
-
-export function fullDaysSince(past: Date, now = new Date()): number {
-  return Math.floor((now.getTime() - past.getTime()) / MS_PER_DAY);
-}
-
 export function getEventDate(agreement: ChaseAgreement): Date | null {
   const raw = agreement.event?.eventDate ?? agreement.client.eventDate;
   if (!raw) return null;
@@ -37,17 +33,11 @@ export function getEventDate(agreement: ChaseAgreement): Date | null {
 }
 
 export function isEventStrictlyAfterToday(eventDate: Date, now = new Date()): boolean {
-  return torontoDateKey(eventDate) > torontoDateKey(now);
+  return isTorontoDateAfter(eventDate, now);
 }
 
 export function daysUntilEvent(eventDate: Date, now = new Date()): number {
-  const eventKey = torontoDateKey(eventDate);
-  const todayKey = torontoDateKey(now);
-  if (eventKey <= todayKey) return 0;
-
-  const eventMs = new Date(`${eventKey}T12:00:00`).getTime();
-  const todayMs = new Date(`${todayKey}T12:00:00`).getTime();
-  return Math.round((eventMs - todayMs) / MS_PER_DAY);
+  return torontoDaysUntil(eventDate, now);
 }
 
 export function isAcceleratedCadence(eventDate: Date | null, now = new Date()): boolean {
@@ -73,13 +63,13 @@ export function isDueForReminder(agreement: ChaseAgreement, now = new Date()): b
   const reminder2Threshold = accelerated ? 2 : 4;
 
   if (agreement.reminderCount === 0) {
-    return fullDaysSince(agreement.lastEmailedAt, now) >= reminder1Threshold;
+    return torontoCalendarDaysBetween(agreement.lastEmailedAt, now) >= reminder1Threshold;
   }
 
   if (agreement.reminderCount === 1) {
     const anchor = getReminder2Anchor(agreement);
     if (!anchor) return false;
-    return fullDaysSince(anchor, now) >= reminder2Threshold;
+    return torontoCalendarDaysBetween(anchor, now) >= reminder2Threshold;
   }
 
   return false;
@@ -171,20 +161,9 @@ export function filterDueChaseAgreements(
 }
 
 export function formatEventDateForEmail(eventDate: Date): string {
-  return eventDate.toLocaleDateString('en-CA', {
-    timeZone: TORONTO,
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  return formatEventDateToronto(eventDate);
 }
 
 export function formatEventDateForTelegram(eventDate: Date): string {
-  return eventDate.toLocaleDateString('en-CA', {
-    timeZone: TORONTO,
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  return formatEventDateTorontoShort(eventDate);
 }

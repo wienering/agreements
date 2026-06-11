@@ -2,6 +2,7 @@ import { escapeHtml } from '@/lib/htmlEscape';
 import { devLog } from './logger';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { formatDateTimeToronto } from '@/lib/dates';
 
 /**
  * Send "Agreement Viewed" alert email. Returns true if sent, false if failed or SMTP not configured.
@@ -43,13 +44,13 @@ export async function sendViewAlertEmail(
       <strong>Template:</strong> ${templateTitle}<br>
       <strong>Status:</strong> ${agreementStatus}<br>
       <strong>View Count:</strong> ${agreement.viewCount}<br>
-      <strong>First Viewed:</strong> ${agreement.firstViewedAt ? new Date(agreement.firstViewedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'Just now'}<br>
-      <strong>Last Viewed:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`;
+      <strong>First Viewed:</strong> ${agreement.firstViewedAt ? formatDateTimeToronto(agreement.firstViewedAt) : 'Just now'}<br>
+      <strong>Last Viewed:</strong> ${formatDateTimeToronto(new Date())}`;
 
     const viewDetailsHtml = `
       <strong>IP Address:</strong> ${safeClientIP}<br>
       <strong>User Agent:</strong> ${safeUserAgent}<br>
-      <strong>Viewed At:</strong> ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}`;
+      <strong>Viewed At:</strong> ${formatDateTimeToronto(new Date())}`;
 
     const bodyHtml = `
       <p style="margin:0 0 16px 0;">Someone has viewed an agreement.</p>

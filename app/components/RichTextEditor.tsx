@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
+import { formatDateToronto } from '@/lib/dates';
 
 interface RichTextEditorProps {
   value: string;
@@ -158,8 +159,8 @@ export function RichTextPreview({
 
     // Prioritize event data from Event model, fall back to deprecated client fields, show empty if blank
     const eventDate = eventData?.eventDate 
-      ? new Date(eventData.eventDate).toLocaleDateString() 
-      : (clientData?.eventDate ? new Date(clientData.eventDate).toLocaleDateString() : '');
+      ? formatDateToronto(eventData.eventDate) 
+      : (clientData?.eventDate ? formatDateToronto(clientData.eventDate) : '');
     const eventType = eventData?.eventType || clientData?.eventType || '';
     const eventLocation = eventData?.eventLocation || clientData?.eventLocation || '';
     const eventStartTime = eventData?.eventStartTime || clientData?.eventStartTime || '';
@@ -210,7 +211,7 @@ export function RichTextPreview({
     processedHtml = processedHtml.replace(/\{\{event\.price\}\}/g, eventChip(eventPrice));
     
     // Replace agreement fields with clean, readable styling
-    const agreementDate = new Date().toLocaleDateString();
+    const agreementDate = formatDateToronto(new Date());
     const agreementIdValue = agreementId || '';
     processedHtml = processedHtml.replace(/\{\{agreement\.date\}\}/g, agreementChip(agreementDate));
     processedHtml = processedHtml.replace(/\{\{agreement\.id\}\}/g, agreementChip(agreementIdValue));

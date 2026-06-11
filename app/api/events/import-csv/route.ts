@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
+import { normalizeEventDateToNoonUtc } from '@/lib/dates';
 import { prisma } from '@/lib/prisma';
 import Papa from 'papaparse';
 
@@ -214,6 +215,10 @@ function mapCsvRow(row: Record<string, string>): {
       const ampm = hours >= 12 ? 'PM' : 'AM';
       timeStr = `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
     }
+  }
+
+  if (eventDate) {
+    eventDate = normalizeEventDateToNoonUtc(eventDate);
   }
   
   // Event details

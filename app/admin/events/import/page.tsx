@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../../../components/Toast';
 import Link from 'next/link';
+import { formatDateToronto } from '@/lib/dates';
 
 interface ImportResult {
   row: number;
@@ -366,7 +367,7 @@ export default function ImportEventsPage() {
                         <div className={`${cardBg} rounded p-3 space-y-1 text-sm`}>
                           <div><span className={'text-admin-muted'}>Event ID:</span> {dup.existingEvent.id}</div>
                           <div><span className={'text-admin-muted'}>Client:</span> {dup.existingEvent.client ? `${dup.existingEvent.client.firstName} ${dup.existingEvent.client.lastName}`.trim() || dup.existingEvent.client.email : 'N/A'}</div>
-                          <div><span className={'text-admin-muted'}>Event Date:</span> {dup.existingEvent.eventDate ? new Date(dup.existingEvent.eventDate).toLocaleDateString() : 'N/A'}</div>
+                          <div><span className={'text-admin-muted'}>Event Date:</span> {dup.existingEvent.eventDate ? formatDateToronto(dup.existingEvent.eventDate) : 'N/A'}</div>
                           <div><span className={'text-admin-muted'}>Event Type:</span> {dup.existingEvent.eventType || 'N/A'}</div>
                           <div><span className={'text-admin-muted'}>Location:</span> {dup.existingEvent.eventLocation || 'N/A'}</div>
                           <div><span className={'text-admin-muted'}>Package:</span> {dup.existingEvent.eventPackage || 'N/A'}</div>
@@ -432,7 +433,7 @@ export default function ImportEventsPage() {
                           <div>
                             <span className="font-medium">Row {detail.row}:</span>
                             <span className={`ml-2 ${'text-admin-text'}`}>
-                              {detail.clientEmail} - {detail.eventDate ? new Date(detail.eventDate).toLocaleDateString() : 'No date'}
+                              {detail.clientEmail} - {detail.eventDate ? formatDateToronto(detail.eventDate) : 'No date'}
                             </span>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded ${
