@@ -2495,6 +2495,19 @@ const normalizePaymentStatus = (value?: string | null) => {
                 if (diffDays < 365) return `in ${Math.round(diffDays / 30)} months`;
                 return `in ${Math.round(diffDays / 365)} year${Math.round(diffDays / 365) === 1 ? '' : 's'}`;
               };
+              const formatEventRelativeCompact = (d: Date | null): string => {
+                if (!d || isNaN(d.getTime())) return '—';
+                const diffDays = torontoCalendarDaysBetween(new Date(), d);
+                if (diffDays < 0) return 'past';
+                if (diffDays === 0) return 'today';
+                if (diffDays === 1) return '1d';
+                if (diffDays < 7) return `${diffDays}d`;
+                if (diffDays < 14) return '1wk';
+                if (diffDays < 30) return `${Math.round(diffDays / 7)}wk`;
+                if (diffDays < 365) return `${Math.round(diffDays / 30)}mo`;
+                const years = Math.round(diffDays / 365);
+                return years === 1 ? '1y' : `${years}y`;
+              };
               const showFollowUpPad = agreement.status === 'LIVE' && agreement.lastEmailedAt &&
                 torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date()) >= 3;
               const statusHint = buildAgreementStatusHint(agreement);
@@ -2507,8 +2520,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                 position: 'relative',
                 overflow: 'hidden'
               }}>
-                {/* Warning Indicator */}
-                {warningType && (
+                {/* Warning Indicator (desktop/tablet — mobile renders inline in badge column) */}
+                {warningType && !isMobile && (
                   <div style={{
                     position: 'absolute',
                     top: '8px',
@@ -2601,15 +2614,35 @@ const normalizePaymentStatus = (value?: string | null) => {
                     }}
                   />
                   {/* Event date column */}
-                  <div style={{ minWidth: '92px', flexShrink: 0, paddingTop: isMobile ? '2px' : 0 }}>
-                    <div style={{ fontSize: '13px', color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
-                      {eventDateObj
-                        ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' })
-                        : 'No date'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: mutedText, lineHeight: 1.2, marginTop: '2px' }}>
-                      {eventDateObj ? formatEventRelative(eventDateObj) : '—'}
-                    </div>
+                  <div style={{
+                    minWidth: isMobile ? '72px' : '92px',
+                    flexShrink: 0,
+                    paddingTop: isMobile ? '2px' : 0,
+                  }}>
+                    {isMobile ? (
+                      <div style={{
+                        fontSize: '12px',
+                        color: textColor,
+                        fontWeight: 500,
+                        lineHeight: 1.2,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {eventDateObj
+                          ? `${eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Toronto' })} · ${formatEventRelativeCompact(eventDateObj)}`
+                          : 'No date'}
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: '13px', color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
+                          {eventDateObj
+                            ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' })
+                            : 'No date'}
+                        </div>
+                        <div style={{ fontSize: '11px', color: mutedText, lineHeight: 1.2, marginTop: '2px' }}>
+                          {eventDateObj ? formatEventRelative(eventDateObj) : '—'}
+                        </div>
+                      </>
+                    )}
                   </div>
                   {/* Name column (truncates) */}
                   <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
@@ -2618,9 +2651,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                         fontSize: '14px',
                         color: textColor,
                         fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        whiteSpace: isRowExpanded ? 'normal' : 'nowrap',
+                        overflow: isRowExpanded ? 'visible' : 'hidden',
+                        textOverflow: isRowExpanded ? 'clip' : 'ellipsis',
+                        wordBreak: isRowExpanded ? 'break-word' : undefined,
                         cursor: 'pointer'
                       }}
                       onMouseEnter={(e) => {
@@ -2646,8 +2680,16 @@ const normalizePaymentStatus = (value?: string | null) => {
                         if (tooltip) tooltip.remove();
                       }}
                     >
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', maxWidth: '100%' }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{
+                        display: isRowExpanded ? 'inline' : 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        maxWidth: isRowExpanded ? undefined : '100%',
+                      }}>
+                        <span style={{
+                          overflow: isRowExpanded ? 'visible' : 'hidden',
+                          textOverflow: isRowExpanded ? 'clip' : 'ellipsis',
+                        }}>
                           {agreement.client.firstName} {agreement.client.lastName}
                         </span>
                         <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
@@ -2744,33 +2786,83 @@ const normalizePaymentStatus = (value?: string | null) => {
                       </div>
                     </div>
                   )}
-                  {/* Status badge — click-to-edit; propagation stopped so row doesn't toggle */}
-                  <span
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ display: 'inline-flex', flexShrink: 0, paddingTop: isMobile ? '2px' : 0 }}
-                  >
-                    <StatusBadge
-                      variant={agreementStatusToBadgeVariant(agreement.status)}
-                      onClick={() => {
-                        setEditingStatus(true);
-                        setEditingStatusAgreementId(agreement.id);
-                        setNewStatus(agreement.status);
-                      }}
-                      title="Click to edit status"
-                      style={isMobile ? { fontSize: '10px', padding: '2px 6px', gap: '3px' } : undefined}
-                    >
-                      {agreement.status}
-                    </StatusBadge>
-                  </span>
-                  {agreement.paymentStatus && (
-                    <StatusBadge
-                      variant={paymentStatusToBadgeVariant(agreement.paymentStatus)}
-                      title="Payment status"
-                      style={isMobile ? { fontSize: '10px', padding: '2px 6px', gap: '3px' } : undefined}
-                    >
-                      <UIcon name="credit-card" style={{ fontSize: isMobile ? '10px' : '12px' }} />
-                      {agreement.paymentStatus}
-                    </StatusBadge>
+                  {/* Badge column — stacked on mobile, inline on desktop/tablet */}
+                  {isMobile ? (
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      gap: '4px',
+                      flexShrink: 0,
+                      paddingTop: '2px',
+                    }}>
+                      {warningType && (
+                        <span style={{ fontSize: '14px', lineHeight: 1, display: 'inline-flex' }}>
+                          {warningType === 'expiration' ? (
+                            <UIcon name="clock" style={{ color: 'var(--warn)' }} />
+                          ) : warningType === 'critical' ? (
+                            <UIcon name="siren" style={{ color: 'var(--alert)' }} />
+                          ) : (
+                            <UIcon name="circle-exclamation" style={{ color: 'var(--warn)' }} />
+                          )}
+                        </span>
+                      )}
+                      {agreement.paymentStatus && (
+                        <StatusBadge
+                          variant={paymentStatusToBadgeVariant(agreement.paymentStatus)}
+                          title="Payment status"
+                          style={{ fontSize: '10px', padding: '2px 6px', gap: '3px' }}
+                        >
+                          <UIcon name="credit-card" style={{ fontSize: '10px' }} />
+                          {agreement.paymentStatus}
+                        </StatusBadge>
+                      )}
+                      <span
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ display: 'inline-flex', flexShrink: 0 }}
+                      >
+                        <StatusBadge
+                          variant={agreementStatusToBadgeVariant(agreement.status)}
+                          onClick={() => {
+                            setEditingStatus(true);
+                            setEditingStatusAgreementId(agreement.id);
+                            setNewStatus(agreement.status);
+                          }}
+                          title="Click to edit status"
+                          style={{ fontSize: '10px', padding: '2px 6px', gap: '3px' }}
+                        >
+                          {agreement.status}
+                        </StatusBadge>
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <span
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ display: 'inline-flex', flexShrink: 0 }}
+                      >
+                        <StatusBadge
+                          variant={agreementStatusToBadgeVariant(agreement.status)}
+                          onClick={() => {
+                            setEditingStatus(true);
+                            setEditingStatusAgreementId(agreement.id);
+                            setNewStatus(agreement.status);
+                          }}
+                          title="Click to edit status"
+                        >
+                          {agreement.status}
+                        </StatusBadge>
+                      </span>
+                      {agreement.paymentStatus && (
+                        <StatusBadge
+                          variant={paymentStatusToBadgeVariant(agreement.paymentStatus)}
+                          title="Payment status"
+                        >
+                          <UIcon name="credit-card" style={{ fontSize: '12px' }} />
+                          {agreement.paymentStatus}
+                        </StatusBadge>
+                      )}
+                    </>
                   )}
                 </div>
                 {/* Expanded section — smooth height transition; respects prefers-reduced-motion */}
