@@ -9,39 +9,38 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        ui: ['var(--font-ui)', 'system-ui', 'sans-serif'],
+      },
       colors: {
-        /* Brand sage green — single source of truth.
-           Mirrors the --accent / --accent-soft / --accent-faint
-           CSS variables defined in app/globals.css so Tailwind
-           utilities (bg-accent, text-accent, etc.) and inline
-           styles using var(--accent) stay in lockstep. */
+        /* Semantic tokens — resolve per data-surface in globals.css */
+        paper: 'var(--paper)',
+        ink: 'var(--ink)',
+        coral: 'var(--coral)',
+        gold: 'var(--gold)',
+        panel: 'var(--panel)',
+        hairline: 'var(--hairline)',
+        muted: 'var(--muted)',
+        surface: 'var(--admin-surface)',
+        'surface-raised': 'var(--admin-surface-raised)',
+        success: 'var(--success)',
+        warn: 'var(--warn)',
+        alert: 'var(--alert)',
         accent: {
-          DEFAULT: '#1D9E75',
-          soft: '#5DCAA5',
-          faint: '#9FE1CB',
+          DEFAULT: 'var(--accent)',
+          soft: 'var(--accent-soft)',
+          faint: 'var(--accent-faint)',
         },
         admin: {
-          bg: '#080c08',
-          sidebar: '#0e110e',
-          card: '#1a1d1a',
-          muted: '#8f9a8f',
-          border: '#2d3530',
-          accent: '#4a9e72',
-          'accent-hover': '#3d8560',
-        },
-        /** Softer than default Tailwind emerald (less neon) — used by portal & marketing */
-        emerald: {
-          50: '#f0f7f3',
-          100: '#dceee3',
-          200: '#b8dcc8',
-          300: '#8fc4a8',
-          400: '#6aa88a',
-          500: '#4a9e72',
-          600: '#438a66',
-          700: '#3d8560',
-          800: '#2f6b4d',
-          900: '#234d3a',
-          950: '#122920',
+          bg: 'var(--admin-bg)',
+          sidebar: 'var(--admin-surface)',
+          card: 'var(--admin-surface)',
+          text: 'var(--admin-text)',
+          muted: 'var(--admin-muted)',
+          border: 'var(--admin-hairline)',
+          accent: 'var(--gold)',
+          'accent-hover': 'var(--gold)',
         },
       },
     },
@@ -50,5 +49,3 @@ const config: Config = {
 }
 
 export default config
-
-

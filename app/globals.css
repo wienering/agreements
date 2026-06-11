@@ -9,28 +9,59 @@
   vertical-align: -0.15em;
 }
 
+/* ---------------------------------------------------------------------------
+   Design tokens — see docs/design-direction.md
+   Scoped by data-surface on layout roots. Stage 3 migrates page-level colors.
+   --------------------------------------------------------------------------- */
+
+[data-surface='client'] {
+  --paper: #faf6ef;
+  --ink: #2a2724;
+  --coral: #c0552f;
+  --panel: #f2ebdd;
+  --hairline: #e5ddcf;
+  --muted: #6e655a;
+  --success: #3f6f4f;
+  --warn: #b07d2a;
+  --alert: #b3392b;
+
+  /* Legacy brand alias — ~158 usages pick up Coral without file edits */
+  --accent: var(--coral);
+  --accent-rgb: 192, 85, 47;
+  --accent-soft: #d4785a;
+  --accent-faint: #e8b5a3;
+}
+
+[data-surface='admin'] {
+  --admin-bg: #1e1b18;
+  --admin-surface: #2a2724;
+  --admin-surface-raised: #353029;
+  --admin-text: #ede7dc;
+  --admin-muted: #9a9087;
+  --admin-hairline: #3d372f;
+  --gold: #c6a04d;
+  --success: #3f6f4f;
+  --warn: #b07d2a;
+  --alert: #b3392b;
+
+  /* Legacy brand alias — ~158 usages pick up Gold without file edits */
+  --accent: var(--gold);
+  --accent-rgb: 198, 160, 77;
+  --accent-soft: #d4b96a;
+  --accent-faint: #e5d4a8;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-
-  /* Brand sage green accent — single source of truth.
-     Use --accent for the main green (heading, nav, chart bars/line,
-     primary buttons, status text). --accent-soft / --accent-faint
-     are lighter stops for secondary surfaces. --accent-rgb is the
-     same value as channels for use with rgba(). */
-  --accent: #1D9E75;
-  --accent-soft: #5DCAA5;
-  --accent-faint: #9FE1CB;
-  --accent-rgb: 29, 158, 117;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    /* Charcoal with subtle green undertone (LinkGuard-style) */
-    --background-start-rgb: 8, 12, 8;
-    --background-end-rgb: 14, 17, 14;
+    --background-start-rgb: 30, 27, 24;
+    --background-end-rgb: 42, 39, 36;
   }
 }
 
@@ -201,56 +232,56 @@ body {
 /* Ensure modals are mobile-friendly */
 @media (max-width: 768px) {
   /* Modal padding adjustments */
-  [style*="position: fixed"][style*="zIndex"] > div[style*="maxWidth"] {
+  [style*='position: fixed'][style*='zIndex'] > div[style*='maxWidth'] {
     padding: 20px !important;
     margin: 16px !important;
     max-width: calc(100% - 32px) !important;
   }
-  
+
   /* Form inputs on mobile should be larger for better touch targets */
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="date"],
-  input[type="datetime-local"],
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='date'],
+  input[type='datetime-local'],
   textarea,
   select {
     font-size: 16px !important; /* Prevents zoom on iOS */
     padding: 12px 16px !important;
   }
-  
+
   /* Buttons should stack on mobile */
   button + button,
   a + button,
   button + a {
     margin-top: 8px;
   }
-  
+
   /* Ensure text wraps properly */
   * {
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
-  
+
   /* Tables should scroll horizontally */
   table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* File upload areas should be touch-friendly */
-  [style*="padding: 32px"] {
+  [style*='padding: 32px'] {
     padding: 24px 16px !important;
   }
-  
+
   /* Action button groups should wrap */
-  [style*="display: flex"][style*="gap"] {
+  [style*='display: flex'][style*='gap'] {
     flex-wrap: wrap !important;
   }
-  
+
   /* Grid layouts should stack on mobile */
-  [style*="gridTemplateColumns"] {
+  [style*='gridTemplateColumns'] {
     grid-template-columns: 1fr !important;
   }
 }
@@ -258,7 +289,7 @@ body {
 /* Tablet adjustments */
 @media (min-width: 769px) and (max-width: 1024px) {
   /* Modals can be slightly wider on tablets */
-  [style*="position: fixed"][style*="zIndex"] > div[style*="maxWidth"] {
+  [style*='position: fixed'][style*='zIndex'] > div[style*='maxWidth'] {
     max-width: 500px !important;
   }
 }
@@ -266,17 +297,23 @@ body {
 /* Small mobile devices */
 @media (max-width: 480px) {
   /* Even smaller padding on very small screens */
-  [style*="position: fixed"][style*="zIndex"] > div[style*="maxWidth"] {
+  [style*='position: fixed'][style*='zIndex'] > div[style*='maxWidth'] {
     padding: 16px !important;
     margin: 12px !important;
     max-width: calc(100% - 24px) !important;
   }
-  
+
   /* Smaller font sizes for very small screens */
-  h1 { font-size: 24px !important; }
-  h2 { font-size: 20px !important; }
-  h3 { font-size: 18px !important; }
-  
+  h1 {
+    font-size: 24px !important;
+  }
+  h2 {
+    font-size: 20px !important;
+  }
+  h3 {
+    font-size: 18px !important;
+  }
+
   /* Compact button padding */
   button {
     padding: 10px 16px !important;
@@ -285,8 +322,14 @@ body {
 }
 
 @keyframes adminFadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .admin-fade-in {
   animation: adminFadeIn 0.2s ease-out;

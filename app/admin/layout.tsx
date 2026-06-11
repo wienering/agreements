@@ -16,7 +16,7 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const { isDark, toggleDarkMode } = useDarkMode();
+  const { isDark } = useDarkMode();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileHeaderPressed, setIsMobileHeaderPressed] = useState(false);
@@ -50,13 +50,15 @@ export default function AdminLayout({
   // Show loading state
   if (status === 'loading') {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div
+        data-surface="admin"
+        style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: isDark ? '#080c08' : '#f8fafc',
-        color: isDark ? adminTheme.dark.text : '#0f172a'
+        backgroundColor: adminTheme.dark.bg,
+        color: adminTheme.dark.text,
       }}>
         <div style={{ textAlign: 'center' }}>
           <UIcon name="spinner" className="animate-spin text-2xl text-[#8f9a8f]" style={{ marginBottom: '16px', display: 'inline-flex' }} />
@@ -68,7 +70,7 @@ export default function AdminLayout({
 
   // If not authenticated, show login page without sidebar
   if (status === 'unauthenticated') {
-    return <>{children}</>;
+    return <div data-surface="admin">{children}</div>;
   }
 
   const sidebarBg = isDark ? adminTheme.dark.sidebar : '#1e293b';
@@ -80,7 +82,7 @@ export default function AdminLayout({
   const navHoverBg = adminTheme.dark.surfaceHover;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: mainBg }}>
+    <div data-surface="admin" style={{ display: 'flex', minHeight: '100vh', backgroundColor: mainBg }}>
       {/* Mobile Menu Overlay */}
       {isMobile && isMobileMenuOpen && (
         <div
@@ -189,38 +191,6 @@ export default function AdminLayout({
           flexShrink: 0,
           borderTop: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
-          {/* Dark Mode Toggle */}
-          <div style={{ marginBottom: '12px' }}>
-            <button
-              onClick={toggleDarkMode}
-              style={{
-                width: '100%',
-                padding: '10px 20px',
-                backgroundColor: navHoverBg,
-                color: 'rgba(255, 255, 255, 0.92)',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'background-color 0.2s',
-              }}
-              title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = adminTheme.dark.border;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = navHoverBg;
-              }}
-            >
-              <UIcon name={isDark ? 'sun' : 'moon'} style={{ fontSize: '16px' }} />
-              {isDark ? 'Light Mode' : 'Dark Mode'}
-            </button>
-          </div>
-
           {/* Logout Button */}
           <div>
             <AdminButton

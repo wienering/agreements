@@ -119,11 +119,11 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
 
   // Don't show layout for login page or landing page
   if (typeof window !== 'undefined' && (window.location.pathname === '/portal/login' || window.location.pathname === '/portal')) {
-    return <>{children}</>;
+    return <div data-surface="client">{children}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950">
+    <div data-surface="client" className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950 dark:to-slate-950">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-emerald-200/70 bg-white/70 backdrop-blur dark:border-emerald-800 dark:bg-slate-900/70">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
