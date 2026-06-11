@@ -310,6 +310,7 @@ enum AgreementActivityType {
   REMINDER_SENT
   CANCELLED
   NOTE_ADDED
+  BACKDROP_SELECTED
 }
 
 enum LeadStage {

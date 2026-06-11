@@ -107,6 +107,15 @@ export function getActivityTimelineLabel(
       return 'Cancelled';
     case 'NOTE_ADDED':
       return 'Client added a note';
+    case 'BACKDROP_SELECTED': {
+      const name =
+        typeof m?.backdropName === 'string' && m.backdropName.trim()
+          ? m.backdropName.trim()
+          : null;
+      const cleared = m?.backdropName === null || m?.backdropName === '';
+      if (cleared) return 'Backdrop selection cleared';
+      return name ? `Backdrop selected: ${name}` : 'Backdrop selected';
+    }
     default:
       return type;
   }

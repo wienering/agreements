@@ -1,90 +1,169 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { formatZodDetails } from '@/lib/handleApiError';
+import { handleApiError } from '@/lib/handleApiError';
+import {
+  authorizeBackdropSelectionUpdate,
+  type BackdropSelectionAuthVia,
+} from '@/lib/authorizeBackdropSelection';
+import { logAgreementActivity } from '@/lib/activityLog';
+import { torontoDateKey } from '@/lib/dates';
 
-const updateBackdropSelectionSchema = z.object({
-  agreementId: z.string().optional(), // If provided, use this directly
-  clientEmail: z.string().email('Invalid email address').optional(),
-  clientName: z.string().optional(),
-  eventDate: z.string().optional(),
-  backdropName: z.string().optional(), // Allow empty string to clear selection
-}).refine(
-  (data) => data.agreementId || (data.clientEmail && data.clientName && data.eventDate),
-  {
-    message: "Either agreementId must be provided, or clientEmail, clientName, and eventDate must all be provided",
-    path: ["agreementId"]
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_PER_AGREEMENT = 10;
+
+const updateBackdropSelectionSchema = z
+  .object({
+    agreementId: z.string().min(1).max(64).optional(),
+    clientEmail: z.string().email('Invalid email address').optional(),
+    clientName: z.string().min(1).max(200).optional(),
+    eventDate: z.string().min(1).max(64).optional(),
+    backdropName: z
+      .string()
+      .max(200)
+      .optional()
+      .transform((value) => (value === undefined ? undefined : value.trim())),
+  })
+  .refine(
+    (data) =>
+      data.agreementId || (data.clientEmail && data.clientName && data.eventDate),
+    {
+      message:
+        'Either agreementId must be provided, or clientEmail, clientName, and eventDate must all be provided',
+      path: ['agreementId'],
+    },
+  );
+
+type BackdropWriteVia = BackdropSelectionAuthVia | 'fallback';
+
+async function isRateLimited(agreementId: string): Promise<boolean> {
+  const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+  const count = await prisma.agreementActivity.count({
+    where: {
+      agreementId,
+      type: 'BACKDROP_SELECTED',
+      createdAt: { gte: since },
+    },
+  });
+  return count >= RATE_LIMIT_MAX_PER_AGREEMENT;
+}
+
+async function persistBackdropSelection(
+  agreementIds: string[],
+  backdropName: string | undefined,
+  via: BackdropWriteVia,
+): Promise<{ updatedCount: number; updatedAgreementIds: string[]; rateLimited: boolean }> {
+  const normalizedName = backdropName ? backdropName : null;
+  const updatedAgreementIds: string[] = [];
+
+  for (const agreementId of agreementIds) {
+    if (await isRateLimited(agreementId)) {
+      return {
+        updatedCount: updatedAgreementIds.length,
+        updatedAgreementIds,
+        rateLimited: true,
+      };
+    }
+
+    await prisma.agreement.update({
+      where: { id: agreementId },
+      data: { selectedBackdropName: normalizedName },
+    });
+
+    await logAgreementActivity(agreementId, 'BACKDROP_SELECTED', {
+      backdropName: normalizedName,
+      via,
+    });
+
+    updatedAgreementIds.push(agreementId);
   }
-);
+
+  return {
+    updatedCount: updatedAgreementIds.length,
+    updatedAgreementIds,
+    rateLimited: false,
+  };
+}
+
+function writableAgreementWhere(agreementId: string) {
+  return {
+    id: agreementId,
+    archived: false,
+    status: { not: 'CANCELLED' as const },
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await authorizeBackdropSelectionUpdate(request);
+    if (!auth.ok) {
+      return auth.response;
+    }
 
-    await requireAdmin(request);
     const body = await request.json();
     const validatedData = updateBackdropSelectionSchema.parse(body);
 
-    let updatedCount = 0;
-    const updatedAgreementIds: string[] = [];
-
-    // If agreementId is provided, use it directly (preferred method)
     if (validatedData.agreementId) {
-      // Verify the agreement exists and is not archived
       const agreement = await prisma.agreement.findFirst({
-        where: {
-          id: validatedData.agreementId,
-          archived: false,
-        },
+        where: writableAgreementWhere(validatedData.agreementId),
+        select: { id: true },
       });
 
       if (!agreement) {
-        return NextResponse.json({
-          success: false,
-          message: 'Agreement not found or is archived',
-          updatedCount: 0,
-        }, { status: 404 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Agreement not found, archived, or cancelled',
+            updatedCount: 0,
+          },
+          { status: 404 },
+        );
       }
 
-      // Update the specific agreement (allow null/empty to clear selection)
-      await prisma.agreement.update({
-        where: {
-          id: validatedData.agreementId,
-        },
-        data: {
-          selectedBackdropName: validatedData.backdropName || null,
-        },
-      });
+      const result = await persistBackdropSelection(
+        [validatedData.agreementId],
+        validatedData.backdropName,
+        auth.via,
+      );
 
-      updatedCount = 1;
-      updatedAgreementIds.push(validatedData.agreementId);
+      if (result.rateLimited) {
+        return NextResponse.json(
+          { error: 'Too many backdrop selection updates. Please try again shortly.' },
+          { status: 429 },
+        );
+      }
 
       return NextResponse.json({
         success: true,
-        message: `Updated agreement with backdrop selection`,
-        updatedCount,
-        updatedAgreementIds,
+        message: 'Updated agreement with backdrop selection',
+        updatedCount: result.updatedCount,
+        updatedAgreementIds: result.updatedAgreementIds,
       });
     }
 
-    // Fallback to old matching method if agreementId not provided
-    if (!validatedData.clientEmail || !validatedData.clientName || !validatedData.eventDate) {
-      return NextResponse.json({
-        success: false,
-        message: 'Either agreementId must be provided, or clientEmail, clientName, and eventDate must all be provided',
-        updatedCount: 0,
-      }, { status: 400 });
-    }
-
-    // Parse event date from the submission
-    const submissionEventDate = new Date(validatedData.eventDate);
-    const submissionDateOnly = new Date(
-      submissionEventDate.getFullYear(),
-      submissionEventDate.getMonth(),
-      submissionEventDate.getDate()
+    console.warn(
+      '[update-backdrop-selection] Legacy fallback matcher used (no agreementId). ' +
+        'Migrate caller to send agreementId.',
     );
 
-    // Step 1: Find clients by email (case-insensitive)
+    if (
+      !validatedData.clientEmail ||
+      !validatedData.clientName ||
+      !validatedData.eventDate
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Either agreementId must be provided, or clientEmail, clientName, and eventDate must all be provided',
+          updatedCount: 0,
+        },
+        { status: 400 },
+      );
+    }
+
+    const submissionDateKey = torontoDateKey(validatedData.eventDate);
+
     const clients = await prisma.client.findMany({
       where: {
         email: {
@@ -95,10 +174,11 @@ export async function POST(request: NextRequest) {
       include: {
         agreements: {
           where: {
-            archived: false, // Only update non-archived agreements
+            archived: false,
+            status: { not: 'CANCELLED' },
           },
           include: {
-            event: true, // Include event data for matching
+            event: true,
           },
         },
       },
@@ -112,45 +192,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 2: For each matching client, find and update agreements
+    let updatedCount = 0;
+    const updatedAgreementIds: string[] = [];
+
     for (const client of clients) {
-      // Normalize client name for comparison
       const clientFullName = `${client.firstName} ${client.lastName}`.trim().toLowerCase();
       const submissionName = validatedData.clientName.trim().toLowerCase();
 
-      // Filter agreements based on matching criteria
       const matchingAgreements = client.agreements.filter((agreement) => {
-        // First, try to match by event date from the Event model (for whitelabel clients)
         if (agreement.event?.eventDate) {
-          const eventDate = new Date(agreement.event.eventDate);
-          const eventDateOnly = new Date(
-            eventDate.getFullYear(),
-            eventDate.getMonth(),
-            eventDate.getDate()
-          );
-
-          // Match by event date (same day)
-          if (eventDateOnly.getTime() === submissionDateOnly.getTime()) {
+          if (torontoDateKey(agreement.event.eventDate) === submissionDateKey) {
             return true;
           }
         }
 
-        // If client has eventDate (deprecated, but still check for backward compatibility)
         if (client.eventDate) {
-          const clientEventDate = new Date(client.eventDate);
-          const clientDateOnly = new Date(
-            clientEventDate.getFullYear(),
-            clientEventDate.getMonth(),
-            clientEventDate.getDate()
-          );
-
-          // Match by event date (same day)
-          if (clientDateOnly.getTime() === submissionDateOnly.getTime()) {
+          if (torontoDateKey(client.eventDate) === submissionDateKey) {
             return true;
           }
         }
 
-        // If eventDate doesn't match or doesn't exist, try matching by client name
         if (clientFullName === submissionName) {
           return true;
         }
@@ -158,23 +219,28 @@ export async function POST(request: NextRequest) {
         return false;
       });
 
-      // Step 3: Update matching agreements with selectedBackdropName
-      if (matchingAgreements.length > 0) {
-        const agreementIds = matchingAgreements.map((agreement) => agreement.id);
+      if (matchingAgreements.length === 0) {
+        continue;
+      }
 
-        const result = await prisma.agreement.updateMany({
-          where: {
-            id: {
-              in: agreementIds,
-            },
-          },
-          data: {
-            selectedBackdropName: validatedData.backdropName || null,
-          },
-        });
+      const result = await persistBackdropSelection(
+        matchingAgreements.map((agreement) => agreement.id),
+        validatedData.backdropName,
+        'fallback',
+      );
 
-        updatedCount += result.count;
-        updatedAgreementIds.push(...agreementIds);
+      updatedCount += result.updatedCount;
+      updatedAgreementIds.push(...result.updatedAgreementIds);
+
+      if (result.rateLimited) {
+        return NextResponse.json(
+          {
+            error: 'Too many backdrop selection updates. Please try again shortly.',
+            updatedCount,
+            updatedAgreementIds,
+          },
+          { status: 429 },
+        );
       }
     }
 
@@ -184,25 +250,7 @@ export async function POST(request: NextRequest) {
       updatedCount,
       updatedAgreementIds,
     });
-  } catch (error: any) {
-    const authResponse = adminAuthResponse(error);
-    if (authResponse) return authResponse;
-    console.error('Error updating backdrop selection:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: formatZodDetails(error),
-        },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json(
-      { error: 'Failed to update backdrop selection' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'agreements/update-backdrop-selection');
   }
 }
-
-
-
