@@ -18,6 +18,14 @@ import {
   getStatusBadgeStyles,
 } from '../../components/StatusBadge';
 import { UIcon } from '../../components/UIcon';
+import {
+  buildAgreementStatusHint,
+  buildAgreementTimeline,
+  formatActivityAbsoluteTime,
+  formatRelativeTime,
+  getActivityTimelineLabel,
+  type AgreementTimelineEntry,
+} from '@/lib/agreementTrackingUi';
 
 interface Agreement {
   id: string;
@@ -299,8 +307,12 @@ export default function AgreementsPage() {
     secondSigner: boolean;
     portal: boolean;
     attendant: boolean;
+    tracking: boolean;
     clientNotes: boolean;
-  }>({ content: false, secondSigner: false, portal: true, attendant: false, clientNotes: false });
+  }>({ content: false, secondSigner: false, portal: true, attendant: false, tracking: false, clientNotes: false });
+  const [trackingTimeline, setTrackingTimeline] = useState<AgreementTimelineEntry[]>([]);
+  const [trackingAgreementId, setTrackingAgreementId] = useState<string | null>(null);
+  const [loadingTracking, setLoadingTracking] = useState(false);
   const [clientNotes, setClientNotes] = useState<Array<{ id: string; content: string; createdAt: string }>>([]);
   const [clientNotesAgreementId, setClientNotesAgreementId] = useState<string | null>(null);
   const [loadingClientNotes, setLoadingClientNotes] = useState(false);
@@ -440,10 +452,13 @@ const normalizePaymentStatus = (value?: string | null) => {
   // Reset Edit Agreement modal sections to default whenever a different agreement is opened
   useEffect(() => {
     if (selectedAgreement?.id) {
-      setEditModalSections({ content: false, secondSigner: false, portal: true, attendant: false, clientNotes: false });
+      setEditModalSections({ content: false, secondSigner: false, portal: true, attendant: false, tracking: false, clientNotes: false });
       setClientNotes([]);
       setClientNotesAgreementId(null);
       setLoadingClientNotes(false);
+      setTrackingTimeline([]);
+      setTrackingAgreementId(null);
+      setLoadingTracking(false);
     }
   }, [selectedAgreement?.id]);
 
@@ -1098,6 +1113,46 @@ const normalizePaymentStatus = (value?: string | null) => {
     setSelectedAgreement((prev) =>
       prev?.id === agreementId ? { ...prev, unreadNotesCount: 0 } : prev
     );
+  };
+
+  const handleToggleTrackingSection = async () => {
+    const willExpand = !editModalSections.tracking;
+    setEditModalSections((s) => ({ ...s, tracking: willExpand }));
+
+    if (!willExpand || !selectedAgreement) return;
+
+    if (trackingAgreementId !== selectedAgreement.id) {
+      setLoadingTracking(true);
+      try {
+        const response = await adminFetch(
+          `/api/agreements/${encodeURIComponent(selectedAgreement.id)}/activity`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setTrackingTimeline(
+            buildAgreementTimeline(data.activities || [], {
+              status: data.legacy?.status ?? selectedAgreement.status,
+              lastEmailedAt: data.legacy?.lastEmailedAt ?? null,
+              emailSendCount: data.legacy?.emailSendCount ?? 0,
+              firstViewedAt: data.legacy?.firstViewedAt ?? null,
+              lastViewedAt: data.legacy?.lastViewedAt ?? null,
+              signedAt: data.legacy?.signedAt ?? null,
+              cancelledAt: data.legacy?.cancelledAt ?? null,
+              reminderCount: data.legacy?.reminderCount ?? 0,
+              lastReminderAt: data.legacy?.lastReminderAt ?? null,
+            }),
+          );
+          setTrackingAgreementId(selectedAgreement.id);
+        } else {
+          setTrackingTimeline([]);
+        }
+      } catch (error) {
+        console.error('Error fetching agreement activity:', error);
+        setTrackingTimeline([]);
+      } finally {
+        setLoadingTracking(false);
+      }
+    }
   };
 
   const handleToggleClientNotesSection = async () => {
@@ -2541,6 +2596,56 @@ const normalizePaymentStatus = (value?: string | null) => {
                       </div>
                     )}
                   </div>
+                  {/* Engagement hint + email */}
+                  {(() => {
+                    const statusHint = buildAgreementStatusHint(agreement);
+                    return (
+                      <div
+                        style={{
+                          minWidth: isMobile ? '96px' : '120px',
+                          maxWidth: isMobile ? '140px' : '220px',
+                          flexShrink: 1,
+                          textAlign: 'right',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: '11px',
+                            lineHeight: 1.3,
+                            color: statusHint.urgency === 'danger'
+                              ? '#dc2626'
+                              : statusHint.urgency === 'warning'
+                                ? '#f59e0b'
+                                : mutedText,
+                            fontWeight: statusHint.warn ? 600 : 400,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                          title={statusHint.text}
+                        >
+                          {statusHint.text}
+                        </div>
+                        {!isMobile && (
+                          <div
+                            style={{
+                              fontSize: '11px',
+                              lineHeight: 1.3,
+                              color: mutedText,
+                              marginTop: '2px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                            title={agreement.client.email}
+                          >
+                            {agreement.client.email}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {/* Status badge — click-to-edit; propagation stopped so row doesn't toggle */}
                   <span
                     onClick={(e) => e.stopPropagation()}
@@ -3876,7 +3981,88 @@ const normalizePaymentStatus = (value?: string | null) => {
                 </div>
               </div>
 
-              {/* Section 5: Client Notes */}
+              {/* Section 5: Tracking */}
+              <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
+                <button
+                  type="button"
+                  onClick={handleToggleTrackingSection}
+                  aria-expanded={editModalSections.tracking}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: textColor, fontSize: '15px', fontWeight: 600, textAlign: 'left' }}
+                >
+                  <span>Tracking</span>
+                  <span aria-hidden="true" style={{ display: 'inline-block', transition: prefersReducedMotion ? 'none' : 'transform 200ms ease', transform: editModalSections.tracking ? 'rotate(90deg)' : 'rotate(0deg)', color: mutedText, fontSize: '12px' }}>▶</span>
+                </button>
+                <div style={{ display: 'grid', gridTemplateRows: editModalSections.tracking ? '1fr' : '0fr', transition: prefersReducedMotion ? 'none' : 'grid-template-rows 200ms ease' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ padding: '0 16px 12px 16px' }}>
+                      {loadingTracking ? (
+                        <p style={{ margin: 0, fontSize: '13px', color: mutedText, fontStyle: 'italic' }}>
+                          Loading activity...
+                        </p>
+                      ) : trackingTimeline.length === 0 ? (
+                        <p style={{ margin: 0, fontSize: '13px', color: mutedText }}>
+                          No tracking activity yet.
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          {trackingTimeline.map((entry, index) => (
+                            <div
+                              key={entry.id}
+                              style={{
+                                display: 'flex',
+                                gap: '12px',
+                                position: 'relative',
+                                paddingBottom: index < trackingTimeline.length - 1 ? '14px' : 0,
+                              }}
+                            >
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '12px', flexShrink: 0 }}>
+                                <div
+                                  style={{
+                                    width: '8px',
+                                    height: '8px',
+                                    borderRadius: '50%',
+                                    backgroundColor: entry.fromLegacy ? mutedText : 'var(--accent)',
+                                    marginTop: '5px',
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                {index < trackingTimeline.length - 1 && (
+                                  <div
+                                    style={{
+                                      width: '2px',
+                                      flex: 1,
+                                      minHeight: '20px',
+                                      backgroundColor: borderColor,
+                                      marginTop: '4px',
+                                    }}
+                                  />
+                                )}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: '14px', color: textColor, fontWeight: 500, lineHeight: 1.35 }}>
+                                  {getActivityTimelineLabel(entry.type, entry.meta)}
+                                  {entry.fromLegacy && (
+                                    <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 400, color: mutedText, fontStyle: 'italic' }}>
+                                      from records
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: '12px', color: mutedText, marginTop: '2px', lineHeight: 1.35 }}>
+                                  {formatActivityAbsoluteTime(entry.createdAt)}
+                                  {' · '}
+                                  {formatRelativeTime(entry.createdAt)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 6: Client Notes */}
               <div style={{ marginTop: '12px', border: `1px solid ${borderColor}`, borderRadius: '8px', overflow: 'hidden', backgroundColor: isDark ? '#1a1d1a' : '#f8fafc' }}>
                 <button
                   type="button"
