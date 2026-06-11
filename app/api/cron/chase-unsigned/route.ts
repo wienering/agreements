@@ -13,25 +13,19 @@ import { sendChaseReminderEmail } from '@/lib/email/chaseReminderEmail';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram';
 
+// Vercel cron invokes this endpoint with GET (user agent: vercel-cron/1.0).
+// Manual triggers can use POST. Both require the CRON_SECRET bearer token.
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+
 type ChaseAttemptResult = {
   agreementId: string;
   status: 'sent' | 'failed';
   error?: string;
 };
 
-export async function POST(request: NextRequest) {
-  if (!verifyCronSecret(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    return NextResponse.json({ error: 'SMTP not configured' }, { status: 503 });
-  }
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host') || 'localhost:3000'}`;
-
+async function runChaseUnsigned(baseUrl: string) {
   const now = new Date();
   const candidates = await prisma.agreement.findMany({
     where: {
@@ -129,10 +123,39 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({
+  return {
     checked: dueAgreements.length,
     sent,
     failed,
     results,
-  });
+  };
 }
+
+async function handler(request: NextRequest) {
+  if (!verifyCronSecret(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return NextResponse.json({ error: 'SMTP not configured' }, { status: 503 });
+  }
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host') || 'localhost:3000'}`;
+
+  try {
+    const summary = await runChaseUnsigned(baseUrl);
+    console.log('[chase-unsigned] completed', summary);
+    return NextResponse.json({
+      ok: true,
+      ranAt: new Date().toISOString(),
+      ...summary,
+    });
+  } catch (error) {
+    console.error('[chase-unsigned] failed', error);
+    return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
+  }
+}
+
+export { handler as GET, handler as POST };
