@@ -6,12 +6,12 @@ import {
   authorizeBackdropSelectionUpdate,
   type BackdropSelectionAuthVia,
 } from '@/lib/authorizeBackdropSelection';
-import { logAgreementActivity } from '@/lib/activityLog';
 import { torontoDateKey } from '@/lib/dates';
 import { verifyBackdropSelectionOwnership } from '@/lib/backdropSelectionOwnership';
-
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_PER_AGREEMENT = 10;
+import {
+  persistBackdropSelection,
+  writableAgreementWhere,
+} from '@/lib/backdropSelectionPersistence';
 
 const SECRET_PATH_FAILURE_BODY = { ok: false } as const;
 
@@ -39,8 +39,6 @@ const updateBackdropSelectionSchema = z
     },
   );
 
-type BackdropWriteVia = BackdropSelectionAuthVia | 'fallback';
-
 function secretPathRejection(reason: string, context?: Record<string, unknown>): NextResponse {
   console.warn('[update-backdrop-selection] secret-path rejection', {
     reason,
@@ -51,63 +49,6 @@ function secretPathRejection(reason: string, context?: Record<string, unknown>):
 
 function secretPathSuccess(updatedCount: number): NextResponse {
   return NextResponse.json({ ok: true, updatedCount }, { status: 200 });
-}
-
-async function isRateLimited(agreementId: string): Promise<boolean> {
-  const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
-  const count = await prisma.agreementActivity.count({
-    where: {
-      agreementId,
-      type: 'BACKDROP_SELECTED',
-      createdAt: { gte: since },
-    },
-  });
-  return count >= RATE_LIMIT_MAX_PER_AGREEMENT;
-}
-
-async function persistBackdropSelection(
-  agreementIds: string[],
-  backdropName: string | undefined,
-  via: BackdropWriteVia,
-): Promise<{ updatedCount: number; updatedAgreementIds: string[]; rateLimited: boolean }> {
-  const normalizedName = backdropName ? backdropName : null;
-  const updatedAgreementIds: string[] = [];
-
-  for (const agreementId of agreementIds) {
-    if (await isRateLimited(agreementId)) {
-      return {
-        updatedCount: updatedAgreementIds.length,
-        updatedAgreementIds,
-        rateLimited: true,
-      };
-    }
-
-    await prisma.agreement.update({
-      where: { id: agreementId },
-      data: { selectedBackdropName: normalizedName },
-    });
-
-    await logAgreementActivity(agreementId, 'BACKDROP_SELECTED', {
-      backdropName: normalizedName,
-      via,
-    });
-
-    updatedAgreementIds.push(agreementId);
-  }
-
-  return {
-    updatedCount: updatedAgreementIds.length,
-    updatedAgreementIds,
-    rateLimited: false,
-  };
-}
-
-function writableAgreementWhere(agreementId: string) {
-  return {
-    id: agreementId,
-    archived: false,
-    status: { not: 'CANCELLED' as const },
-  };
 }
 
 function parseBackdropSelectionBody(

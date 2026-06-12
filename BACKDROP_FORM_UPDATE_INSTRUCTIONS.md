@@ -116,6 +116,122 @@ curl_close($ch);
 
 Legacy fallback matching uses Toronto calendar dates (`America/Toronto`). Prefer `agreementId` whenever possible.
 
+## Backdrop match proposals (no agreementId)
+
+When the backdrop tool receives a submission **without** `agreementId`, call the propose endpoint instead of writing directly. The agreements app finds a confident match and sends you a Telegram message with a confirmation link. **Nothing is written until you tap that link.**
+
+### Propose endpoint
+
+**URL:** `POST /api/agreements/propose-backdrop-match`
+
+**Full URL Example:** `https://your-agreements-domain.com/api/agreements/propose-backdrop-match`
+
+**When to call:** After a client submits a backdrop selection and the URL has no `agreementId` (or ownership binding cannot be sent).
+
+**Authentication:** Same as update-backdrop-selection — `X-Backdrop-Secret` header with `BACKDROP_FORM_SECRET`. Fail-closed: **503** if secret unset on server, **401** if header missing or wrong.
+
+**Request body:**
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `clientEmail` | string | **yes** | Valid email |
+| `attendantId` | string | **yes** | Attendant CUID (`c` + 24 lowercase alphanumeric) |
+| `backdropName` | string | **yes** | Trimmed on receipt |
+| `clientName` | string | no | Shown in Telegram copy |
+| `eventDate` | string | no | Shown in Telegram for comparison (Toronto calendar day) |
+
+**Example:**
+
+```json
+{
+  "clientEmail": "client@example.com",
+  "clientName": "Jane Smith",
+  "attendantId": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "eventDate": "2026-06-15",
+  "backdropName": "Gold Sequin"
+}
+```
+
+**JavaScript fetch example (server-side):**
+
+```javascript
+const response = await fetch('https://your-domain.com/api/agreements/propose-backdrop-match', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Backdrop-Secret': process.env.BACKDROP_FORM_SECRET,
+  },
+  body: JSON.stringify({
+    clientEmail,
+    clientName,
+    attendantId,
+    eventDate,
+    backdropName,
+  }),
+});
+
+// Always expect 200 { ok: true } on success — match outcome does not change status
+const result = await response.json();
+```
+
+**Responses:**
+
+| Status | Body | When |
+|--------|------|------|
+| `200` | `{ "ok": true }` | Valid auth + body, regardless of match outcome |
+| `400` | `{ "ok": false, "error": "Validation failed", "issues": [...] }` | Zod validation failure |
+| `401` | `{ "error": "..." }` | Missing or wrong `X-Backdrop-Secret` |
+| `503` | `{ "error": "..." }` | `BACKDROP_FORM_SECRET` not configured |
+
+Internal match or Telegram failures are logged server-side; the backdrop tool still receives `200 { "ok": true }` so the client's submission is never blocked.
+
+### Match logic
+
+The server finds non-archived, non-cancelled agreements where:
+
+1. Client email equals `clientEmail` (case-insensitive), and
+2. The agreement's backdrop link URL contains `attendantId` as a bounded token (`/select/{id}` or `attendantId={id}`).
+
+| Candidates | Result |
+|------------|--------|
+| Exactly **1** | Telegram message with client name, submitted vs agreement event dates, backdrop name, and a signed confirmation URL |
+| **0** or **2+** | Informational Telegram only: "Unlinked backdrop selection — no confident match" with details and candidate count. No link. |
+
+### Confirmation (Telegram link)
+
+When exactly one candidate is found, the Telegram message includes a link like:
+
+`GET /api/agreements/confirm-backdrop-match?token=...`
+
+- Token is HMAC-SHA256 signed, stateless, 7-day expiry (requires `MATCH_CONFIRM_SECRET` on the agreements server).
+- Tapping the link writes `selectedBackdropName`, logs activity with `via: 'proposed-match'`, sends a Telegram "confirmed" message, and renders a minimal HTML confirmation page.
+- Idempotent: tapping twice writes the same value.
+- Invalid or expired token shows a generic error page with no details.
+
+### Agreements server env vars (proposals)
+
+In addition to `BACKDROP_FORM_SECRET`:
+
+```env
+MATCH_CONFIRM_SECRET="..."   # openssl rand -hex 32 — signs confirmation links
+TELEGRAM_BOT_TOKEN="..."     # same bot as unsigned agreement chaser
+TELEGRAM_CHAT_ID="..."       # your Telegram chat ID
+```
+
+### Recommended submission flow
+
+```
+if (agreementId from URL) {
+  POST /api/agreements/update-backdrop-selection
+  body: { agreementId, attendantId, clientEmail, backdropName }
+} else {
+  POST /api/agreements/propose-backdrop-match
+  body: { clientEmail, clientName, attendantId, eventDate, backdropName }
+}
+```
+
+Never auto-write when `agreementId` is missing — always propose and wait for Telegram confirmation.
+
 ## Benefits of Using agreementId
 
 1. **Accuracy**: Directly targets the specific agreement, eliminating matching errors
@@ -133,8 +249,9 @@ After updating the form, test with:
 ## Current Status
 
 ✅ **API is ready** - The `/api/agreements/update-backdrop-selection` endpoint accepts `agreementId` and shared-secret auth  
+✅ **Match proposals** - `POST /api/agreements/propose-backdrop-match` sends Telegram confirmation links when `agreementId` is absent  
 ✅ **URL includes agreementId** - The portal appends `?agreementId=xxx` to backdrop links  
-⏳ **Backdrop tool** - Must send `X-Backdrop-Secret` (server-side) and `agreementId` in the JSON body
+⏳ **Backdrop tool** - Must send `X-Backdrop-Secret` (server-side), `agreementId` when available, or call propose-backdrop-match when not
 
 ## Troubleshooting
 
