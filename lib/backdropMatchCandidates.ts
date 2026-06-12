@@ -10,6 +10,7 @@ export type BackdropMatchCandidate = {
   id: string;
   clientName: string;
   eventDate: Date | null;
+  selectedBackdropName: string | null;
 };
 
 export async function findBackdropMatchCandidates(params: {
@@ -70,6 +71,7 @@ export async function findBackdropMatchCandidates(params: {
     id: agreement.id,
     clientName: `${agreement.client.firstName} ${agreement.client.lastName}`.trim(),
     eventDate: agreement.event?.eventDate ?? agreement.client.eventDate ?? null,
+    selectedBackdropName: null,
   }));
 }
 
@@ -80,6 +82,7 @@ export async function findWritableBackdropMatchCandidate(
     where: writableAgreementWhere(agreementId),
     select: {
       id: true,
+      selectedBackdropName: true,
       client: {
         select: {
           firstName: true,
@@ -103,5 +106,6 @@ export async function findWritableBackdropMatchCandidate(
     id: agreement.id,
     clientName: `${agreement.client.firstName} ${agreement.client.lastName}`.trim(),
     eventDate: agreement.event?.eventDate ?? agreement.client.eventDate ?? null,
+    selectedBackdropName: agreement.selectedBackdropName,
   };
 }

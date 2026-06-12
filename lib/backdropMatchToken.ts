@@ -35,12 +35,14 @@ function decodeToken(token: string): { payload: string; signature: string } | nu
 export type BackdropMatchTokenPayload = {
   agreementId: string;
   backdropName: string;
+  submittedEventDate: string;
   expiry: number;
 };
 
 export function createBackdropMatchConfirmToken(
   agreementId: string,
   backdropName: string,
+  submittedEventDate = '',
 ): string | null {
   const secret = getMatchConfirmSecret();
   if (!secret) {
@@ -49,7 +51,7 @@ export function createBackdropMatchConfirmToken(
   }
 
   const expiry = Date.now() + TOKEN_TTL_MS;
-  const payload = `${agreementId}|${backdropName}|${expiry}`;
+  const payload = `${agreementId}|${backdropName}|${submittedEventDate}|${expiry}`;
   const signature = signPayload(payload, secret);
   return encodeToken(payload, signature);
 }
@@ -76,15 +78,15 @@ export function verifyBackdropMatchConfirmToken(token: string): BackdropMatchTok
   }
 
   const parts = decoded.payload.split('|');
-  if (parts.length !== 3) {
+  if (parts.length !== 4) {
     return null;
   }
 
-  const [agreementId, backdropName, expiryRaw] = parts;
+  const [agreementId, backdropName, submittedEventDate, expiryRaw] = parts;
   const expiry = Number(expiryRaw);
   if (!agreementId || !backdropName || !Number.isFinite(expiry) || Date.now() > expiry) {
     return null;
   }
 
-  return { agreementId, backdropName, expiry };
+  return { agreementId, backdropName, submittedEventDate, expiry };
 }

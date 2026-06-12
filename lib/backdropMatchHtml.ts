@@ -69,6 +69,53 @@ function backdropMatchPageShell(title: string, body: string): string {
       font-size: 15px;
       line-height: 1.5;
     }
+    .details {
+      margin: 20px 0 24px;
+      text-align: left;
+      border: 1px solid #3d372f;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .detail-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #3d372f;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #9a9087;
+    }
+    .detail-value {
+      font-size: 15px;
+      line-height: 1.4;
+      color: #ede7dc;
+    }
+    .confirm-form {
+      margin: 0;
+    }
+    .confirm-button {
+      width: 100%;
+      border: 1px solid #c6a04d;
+      border-radius: 8px;
+      background: #c6a04d;
+      color: #2a2724;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 14px 16px;
+    }
+    .confirm-button:active {
+      filter: brightness(0.95);
+    }
   </style>
 </head>
 <body>
@@ -77,6 +124,40 @@ function backdropMatchPageShell(title: string, body: string): string {
   </div>
 </body>
 </html>`;
+}
+
+function detailRow(label: string, value: string): string {
+  return `<div class="detail-row">
+    <div class="detail-label">${escapeHtml(label)}</div>
+    <div class="detail-value">${escapeHtml(value)}</div>
+  </div>`;
+}
+
+export function renderBackdropMatchConfirmPage(params: {
+  token: string;
+  clientName: string;
+  backdropName: string;
+  submittedEventLabel: string;
+  agreementEventLabel: string;
+  actionPath?: string;
+}): string {
+  const actionPath = params.actionPath ?? '/api/agreements/confirm-backdrop-match';
+
+  return backdropMatchPageShell(
+    'Confirm backdrop',
+    `<h1>Confirm backdrop match</h1>
+     <p>Review the details below, then confirm to attach this backdrop.</p>
+     <div class="details">
+       ${detailRow('Client', params.clientName)}
+       ${detailRow('Backdrop', params.backdropName)}
+       ${detailRow('Submitted event', params.submittedEventLabel)}
+       ${detailRow('Agreement event', params.agreementEventLabel)}
+     </div>
+     <form class="confirm-form" method="POST" action="${escapeHtml(actionPath)}">
+       <input type="hidden" name="token" value="${escapeHtml(params.token)}" />
+       <button type="submit" class="confirm-button">Confirm Backdrop</button>
+     </form>`,
+  );
 }
 
 export function renderBackdropMatchSuccessPage(clientName: string): string {

@@ -4,7 +4,7 @@ import { authorizeBackdropSelectionUpdate } from '@/lib/authorizeBackdropSelecti
 import { isValidAttendantCuid } from '@/lib/attendantIdentity';
 import { findBackdropMatchCandidates } from '@/lib/backdropMatchCandidates';
 import { createBackdropMatchConfirmToken } from '@/lib/backdropMatchToken';
-import { formatEventDateToronto } from '@/lib/dates';
+import { formatEventDateToronto, formatEventDateTorontoInput } from '@/lib/dates';
 import { sendTelegramMessage } from '@/lib/telegram';
 
 const proposeBackdropMatchSchema = z.object({
@@ -35,7 +35,7 @@ function formatOptionalEventDate(value: string | undefined): string {
   if (!value) {
     return '—';
   }
-  const formatted = formatEventDateToronto(value);
+  const formatted = formatEventDateTorontoInput(value);
   return formatted === '—' ? value : formatted;
 }
 
@@ -57,7 +57,11 @@ async function processBackdropMatchProposal(
       ? formatEventDateToronto(candidate.eventDate)
       : '—';
 
-    const token = createBackdropMatchConfirmToken(candidate.id, data.backdropName);
+    const token = createBackdropMatchConfirmToken(
+      candidate.id,
+      data.backdropName,
+      data.eventDate ?? '',
+    );
     if (!token) {
       console.error('[propose-backdrop-match] MATCH_CONFIRM_SECRET not configured');
       await sendTelegramMessage(
@@ -85,6 +89,7 @@ async function processBackdropMatchProposal(
         '',
         `Confirm: ${confirmUrl}`,
       ].join('\n'),
+      { disableWebPagePreview: true },
     );
     return;
   }

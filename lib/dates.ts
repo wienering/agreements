@@ -97,6 +97,43 @@ export function formatEventDateToronto(date: Date | string | number): string {
   });
 }
 
+const TORONTO_DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Parse a bare YYYY-MM-DD string as a Toronto calendar date (no UTC midnight shift).
+ * Returns null when the string is not a valid calendar date key.
+ */
+export function parseTorontoCalendarDateKey(dateKey: string): Date | null {
+  const match = TORONTO_DATE_KEY_PATTERN.exec(dateKey.trim());
+  if (!match) {
+    return null;
+  }
+
+  const year = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1;
+  const day = parseInt(match[3], 10);
+  if (month < 0 || month > 11 || day < 1 || day > 31) {
+    return null;
+  }
+
+  return torontoMidnightUtc(year, month, day);
+}
+
+/**
+ * Format an event date for display. Bare YYYY-MM-DD strings are treated as Toronto
+ * calendar dates; Date values and other inputs use Toronto wall-clock formatting.
+ */
+export function formatEventDateTorontoInput(input: Date | string | number): string {
+  if (typeof input === 'string') {
+    const parsed = parseTorontoCalendarDateKey(input);
+    if (parsed) {
+      return formatEventDateToronto(parsed);
+    }
+  }
+
+  return formatEventDateToronto(input);
+}
+
 /** Short event date label. */
 export function formatEventDateTorontoShort(date: Date | string | number): string {
   return formatDateToronto(date, {
