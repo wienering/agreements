@@ -225,8 +225,8 @@ export default function AdminHome() {
               <AdminButton variant="ghost" onClick={() => router.push('/admin/clients')}>
                 Clients
               </AdminButton>
-              <AdminButton variant="ghost" onClick={() => router.push('/admin/templates')}>
-                Templates
+              <AdminButton variant="ghost" onClick={() => router.push('/admin/agreements')}>
+                Agreements
               </AdminButton>
               <AdminButton
                 variant="primary"
