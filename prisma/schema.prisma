@@ -372,6 +372,10 @@ model Lead {
   lastContactedAt  DateTime?
   nextFollowUpAt   DateTime?
   contactCount     Int        @default(0)
+
+  // Archive (removed from active pipeline)
+  archivedAt       DateTime?
+  archiveReason    String?
   
   // Links (when converted)
   clientId         String?
@@ -387,4 +391,6 @@ model Lead {
   @@index([stage])
   @@index([nextFollowUpAt])
   @@index([email])
+  @@index([eventDate])
+  @@index([archivedAt])
 }
