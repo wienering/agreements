@@ -565,7 +565,7 @@ export default function LeadsPage() {
           <div style={{ position: 'relative', maxWidth: '420px' }}>
             <input
               ref={searchInputRef}
-              type="search"
+              type="text"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               onKeyDown={(event) => {
