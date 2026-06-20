@@ -1,10 +1,21 @@
 'use client';
 
 import { adminFetch } from '@/lib/adminFetch';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { AdminButton, AdminLink } from '../../components/AdminButton';
-import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
+import { getAgreementViewUrl, getQuoteUrl } from '@/lib/leads/display';
+import { foldLeadsByEmail } from '@/lib/leads/dedup';
+import {
+  getLeadGroup,
+  LEAD_GROUP_LABELS,
+  LEAD_GROUP_ORDER,
+  type LeadGroup,
+} from '@/lib/leads/grouping';
+import { parseLeadTab } from '@/lib/leads/query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { AdminButton } from '../../components/AdminButton';
+import { getStatusBadgeStyles } from '../../components/StatusBadge';
+import { LeadRow } from './LeadRow';
+import type { FoldedLeadRecord, LeadCounts, LeadRecord, LeadTab, ManualArchiveReason } from './types';
 
 const STAGES: { key: string; label: string }[] = [
   { key: 'QUOTE_REQUESTED', label: 'Quote Requested' },
@@ -15,27 +26,11 @@ const STAGES: { key: string; label: string }[] = [
   { key: 'LOST', label: 'Lost' },
 ];
 
-interface Lead {
-  id: string;
-  source: string;
-  stage: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  eventDate?: string;
-  eventType?: string;
-  eventLocation?: string;
-  quotePackageHours?: number;
-  quoteTotal?: number;
-  lastContactedAt?: string;
-  nextFollowUpAt?: string;
-  contactCount: number;
-  createdAt: string;
-  notes?: string;
-  client?: { id: string; firstName: string; lastName: string; email: string };
-  agreement?: { id: string; status: string; uniqueToken: string };
-}
+const TAB_OPTIONS: { key: LeadTab; label: string }[] = [
+  { key: 'active', label: 'Active' },
+  { key: 'archived', label: 'Archived' },
+  { key: 'all', label: 'All' },
+];
 
 export default function LeadsPage() {
   useEffect(() => {
@@ -43,18 +38,21 @@ export default function LeadsPage() {
   }, []);
 
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [followUpLeads, setFollowUpLeads] = useState<Lead[]>([]);
+  const searchParams = useSearchParams();
+  const tab = parseLeadTab(searchParams.get('tab'));
+  const filterStage = searchParams.get('stage') || '';
+
+  const [leads, setLeads] = useState<LeadRecord[]>([]);
+  const [counts, setCounts] = useState<LeadCounts>({ active: 0, archived: 0, all: 0 });
   const [templates, setTemplates] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStage, setFilterStage] = useState<string>('');
-  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [markingContactLeadId, setMarkingContactLeadId] = useState<string | null>(null);
   const [nextFollowUp, setNextFollowUp] = useState('');
-  const [createAgreementLead, setCreateAgreementLead] = useState<Lead | null>(null);
+  const [createAgreementLead, setCreateAgreementLead] = useState<LeadRecord | null>(null);
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadError, setAddLeadError] = useState('');
   const [addLeadSaving, setAddLeadSaving] = useState(false);
-  const [editLead, setEditLead] = useState<Lead | null>(null);
+  const [editLead, setEditLead] = useState<LeadRecord | null>(null);
   const [editLeadForm, setEditLeadForm] = useState({
     firstName: '',
     lastName: '',
@@ -88,43 +86,99 @@ export default function LeadsPage() {
   const mutedText = 'var(--admin-muted)';
   const borderColor = 'var(--admin-hairline)';
 
-  useEffect(() => {
-    fetchLeads();
-    fetchFollowUp();
-    adminFetch('/api/templates')
-      .then((r) => r.ok ? r.json() : [])
-      .then((t) => setTemplates(t));
-  }, [filterStage]);
+  const updateSearchParams = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      mutate(params);
+      const query = params.toString();
+      router.replace(query ? `/admin/leads?${query}` : '/admin/leads');
+    },
+    [router, searchParams],
+  );
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
-      const url = filterStage ? `/api/leads?stage=${filterStage}` : '/api/leads';
-      const res = await adminFetch(url);
+      const params = new URLSearchParams();
+      params.set('tab', tab);
+      if (filterStage) params.set('stage', filterStage);
+      const res = await adminFetch(`/api/leads?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setLeads(data);
+        setLeads(data.leads);
+        setCounts(data.counts);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterStage, tab]);
 
-  const fetchFollowUp = async () => {
-    try {
-      const res = await adminFetch('/api/leads/follow-up');
-      if (res.ok) {
-        const data = await res.json();
-        setFollowUpLeads(data);
-      }
-    } catch (e) {
-      console.error(e);
+  useEffect(() => {
+    fetchLeads();
+    adminFetch('/api/templates')
+      .then((response) => (response.ok ? response.json() : []))
+      .then((templateList) => setTemplates(templateList));
+  }, [fetchLeads]);
+
+  const foldedLeads = useMemo((): FoldedLeadRecord[] | null => {
+    if (tab === 'archived') {
+      return null;
     }
+
+    if (tab === 'active') {
+      return foldLeadsByEmail(leads);
+    }
+
+    const activeLeads = leads.filter((lead) => !lead.archivedAt);
+    const archivedLeads = leads.filter((lead) => lead.archivedAt);
+
+    return [
+      ...foldLeadsByEmail(activeLeads),
+      ...archivedLeads.map((lead) => ({ primary: lead, others: [] as LeadRecord[] })),
+    ];
+  }, [leads, tab]);
+
+  const groupedSections = useMemo(() => {
+    if (!foldedLeads) {
+      return null;
+    }
+
+    const buckets: Record<LeadGroup, FoldedLeadRecord[]> = {
+      urgent: [],
+      coming_up: [],
+      later: [],
+      no_date: [],
+    };
+
+    for (const folded of foldedLeads) {
+      buckets[getLeadGroup(folded.primary)].push(folded);
+    }
+
+    return LEAD_GROUP_ORDER
+      .map((group) => ({ group, label: LEAD_GROUP_LABELS[group], rows: buckets[group] }))
+      .filter((section) => section.rows.length > 0);
+  }, [foldedLeads]);
+
+  const setTab = (nextTab: LeadTab) => {
+    updateSearchParams((params) => {
+      if (nextTab === 'active') {
+        params.delete('tab');
+      } else {
+        params.set('tab', nextTab);
+      }
+    });
   };
 
-  const handleMarkContacted = async (lead: Lead) => {
+  const setFilterStage = (stage: string) => {
+    updateSearchParams((params) => {
+      if (stage) params.set('stage', stage);
+      else params.delete('stage');
+    });
+  };
+
+  const handleMarkContacted = async (lead: LeadRecord) => {
     try {
       const res = await adminFetch(`/api/leads/${lead.id}/contacted`, {
         method: 'POST',
@@ -133,49 +187,55 @@ export default function LeadsPage() {
       });
       if (res.ok) {
         setNextFollowUp('');
-        setEditingLead(null);
+        setMarkingContactLeadId(null);
         fetchLeads();
-        fetchFollowUp();
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleStageChange = async (lead: Lead, newStage: string) => {
+  const handleArchive = async (lead: LeadRecord, reason: ManualArchiveReason) => {
     try {
-      const res = await adminFetch(`/api/leads/${lead.id}`, {
-        method: 'PATCH',
+      const res = await adminFetch(`/api/leads/${lead.id}/archive`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage: newStage }),
+        body: JSON.stringify({ reason }),
       });
-      if (res.ok) {
-        fetchLeads();
-        fetchFollowUp();
-      }
-    } catch (e) {
-      console.error(e);
+      if (res.ok) fetchLeads();
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleDeleteLead = async (lead: Lead) => {
+  const handleRestore = async (lead: LeadRecord) => {
+    try {
+      const res = await adminFetch(`/api/leads/${lead.id}/restore`, {
+        method: 'POST',
+      });
+      if (res.ok) fetchLeads();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteLead = async (lead: LeadRecord) => {
     if (!confirm(`Delete lead ${lead.firstName} ${lead.lastName}? This cannot be undone.`)) return;
     try {
       const res = await adminFetch(`/api/leads/${lead.id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchLeads();
-        fetchFollowUp();
       } else {
         const data = await res.json();
         alert(data.error || 'Failed to delete lead');
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       alert('Failed to delete lead');
     }
   };
 
-  const handleCreateAgreement = async (lead: Lead, templateId: string) => {
+  const handleCreateAgreement = async (lead: LeadRecord, templateId: string) => {
     try {
       const res = await adminFetch(`/api/leads/${lead.id}/create-agreement`, {
         method: 'POST',
@@ -187,12 +247,20 @@ export default function LeadsPage() {
         setCreateAgreementLead(null);
         router.push(`/admin/agreements?highlight=${agreement.id}`);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const openEditLead = (lead: Lead) => {
+  const handleViewLead = (lead: LeadRecord) => {
+    if (lead.agreement) {
+      router.push(getAgreementViewUrl(lead.agreement.id));
+      return;
+    }
+    router.push(getQuoteUrl(lead));
+  };
+
+  const openEditLead = (lead: LeadRecord) => {
     setEditLead(lead);
     setEditLeadForm({
       firstName: lead.firstName,
@@ -209,8 +277,8 @@ export default function LeadsPage() {
     setEditLeadError('');
   };
 
-  const handleUpdateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateLead = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!editLead) return;
     setEditLeadError('');
     if (!editLeadForm.firstName.trim() || !editLeadForm.lastName.trim() || !editLeadForm.email.trim()) {
@@ -225,15 +293,16 @@ export default function LeadsPage() {
         email: editLeadForm.email.trim(),
       };
       if (editLeadForm.phone !== undefined) payload.phone = editLeadForm.phone.trim() || null;
-      if (editLeadForm.eventDate) payload.eventDate = editLeadForm.eventDate;
-      else payload.eventDate = null;
+      payload.eventDate = editLeadForm.eventDate || null;
       if (editLeadForm.eventType !== undefined) payload.eventType = editLeadForm.eventType.trim() || null;
-      if (editLeadForm.eventLocation !== undefined) payload.eventLocation = editLeadForm.eventLocation.trim() || null;
-      if (editLeadForm.quotePackageHours) payload.quotePackageHours = parseInt(editLeadForm.quotePackageHours, 10) || null;
-      else payload.quotePackageHours = null;
-      if (editLeadForm.quoteTotal) payload.quoteTotal = parseFloat(editLeadForm.quoteTotal) || null;
-      else payload.quoteTotal = null;
-      if (editLeadForm.notes !== undefined) payload.notes = editLeadForm.notes.trim() || null;
+      if (editLeadForm.eventLocation !== undefined) {
+        payload.eventLocation = editLeadForm.eventLocation.trim() || null;
+      }
+      payload.quotePackageHours = editLeadForm.quotePackageHours
+        ? parseInt(editLeadForm.quotePackageHours, 10) || null
+        : null;
+      payload.quoteTotal = editLeadForm.quoteTotal ? parseFloat(editLeadForm.quoteTotal) || null : null;
+      payload.notes = editLeadForm.notes.trim() || null;
 
       const res = await adminFetch(`/api/leads/${editLead.id}`, {
         method: 'PATCH',
@@ -244,20 +313,19 @@ export default function LeadsPage() {
       if (res.ok) {
         setEditLead(null);
         fetchLeads();
-        fetchFollowUp();
       } else {
         setEditLeadError(data.error || data.details?.[0]?.message || 'Failed to update lead');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setEditLeadError('Failed to update lead');
     } finally {
       setEditLeadSaving(false);
     }
   };
 
-  const handleAddLead = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddLead = async (event: React.FormEvent) => {
+    event.preventDefault();
     setAddLeadError('');
     if (!newLead.firstName.trim() || !newLead.lastName.trim() || !newLead.email.trim()) {
       setAddLeadError('First name, last name, and email are required.');
@@ -275,7 +343,9 @@ export default function LeadsPage() {
       if (newLead.eventDate) payload.eventDate = newLead.eventDate;
       if (newLead.eventType.trim()) payload.eventType = newLead.eventType.trim();
       if (newLead.eventLocation.trim()) payload.eventLocation = newLead.eventLocation.trim();
-      if (newLead.quotePackageHours) payload.quotePackageHours = parseInt(newLead.quotePackageHours, 10) || undefined;
+      if (newLead.quotePackageHours) {
+        payload.quotePackageHours = parseInt(newLead.quotePackageHours, 10) || undefined;
+      }
       if (newLead.quoteTotal) payload.quoteTotal = parseFloat(newLead.quoteTotal) || undefined;
       if (newLead.notes.trim()) payload.notes = newLead.notes.trim();
 
@@ -287,118 +357,108 @@ export default function LeadsPage() {
       const data = await res.json();
       if (res.ok) {
         setShowAddLead(false);
-        setNewLead({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', quotePackageHours: '', quoteTotal: '', notes: '' });
+        setNewLead({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          eventDate: '',
+          eventType: '',
+          eventLocation: '',
+          quotePackageHours: '',
+          quoteTotal: '',
+          notes: '',
+        });
         fetchLeads();
-        fetchFollowUp();
       } else {
         setAddLeadError(data.error || data.details?.[0]?.message || 'Failed to add lead');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setAddLeadError('Failed to add lead');
     } finally {
       setAddLeadSaving(false);
     }
   };
 
-  const formatDate = (d: string | undefined) =>
-    d ? new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : '-';
+  const toDateOnly = (value: Date | string) =>
+    new Date(value).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
 
-  const toDateOnly = (d: string) =>
-    new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+  const renderLeadList = (rows: FoldedLeadRecord[]) =>
+    rows.map((folded) => (
+      <LeadRow
+        key={folded.primary.id}
+        folded={folded}
+        tab={tab}
+        borderColor={borderColor}
+        cardBg={cardBg}
+        textColor={textColor}
+        mutedText={mutedText}
+        markingContactLeadId={markingContactLeadId}
+        nextFollowUp={nextFollowUp}
+        onNextFollowUpChange={setNextFollowUp}
+        onSaveMarkContacted={handleMarkContacted}
+        onCancelMarkContacted={() => {
+          setMarkingContactLeadId(null);
+          setNextFollowUp('');
+        }}
+        onCreateAgreement={setCreateAgreementLead}
+        onView={handleViewLead}
+        onMarkContacted={(leadRecord) => {
+          setMarkingContactLeadId(leadRecord.id);
+          setNextFollowUp('');
+        }}
+        onEdit={openEditLead}
+        onArchive={handleArchive}
+        onRestore={handleRestore}
+        onDelete={handleDeleteLead}
+      />
+    ));
 
-  const getQuoteUrl = (lead: Lead) => {
-    const params = new URLSearchParams();
-    params.set('name', `${lead.firstName} ${lead.lastName}`.trim());
-    params.set('email', lead.email);
-    if (lead.phone) params.set('phone', lead.phone);
-    if (lead.eventDate) params.set('eventDate', toDateOnly(lead.eventDate));
-    return `/admin/quotes?${params.toString()}`;
-  };
-
-  const renderLeadActions = (lead: Lead) => {
-    if (editingLead?.id === lead.id) {
-      return (
-        <>
-          <input
-            type="date"
-            value={nextFollowUp}
-            onChange={(e) => setNextFollowUp(e.target.value)}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '4px',
-              border: `1px solid ${borderColor}`,
-              backgroundColor: cardBg,
-              color: textColor,
-              maxWidth: '100%',
-            }}
-          />
-          <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
-            Save
-          </AdminButton>
-          <AdminButton variant="ghost" size="compact" onClick={() => { setEditingLead(null); setNextFollowUp(''); }}>
-            Cancel
-          </AdminButton>
-        </>
-      );
-    }
-    return (
-      <>
-        {!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' && (
-          <AdminButton variant="primary" size="compact" onClick={() => setCreateAgreementLead(lead)}>
-            Create agreement
-          </AdminButton>
-        )}
-        <AdminLink
-          href={getQuoteUrl(lead)}
-          variant={!lead.agreement && lead.stage !== 'LOST' && lead.stage !== 'COMPLETED' ? 'ghost' : 'primary'}
-          size="compact"
-        >
-          Create quote
-        </AdminLink>
-        {lead.agreement && (
-          <AdminLink href="/admin/agreements" variant="ghost" size="compact">
-            View agreement
-          </AdminLink>
-        )}
-        <AdminButton variant="ghost" size="compact" onClick={() => setEditingLead(lead)}>
-          Mark contacted
-        </AdminButton>
-        <AdminButton variant="ghost" size="compact" onClick={() => openEditLead(lead)}>
-          Edit
-        </AdminButton>
-        <AdminButton variant="danger" size="compact" onClick={() => handleDeleteLead(lead)}>
-          Delete
-        </AdminButton>
-      </>
-    );
-  };
-
-  const renderLeadStageSelect = (lead: Lead) => (
-    <select
-      value={lead.stage}
-      onChange={(e) => handleStageChange(lead, e.target.value)}
-      style={{
-        padding: '6px 10px',
-        borderRadius: '6px',
-        border: `1px solid ${borderColor}`,
-        backgroundColor: cardBg,
-        color: textColor,
-        fontSize: '13px',
-        cursor: 'pointer',
-        maxWidth: '100%',
-      }}
-    >
-      {STAGES.map((s) => (
-        <option key={s.key} value={s.key}>{s.label}</option>
-      ))}
-    </select>
-  );
+  const renderArchivedList = (rows: LeadRecord[]) =>
+    rows.map((lead) => (
+      <LeadRow
+        key={lead.id}
+        folded={{ primary: lead, others: [] }}
+        tab={tab}
+        borderColor={borderColor}
+        cardBg={cardBg}
+        textColor={textColor}
+        mutedText={mutedText}
+        markingContactLeadId={markingContactLeadId}
+        nextFollowUp={nextFollowUp}
+        onNextFollowUpChange={setNextFollowUp}
+        onSaveMarkContacted={handleMarkContacted}
+        onCancelMarkContacted={() => {
+          setMarkingContactLeadId(null);
+          setNextFollowUp('');
+        }}
+        onCreateAgreement={setCreateAgreementLead}
+        onView={handleViewLead}
+        onMarkContacted={(leadRecord) => {
+          setMarkingContactLeadId(leadRecord.id);
+          setNextFollowUp('');
+        }}
+        onEdit={openEditLead}
+        onArchive={handleArchive}
+        onRestore={handleRestore}
+        onDelete={handleDeleteLead}
+      />
+    ));
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: mainBg, padding: '24px' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div
+          style={{
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+          }}
+        >
           <div>
             <h1 className="admin-page-title" style={{ margin: '0', fontSize: '28px', fontWeight: '700', color: textColor }}>
               Lead Pipeline
@@ -408,13 +468,13 @@ export default function LeadsPage() {
               Track and nurture quote inquiries through to signed agreements
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <AdminButton variant="primary" onClick={() => setShowAddLead(true)}>
               + Add Lead
             </AdminButton>
             <select
               value={filterStage}
-              onChange={(e) => setFilterStage(e.target.value)}
+              onChange={(event) => setFilterStage(event.target.value)}
               style={{
                 padding: '8px 12px',
                 borderRadius: '8px',
@@ -425,153 +485,86 @@ export default function LeadsPage() {
               }}
             >
               <option value="">All stages</option>
-              {STAGES.map((s) => (
-                <option key={s.key} value={s.key}>{s.label}</option>
+              {STAGES.map((stage) => (
+                <option key={stage.key} value={stage.key}>
+                  {stage.label}
+                </option>
               ))}
             </select>
           </div>
         </div>
 
-        {followUpLeads.length > 0 && (
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: cardBg, borderRadius: '12px', border: `1px solid ${borderColor}` }}>
-            <h2 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: textColor }}>
-              Needs Follow-up ({followUpLeads.length})
-            </h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {followUpLeads.slice(0, 8).map((lead) => (
-                <div
-                  key={lead.id}
-                  style={{
-                    padding: '10px 14px',
-                    backgroundColor: cardBg,
-                    borderRadius: '8px',
-                    border: `1px solid ${borderColor}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span style={{ fontWeight: '600', color: textColor }}>{lead.firstName} {lead.lastName}</span>
-                  <span style={{ color: mutedText, fontSize: '13px' }}>{lead.email}</span>
-                  <span style={{ fontSize: '12px', color: mutedText }}>{STAGES.find((s) => s.key === lead.stage)?.label}</span>
-                  <span style={{ fontSize: '12px', color: mutedText }}>Last: {formatDate(lead.lastContactedAt)}</span>
-                  <AdminLink href="/admin/agreements" variant="ghost" size="compact">
-                    View
-                  </AdminLink>
-                  {editingLead?.id === lead.id ? (
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <input
-                        type="date"
-                        value={nextFollowUp}
-                        onChange={(e) => setNextFollowUp(e.target.value)}
-                        style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${borderColor}`, backgroundColor: cardBg, color: textColor }}
-                      />
-                      <AdminButton variant="primary" size="compact" onClick={() => handleMarkContacted(lead)}>
-                        Save
-                      </AdminButton>
-                      <AdminButton variant="ghost" size="compact" onClick={() => { setEditingLead(null); setNextFollowUp(''); }}>
-                        Cancel
-                      </AdminButton>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <AdminLink href={getQuoteUrl(lead)} variant="primary" size="compact">
-                        Create quote
-                      </AdminLink>
-                      <AdminButton variant="ghost" size="compact" onClick={() => setEditingLead(lead)}>
-                        Mark contacted
-                      </AdminButton>
-                      <AdminButton variant="ghost" size="compact" onClick={() => openEditLead(lead)}>
-                        Edit
-                      </AdminButton>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div
+          style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${borderColor}`,
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
+          }}
+        >
+          {TAB_OPTIONS.map((option) => {
+            const isActive = tab === option.key;
+            const count = counts[option.key];
+            return (
+              <AdminButton
+                key={option.key}
+                size="compact"
+                variant="ghost"
+                onClick={() => setTab(option.key)}
+                style={
+                  isActive
+                    ? { ...getStatusBadgeStyles('accent'), borderRadius: '6px', fontWeight: 600 }
+                    : { ...getStatusBadgeStyles('neutral'), borderRadius: '6px' }
+                }
+              >
+                {option.label} ({count})
+              </AdminButton>
+            );
+          })}
+        </div>
 
         {loading ? (
           <div style={{ padding: '48px', textAlign: 'center', color: mutedText }}>Loading...</div>
+        ) : leads.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              border: `1px solid ${borderColor}`,
+              padding: '48px',
+              textAlign: 'center',
+              color: mutedText,
+            }}
+          >
+            No leads in this view.
+          </div>
         ) : (
           <div style={{ backgroundColor: cardBg, borderRadius: '12px', border: `1px solid ${borderColor}`, overflow: 'hidden' }}>
-            {leads.length === 0 ? (
-              <div style={{ padding: '48px', textAlign: 'center', color: mutedText }}>
-                No leads yet. Generate a quote to create your first lead.
-              </div>
-            ) : (
-              <>
-                <div className="admin-table-desktop">
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ borderBottom: `2px solid ${borderColor}`, backgroundColor: 'var(--admin-surface-raised)' }}>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Contact</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Event Date</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Stage</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Quote</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Last Contacted</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Next Follow-up</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', color: textColor }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leads.map((lead) => (
-                        <tr key={lead.id} style={{ borderBottom: `1px solid ${borderColor}` }}>
-                          <td style={{ padding: '12px 16px' }}>
-                            <div style={{ fontWeight: '500', color: textColor }}>{lead.firstName} {lead.lastName}</div>
-                            <div style={{ fontSize: '13px', color: mutedText }}>{lead.email}</div>
-                          </td>
-                          <td style={{ padding: '12px 16px', color: textColor }}>{formatDate(lead.eventDate)}</td>
-                          <td style={{ padding: '12px 16px' }}>{renderLeadStageSelect(lead)}</td>
-                          <td style={{ padding: '12px 16px', color: textColor }}>
-                            {lead.quoteTotal != null ? `$${lead.quoteTotal}` : '-'}
-                          </td>
-                          <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.lastContactedAt)}</td>
-                          <td style={{ padding: '12px 16px', color: mutedText, fontSize: '13px' }}>{formatDate(lead.nextFollowUpAt)}</td>
-                          <td style={{ padding: '12px 16px' }}>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', maxWidth: '100%' }}>
-                              {renderLeadActions(lead)}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="admin-table-mobile">
-                  {leads.map((lead) => (
-                    <AdminMobileDataCard
-                      key={lead.id}
-                      title={`${lead.firstName} ${lead.lastName}`}
-                      subtitle={lead.email}
-                      cardBg={cardBg}
-                      borderColor={borderColor}
-                      textColor={textColor}
-                      mutedText={mutedText}
-                      actions={renderLeadActions(lead)}
+            {tab === 'archived'
+              ? renderArchivedList(leads)
+              : groupedSections?.map((section) => (
+                  <section key={section.group} aria-labelledby={`lead-group-${section.group}`}>
+                    <div
+                      id={`lead-group-${section.group}`}
+                      style={{
+                        padding: '12px 16px',
+                        borderBottom: `1px solid ${borderColor}`,
+                        backgroundColor: 'var(--admin-surface-raised)',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: textColor,
+                      }}
                     >
-                      <AdminMobileField label="Event Date" mutedText={mutedText}>
-                        <span style={{ color: textColor }}>{formatDate(lead.eventDate)}</span>
-                      </AdminMobileField>
-                      <AdminMobileField label="Stage" mutedText={mutedText}>
-                        {renderLeadStageSelect(lead)}
-                      </AdminMobileField>
-                      <AdminMobileField label="Quote" mutedText={mutedText}>
-                        <span style={{ color: textColor }}>{lead.quoteTotal != null ? `$${lead.quoteTotal}` : '-'}</span>
-                      </AdminMobileField>
-                      <AdminMobileField label="Last Contacted" mutedText={mutedText}>
-                        <span style={{ color: mutedText }}>{formatDate(lead.lastContactedAt)}</span>
-                      </AdminMobileField>
-                      <AdminMobileField label="Next Follow-up" mutedText={mutedText}>
-                        <span style={{ color: mutedText }}>{formatDate(lead.nextFollowUpAt)}</span>
-                      </AdminMobileField>
-                    </AdminMobileDataCard>
-                  ))}
-                </div>
-              </>
-            )}
+                      {section.label}
+                    </div>
+                    {renderLeadList(section.rows)}
+                  </section>
+                ))}
           </div>
         )}
 
@@ -596,9 +589,11 @@ export default function LeadsPage() {
                 border: `1px solid ${borderColor}`,
                 minWidth: '320px',
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
             >
-              <h3 style={{ margin: '0 0 16px 0', color: textColor }}>Create agreement for {createAgreementLead.firstName} {createAgreementLead.lastName}</h3>
+              <h3 style={{ margin: '0 0 16px 0', color: textColor }}>
+                Create agreement for {createAgreementLead.firstName} {createAgreementLead.lastName}
+              </h3>
               <select
                 style={{
                   width: '100%',
@@ -609,14 +604,16 @@ export default function LeadsPage() {
                   backgroundColor: mainBg,
                   color: textColor,
                 }}
-                onChange={(e) => {
-                  const tid = e.target.value;
-                  if (tid) handleCreateAgreement(createAgreementLead, tid);
+                onChange={(event) => {
+                  const templateId = event.target.value;
+                  if (templateId) handleCreateAgreement(createAgreementLead, templateId);
                 }}
               >
                 <option value="">Select template...</option>
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>{t.title}</option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.title}
+                  </option>
                 ))}
               </select>
               <AdminButton variant="ghost" onClick={() => setCreateAgreementLead(null)}>
@@ -638,7 +635,10 @@ export default function LeadsPage() {
               zIndex: 1000,
               padding: '20px',
             }}
-            onClick={() => { setShowAddLead(false); setAddLeadError(''); }}
+            onClick={() => {
+              setShowAddLead(false);
+              setAddLeadError('');
+            }}
           >
             <div
               style={{
@@ -651,127 +651,39 @@ export default function LeadsPage() {
                 maxHeight: '90vh',
                 overflowY: 'auto',
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
             >
               <h3 style={{ margin: '0 0 20px 0', color: textColor }}>Add Lead</h3>
               <form onSubmit={handleAddLead}>
                 {addLeadError && (
-                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--admin-surface-raised)', color: 'var(--alert)', borderRadius: '8px', fontSize: '14px' }}>
+                  <div
+                    style={{
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: 'var(--admin-surface-raised)',
+                      color: 'var(--alert)',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    }}
+                  >
                     {addLeadError}
                   </div>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>First name *</label>
-                    <input
-                      type="text"
-                      value={newLead.firstName}
-                      onChange={(e) => setNewLead({ ...newLead, firstName: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Last name *</label>
-                    <input
-                      type="text"
-                      value={newLead.lastName}
-                      onChange={(e) => setNewLead({ ...newLead, lastName: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Email *</label>
-                  <input
-                    type="email"
-                    value={newLead.email}
-                    onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
-                    required
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                  />
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Phone</label>
-                  <input
-                    type="tel"
-                    value={newLead.phone}
-                    onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event date</label>
-                    <input
-                      type="date"
-                      value={newLead.eventDate}
-                      onChange={(e) => setNewLead({ ...newLead, eventDate: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event type</label>
-                    <input
-                      type="text"
-                      value={newLead.eventType}
-                      onChange={(e) => setNewLead({ ...newLead, eventType: e.target.value })}
-                      placeholder="e.g. Wedding, Corporate"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event location</label>
-                  <input
-                    type="text"
-                    value={newLead.eventLocation}
-                    onChange={(e) => setNewLead({ ...newLead, eventLocation: e.target.value })}
-                    placeholder="Venue or address"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote hours</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={newLead.quotePackageHours}
-                      onChange={(e) => setNewLead({ ...newLead, quotePackageHours: e.target.value })}
-                      placeholder="e.g. 4"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote total ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={newLead.quoteTotal}
-                      onChange={(e) => setNewLead({ ...newLead, quoteTotal: e.target.value })}
-                      placeholder="e.g. 950"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Notes</label>
-                  <textarea
-                    value={newLead.notes}
-                    onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
-                    rows={3}
-                    placeholder="Any notes about this lead..."
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, resize: 'vertical' }}
-                  />
-                </div>
+                <LeadFormFields
+                  form={newLead}
+                  setForm={setNewLead}
+                  mainBg={mainBg}
+                  borderColor={borderColor}
+                  textColor={textColor}
+                />
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                   <AdminButton
                     type="button"
                     variant="ghost"
-                    onClick={() => { setShowAddLead(false); setAddLeadError(''); }}
+                    onClick={() => {
+                      setShowAddLead(false);
+                      setAddLeadError('');
+                    }}
                   >
                     Cancel
                   </AdminButton>
@@ -796,7 +708,10 @@ export default function LeadsPage() {
               zIndex: 1000,
               padding: '20px',
             }}
-            onClick={() => { setEditLead(null); setEditLeadError(''); }}
+            onClick={() => {
+              setEditLead(null);
+              setEditLeadError('');
+            }}
           >
             <div
               style={{
@@ -809,127 +724,39 @@ export default function LeadsPage() {
                 maxHeight: '90vh',
                 overflowY: 'auto',
               }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
             >
               <h3 style={{ margin: '0 0 20px 0', color: textColor }}>Edit Lead</h3>
               <form onSubmit={handleUpdateLead}>
                 {editLeadError && (
-                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--admin-surface-raised)', color: 'var(--alert)', borderRadius: '8px', fontSize: '14px' }}>
+                  <div
+                    style={{
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: 'var(--admin-surface-raised)',
+                      color: 'var(--alert)',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                    }}
+                  >
                     {editLeadError}
                   </div>
                 )}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>First name *</label>
-                    <input
-                      type="text"
-                      value={editLeadForm.firstName}
-                      onChange={(e) => setEditLeadForm({ ...editLeadForm, firstName: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Last name *</label>
-                    <input
-                      type="text"
-                      value={editLeadForm.lastName}
-                      onChange={(e) => setEditLeadForm({ ...editLeadForm, lastName: e.target.value })}
-                      required
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Email *</label>
-                  <input
-                    type="email"
-                    value={editLeadForm.email}
-                    onChange={(e) => setEditLeadForm({ ...editLeadForm, email: e.target.value })}
-                    required
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                  />
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Phone</label>
-                  <input
-                    type="tel"
-                    value={editLeadForm.phone}
-                    onChange={(e) => setEditLeadForm({ ...editLeadForm, phone: e.target.value })}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event date</label>
-                    <input
-                      type="date"
-                      value={editLeadForm.eventDate}
-                      onChange={(e) => setEditLeadForm({ ...editLeadForm, eventDate: e.target.value })}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event type</label>
-                    <input
-                      type="text"
-                      value={editLeadForm.eventType}
-                      onChange={(e) => setEditLeadForm({ ...editLeadForm, eventType: e.target.value })}
-                      placeholder="e.g. Wedding, Corporate"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Event location</label>
-                  <input
-                    type="text"
-                    value={editLeadForm.eventLocation}
-                    onChange={(e) => setEditLeadForm({ ...editLeadForm, eventLocation: e.target.value })}
-                    placeholder="Venue or address"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote hours</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={editLeadForm.quotePackageHours}
-                      onChange={(e) => setEditLeadForm({ ...editLeadForm, quotePackageHours: e.target.value })}
-                      placeholder="e.g. 4"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Quote total ($)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editLeadForm.quoteTotal}
-                      onChange={(e) => setEditLeadForm({ ...editLeadForm, quoteTotal: e.target.value })}
-                      placeholder="e.g. 950"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor }}
-                    />
-                  </div>
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>Notes</label>
-                  <textarea
-                    value={editLeadForm.notes}
-                    onChange={(e) => setEditLeadForm({ ...editLeadForm, notes: e.target.value })}
-                    rows={3}
-                    placeholder="Any notes about this lead..."
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${borderColor}`, backgroundColor: mainBg, color: textColor, resize: 'vertical' }}
-                  />
-                </div>
+                <LeadFormFields
+                  form={editLeadForm}
+                  setForm={setEditLeadForm}
+                  mainBg={mainBg}
+                  borderColor={borderColor}
+                  textColor={textColor}
+                />
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                   <AdminButton
                     type="button"
                     variant="ghost"
-                    onClick={() => { setEditLead(null); setEditLeadError(''); }}
+                    onClick={() => {
+                      setEditLead(null);
+                      setEditLeadError('');
+                    }}
                   >
                     Cancel
                   </AdminButton>
@@ -943,5 +770,173 @@ export default function LeadsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+type LeadFormState = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  eventDate: string;
+  eventType: string;
+  eventLocation: string;
+  quotePackageHours: string;
+  quoteTotal: string;
+  notes: string;
+};
+
+function LeadFormFields({
+  form,
+  setForm,
+  mainBg,
+  borderColor,
+  textColor,
+}: {
+  form: LeadFormState;
+  setForm: (value: LeadFormState) => void;
+  mainBg: string;
+  borderColor: string;
+  textColor: string;
+}) {
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: `1px solid ${borderColor}`,
+    backgroundColor: mainBg,
+    color: textColor,
+  };
+
+  return (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+            First name *
+          </label>
+          <input
+            type="text"
+            value={form.firstName}
+            onChange={(event) => setForm({ ...form, firstName: event.target.value })}
+            required
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+            Last name *
+          </label>
+          <input
+            type="text"
+            value={form.lastName}
+            onChange={(event) => setForm({ ...form, lastName: event.target.value })}
+            required
+            style={inputStyle}
+          />
+        </div>
+      </div>
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+          Email *
+        </label>
+        <input
+          type="email"
+          value={form.email}
+          onChange={(event) => setForm({ ...form, email: event.target.value })}
+          required
+          style={inputStyle}
+        />
+      </div>
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+          Phone
+        </label>
+        <input
+          type="tel"
+          value={form.phone}
+          onChange={(event) => setForm({ ...form, phone: event.target.value })}
+          style={inputStyle}
+        />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+            Event date
+          </label>
+          <input
+            type="date"
+            value={form.eventDate}
+            onChange={(event) => setForm({ ...form, eventDate: event.target.value })}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+            Event type
+          </label>
+          <input
+            type="text"
+            value={form.eventType}
+            onChange={(event) => setForm({ ...form, eventType: event.target.value })}
+            placeholder="e.g. Wedding, Corporate"
+            style={inputStyle}
+          />
+        </div>
+      </div>
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+          Event location
+        </label>
+        <input
+          type="text"
+          value={form.eventLocation}
+          onChange={(event) => setForm({ ...form, eventLocation: event.target.value })}
+          placeholder="Venue or address"
+          style={inputStyle}
+        />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+            Quote hours
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={form.quotePackageHours}
+            onChange={(event) => setForm({ ...form, quotePackageHours: event.target.value })}
+            placeholder="e.g. 4"
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+            Quote total ($)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.quoteTotal}
+            onChange={(event) => setForm({ ...form, quoteTotal: event.target.value })}
+            placeholder="e.g. 950"
+            style={inputStyle}
+          />
+        </div>
+      </div>
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: textColor }}>
+          Notes
+        </label>
+        <textarea
+          value={form.notes}
+          onChange={(event) => setForm({ ...form, notes: event.target.value })}
+          rows={3}
+          placeholder="Any notes about this lead..."
+          style={{ ...inputStyle, resize: 'vertical' }}
+        />
+      </div>
+    </>
   );
 }

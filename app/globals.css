@@ -214,6 +214,39 @@ body {
   }
 }
 
+.lead-worklist-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 112px) minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.lead-worklist-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 767px) {
+  .lead-worklist-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .lead-worklist-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .lead-worklist-subrow {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding-left: 16px !important;
+  }
+}
+
 .admin-overview-status-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

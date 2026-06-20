@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
+import { fetchLeadList, parseLeadTab } from '@/lib/leads/query';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -25,25 +26,26 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const stage = searchParams.get('stage');
     const source = searchParams.get('source');
+    const tab = parseLeadTab(searchParams.get('tab'));
 
-    const where: Record<string, unknown> = {};
-    if (stage) where.stage = stage;
-    if (source) where.source = source;
+    if (source) {
+      const leads = await prisma.lead.findMany({
+        where: { source: source as 'QUOTE' | 'MANUAL' },
+        include: {
+          client: { select: { id: true, firstName: true, lastName: true, email: true } },
+          event: { select: { id: true, eventDate: true, eventType: true } },
+          agreement: { select: { id: true, status: true, uniqueToken: true } },
+        },
+        orderBy: [
+          { eventDate: { sort: 'asc', nulls: 'last' } },
+          { createdAt: 'asc' },
+        ],
+      });
+      return NextResponse.json(leads);
+    }
 
-    const leads = await prisma.lead.findMany({
-      where,
-      include: {
-        client: { select: { id: true, firstName: true, lastName: true, email: true } },
-        event: { select: { id: true, eventDate: true, eventType: true } },
-        agreement: { select: { id: true, status: true, uniqueToken: true } },
-      },
-      orderBy: [
-        { nextFollowUpAt: 'asc' },
-        { createdAt: 'desc' },
-      ],
-    });
-
-    return NextResponse.json(leads);
+    const result = await fetchLeadList({ tab, stage });
+    return NextResponse.json(result);
   } catch (error) {
     const authResponse = adminAuthResponse(error);
     if (authResponse) return authResponse;
