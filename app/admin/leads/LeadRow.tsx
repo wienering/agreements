@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { AdminButton, AdminLink } from '../../components/AdminButton';
 import { StatusBadge } from '../../components/StatusBadge';
 import {
@@ -14,6 +14,7 @@ import type { FoldedLeadRecord, LeadRecord, ManualArchiveReason } from './types'
 
 type LeadRowProps = {
   folded: FoldedLeadRecord;
+  forceExpanded?: boolean;
   tab: 'active' | 'archived' | 'all';
   borderColor: string;
   cardBg: string;
@@ -259,6 +260,7 @@ function LeadInquirySubRow({
 
 export function LeadRow({
   folded,
+  forceExpanded = false,
   tab,
   borderColor,
   cardBg,
@@ -282,6 +284,14 @@ export function LeadRow({
   const inquiryCount = folded.others.length + 1;
   const [expanded, setExpanded] = useState(false);
   const subRowsId = useId();
+
+  useEffect(() => {
+    if (forceExpanded) {
+      setExpanded(true);
+    } else {
+      setExpanded(false);
+    }
+  }, [forceExpanded]);
 
   const isArchived = Boolean(lead.archivedAt);
   const dateBadge = formatLeadDateBadge(lead.eventDate);

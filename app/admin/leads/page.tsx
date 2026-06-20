@@ -10,7 +10,14 @@ import {
   type LeadGroup,
 } from '@/lib/leads/grouping';
 import { parseLeadTab } from '@/lib/leads/query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  countMatchingLeads,
+  filterFoldedLeadsBySearch,
+  filterLeadsBySearch,
+  normalizeSearchQuery,
+  type FilteredFoldedLead,
+} from '@/lib/leads/search';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AdminButton } from '../../components/AdminButton';
 import { getStatusBadgeStyles } from '../../components/StatusBadge';
@@ -46,6 +53,8 @@ export default function LeadsPage() {
   const [counts, setCounts] = useState<LeadCounts>({ active: 0, archived: 0, all: 0 });
   const [templates, setTemplates] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [markingContactLeadId, setMarkingContactLeadId] = useState<string | null>(null);
   const [nextFollowUp, setNextFollowUp] = useState('');
   const [createAgreementLead, setCreateAgreementLead] = useState<LeadRecord | null>(null);
@@ -140,26 +149,49 @@ export default function LeadsPage() {
     ];
   }, [leads, tab]);
 
-  const groupedSections = useMemo(() => {
+  const filteredFoldedLeads = useMemo((): FilteredFoldedLead<LeadRecord>[] | null => {
     if (!foldedLeads) {
       return null;
     }
+    return filterFoldedLeadsBySearch(foldedLeads, searchQuery);
+  }, [foldedLeads, searchQuery]);
 
-    const buckets: Record<LeadGroup, FoldedLeadRecord[]> = {
+  const filteredArchivedLeads = useMemo(
+    () => filterLeadsBySearch(leads, searchQuery),
+    [leads, searchQuery],
+  );
+
+  const groupedSections = useMemo(() => {
+    if (!filteredFoldedLeads) {
+      return null;
+    }
+
+    const buckets: Record<LeadGroup, FilteredFoldedLead<LeadRecord>[]> = {
       urgent: [],
       coming_up: [],
       later: [],
       no_date: [],
     };
 
-    for (const folded of foldedLeads) {
-      buckets[getLeadGroup(folded.primary)].push(folded);
+    for (const item of filteredFoldedLeads) {
+      buckets[getLeadGroup(item.folded.primary)].push(item);
     }
 
     return LEAD_GROUP_ORDER
       .map((group) => ({ group, label: LEAD_GROUP_LABELS[group], rows: buckets[group] }))
       .filter((section) => section.rows.length > 0);
-  }, [foldedLeads]);
+  }, [filteredFoldedLeads]);
+
+  const activeSearchQuery = normalizeSearchQuery(searchQuery);
+  const matchingLeadCount = useMemo(
+    () => countMatchingLeads(leads, foldedLeads, searchQuery),
+    [foldedLeads, leads, searchQuery],
+  );
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    searchInputRef.current?.focus();
+  };
 
   const setTab = (nextTab: LeadTab) => {
     updateSearchParams((params) => {
@@ -384,11 +416,12 @@ export default function LeadsPage() {
   const toDateOnly = (value: Date | string) =>
     new Date(value).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
 
-  const renderLeadList = (rows: FoldedLeadRecord[]) =>
-    rows.map((folded) => (
+  const renderLeadList = (rows: FilteredFoldedLead<LeadRecord>[]) =>
+    rows.map(({ folded, forceExpanded }) => (
       <LeadRow
         key={folded.primary.id}
         folded={folded}
+        forceExpanded={forceExpanded}
         tab={tab}
         borderColor={borderColor}
         cardBg={cardBg}
@@ -500,7 +533,7 @@ export default function LeadsPage() {
             border: `1px solid ${borderColor}`,
             borderRadius: '8px',
             padding: '12px 16px',
-            marginBottom: '24px',
+            marginBottom: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -528,6 +561,59 @@ export default function LeadsPage() {
           })}
         </div>
 
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ position: 'relative', maxWidth: '420px' }}>
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  clearSearch();
+                }
+              }}
+              placeholder="Search name or email"
+              aria-label="Search name or email"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '10px 12px',
+                paddingRight: searchQuery ? '40px' : '12px',
+                borderRadius: '8px',
+                border: `1px solid ${borderColor}`,
+                backgroundColor: mainBg,
+                color: textColor,
+                fontSize: '14px',
+              }}
+            />
+            {searchQuery && (
+              <AdminButton
+                variant="ghost"
+                size="compact"
+                aria-label="Clear search"
+                onClick={clearSearch}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '6px',
+                  transform: 'translateY(-50%)',
+                  minWidth: '28px',
+                  padding: '0 6px',
+                }}
+              >
+                ×
+              </AdminButton>
+            )}
+          </div>
+          {activeSearchQuery && (
+            <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: mutedText }}>
+              Showing {matchingLeadCount} of {leads.length}
+            </p>
+          )}
+        </div>
+
         {loading ? (
           <div style={{ padding: '48px', textAlign: 'center', color: mutedText }}>Loading...</div>
         ) : leads.length === 0 ? (
@@ -543,10 +629,23 @@ export default function LeadsPage() {
           >
             No leads in this view.
           </div>
+        ) : activeSearchQuery && matchingLeadCount === 0 ? (
+          <div
+            style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              border: `1px solid ${borderColor}`,
+              padding: '48px',
+              textAlign: 'center',
+              color: mutedText,
+            }}
+          >
+            No leads match your search.
+          </div>
         ) : (
           <div style={{ backgroundColor: cardBg, borderRadius: '12px', border: `1px solid ${borderColor}`, overflow: 'hidden' }}>
             {tab === 'archived'
-              ? renderArchivedList(leads)
+              ? renderArchivedList(filteredArchivedLeads)
               : groupedSections?.map((section) => (
                   <section key={section.group} aria-labelledby={`lead-group-${section.group}`}>
                     <div
