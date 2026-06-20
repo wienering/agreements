@@ -3,7 +3,7 @@
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminButton } from '../../components/AdminButton';
+import { AdminButton, AdminLink } from '../../components/AdminButton';
 import { AdminMobileDataCard, AdminMobileField } from '../../components/AdminMobileDataCard';
 import { UIcon } from '../../components/UIcon';
 
@@ -188,43 +188,54 @@ export default function BackdropLinksPage() {
     }
   };
 
-  const renderOrderControls = (link: BackdropLink, index: number) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <button
-        onClick={() => moveLink(link.id, 'up')}
-        disabled={index === 0}
-        style={{
-          backgroundColor: 'transparent',
-          border: `1px solid ${borderColor}`,
-          borderRadius: '4px',
-          cursor: index === 0 ? 'not-allowed' : 'pointer',
-          color: index === 0 ? borderColor : mutedText,
-          fontSize: '12px',
-          padding: '4px 8px',
-        }}
-      >
-        ▲
-      </button>
-      <span style={{ fontSize: '14px', color: textColor, fontWeight: 600, minWidth: '24px', textAlign: 'center' }}>
-        {link.displayOrder}
-      </span>
-      <button
-        onClick={() => moveLink(link.id, 'down')}
-        disabled={index === backdropLinks.length - 1}
-        style={{
-          backgroundColor: 'transparent',
-          border: `1px solid ${borderColor}`,
-          borderRadius: '4px',
-          cursor: index === backdropLinks.length - 1 ? 'not-allowed' : 'pointer',
-          color: index === backdropLinks.length - 1 ? borderColor : mutedText,
-          fontSize: '12px',
-          padding: '4px 8px',
-        }}
-      >
-        ▼
-      </button>
-    </div>
-  );
+  const renderOrderControls = (link: BackdropLink, index: number) => {
+    const isFirst = index === 0;
+    const isLast = index === backdropLinks.length - 1;
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          type="button"
+          onClick={() => moveLink(link.id, 'up')}
+          disabled={isFirst}
+          aria-disabled={isFirst}
+          style={{
+            backgroundColor: 'transparent',
+            border: `1px solid ${borderColor}`,
+            borderRadius: '4px',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            color: mutedText,
+            opacity: isFirst ? 0.3 : 1,
+            fontSize: '12px',
+            padding: '4px 8px',
+          }}
+        >
+          ▲
+        </button>
+        <span style={{ fontSize: '14px', color: textColor, fontWeight: 600, minWidth: '24px', textAlign: 'center' }}>
+          {link.displayOrder}
+        </span>
+        <button
+          type="button"
+          onClick={() => moveLink(link.id, 'down')}
+          disabled={isLast}
+          aria-disabled={isLast}
+          style={{
+            backgroundColor: 'transparent',
+            border: `1px solid ${borderColor}`,
+            borderRadius: '4px',
+            cursor: isLast ? 'not-allowed' : 'pointer',
+            color: mutedText,
+            opacity: isLast ? 0.3 : 1,
+            fontSize: '12px',
+            padding: '4px 8px',
+          }}
+        >
+          ▼
+        </button>
+      </div>
+    );
+  };
 
   const renderAttendantHubCell = (link: BackdropLink) => {
     const hubLink = getAttendantHubLink(link.url);
@@ -254,11 +265,27 @@ export default function BackdropLinksPage() {
     );
   };
 
-  const renderBackdropActions = (link: BackdropLink) => (
-    <>
+  const renderLinkCell = (link: BackdropLink) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
       <AdminButton variant="ghost" size="compact" onClick={() => copyLink(link.url, link.id)}>
         {copiedKey === `${link.id}:url` ? '✓ Copied' : 'Copy Link'}
       </AdminButton>
+      <AdminLink
+        href={link.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open link"
+        variant="ghost"
+        size="compact"
+        style={{ padding: '0 8px', minWidth: '30px' }}
+      >
+        <UIcon name="arrow-up-right-from-square" style={{ fontSize: '14px' }} />
+      </AdminLink>
+    </div>
+  );
+
+  const renderBackdropActions = (link: BackdropLink) => (
+    <>
       <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(link)}>
         Edit
       </AdminButton>
@@ -412,7 +439,7 @@ export default function BackdropLinksPage() {
                     }}>
                       <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, width: '60px' }}>Order</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, minWidth: '100px' }}>Name</th>
-                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, maxWidth: '200px', width: '200px' }}>URL</th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText }}>Link</th>
                       <th style={{ padding: '16px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: mutedText, width: '180px', minWidth: '180px' }}>Attendant Hub</th>
                       <th style={{ padding: '16px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: mutedText, width: '280px', minWidth: '280px' }}>Actions</th>
                     </tr>
@@ -428,13 +455,16 @@ export default function BackdropLinksPage() {
                         <td style={{ padding: '16px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <button
+                              type="button"
                               onClick={() => moveLink(link.id, 'up')}
                               disabled={index === 0}
+                              aria-disabled={index === 0}
                               style={{
                                 backgroundColor: 'transparent',
                                 border: 'none',
                                 cursor: index === 0 ? 'not-allowed' : 'pointer',
-                                color: index === 0 ? borderColor : mutedText,
+                                color: mutedText,
+                                opacity: index === 0 ? 0.3 : 1,
                                 fontSize: '12px',
                                 padding: '2px',
                               }}
@@ -445,13 +475,16 @@ export default function BackdropLinksPage() {
                               {link.displayOrder}
                             </span>
                             <button
+                              type="button"
                               onClick={() => moveLink(link.id, 'down')}
                               disabled={index === backdropLinks.length - 1}
+                              aria-disabled={index === backdropLinks.length - 1}
                               style={{
                                 backgroundColor: 'transparent',
                                 border: 'none',
                                 cursor: index === backdropLinks.length - 1 ? 'not-allowed' : 'pointer',
-                                color: index === backdropLinks.length - 1 ? borderColor : mutedText,
+                                color: mutedText,
+                                opacity: index === backdropLinks.length - 1 ? 0.3 : 1,
                                 fontSize: '12px',
                                 padding: '2px',
                               }}
@@ -463,27 +496,7 @@ export default function BackdropLinksPage() {
                         <td style={{ padding: '16px' }}>
                           <div style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>{link.name}</div>
                         </td>
-                        <td style={{ padding: '16px', maxWidth: '200px', width: '200px' }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: 'var(--accent)',
-                                fontSize: '14px',
-                                textDecoration: 'none',
-                                display: 'inline-block',
-                                maxWidth: '100%',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                              title={link.url}
-                            >
-                              {link.url.length > 35 ? link.url.substring(0, 35) + '...' : link.url}
-                            </a>
-                          </div>
-                        </td>
+                        <td style={{ padding: '16px' }}>{renderLinkCell(link)}</td>
                         <td style={{ padding: '16px', width: '180px', minWidth: '180px' }}>{renderAttendantHubCell(link)}</td>
                         <td style={{ padding: '16px' }}>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -509,15 +522,8 @@ export default function BackdropLinksPage() {
                     <AdminMobileField label="Order" mutedText={mutedText}>
                       {renderOrderControls(link, index)}
                     </AdminMobileField>
-                    <AdminMobileField label="URL" mutedText={mutedText}>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: 'var(--accent)', fontSize: '14px', textDecoration: 'none', wordBreak: 'break-all' }}
-                      >
-                        {link.url}
-                      </a>
+                    <AdminMobileField label="Link" mutedText={mutedText}>
+                      {renderLinkCell(link)}
                     </AdminMobileField>
                     <AdminMobileField label="Attendant Hub" mutedText={mutedText}>
                       {renderAttendantHubCell(link)}
