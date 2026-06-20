@@ -1,5 +1,7 @@
-/** Business timezone — IANA identifier (observes DST). */
+/** Business timezone — Eastern Time (EST/EDT). America/Toronto matches America/New_York for calendar math. */
 export const TORONTO_TZ = 'America/Toronto';
+/** Alias for documentation; all event date calculations use Eastern Time. */
+export const EASTERN_TZ = TORONTO_TZ;
 
 const MS_PER_DAY = 86_400_000;
 const INVALID_DATE_FALLBACK = '—';
@@ -37,6 +39,17 @@ export function torontoTodayKey(): string {
 export function torontoMonthKey(date: Date | string | number): string {
   const { year, month } = getTorontoDateParts(new Date(date));
   return `${year}-${String(month + 1).padStart(2, '0')}`;
+}
+
+/** Effective event date for an agreement (event record, then legacy client field). */
+export function resolveAgreementEventDate(agreement: {
+  event?: { eventDate: Date | null } | null;
+  client?: { eventDate: Date | null } | null;
+}): Date | null {
+  const raw = agreement.event?.eventDate ?? agreement.client?.eventDate ?? null;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 /** Toronto calendar day + N days as a UTC instant at that day's midnight (Toronto). */

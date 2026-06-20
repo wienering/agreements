@@ -6,12 +6,28 @@ import {
   addTorontoCalendarDaysFrom,
   formatDateToronto,
   getTorontoDateParts,
+  resolveAgreementEventDate,
   torontoCalendarDaysBetween,
   torontoDateKey,
   torontoMidnightUtc,
   torontoMonthKey,
   torontoStartOfTodayUtc,
 } from '@/lib/dates';
+
+/** Non-archived agreements bucketed by effective event date in Eastern Time. */
+async function fetchAgreementEventDatesForChart(): Promise<Date[]> {
+  const rows = await prisma.agreement.findMany({
+    where: { archived: false },
+    select: {
+      event: { select: { eventDate: true } },
+      client: { select: { eventDate: true } },
+    },
+  });
+
+  return rows
+    .map((row) => resolveAgreementEventDate(row))
+    .filter((date): date is Date => date !== null);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -62,31 +78,20 @@ export async function GET(request: NextRequest) {
       take: 10
     });
 
-    // Get chart data based on period
+    // Chart: non-archived agreements grouped by effective event date (Eastern Time).
     let chartData: Array<{ month: string; count: number }> = [];
-    let startDate: Date;
-    
-    if (period === 'week') {
-      startDate = addTorontoCalendarDaysFrom(new Date(), -7);
-      
-      const weeklyData = await prisma.agreement.findMany({
-        where: {
-          createdAt: {
-            gte: startDate
-          }
-        },
-        select: { createdAt: true },
-      });
+    const eventDates = await fetchAgreementEventDatesForChart();
 
+    if (period === 'week') {
       chartData = Array.from({ length: 7 }, (_, i) => {
         const bucketDate = addTorontoCalendarDaysFrom(new Date(), -(6 - i));
         const bucketKey = torontoDateKey(bucketDate);
-        
-        const dayData = weeklyData.filter(item => torontoDateKey(item.createdAt) === bucketKey);
-        
+
+        const count = eventDates.filter((date) => torontoDateKey(date) === bucketKey).length;
+
         return {
           month: formatDateToronto(bucketDate, { month: 'short', day: 'numeric' }),
-          count: dayData.length
+          count,
         };
       });
     } else if (period === 'year') {
@@ -97,16 +102,6 @@ export async function GET(request: NextRequest) {
         startMonth += 12;
         startYear -= 1;
       }
-      startDate = torontoMidnightUtc(startYear, startMonth, 1);
-      
-      const yearlyData = await prisma.agreement.findMany({
-        where: {
-          createdAt: {
-            gte: startDate
-          }
-        },
-        select: { createdAt: true },
-      });
 
       chartData = Array.from({ length: 12 }, (_, i) => {
         let year = startYear;
@@ -117,12 +112,12 @@ export async function GET(request: NextRequest) {
         }
         const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
         const labelDate = torontoMidnightUtc(year, month, 1);
-        
-        const monthData = yearlyData.filter(item => torontoMonthKey(item.createdAt) === monthKey);
-        
+
+        const count = eventDates.filter((date) => torontoMonthKey(date) === monthKey).length;
+
         return {
           month: formatDateToronto(labelDate, { month: 'short', year: 'numeric' }),
-          count: monthData.length
+          count,
         };
       });
     } else {
@@ -133,16 +128,6 @@ export async function GET(request: NextRequest) {
         startMonth += 12;
         startYear -= 1;
       }
-      startDate = torontoMidnightUtc(startYear, startMonth, 1);
-      
-      const monthlyData = await prisma.agreement.findMany({
-        where: {
-          createdAt: {
-            gte: startDate
-          }
-        },
-        select: { createdAt: true },
-      });
 
       chartData = Array.from({ length: 6 }, (_, i) => {
         let year = startYear;
@@ -153,12 +138,12 @@ export async function GET(request: NextRequest) {
         }
         const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
         const labelDate = torontoMidnightUtc(year, month, 1);
-        
-        const monthData = monthlyData.filter(item => torontoMonthKey(item.createdAt) === monthKey);
-        
+
+        const count = eventDates.filter((date) => torontoMonthKey(date) === monthKey).length;
+
         return {
           month: formatDateToronto(labelDate, { month: 'short', year: 'numeric' }),
-          count: monthData.length
+          count,
         };
       });
     }

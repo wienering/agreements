@@ -42,6 +42,37 @@ const AGREEMENT_STATUS_LABELS: Record<string, string> = {
   VOID: 'Void'
 };
 
+function getAgreementsChartNote(
+  chartData: Array<{ month: string; count: number }>,
+  period: 'week' | 'month' | 'year',
+): string {
+  if (chartData.length === 0) {
+    return 'Event counts use Eastern Time.';
+  }
+
+  if (period === 'week') {
+    const today = chartData[chartData.length - 1];
+    return `${today.count} event${today.count === 1 ? '' : 's'} scheduled for ${today.month}.`;
+  }
+
+  if (chartData.length < 2) {
+    return 'Event counts use Eastern Time.';
+  }
+
+  const current = chartData[chartData.length - 1];
+  const previous = chartData[chartData.length - 2];
+
+  if (current.count === previous.count) {
+    return `${current.month} matches ${previous.month} at ${current.count} event${current.count === 1 ? '' : 's'}.`;
+  }
+
+  if (current.count > previous.count) {
+    return `${current.month} has ${current.count} events, up from ${previous.count} in ${previous.month}.`;
+  }
+
+  return `${current.month} has ${current.count} events, down from ${previous.count} in ${previous.month}.`;
+}
+
 interface Warning {
   id: string;
   status: string;
@@ -177,6 +208,7 @@ export default function AdminHome() {
 
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
+  const chartNote = getAgreementsChartNote(chartData, timePeriod);
 
   const activeTotal = stats?.activeAgreements?.total ?? 0;
   const activeByStatus = stats?.activeAgreements?.byStatus ?? [];
@@ -735,7 +767,7 @@ export default function AdminHome() {
                 {totalAgreementsDisplay}
               </div>
               <div style={{ fontSize: '12px', color: mutedText, lineHeight: 1.4 }}>
-                June is mid-cycle — pacing roughly in line with May.
+                {chartNote}
               </div>
             </div>
 
