@@ -28,7 +28,7 @@ export default function BackdropLinksPage() {
   const [editingLink, setEditingLink] = useState<BackdropLink | null>(null);
   const [formData, setFormData] = useState({ name: '', url: '', displayOrder: 0 });
   const [saving, setSaving] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const router = useRouter();
 
   const mainBg = 'var(--admin-bg)';
@@ -129,8 +129,8 @@ export default function BackdropLinksPage() {
   const copyLink = async (url: string, id: string) => {
     try {
       await navigator.clipboard.writeText(url);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      setCopiedKey(`${id}:url`);
+      setTimeout(() => setCopiedKey(null), 2000);
     } catch (error) {
       console.error('Failed to copy link:', error);
       alert('Failed to copy link to clipboard');
@@ -180,8 +180,8 @@ export default function BackdropLinksPage() {
     }
     try {
       await navigator.clipboard.writeText(hubLink);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      setCopiedKey(`${id}:hub`);
+      setTimeout(() => setCopiedKey(null), 2000);
     } catch (error) {
       console.error('Failed to copy hub link:', error);
       alert('Failed to copy hub link to clipboard');
@@ -248,7 +248,7 @@ export default function BackdropLinksPage() {
           View Hub →
         </a>
         <AdminButton variant="ghost" size="compact" onClick={() => copyHubLink(link.url, link.id)}>
-          {copiedId === link.id ? '✓ Copied' : 'Copy Hub Link'}
+          {copiedKey === `${link.id}:hub` ? '✓ Copied' : 'Copy Hub Link'}
         </AdminButton>
       </div>
     );
@@ -257,7 +257,7 @@ export default function BackdropLinksPage() {
   const renderBackdropActions = (link: BackdropLink) => (
     <>
       <AdminButton variant="ghost" size="compact" onClick={() => copyLink(link.url, link.id)}>
-        {copiedId === link.id ? '✓ Copied' : 'Copy Link'}
+        {copiedKey === `${link.id}:url` ? '✓ Copied' : 'Copy Link'}
       </AdminButton>
       <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(link)}>
         Edit
