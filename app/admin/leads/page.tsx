@@ -131,6 +131,28 @@ export default function LeadsPage() {
       .then((templateList) => setTemplates(templateList));
   }, [fetchLeads]);
 
+  // Handle "/" key to focus search bar
+  useEffect(() => {
+    const handleSlashKey = (event: KeyboardEvent) => {
+      // Only trigger if "/" is pressed and user is not already typing in an input/textarea
+      if (event.key === '/' && searchInputRef.current) {
+        const target = event.target as HTMLElement;
+        const isInputFocused = target.tagName === 'INPUT' ||
+                              target.tagName === 'TEXTAREA' ||
+                              target.isContentEditable;
+
+        // Don't trigger if user is already typing in an input field
+        if (!isInputFocused) {
+          event.preventDefault();
+          searchInputRef.current.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleSlashKey);
+    return () => window.removeEventListener('keydown', handleSlashKey);
+  }, []);
+
   const foldedLeads = useMemo((): FoldedLeadRecord[] | null => {
     if (tab === 'archived') {
       return null;
