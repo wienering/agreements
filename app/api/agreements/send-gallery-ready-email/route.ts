@@ -88,22 +88,16 @@ export async function POST(request: NextRequest) {
       <ul style="margin:8px 0 0 0;padding-left:20px;">${galleryLinksHtml}</ul>
       ${eventDateSafe ? `<p style="margin:12px 0 0 0;">Event Date: ${eventDateSafe}</p>` : ''}`;
 
-    const portalFeaturesHtml = `
-      <ul style="margin:0;padding-left:20px;">
-        <li>View and download all your event photos</li>
-        <li>Access your signed agreements</li>
-        <li>Track payment information</li>
-        <li>View event details and preferences</li>
-      </ul>
-      <p style="margin:12px 0 0 0;font-size:13px;color:#6E655A;">This link is unique to you and will automatically log you in. It expires in 7 days.</p>`;
+    const reviewPanel = `
+      <p style="margin:0 0 16px 0;">We loved being part of your event. If you have a moment, a Google review would mean a lot to us. It helps other people find us and makes a real difference for a small business like ours.</p>
+      <p style="margin:0;"><a href="https://g.page/r/CXHuVoPHi-cIEAI/review" style="color:#C0552F;text-decoration:underline;">Leave a Google Review</a></p>`;
 
     const bodyHtml = `
       <p style="margin:0 0 16px 0;">Hi ${clientFirstName},</p>
       <p style="margin:0 0 16px 0;">Thank you for choosing Photobooth Guys for your ${eventType}. We hope you had a wonderful time. Your photo gallery is now ready, and you can view and download all of your event photos whenever you like.</p>
       ${renderCtaButton({ label: 'View Your Gallery', url: galleryLinks[0].url, tone: 'default' })}
-      ${renderNoticeBlock('Your Photos Are Ready', 'All the fantastic photos from your event are now available to view and download.', 'default')}
+      ${renderNoticeBlock('Leave Us a Review', reviewPanel, 'default')}
       ${renderNoticeBlock('Your Gallery Links', galleryLinksPanel, 'default')}
-      ${renderNoticeBlock('Your Client Portal Features', portalFeaturesHtml, 'default')}
       <p style="margin:16px 0 0 0;">We truly appreciate you choosing Photobooth Guys to be part of your special day. It was a pleasure serving you, and we hope the photos bring back wonderful memories!</p>
       ${renderNoticeBlock('Questions or Need Help?', `
         Our team is here to help!<br>
