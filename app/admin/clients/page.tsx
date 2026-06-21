@@ -60,6 +60,7 @@ interface Client {
   id: string;
   firstName: string;
   lastName: string;
+  emailGreetingName?: string | null;
   email: string;
   phone?: string;
   notes?: string;
@@ -101,6 +102,7 @@ export default function ClientsPage() {
   const [newClient, setNewClient] = useState({
     firstName: '',
     lastName: '',
+    emailGreetingName: '',
     email: '',
     phone: '',
     eventDate: '',
@@ -265,7 +267,7 @@ export default function ClientsPage() {
         const createdClient = await response.json();
         setClients([createdClient, ...clients]);
         setShowAddForm(false);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
+        setNewClient({ firstName: '', lastName: '', emailGreetingName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
         showToast('Client added successfully!');
       } else {
         try {
@@ -315,7 +317,7 @@ export default function ClientsPage() {
         setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
         setShowAddForm(false);
         setEditingClient(null);
-        setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
+        setNewClient({ firstName: '', lastName: '', emailGreetingName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
         showToast('Client updated successfully!');
       } else {
         try {
@@ -340,6 +342,7 @@ export default function ClientsPage() {
     setNewClient({
       firstName: client.firstName,
       lastName: client.lastName,
+      emailGreetingName: client.emailGreetingName || '',
       email: client.email,
       phone: client.phone || '',
       eventDate: eventDateLocalFromStored(client.eventDate),
@@ -360,7 +363,7 @@ export default function ClientsPage() {
     setEditingClient(null);
     setEditingEvent(null);
     setAddingEventToClient(null);
-    setNewClient({ firstName: '', lastName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
+    setNewClient({ firstName: '', lastName: '', emailGreetingName: '', email: '', phone: '', eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', isWhitelabelClient: false });
     setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '', eventDuration: '', eventPackage: '', packagePrice: '', notes: '', eventName: '', eventPhone: '', unlimitedPrints: false });
   };
 
@@ -1125,6 +1128,34 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         }}
                         placeholder="Enter last name"
                       />
+                    </div>
+                    <div>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '8px', 
+                        fontWeight: '500', 
+                        color: textColor 
+                      }}>
+                        Email greeting name
+                      </label>
+                      <input
+                        type="text"
+                        value={newClient.emailGreetingName}
+                        onChange={(e) => setNewClient({ ...newClient, emailGreetingName: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '4px',
+                          backgroundColor: cardBg,
+                          color: textColor,
+                          fontSize: '14px'
+                        }}
+                        placeholder="Optional greeting name for emails"
+                      />
+                      <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: mutedText, lineHeight: 1.4 }}>
+                        Optional. Used only in automated email greetings. Leave blank to use the first name.
+                      </p>
                     </div>
                     <div>
                       <label style={{ 

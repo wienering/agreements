@@ -9,6 +9,7 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 import { handleApiError } from '@/lib/handleApiError';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
 
 const sendAgreementSchema = z.object({
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
     );
     const clientFirstName = escapeHtml(agreement.client.firstName);
     const clientLastName = escapeHtml(agreement.client.lastName);
+    const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
     
     // Get the base URL from the request headers or environment
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
@@ -118,7 +120,7 @@ export async function POST(request: NextRequest) {
         : '');
 
     const bodyHtml = `
-      <p style="margin:0 0 16px 0;">Dear ${clientFirstName} ${clientLastName},</p>
+      <p style="margin:0 0 16px 0;">Dear ${clientGreeting},</p>
       <p style="margin:0 0 16px 0;">${emailMessage}</p>
       ${renderCtaButton({ label: 'Review & Sign Agreement', url: clientLink, tone: 'default' })}
       ${renderNoticeBlock(noticeLabel, urgencyContent, noticeTone)}

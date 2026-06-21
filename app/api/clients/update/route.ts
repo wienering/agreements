@@ -8,6 +8,7 @@ const clientUpdateSchema = z.object({
   id: z.string().min(1, 'Client ID is required'),
   firstName: z.string().trim().pipe(z.string().min(1, 'First name is required')),
   lastName: z.string().trim().pipe(z.string().min(1, 'Last name is required')),
+  emailGreetingName: z.string().optional().nullable(),
   email: z
     .string()
     .transform((s) => s.normalize('NFKC').trim().toLowerCase())
@@ -106,6 +107,7 @@ export async function PUT(request: NextRequest) {
       data: {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
+        emailGreetingName: validatedData.emailGreetingName?.trim() || null,
         email: validatedData.email,
         phone: validatedData.phone,
         eventDate: eventDateParsed,

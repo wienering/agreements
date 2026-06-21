@@ -6,6 +6,7 @@ import { escapeHtml } from '@/lib/htmlEscape';
 import { formatZodDetails } from '@/lib/handleApiError';
 import { renderEmailLayout } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 
 const sendReviewRequestSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -62,13 +63,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const firstName = agreement.client.firstName?.trim() || '';
-    const lastName = agreement.client.lastName?.trim() || '';
-    const clientGreetingName = escapeHtml([firstName, lastName].filter(Boolean).join(' '));
+    const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
     const subject = `Would you leave us a Google review?`;
 
     const bodyHtml = `
-      <p style="margin:0 0 16px 0;">Hello${clientGreetingName ? ` ${clientGreetingName}` : ''},</p>
+      <p style="margin:0 0 16px 0;">Hello ${clientGreeting},</p>
       <p style="margin:0 0 16px 0;">Thanks again for having us out. Hope you had a great time and that the prints came out the way you wanted.</p>
       <p style="margin:0 0 16px 0;">If you have a moment, we would really appreciate it if you could leave us a Google review. It makes a big difference for a small business like ours, and helps other people find us when they are planning their own events.</p>
       <p style="margin:0 0 16px 0;">If anything was off, just reply to this email and let me know. I would rather hear it from you.</p>

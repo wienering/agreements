@@ -13,6 +13,7 @@ import {
   renderNoticeBlock,
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 import { formatDateToronto } from '@/lib/dates';
 
 const emailRequestSchema = z.object({
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       agreement.event,
       pickSecondSigner(agreement),
     );
+    const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
     const clientFirstName = escapeHtml(agreement.client.firstName);
     const clientLastName = escapeHtml(agreement.client.lastName);
     const clientEmail = escapeHtml(agreement.client.email);
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
       <strong>Status:</strong> Already Signed`;
 
     const bodyHtml = `
-      <p style="margin:0 0 16px 0;">Hello ${clientFirstName},</p>
+      <p style="margin:0 0 16px 0;">Hello ${clientGreeting},</p>
       <p style="margin:0 0 16px 0;">${introMessage}</p>
       ${renderCtaButton({ label: 'View Agreement', url: agreementUrl, tone: 'default' })}
       ${renderNoticeBlock('Agreement Details', detailsHtml, 'default')}

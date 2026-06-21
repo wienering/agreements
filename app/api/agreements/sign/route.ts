@@ -8,6 +8,7 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 import { handleApiError } from '@/lib/handleApiError';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
 
 const signAgreementSchema = z.object({
@@ -434,7 +435,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   );
   const eventPackage = escapeHtml(agreement.event?.eventPackage ?? agreement.client.eventPackage ?? 'Standard Package');
   const packagePrice = agreement.event?.packagePrice ?? agreement.client.packagePrice;
-  const clientFirstName = escapeHtml(agreement.client.firstName);
+  const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
   const clientEmail = escapeHtml(agreement.client.email);
   const portalUrl = `${baseUrl}/portal/login`;
 
@@ -465,8 +466,8 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
     </ul>`;
 
   const bodyHtml = `
-    <p style="margin:0 0 16px 0;">Thank you, ${clientFirstName}! Your agreement has been successfully signed and we're excited to work with you!</p>
-    <p style="margin:0 0 16px 0;">Dear ${clientFirstName},</p>
+    <p style="margin:0 0 16px 0;">Thank you, ${clientGreeting}! Your agreement has been successfully signed and we're excited to work with you!</p>
+    <p style="margin:0 0 16px 0;">Dear ${clientGreeting},</p>
     <p style="margin:0 0 16px 0;">Thank you for choosing <strong>Photobooth Guys</strong> for your special event! We're thrilled to be part of your celebration and look forward to creating amazing memories together.</p>
     ${renderNoticeBlock('Your Agreement Details', agreementDetailsHtml, 'default')}
     ${renderCtaButton({ label: 'View Your Agreement', url: agreementUrl, tone: 'default' })}
@@ -537,7 +538,7 @@ async function sendWaitingForSecondSignerEmail(
     : agreement.client.email;
   const recipientName = signerJustSigned === 'primary'
     ? `${agreement.secondSignerFirstName || ''} ${agreement.secondSignerLastName || ''}`.trim() || 'there'
-    : `${agreement.client.firstName || ''}`.trim() || 'there';
+    : getEmailGreeting(agreement.client) || 'there';
 
   const justSignedName = signerJustSigned === 'primary'
     ? `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim()

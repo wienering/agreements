@@ -20,6 +20,7 @@ model Client {
   id             String          @id @default(cuid())
   firstName      String
   lastName       String
+  emailGreetingName String?
   email          String          @unique
   phone          String?
   eventDate      DateTime?       // Deprecated - use Event model instead

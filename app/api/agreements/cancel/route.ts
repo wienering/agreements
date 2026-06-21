@@ -7,6 +7,7 @@ import { escapeHtml } from '@/lib/htmlEscape';
 import { handleApiError } from '@/lib/handleApiError';
 import { renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
 
 const cancelAgreementSchema = z.object({
@@ -91,6 +92,7 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
   // Create email content
   const clientFirstName = escapeHtml(agreement.client.firstName);
   const clientLastName = escapeHtml(agreement.client.lastName);
+  const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
   const clientEmail = escapeHtml(agreement.client.email);
   const templateTitle = escapeHtml(agreement.template.title);
   const safeAdminName = escapeHtml(adminName);
@@ -116,7 +118,7 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
 
   const bodyHtml = `
     ${renderNoticeBlock('Agreement Cancelled', '<strong>Your service agreement has been cancelled by Photobooth Guys.</strong>', 'alert')}
-    <p style="margin:0 0 16px 0;">Dear ${clientFirstName} ${clientLastName},</p>
+    <p style="margin:0 0 16px 0;">Dear ${clientGreeting},</p>
     <p style="margin:0 0 16px 0;">We are writing to inform you that your service agreement has been cancelled. This action was taken by our administration team and is effective immediately.</p>
     ${renderNoticeBlock('Agreement Details', agreementDetailsHtml, 'alert')}
     ${renderNoticeBlock('Important Information', importantInfoHtml, 'alert')}

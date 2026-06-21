@@ -10,6 +10,7 @@ import {
   renderNoticeBlock,
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 
 const RATE_LIMIT_MESSAGE = 'Too many attempts. Please try again in a few minutes.';
 const REQUEST_WINDOW_MS = 15 * 60 * 1000;
@@ -128,14 +129,14 @@ export async function POST(request: NextRequest) {
 }
 
 function generateVerificationEmail(client: any, code: string): string {
-  const clientFirstName = escapeHtml(client.firstName);
+  const clientGreeting = escapeHtml(getEmailGreeting(client));
   const template = process.env.VERIFICATION_EMAIL_TEMPLATE || 'default';
 
   if (template === 'minimal') {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Your verification code</h2>
-        <p>Hello ${clientFirstName},</p>
+        <p>Hello ${clientGreeting},</p>
         <p>Your verification code is: <strong style="font-size: 24px; letter-spacing: 2px;">${code}</strong></p>
         <p>This code expires in 15 minutes.</p>
       </div>
@@ -143,7 +144,7 @@ function generateVerificationEmail(client: any, code: string): string {
   }
 
   const bodyHtml = `
-    <p style="margin:0 0 16px 0;">Hello ${clientFirstName}!</p>
+    <p style="margin:0 0 16px 0;">Hello ${clientGreeting}!</p>
     <p style="margin:0 0 16px 0;">You requested access to your client portal. Use the verification code below to log in:</p>
     ${renderCodePanel(code)}
     ${renderNoticeBlock(

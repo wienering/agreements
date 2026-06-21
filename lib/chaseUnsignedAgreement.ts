@@ -6,12 +6,13 @@ import {
   torontoCalendarDaysBetween,
   torontoDaysUntil,
 } from '@/lib/dates';
+import { getEmailGreeting } from '@/lib/email/greeting';
 
 export const NEXT_ACTION_REMINDERS_EXHAUSTED =
   'Automated reminders exhausted — manual follow-up needed';
 
 export type ChaseAgreement = Agreement & {
-  client: Pick<Client, 'firstName' | 'lastName' | 'email' | 'eventDate'>;
+  client: Pick<Client, 'firstName' | 'lastName' | 'email' | 'eventDate' | 'emailGreetingName'>;
   event: Pick<Event, 'eventDate'> | null;
   signatures: Pick<Signature, 'signerEmail'>[];
 };
@@ -115,7 +116,7 @@ export function resolveReminderRecipient(
         to: agreement.client.email,
         cc: buildSecondSignerCc(agreement),
         recipient: 'client',
-        greetingFirstName: agreement.client.firstName || 'there',
+        greetingFirstName: getEmailGreeting(agreement.client) || 'there',
       };
     }
 
@@ -131,7 +132,7 @@ export function resolveReminderRecipient(
       return {
         to: agreement.client.email,
         recipient: 'client',
-        greetingFirstName: agreement.client.firstName || 'there',
+        greetingFirstName: getEmailGreeting(agreement.client) || 'there',
       };
     }
 
@@ -144,7 +145,7 @@ export function resolveReminderRecipient(
     to: agreement.client.email,
     cc: buildSecondSignerCc(agreement),
     recipient: 'client',
-    greetingFirstName: agreement.client.firstName || 'there',
+    greetingFirstName: getEmailGreeting(agreement.client) || 'there',
   };
 }
 

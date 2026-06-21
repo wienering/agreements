@@ -41,6 +41,7 @@ async function runChaseUnsigned(baseUrl: string) {
         select: {
           firstName: true,
           lastName: true,
+          emailGreetingName: true,
           email: true,
           eventDate: true,
         },

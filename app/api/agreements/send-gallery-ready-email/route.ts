@@ -11,6 +11,7 @@ import {
   renderNoticeBlock,
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { getEmailGreeting } from '@/lib/email/greeting';
 
 const sendGalleryReadyEmailSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
         })
       : null;
     const eventType = escapeHtml(agreement.event?.eventType || 'event');
-    const clientFirstName = escapeHtml(agreement.client.firstName);
+    const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
     const eventDateSafe = eventDate ? escapeHtml(eventDate) : null;
     const galleryLinksHtml = galleryLinks.map((g, i) => {
       const title = escapeHtml((g.title || 'Photo Gallery').trim() || `Gallery ${i + 1}`);
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       <p style="margin:0;"><a href="https://g.page/r/CXHuVoPHi-cIEAI/review" style="color:#C0552F;text-decoration:underline;">Leave a Google Review</a></p>`;
 
     const bodyHtml = `
-      <p style="margin:0 0 16px 0;">Hi ${clientFirstName},</p>
+      <p style="margin:0 0 16px 0;">Hi ${clientGreeting},</p>
       <p style="margin:0 0 16px 0;">Thank you for choosing Photobooth Guys for your ${eventType}. We hope you had a wonderful time. Your photo gallery is now ready, and you can view and download all of your event photos whenever you like.</p>
       ${renderCtaButton({ label: 'View Your Gallery', url: galleryLinks[0].url, tone: 'default' })}
       ${renderNoticeBlock('Leave Us a Review', reviewPanel, 'default')}
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
     try {
       const info = await sendEmail({
         to: agreement.client.email,
-        subject: `Your Photo Gallery is Ready - ${clientFirstName}!`,
+        subject: `Your Photo Gallery is Ready - ${clientGreeting}!`,
         html: emailHtml,
       });
 

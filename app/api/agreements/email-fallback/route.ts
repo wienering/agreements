@@ -5,6 +5,7 @@ import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
 import { formatDateToronto } from '@/lib/dates';
+import { getEmailGreeting } from '@/lib/email/greeting';
 
 const emailFallbackSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 AGREEMENT SHARING LINK
 ======================
 
-Hello ${agreement.client.firstName},
+Hello ${getEmailGreeting(agreement.client)},
 
 Your signed agreement is ready! You can access it using the link below:
 
