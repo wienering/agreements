@@ -3,7 +3,6 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
-import { generateMagicLoginUrl } from '@/lib/magicToken';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { handleApiError } from '@/lib/handleApiError';
 import {
@@ -60,19 +59,6 @@ export async function POST(request: NextRequest) {
       }, { status: 503 });
     }
 
-    // Get the base URL from the request headers or environment
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
-    
-    // Generate magic login link for one-click access
-    const portalLink = generateMagicLoginUrl(
-      baseUrl,
-      agreement.client.id,
-      agreement.client.email,
-      'gallery_access'
-    );
-
     // Get event details for the email
     const eventDate = agreement.event?.eventDate 
       ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', {
@@ -83,9 +69,8 @@ export async function POST(request: NextRequest) {
           day: 'numeric'
         })
       : null;
-    const eventType = escapeHtml(agreement.event?.eventType || 'your event');
+    const eventType = escapeHtml(agreement.event?.eventType || 'event');
     const clientFirstName = escapeHtml(agreement.client.firstName);
-    const clientLastName = escapeHtml(agreement.client.lastName);
     const eventDateSafe = eventDate ? escapeHtml(eventDate) : null;
     const galleryLinksHtml = galleryLinks.map((g, i) => {
       const title = escapeHtml((g.title || 'Photo Gallery').trim() || `Gallery ${i + 1}`);
@@ -96,7 +81,7 @@ export async function POST(request: NextRequest) {
       ? `Here is the link for your ${escapeHtml((galleryLinks[0].title || 'photo gallery').trim())}:`
       : 'Here are the links for your galleries:';
 
-    const introMessage = `We hope you had an amazing time at your event! We're excited to let you know that your photo gallery is now ready and waiting for you.`;
+    const preheader = `Your photo gallery is now ready. View and download your event photos whenever you like.`;
 
     const galleryLinksPanel = `
       ${galleryIntro}<br>
@@ -113,10 +98,9 @@ export async function POST(request: NextRequest) {
       <p style="margin:12px 0 0 0;font-size:13px;color:#6E655A;">This link is unique to you and will automatically log you in. It expires in 7 days.</p>`;
 
     const bodyHtml = `
-      <p style="margin:0 0 16px 0;">Thank you, ${clientFirstName}! Thank you for choosing Photobooth Guys for ${eventType}!</p>
-      <p style="margin:0 0 16px 0;">Dear ${clientFirstName} ${clientLastName},</p>
-      <p style="margin:0 0 16px 0;">${introMessage}</p>
-      ${renderCtaButton({ label: 'View Your Gallery', url: portalLink, tone: 'default' })}
+      <p style="margin:0 0 16px 0;">Hi ${clientFirstName},</p>
+      <p style="margin:0 0 16px 0;">Thank you for choosing Photobooth Guys for your ${eventType}. We hope you had a wonderful time. Your photo gallery is now ready, and you can view and download all of your event photos whenever you like.</p>
+      ${renderCtaButton({ label: 'View Your Gallery', url: galleryLinks[0].url, tone: 'default' })}
       ${renderNoticeBlock('Your Photos Are Ready', 'All the fantastic photos from your event are now available to view and download.', 'default')}
       ${renderNoticeBlock('Your Gallery Links', galleryLinksPanel, 'default')}
       ${renderNoticeBlock('Your Client Portal Features', portalFeaturesHtml, 'default')}
@@ -136,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     const emailHtml = renderEmailLayout({
       title: 'Your Photo Gallery is Ready',
-      preheader: introMessage,
+      preheader,
       bodyHtml,
       tone: 'default',
     });
