@@ -341,6 +341,14 @@ export default function AgreementsPage() {
   const [galleryLinks, setGalleryLinks] = useState<Array<{ title: string; url: string }>>([]);
   const [galleryEmailSentAt, setGalleryEmailSentAt] = useState<Date | null>(null);
   const [sendingGalleryEmail, setSendingGalleryEmail] = useState(false);
+  const [showGalleryReadyPreview, setShowGalleryReadyPreview] = useState(false);
+  const [galleryReadyPreview, setGalleryReadyPreview] = useState<{
+    subject: string;
+    html: string;
+    canSend: boolean;
+    sendBlockedReason?: string;
+  } | null>(null);
+  const [loadingGalleryReadyPreview, setLoadingGalleryReadyPreview] = useState(false);
   const [nextAction, setNextAction] = useState('');
   const [backdropLinks, setBackdropLinks] = useState<any[]>([]);
   const [selectedBackdropLinkId, setSelectedBackdropLinkId] = useState('');
@@ -509,6 +517,9 @@ const normalizePaymentStatus = (value?: string | null) => {
         if (showAttendantModal) {
           setShowAttendantModal(false);
           setAttendantModalAgreement(null);
+        } else if (showGalleryReadyPreview) {
+          setShowGalleryReadyPreview(false);
+          setGalleryReadyPreview(null);
         } else if (showReviewRequestModal) {
           setShowReviewRequestModal(false);
           setReviewRequestAgreement(null);
@@ -554,6 +565,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     return () => window.removeEventListener('keydown', handleEscKey);
   }, [
     showAttendantModal,
+    showGalleryReadyPreview,
     showReviewRequestModal,
     showCopyLinkModal,
     showEmailPreview,
@@ -577,6 +589,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     Boolean(showReviewRequestModal && reviewRequestAgreement) ||
     Boolean(showInvoiceModal && invoiceAgreement) ||
     Boolean(showEmailPreview && previewAgreement) ||
+    Boolean(showGalleryReadyPreview && galleryReadyPreview) ||
     Boolean(showAttendantModal && (attendantModalAgreement || selectedAgreement));
 
   useLockBodyScroll(fullscreenAdminModalOpen);
@@ -1490,16 +1503,16 @@ const normalizePaymentStatus = (value?: string | null) => {
     }
   };
 
-  const handleSendGalleryReadyEmail = async () => {
+  const handleSendGalleryReadyEmail = async (): Promise<boolean> => {
     const validLinks = galleryLinks.filter(g => g.url.trim());
-    if (!selectedAgreement || validLinks.length === 0) return;
+    if (!selectedAgreement || validLinks.length === 0) return false;
     
     // Validate URL format for each
     try {
       validLinks.forEach(g => new URL(g.url));
     } catch {
       showToast('Please enter valid gallery link URLs first', 'error');
-      return;
+      return false;
     }
     
     try {
@@ -1532,14 +1545,59 @@ const normalizePaymentStatus = (value?: string | null) => {
             }
           }
         }
+        return true;
       } else {
         showToast(`Error: ${data.error || 'Failed to send gallery ready email'}`, 'error');
+        return false;
       }
     } catch (error) {
       console.error('Error sending gallery ready email:', error);
       showToast('Failed to send gallery ready email. Please try again later.', 'error');
+      return false;
     } finally {
       setSendingGalleryEmail(false);
+    }
+  };
+
+  const closeGalleryReadyPreview = () => {
+    setShowGalleryReadyPreview(false);
+    setGalleryReadyPreview(null);
+  };
+
+  const handlePreviewGalleryReadyEmail = async () => {
+    if (!selectedAgreement) return;
+
+    try {
+      setLoadingGalleryReadyPreview(true);
+      const response = await adminFetch(
+        `/api/agreements/send-gallery-ready-email?agreementId=${encodeURIComponent(selectedAgreement.id)}`,
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        showToast(`Error: ${data.error || 'Failed to load gallery ready email preview'}`, 'error');
+        return;
+      }
+
+      setGalleryReadyPreview({
+        subject: data.subject ?? '',
+        html: data.html ?? '',
+        canSend: data.canSend !== false,
+        sendBlockedReason: data.sendBlockedReason,
+      });
+      setShowGalleryReadyPreview(true);
+    } catch (error) {
+      console.error('Error loading gallery ready email preview:', error);
+      showToast('Failed to load gallery ready email preview. Please try again later.', 'error');
+    } finally {
+      setLoadingGalleryReadyPreview(false);
+    }
+  };
+
+  const handleSendGalleryReadyEmailFromPreview = async () => {
+    const sent = await handleSendGalleryReadyEmail();
+    if (sent) {
+      closeGalleryReadyPreview();
     }
   };
 
@@ -3913,49 +3971,88 @@ const normalizePaymentStatus = (value?: string | null) => {
                   >
                     + Add another gallery
                   </button>
-                  {galleryLinks.some(g => g.url.trim()) && (
+                  {selectedAgreement && (
                     <>
-                      <button
-                        type="button"
-                        onClick={handleSendGalleryReadyEmail}
-                        disabled={sendingGalleryEmail || !galleryLinks.some(g => g.url && g.url.trim())}
-                        style={{
-                          marginTop: '8px',
-                          padding: '8px 16px',
-                          backgroundColor: sendingGalleryEmail ? 'var(--admin-hairline)' : 'var(--gold)',
-                          color: 'var(--ink)',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        {sendingGalleryEmail ? (
-                          <>
-                            <span style={{ 
-                              display: 'inline-block', 
-                              width: '14px', 
-                              height: '14px', 
-                              border: '2px solid white', 
-                              borderTopColor: 'transparent', 
-                              borderRadius: '50%', 
-                              animation: 'spin 1s linear infinite' 
-                            }} />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                              <UIcon name="envelope" style={{ fontSize: '14px' }} />
-                              Send Gallery Ready Email
-                            </span>
-                          </>
-                        )}
-                      </button>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={handlePreviewGalleryReadyEmail}
+                          disabled={loadingGalleryReadyPreview}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: 'var(--admin-surface-raised)',
+                            color: 'var(--admin-text)',
+                            border: '1px solid var(--admin-hairline)',
+                            borderRadius: '4px',
+                            cursor: loadingGalleryReadyPreview ? 'not-allowed' : 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          {loadingGalleryReadyPreview ? (
+                            <>
+                              <span style={{
+                                display: 'inline-block',
+                                width: '14px',
+                                height: '14px',
+                                border: '2px solid var(--admin-text)',
+                                borderTopColor: 'transparent',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite',
+                              }} />
+                              Loading preview...
+                            </>
+                          ) : (
+                            <>
+                              <UIcon name="eye" style={{ fontSize: '14px' }} />
+                              Preview
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSendGalleryReadyEmail}
+                          disabled={sendingGalleryEmail || !galleryLinks.some(g => g.url && g.url.trim())}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: sendingGalleryEmail ? 'var(--admin-hairline)' : 'var(--gold)',
+                            color: 'var(--ink)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: sendingGalleryEmail ? 'not-allowed' : 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          {sendingGalleryEmail ? (
+                            <>
+                              <span style={{
+                                display: 'inline-block',
+                                width: '14px',
+                                height: '14px',
+                                border: '2px solid white',
+                                borderTopColor: 'transparent',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite',
+                              }} />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                <UIcon name="envelope" style={{ fontSize: '14px' }} />
+                                Send Gallery Ready Email
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                       {galleryEmailSentAt && (
                         <div
                           style={{
@@ -5954,6 +6051,126 @@ const normalizePaymentStatus = (value?: string | null) => {
                   }}
                 >
                   Send Email
+                </AdminButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Gallery Ready Email Preview Modal */}
+        {showGalleryReadyPreview && galleryReadyPreview && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '12px',
+              padding: '32px',
+              maxWidth: '900px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              border: `1px solid ${borderColor}`,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+              }}>
+                <h2 style={{
+                  margin: '0',
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: textColor,
+                }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                    <UIcon name="camera" style={{ fontSize: '24px' }} />
+                    Gallery Ready Email Preview
+                  </span>
+                </h2>
+                <button
+                  onClick={closeGalleryReadyPreview}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    color: textColor,
+                  }}
+                  title="Close preview"
+                >
+                  ×
+                </button>
+              </div>
+
+              {!galleryReadyPreview.canSend && galleryReadyPreview.sendBlockedReason && (
+                <div style={{
+                  marginBottom: '16px',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--admin-surface-raised)',
+                  border: '1px solid var(--warn)',
+                  borderRadius: '6px',
+                  color: textColor,
+                  fontSize: '14px',
+                }}>
+                  <strong>Cannot send yet:</strong> {galleryReadyPreview.sendBlockedReason}
+                </div>
+              )}
+
+              {galleryReadyPreview.canSend && galleryReadyPreview.subject && (
+                <>
+                  <div style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: textColor,
+                  }}>
+                    <strong>Subject:</strong> {galleryReadyPreview.subject}
+                  </div>
+                  <iframe
+                    title="Gallery ready email preview"
+                    srcDoc={galleryReadyPreview.html}
+                    sandbox=""
+                    style={{
+                      width: '100%',
+                      height: '520px',
+                      border: `1px solid ${borderColor}`,
+                      borderRadius: '8px',
+                      backgroundColor: '#ffffff',
+                    }}
+                  />
+                </>
+              )}
+
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+                marginTop: '24px',
+              }}>
+                <AdminButton
+                  variant="ghost"
+                  onClick={closeGalleryReadyPreview}
+                >
+                  Close
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
+                  onClick={handleSendGalleryReadyEmailFromPreview}
+                  disabled={!galleryReadyPreview.canSend || sendingGalleryEmail}
+                >
+                  {sendingGalleryEmail ? 'Sending...' : 'Send Email'}
                 </AdminButton>
               </div>
             </div>
