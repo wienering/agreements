@@ -53,6 +53,7 @@ interface Agreement {
   chaserPaused?: boolean;
   selectedBackdropName?: string;
   paymentStatus?: string;
+  reviewRequestSentAt?: string | null;
   showPhoneNumberAlways?: boolean;
   forceVirtualGreenScreen?: boolean;
   client: {
@@ -381,7 +382,6 @@ export default function AgreementsPage() {
   const [showReviewRequestModal, setShowReviewRequestModal] = useState(false);
   const [reviewRequestAgreement, setReviewRequestAgreement] = useState<Agreement | null>(null);
   const [reviewRequestUseCalgary, setReviewRequestUseCalgary] = useState(false);
-  const [reviewRequestSent, setReviewRequestSent] = useState<Record<string, boolean>>({});
 
   // Invoice creation state
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -1455,6 +1455,12 @@ const normalizePaymentStatus = (value?: string | null) => {
       const data = await response.json();
 
       if (response.ok) {
+        const sentAt = data.reviewRequestSentAt || new Date().toISOString();
+        setAgreements(prev =>
+          prev.map(a =>
+            a.id === agreement.id ? { ...a, reviewRequestSentAt: sentAt } : a
+          )
+        );
         showToast(`Review request sent to ${agreement.client.email}!`);
         return true;
       } else {
@@ -1498,7 +1504,6 @@ const normalizePaymentStatus = (value?: string | null) => {
       reviewRequestUseCalgary ? 'calgary' : 'ontario'
     );
     if (ok) {
-      setReviewRequestSent(prev => ({ ...prev, [reviewRequestAgreement.id]: true }));
       closeReviewRequestModal();
     }
   };
@@ -3034,7 +3039,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       {sendingToClient[agreement.id] ? 'Sending...' : 'Resend Email'}
                     </AdminButton>
                   )}
-                  {agreement.status === 'COMPLETED' && !reviewRequestSent[agreement.id] && (
+                  {agreement.status === 'COMPLETED' && !agreement.reviewRequestSentAt && (
                     <AdminButton
                       variant="ghost"
                       onClick={() => openReviewRequestModal(agreement)}
@@ -3043,6 +3048,28 @@ const normalizePaymentStatus = (value?: string | null) => {
                     >
                       {sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
                     </AdminButton>
+                  )}
+                  {agreement.status === 'COMPLETED' && agreement.reviewRequestSentAt && (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        color: mutedText,
+                        padding: '6px 10px',
+                      }}
+                      title="Google review request already sent"
+                    >
+                      <UIcon name="check" style={{ fontSize: '14px', color: 'var(--success)' }} />
+                      Review requested {formatDateTimeToronto(agreement.reviewRequestSentAt, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   )}
                   {agreement.status === 'DRAFT' && (
                     <AdminButton
@@ -3196,15 +3223,6 @@ const normalizePaymentStatus = (value?: string | null) => {
                         padding: '20px',
                         position: 'relative',
                       }}>
-                        {/* Completed Badge */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '-10px',
-                          right: '16px',
-                        }}>
-                          <StatusBadge variant="accent">Completed</StatusBadge>
-                        </div>
-
                         {/* Agreement Header */}
                         <div style={{
                           display: 'flex',
@@ -3296,7 +3314,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                         <div style={{
                           display: 'flex',
                           gap: '8px',
-                          flexWrap: 'wrap'
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
                         }}>
                           <AdminButton
                             variant="ghost"
@@ -3313,7 +3332,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           >
                             Edit Details
                           </AdminButton>
-                          {!reviewRequestSent[agreement.id] && (
+                          {!agreement.reviewRequestSentAt ? (
                             <AdminButton
                               variant="ghost"
                               onClick={() => openReviewRequestModal(agreement)}
@@ -3322,6 +3341,27 @@ const normalizePaymentStatus = (value?: string | null) => {
                             >
                               {sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
                             </AdminButton>
+                          ) : (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                fontSize: '13px',
+                                color: mutedText,
+                                padding: '6px 10px',
+                              }}
+                              title="Google review request already sent"
+                            >
+                              <UIcon name="check" style={{ fontSize: '14px', color: 'var(--success)' }} />
+                              Review requested {formatDateTimeToronto(agreement.reviewRequestSentAt, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
                           )}
                           <AdminButton
                             variant="danger"

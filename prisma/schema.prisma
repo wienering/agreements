@@ -92,6 +92,7 @@ model Agreement {
   galleryLink        String?   // Deprecated: use galleryLinks. Kept for backward compatibility.
   galleryLinks       Json?     // Array of { title: string, url: string } for multiple galleries
   galleryEmailSentAt DateTime?
+  reviewRequestSentAt DateTime?
   nextAction         String?
   backdropLinkId     String?
   backdropLink       BackdropLink?         @relation(fields: [backdropLinkId], references: [id], onDelete: SetNull)

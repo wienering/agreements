@@ -92,9 +92,16 @@ export async function POST(request: NextRequest) {
         html: emailHtml,
       });
 
+      const reviewRequestSentAt = new Date();
+      await prisma.agreement.update({
+        where: { id: agreement.id },
+        data: { reviewRequestSentAt },
+      });
+
       return NextResponse.json({
         message: 'Review request email sent successfully',
         recipientEmail: agreement.client.email,
+        reviewRequestSentAt: reviewRequestSentAt.toISOString(),
       });
     } catch (emailError: any) {
       console.error('Review request email sending failed:', emailError);
