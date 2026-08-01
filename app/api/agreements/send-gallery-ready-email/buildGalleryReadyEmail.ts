@@ -4,7 +4,6 @@ import {
   renderCtaButton,
   renderCtaButtonPair,
   renderEmailLayout,
-  renderNoticeBlock,
 } from '@/lib/email/layout';
 import { getEmailGreeting } from '@/lib/email/greeting';
 
@@ -131,8 +130,8 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
           ? `<p style="margin:0 0 16px 0;font-size:13px;line-height:1.5;color:#6E655A;">${escapeHtml(eventDateFull)}</p>`
           : ''
       }
-      <p style="margin:24px 0 8px 0;font-weight:600;">A quick favour</p>
-      <p style="margin:0 0 16px 0;">If we did right by you, a Google review would mean a lot. We're a small business and it's genuinely how most people find us. If your attendant took good care of you, mentioning them by name is even better.</p>
+      <p style="margin:24px 0 8px 0;font-weight:600;">Enjoyed the booth?</p>
+      <p style="margin:0 0 16px 0;">Google reviews are how most people find us, and a few words from you does more than anything we could say about ourselves. If your attendant looked after you, mentioning them by name is a nice touch.</p>
       ${renderCtaButton({
         label: 'Leave a Google Review',
         url: 'https://g.page/r/CXHuVoPHi-cIEAI/review',
@@ -140,18 +139,9 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
       })}
       <p style="margin:24px 0 8px 0;font-weight:600;">Know someone with an event coming up?</p>
       <p style="margin:0 0 16px 0;">Send them our way, or forward them this gallery so they can see what the photos look like. We also do event and corporate photography if you ever need coverage beyond the booth.</p>
-      ${renderNoticeBlock(
-        'Questions or Need Help?',
-        `
-        Our team is here to help!<br>
-        <strong>Email:</strong> info@photoboothguys.ca<br>
-        <strong>Phone:</strong> 647-378-5332<br>
-        <strong>Website:</strong> <a href="https://photoboothguys.ca" style="color:#C0552F;text-decoration:underline;">photoboothguys.ca</a>
-      `,
-        'default',
-      )}
+      <p style="margin:16px 0 0 0;">Any questions about your gallery, just reply to this email or give me a call at 647-378-5332.</p>
       <p style="margin:16px 0 0 0;">Thank you for choosing Photobooth Guys.</p>
-      <p style="margin:16px 0 0 0;">Best regards,<br><strong>Dennis</strong><br>Photobooth Guys<br>647-378-5332</p>
+      <p style="margin:16px 0 0 0;">Best regards,<br><strong>Dennis</strong><br>Photobooth Guys</p>
     `;
 
   const html = renderEmailLayout({
