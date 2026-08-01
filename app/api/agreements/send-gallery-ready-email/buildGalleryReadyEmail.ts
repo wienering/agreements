@@ -2,6 +2,7 @@ import type { Agreement, Client, Event } from '@prisma/client';
 import { escapeHtml } from '@/lib/htmlEscape';
 import {
   renderCtaButton,
+  renderCtaButtonPair,
   renderEmailLayout,
   renderNoticeBlock,
 } from '@/lib/email/layout';
@@ -25,13 +26,81 @@ export function resolveGalleryLinks(agreement: GalleryReadyAgreement): GalleryLi
   return [];
 }
 
+const LABEL_MAX = 28;
+
+function truncateLabel(title: string, max = LABEL_MAX): string {
+  if (title.length <= max) return title;
+  return `${title.slice(0, max - 1).trimEnd()}…`;
+}
+
+/** Per-gallery friendly label for 3–4 / 5+ cases. */
+function friendlyGalleryLabel(title: string): string {
+  const t = (title || '').trim();
+  if (/360/i.test(t)) return '360 gallery';
+  if (!t || /photo\s*(booth|gallery)/i.test(t)) return 'Photo booth gallery';
+  return truncateLabel(t);
+}
+
+/**
+ * Exactly one /360/i match → that one is "360 gallery", the other is
+ * "Photo booth gallery". Both or neither → raw (truncated) titles.
+ */
+function labelsForTwoGalleries(links: [GalleryLink, GalleryLink]): [string, string] {
+  const a360 = /360/i.test(links[0].title || '');
+  const b360 = /360/i.test(links[1].title || '');
+  if (a360 !== b360) {
+    return [
+      a360 ? '360 gallery' : 'Photo booth gallery',
+      b360 ? '360 gallery' : 'Photo booth gallery',
+    ];
+  }
+  return [
+    truncateLabel((links[0].title || 'Photo Gallery').trim() || 'Photo Gallery'),
+    truncateLabel((links[1].title || 'Photo Gallery').trim() || 'Photo Gallery'),
+  ];
+}
+
+function renderGalleryCtas(galleryLinks: GalleryLink[]): string {
+  if (galleryLinks.length === 1) {
+    return renderCtaButton({ label: 'View Your Gallery', url: galleryLinks[0].url });
+  }
+  if (galleryLinks.length === 2) {
+    const [leftLabel, rightLabel] = labelsForTwoGalleries([
+      galleryLinks[0],
+      galleryLinks[1],
+    ]);
+    return renderCtaButtonPair(
+      { label: leftLabel, url: galleryLinks[0].url },
+      { label: rightLabel, url: galleryLinks[1].url },
+    );
+  }
+  if (galleryLinks.length <= 4) {
+    return galleryLinks
+      .map((g) =>
+        renderCtaButton({
+          label: friendlyGalleryLabel(g.title),
+          url: g.url,
+        }),
+      )
+      .join('');
+  }
+  const items = galleryLinks
+    .map((g) => {
+      const title = escapeHtml(friendlyGalleryLabel(g.title));
+      const href = escapeHtml(g.url);
+      return `<li style="margin-bottom:8px;"><a href="${href}" style="color:#C0552F;text-decoration:underline;">${title}</a></li>`;
+    })
+    .join('');
+  return `<ul style="margin:16px 0;padding-left:20px;">${items}</ul>`;
+}
+
 export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subject: string; html: string } {
   const galleryLinks = resolveGalleryLinks(agreement);
   if (galleryLinks.length === 0) {
     throw new Error('NO_GALLERY_LINKS');
   }
 
-  const eventDate = agreement.event?.eventDate
+  const eventDateFull = agreement.event?.eventDate
     ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', {
         timeZone: 'America/Toronto',
         weekday: 'long',
@@ -40,39 +109,37 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
         day: 'numeric',
       })
     : null;
+  const eventDateShort = agreement.event?.eventDate
+    ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', {
+        timeZone: 'America/Toronto',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
   const eventType = escapeHtml(agreement.event?.eventType || 'event');
   const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));
-  const eventDateSafe = eventDate ? escapeHtml(eventDate) : null;
-  const galleryLinksHtml = galleryLinks
-    .map((g, i) => {
-      const title = escapeHtml((g.title || 'Photo Gallery').trim() || `Gallery ${i + 1}`);
-      const url = escapeHtml(g.url);
-      return `<li style="margin-bottom:8px;"><strong>${title}:</strong> <a href="${url}" style="color:#C0552F;text-decoration:underline;">${url}</a></li>`;
-    })
-    .join('');
-  const galleryIntro =
-    galleryLinks.length === 1
-      ? `Here is the link for your ${escapeHtml((galleryLinks[0].title || 'photo gallery').trim())}:`
-      : 'Here are the links for your galleries:';
 
-  const preheader = `Your photo gallery is now ready. View and download your event photos whenever you like.`;
-
-  const galleryLinksPanel = `
-      ${galleryIntro}<br>
-      <ul style="margin:8px 0 0 0;padding-left:20px;">${galleryLinksHtml}</ul>
-      ${eventDateSafe ? `<p style="margin:12px 0 0 0;">Event Date: ${eventDateSafe}</p>` : ''}`;
-
-  const reviewPanel = `
-      <p style="margin:0 0 16px 0;">We loved being part of your event. If you have a moment, a Google review would mean a lot to us. It helps other people find us and makes a real difference for a small business like ours.</p>
-      <p style="margin:0;"><a href="https://g.page/r/CXHuVoPHi-cIEAI/review" style="color:#C0552F;text-decoration:underline;">Leave a Google Review</a></p>`;
+  const preheader =
+    'Your photo gallery is now ready. View and download your event photos whenever you like.';
 
   const bodyHtml = `
       <p style="margin:0 0 16px 0;">Hi ${clientGreeting},</p>
-      <p style="margin:0 0 16px 0;">Thank you for choosing Photobooth Guys for your ${eventType}. We hope you had a wonderful time. Your photo gallery is now ready, and you can view and download all of your event photos whenever you like.</p>
-      ${renderCtaButton({ label: 'View Your Gallery', url: galleryLinks[0].url, tone: 'default' })}
-      ${renderNoticeBlock('Leave Us a Review', reviewPanel, 'default')}
-      ${renderNoticeBlock('Your Gallery Links', galleryLinksPanel, 'default')}
-      <p style="margin:16px 0 0 0;">We truly appreciate you choosing Photobooth Guys to be part of your special day. It was a pleasure serving you, and we hope the photos bring back wonderful memories!</p>
+      <p style="margin:0 0 16px 0;">Your photos from your ${eventType} are ready. You can view and download them whenever you like.</p>
+      ${renderGalleryCtas(galleryLinks)}
+      ${
+        eventDateFull
+          ? `<p style="margin:0 0 16px 0;font-size:13px;line-height:1.5;color:#6E655A;">${escapeHtml(eventDateFull)}</p>`
+          : ''
+      }
+      <p style="margin:24px 0 8px 0;font-weight:600;">A quick favour</p>
+      <p style="margin:0 0 16px 0;">If we did right by you, a Google review would mean a lot. We're a small business and it's genuinely how most people find us. If your attendant took good care of you, mentioning them by name is even better.</p>
+      ${renderCtaButton({
+        label: 'Leave a Google Review',
+        url: 'https://g.page/r/CXHuVoPHi-cIEAI/review',
+        variant: 'outlined',
+      })}
+      <p style="margin:24px 0 8px 0;font-weight:600;">Know someone with an event coming up?</p>
+      <p style="margin:0 0 16px 0;">Send them our way, or forward them this gallery so they can see what the photos look like. We also do event and corporate photography if you ever need coverage beyond the booth.</p>
       ${renderNoticeBlock(
         'Questions or Need Help?',
         `
@@ -83,11 +150,8 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
       `,
         'default',
       )}
-      <p style="margin:16px 0 0 0;">Thank you again for choosing us. We look forward to capturing more memories for you in the future!</p>
-      <p style="margin:16px 0 0 0;">Best regards,<br><strong>The Photobooth Guys Team</strong></p>
-      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
-        Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
-      </p>
+      <p style="margin:16px 0 0 0;">Thank you for choosing Photobooth Guys.</p>
+      <p style="margin:16px 0 0 0;">Best regards,<br><strong>Dennis</strong><br>Photobooth Guys<br>647-378-5332</p>
     `;
 
   const html = renderEmailLayout({
@@ -98,7 +162,9 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
   });
 
   return {
-    subject: `Your Photo Gallery is Ready - ${clientGreeting}!`,
+    subject: eventDateShort
+      ? `Your photos from ${eventDateShort}`
+      : 'Your photos are ready',
     html,
   };
 }

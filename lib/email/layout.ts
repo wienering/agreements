@@ -2,6 +2,8 @@
  * Shared HTML email layout — quote PDF palette, table-based, inline styles only.
  */
 
+import { escapeHtml } from '@/lib/htmlEscape';
+
 export type EmailTone = 'default' | 'alert';
 
 export type EmailCta = {
@@ -11,6 +13,7 @@ export type EmailCta = {
 
 export type RenderCtaButtonOptions = EmailCta & {
   tone?: EmailTone;
+  variant?: 'filled' | 'outlined';
 };
 
 export type RenderEmailLayoutOptions = {
@@ -34,25 +37,69 @@ const PANEL_FILL = '#F2EBDD';
 const FONT_STACK =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
+/** Usable body width: 600px container − 24px padding each side. */
+export const EMAIL_CONTENT_WIDTH = 552;
+const PAIR_GUTTER = 12;
+const PAIR_BUTTON_WIDTH = (EMAIL_CONTENT_WIDTH - PAIR_GUTTER) / 2; // 270
+
 function accentForTone(tone: EmailTone): string {
   return tone === 'alert' ? ALERT : ACCENT;
 }
 
-function bulletproofButton(label: string, url: string, bg: string): string {
-  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="width:100%;margin:24px 0;">
+type BulletproofButtonOptions = {
+  margin?: string;
+  /** MSO VML width in px. Defaults to 300 (unchanged from pre-change single buttons). */
+  widthPx?: number;
+  /**
+   * When true, the button fills its container at equal width (for side-by-side pairs).
+   * Single buttons keep shrink-to-fit.
+   */
+  fillWidth?: boolean;
+};
+
+function bulletproofButton(
+  label: string,
+  url: string,
+  accent: string,
+  variant: 'filled' | 'outlined' = 'filled',
+  options?: BulletproofButtonOptions,
+): string {
+  const isOutlined = variant === 'outlined';
+  const bg = isOutlined ? PAPER : accent;
+  const textColor = isOutlined ? accent : '#ffffff';
+  // Border on the td only — filled has none, so dimensions/edge stay unchanged.
+  const tdBorder = isOutlined ? `border:2px solid ${accent};` : '';
+  const margin = options?.margin ?? '24px 0';
+  // 300 matches the pre-change MSO width for single buttons.
+  const msoWidth = options?.widthPx ?? 300;
+  const fillWidth = options?.fillWidth === true;
+  const safeLabel = escapeHtml(label);
+  const safeUrl = escapeHtml(url);
+
+  const innerTableWidthAttrs = fillWidth
+    ? `width="100%" style="width:100%;"`
+    : `align="center"`;
+  const tdExtra = fillWidth
+    ? 'width:100%;box-sizing:border-box;'
+    : '';
+  const anchorDisplay = fillWidth
+    ? 'display:block;width:100%;text-align:center;box-sizing:border-box;'
+    : 'display:inline-block;';
+
+  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="width:100%;margin:${margin};">
   <tr>
     <td align="center" style="padding:0;">
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" ${innerTableWidthAttrs}>
         <tr>
-          <td align="center" bgcolor="${bg}" style="border-radius:4px;background-color:${bg};">
+          <td align="center" bgcolor="${bg}" style="border-radius:4px;background-color:${bg};${tdBorder}${tdExtra}">
             <!--[if mso]>
-            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:48px;v-text-anchor:middle;width:300px;" arcsize="8%" strokecolor="${bg}" fillcolor="${bg}">
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${safeUrl}" style="height:48px;v-text-anchor:middle;width:${msoWidth}px;" arcsize="8%" strokecolor="${accent}" fillcolor="${bg}">
               <w:anchorlock/>
-              <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center>
+              <center style="color:${textColor};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${safeLabel}</center>
             </v:roundrect>
             <![endif]-->
             <!--[if !mso]><!-->
-            <a href="${url}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:${FONT_STACK};font-size:16px;line-height:1.25;color:#ffffff;text-decoration:none;font-weight:600;border-radius:4px;background-color:${bg};">${label}</a>
+            <a href="${safeUrl}" target="_blank" style="${anchorDisplay}padding:14px 32px;font-family:${FONT_STACK};font-size:16px;line-height:1.25;color:${textColor};text-decoration:none;font-weight:600;border-radius:4px;background-color:${bg};">${safeLabel}</a>
             <!--<![endif]-->
           </td>
         </tr>
@@ -65,7 +112,67 @@ function bulletproofButton(label: string, url: string, bg: string): string {
 /** Self-contained bulletproof CTA for placement anywhere inside bodyHtml. */
 export function renderCtaButton(options: RenderCtaButtonOptions): string {
   const accent = accentForTone(options.tone ?? 'default');
-  return bulletproofButton(options.label, options.url, accent);
+  return bulletproofButton(
+    options.label,
+    options.url,
+    accent,
+    options.variant ?? 'filled',
+  );
+}
+
+/** Two filled CTAs side-by-side at equal width; stacks when the viewport is narrower than the content area. */
+export function renderCtaButtonPair(
+  left: RenderCtaButtonOptions,
+  right: RenderCtaButtonOptions,
+): string {
+  const leftBtn = bulletproofButton(
+    left.label,
+    left.url,
+    accentForTone(left.tone ?? 'default'),
+    left.variant ?? 'filled',
+    { margin: '0', widthPx: PAIR_BUTTON_WIDTH, fillWidth: true },
+  );
+  const rightBtn = bulletproofButton(
+    right.label,
+    right.url,
+    accentForTone(right.tone ?? 'default'),
+    right.variant ?? 'filled',
+    { margin: '0', widthPx: PAIR_BUTTON_WIDTH, fillWidth: true },
+  );
+
+  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="width:100%;margin:24px 0;">
+  <tr>
+    <td align="center" style="padding:0;font-size:0;line-height:0;">
+      <!--[if mso]>
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="${EMAIL_CONTENT_WIDTH}"><tr>
+      <td valign="top" width="${PAIR_BUTTON_WIDTH}" style="width:${PAIR_BUTTON_WIDTH}px;padding:0;">
+      <![endif]-->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="left" width="${PAIR_BUTTON_WIDTH}" style="width:100%;max-width:${PAIR_BUTTON_WIDTH}px;display:inline-block;vertical-align:top;">
+        <tr>
+          <td style="padding:0;font-size:15px;line-height:1.65;">${leftBtn}</td>
+        </tr>
+      </table>
+      <!--[if mso]>
+      </td>
+      <td width="${PAIR_GUTTER}" style="width:${PAIR_GUTTER}px;font-size:0;line-height:0;">&nbsp;</td>
+      <td valign="top" width="${PAIR_BUTTON_WIDTH}" style="width:${PAIR_BUTTON_WIDTH}px;padding:0;">
+      <![endif]-->
+      <!--[if !mso]><!-->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="left" width="${PAIR_GUTTER}" style="width:${PAIR_GUTTER}px;display:inline-block;">
+        <tr><td style="font-size:0;line-height:0;padding:0;">&nbsp;</td></tr>
+      </table>
+      <!--<![endif]-->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="left" width="${PAIR_BUTTON_WIDTH}" style="width:100%;max-width:${PAIR_BUTTON_WIDTH}px;display:inline-block;vertical-align:top;">
+        <tr>
+          <td style="padding:0;font-size:15px;line-height:1.65;">${rightBtn}</td>
+        </tr>
+      </table>
+      <!--[if mso]>
+      </td></tr></table>
+      <![endif]-->
+    </td>
+  </tr>
+</table>`;
 }
 
 /**
