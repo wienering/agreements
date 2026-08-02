@@ -372,7 +372,7 @@ function AgreementDetailContent() {
             <div className="mt-4 flex gap-3 justify-center">
               <button
                 onClick={fetchAgreementData}
-                className="rounded-md bg-alert px-4 py-2 text-sm font-semibold text-white hover:bg-alert"
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:bg-accent-hover"
               >
                 Try Again
               </button>

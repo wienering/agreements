@@ -212,7 +212,7 @@ export default function PortalDashboard() {
           <p className="text-alert">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="mt-4 rounded-md bg-alert px-4 py-2 text-sm font-semibold text-white hover:bg-alert"
+            className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:bg-accent-hover"
           >
             Try Again
           </button>
