@@ -46,23 +46,30 @@ const BOTTOM_MARGIN = 16;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 const RIGHT_X = PAGE_WIDTH - MARGIN;
 
-const TOP_BAR_HEIGHT = 4.5;
 const CONTENT_START_Y = 16;
 const FOOTER_TOP_SPACING = 14;
 const OPTION_GAP = 10;
 const LINE_ROW_HEIGHT = 7;
 const LINE_GAP = 1.5;
 const TOTAL_ROW_HEIGHT = 9;
-const PANEL_RADIUS = 3;
+/** 2px at 96dpi. The 2px maximum applies here too. */
+const PANEL_RADIUS = 0.5;
 
-const PAPER: [number, number, number] = [250, 246, 239];
-const INK: [number, number, number] = [42, 39, 36];
-const ACCENT: [number, number, number] = [192, 85, 47];
-const MUTED: [number, number, number] = [110, 101, 90];
-const FAINT: [number, number, number] = [154, 143, 128];
-const HAIRLINE: [number, number, number] = [229, 221, 207];
-const ROW_DIVIDER: [number, number, number] = [237, 230, 217];
-const PANEL_FILL: [number, number, number] = [242, 235, 221];
+/**
+ * Mirrors the tokens in app/globals.css. jsPDF wants 0-255 triples.
+ *
+ * Typography is Helvetica throughout: it is a jsPDF core font, so nothing is
+ * embedded, and it is the honest fallback for Libre Franklin. Times is gone
+ * because the system has no serif headers.
+ */
+const PAPER: [number, number, number] = [251, 251, 249];
+const INK: [number, number, number] = [26, 26, 24];
+const ACCENT: [number, number, number] = [30, 59, 49];
+const MUTED: [number, number, number] = [94, 94, 88];
+const FAINT: [number, number, number] = [107, 107, 100];
+const HAIRLINE: [number, number, number] = [227, 227, 222];
+const ROW_DIVIDER: [number, number, number] = [227, 227, 222];
+const PANEL_FILL: [number, number, number] = [242, 242, 239];
 
 const TERMS = [
   'A $100 retainer fee is required to secure your booking.',
@@ -180,20 +187,25 @@ function fillPageBackground(doc: jsPDF): void {
   doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
 }
 
-function drawTopAccentBar(doc: jsPDF): void {
-  doc.setFillColor(ACCENT[0], ACCENT[1], ACCENT[2]);
-  doc.rect(0, 0, PAGE_WIDTH, TOP_BAR_HEIGHT, 'F');
-}
-
 function drawHairline(doc: jsPDF, y: number): void {
   doc.setDrawColor(HAIRLINE[0], HAIRLINE[1], HAIRLINE[2]);
   doc.setLineWidth(0.25);
   doc.line(MARGIN, y, RIGHT_X, y);
 }
 
+/**
+ * Full ink, at most twice per document: under the title and above the total.
+ * Anything else that needs separating gets a hairline.
+ */
+function drawStrongRule(doc: jsPDF, y: number): void {
+  doc.setDrawColor(INK[0], INK[1], INK[2]);
+  doc.setLineWidth(0.25);
+  doc.line(MARGIN, y, RIGHT_X, y);
+}
+
 function drawRowDivider(doc: jsPDF, y: number): void {
   doc.setDrawColor(ROW_DIVIDER[0], ROW_DIVIDER[1], ROW_DIVIDER[2]);
-  doc.setLineWidth(0.2);
+  doc.setLineWidth(0.25);
   doc.line(MARGIN, y, RIGHT_X, y);
 }
 
@@ -224,7 +236,6 @@ function drawSpacedLabel(doc: jsPDF, text: string, x: number, y: number): void {
 
 function setupContinuationPage(doc: jsPDF): number {
   fillPageBackground(doc);
-  drawTopAccentBar(doc);
   return CONTENT_START_Y;
 }
 
@@ -272,14 +283,14 @@ function ensureVerticalSpace(doc: jsPDF, y: number, neededHeight: number): numbe
 function drawSharedHeader(ctx: PdfContext, contactInfo: ContactInfo): number {
   const { doc } = ctx;
 
+  // The letterhead is the mark, the details and one hairline. No colored band.
   fillPageBackground(doc);
-  drawTopAccentBar(doc);
 
   let y = CONTENT_START_Y;
 
   doc.setTextColor(INK[0], INK[1], INK[2]);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
   doc.text('Photobooth Guys', MARGIN, y);
 
   doc.setFont('helvetica', 'normal');
@@ -297,10 +308,13 @@ function drawSharedHeader(ctx: PdfContext, contactInfo: ContactInfo): number {
   drawHairline(doc, y);
   y += 10;
 
-  doc.setFont('times', 'bold');
-  doc.setFontSize(26);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
   doc.setTextColor(INK[0], INK[1], INK[2]);
   doc.text('Quote', MARGIN, y);
+
+  // Heavy rule under the document title, in the gap before "Prepared for".
+  drawStrongRule(doc, y + 4.5);
 
   const quoteDate = formatEventDateToronto(new Date());
 
@@ -477,6 +491,9 @@ function drawOptionBlock(
     yPosition += 2;
   }
 
+  // The second and last heavy rule: above the total.
+  drawStrongRule(doc, yPosition);
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(INK[0], INK[1], INK[2]);
@@ -497,7 +514,7 @@ function drawFooter(ctx: PdfContext, startY: number): number {
   const panelPaddingX = 10;
   const panelPaddingY = 7;
   const thankYouText = 'Thank you for considering Photobooth Guys for your event.';
-  doc.setFont('times', 'italic');
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   const thankYouLines = doc.splitTextToSize(thankYouText, CONTENT_WIDTH - panelPaddingX * 2);
   const panelHeight = thankYouLines.length * 4.8 + panelPaddingY * 2;
