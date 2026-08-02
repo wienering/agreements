@@ -1,17 +1,15 @@
 import type { Metadata } from 'next'
-import { Fraunces, Montserrat } from 'next/font/google'
+import { Libre_Franklin } from 'next/font/google'
 import { Providers } from './providers'
 import '@flaticon/flaticon-uicons/css/regular/rounded.css'
 import './globals.css'
 
-const fraunces = Fraunces({
+/* One family across every role. next/font self-hosts the files at build time,
+   so nothing is fetched from a CDN at runtime. The display variable is kept
+   because ~13 surfaces reference it; it now resolves to the same family. */
+const libreFranklin = Libre_Franklin({
   subsets: ['latin'],
-  variable: '--font-display',
-  display: 'swap',
-})
-
-const montserrat = Montserrat({
-  subsets: ['latin'],
+  weight: ['400', '600'],
   variable: '--font-ui',
   display: 'swap',
 })
@@ -33,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${montserrat.className} ${fraunces.variable} ${montserrat.variable}`}>
+      <body className={`${libreFranklin.className} ${libreFranklin.variable}`}>
         <Providers>
           {children}
         </Providers>

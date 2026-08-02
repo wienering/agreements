@@ -10,81 +10,126 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Design tokens — see docs/design-direction.md
-   Scoped by data-surface on layout roots. Stage 3 migrates page-level colors.
+   Design tokens — see DESIGN.md
+   Scoped by data-surface on layout roots.
+
+   Token *names* are load-bearing (~158 usages of the --accent alias), so this
+   pass changes values behind the existing names rather than renaming. Two names
+   now hold a colour their name no longer describes: --coral and --gold are both
+   the deep green accent. Renaming them is a separate pass.
    --------------------------------------------------------------------------- */
 
 [data-surface='client'] {
-  --paper: #faf6ef;
-  --ink: #2a2724;
-  --coral: #c0552f;
-  --panel: #f2ebdd;
-  --hairline: #e5ddcf;
-  --muted: #6e655a;
-  --success: #3f6f4f;
-  --warn: #8a6220;
-  --alert: #b3392b;
+  --paper: #fbfbf9;
+  --ink: #1a1a18;
+  --coral: #1e3b31;
+  --panel: #f2f2ef;
+  --hairline: #e3e3de;
+  --muted: #5e5e58;
+  --success: #2f6a4c;
+  --warn: #2c5878;
+  --alert: #9e2b2b;
+
+  /* The one heavy rule: under a document title, above a total */
+  --rule-strong: #1a1a18;
+
+  --status-good: #2f6a4c;
+  --status-wait: #2c5878;
+  --status-wait-lt: #5a88a8;
+  --status-action: #9e2b2b;
+  --status-idle: #6b6b64;
 
   font-family: var(--font-ui), system-ui, sans-serif;
 
-  /* Legacy brand alias — ~158 usages pick up Coral without file edits */
   --accent: var(--coral);
-  --accent-rgb: 192, 85, 47;
-  --accent-soft: #d4785a;
-  --accent-faint: #e8b5a3;
+  --accent-rgb: 30, 59, 49;
+  --accent-hover: #162d25;
+  --accent-soft: #35594b;
+  --accent-faint: #c6cfc9;
+  /* The only tinted fill in the system */
+  --accent-wash: #edf2ef;
+  /* Text and icons sitting on an accent fill */
+  --accent-on: #fbfbf9;
 }
 
 [data-surface='client'] .client-page-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
+/* Heavy rule under a document title. Full measure, full ink, at most twice per
+   document — the other one sits above a total. */
 [data-surface='client'] .client-title-rule {
-  height: 2px;
-  width: 4rem;
-  background-color: var(--coral);
+  height: 1px;
+  width: 100%;
+  background-color: var(--rule-strong);
   margin-top: 0.75rem;
 }
 
 [data-surface='admin'] {
-  --admin-bg: #1e1b18;
-  --admin-surface: #2a2724;
-  --admin-surface-raised: #353029;
-  --admin-text: #ede7dc;
-  --admin-muted: #9a9087;
-  --admin-hairline: #3d372f;
-  --ink: #2a2724;
-  --gold: #c6a04d;
-  --success: #3f6f4f;
-  /* Lightened vs client warn: same hue family, readable on dark admin surfaces */
-  --warn: #b4862a;
-  --alert: #b3392b;
+  --admin-bg: #f4f4f2;
+  --admin-surface: #ffffff;
+  --admin-surface-raised: #f2f2ef;
+  --admin-text: #1a1a18;
+  --admin-muted: #5e5e58;
+  --admin-hairline: #e3e3de;
+  --ink: #1a1a18;
+  --gold: #1e3b31;
+  --success: #2f6a4c;
+  --warn: #2c5878;
+  --alert: #9e2b2b;
+
+  /* Sidebar panel and inset fills, shared with the client surface */
+  --paper: #fbfbf9;
+  --panel: #f2f2ef;
+  --hairline: #e3e3de;
+  --muted: #5e5e58;
+  --rule-strong: #1a1a18;
+
+  --status-good: #2f6a4c;
+  --status-wait: #2c5878;
+  --status-wait-lt: #5a88a8;
+  --status-action: #9e2b2b;
+  --status-idle: #6b6b64;
 
   font-family: var(--font-ui), system-ui, sans-serif;
 
-  /* Legacy brand alias — ~158 usages pick up Gold without file edits */
   --accent: var(--gold);
-  --accent-rgb: 198, 160, 77;
-  --accent-soft: #d4b96a;
-  --accent-faint: #e5d4a8;
+  --accent-rgb: 30, 59, 49;
+  --accent-hover: #162d25;
+  --accent-soft: #35594b;
+  --accent-faint: #c6cfc9;
+  --accent-wash: #edf2ef;
+  --accent-on: #fbfbf9;
 }
 
 [data-surface='admin'] .admin-page-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 [data-surface='admin'] .admin-title-rule {
-  height: 2px;
-  width: 4rem;
-  background-color: var(--gold);
+  height: 1px;
+  width: 100%;
+  background-color: var(--rule-strong);
   margin-top: 0.75rem;
 }
 
 [data-surface='admin'] .admin-section-title {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), Helvetica, Arial, sans-serif;
+  font-weight: 600;
 }
 
 body {
-  font-family: var(--font-ui), system-ui, sans-serif;
+  /* The display alias survives so the ~13 surfaces that reference it keep
+     working; it resolves to the one family rather than to a serif. */
+  --font-display: var(--font-ui);
+
+  font-family: var(--font-ui), Helvetica, Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Admin overview: active agreements + upcoming events */
@@ -128,7 +173,7 @@ body {
   max-height: 34px;
   padding: 0 14px;
   margin: 0;
-  border-radius: 6px;
+  border-radius: 2px;
   font-size: 13px;
   line-height: 1;
   display: inline-flex;
