@@ -204,7 +204,21 @@ export function renderEmailLayout(options: RenderEmailLayoutOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no">
   <title>${options.title}</title>
+  <!-- Clients auto-link bare phone numbers, addresses, and domains and paint
+       them their own link blue. The system has no blue, so inherit instead. -->
+  <style>
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: none !important;
+      font-size: inherit !important;
+      font-family: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+    }
+    #MessageViewBody a { color: inherit; text-decoration: none; }
+  </style>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -238,7 +252,7 @@ export function renderEmailLayout(options: RenderEmailLayoutOptions): string {
                     <p style="margin:4px 0 0 0;font-size:10px;line-height:1.3;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:${MUTED};">Greater Toronto Area</p>
                   </td>
                   <td valign="top" align="right" style="font-family:${FONT_STACK};font-size:11px;line-height:1.85;color:${MUTED};">
-                    ${CONTACT_PHONE}<br>${CONTACT_EMAIL}<br>${CONTACT_SITE}
+                    <a href="tel:${CONTACT_PHONE.replace(/-/g, '')}" style="color:${MUTED};text-decoration:none;">${CONTACT_PHONE}</a><br><a href="mailto:${CONTACT_EMAIL}" style="color:${MUTED};text-decoration:none;">${CONTACT_EMAIL}</a><br><a href="https://${CONTACT_SITE}" style="color:${MUTED};text-decoration:none;">${CONTACT_SITE}</a>
                   </td>
                 </tr>
               </table>

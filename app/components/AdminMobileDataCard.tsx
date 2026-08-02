@@ -29,7 +29,7 @@ export function AdminMobileDataCard({
       style={{
         backgroundColor: cardBg,
         border: `1px solid ${borderColor}`,
-        borderRadius: '8px',
+        borderRadius: '2px',
         padding: '16px',
         width: '100%',
         maxWidth: '100%',

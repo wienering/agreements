@@ -3201,7 +3201,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   <div style={{
                     border: `1px solid var(--admin-hairline)`,
                     borderTop: 'none',
-                    borderRadius: '0 0 8px 8px',
+                    borderRadius: '0 0 2px 2px',
                     padding: '16px',
                     marginBottom: '16px',
                   }}>
