@@ -163,7 +163,7 @@ function PortalLoginContent() {
       <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white text-2xl font-bold animate-pulse">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-on text-2xl font-bold animate-pulse">
               PG
             </div>
           </div>
@@ -174,7 +174,7 @@ function PortalLoginContent() {
             Please wait while we verify your access.
           </p>
           <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@ function PortalLoginContent() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white text-2xl font-bold">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-on text-2xl font-bold">
               PG
             </div>
           </div>
@@ -199,7 +199,7 @@ function PortalLoginContent() {
           </p>
         </div>
 
-        <div className="bg-panel py-8 px-4 shadow-xl rounded-lg sm:px-10 border border-hairline">
+        <div className="bg-panel py-8 px-4 rounded-lg sm:px-10 border border-hairline">
           {step === 'email' ? (
             <form className="space-y-6" onSubmit={handleRequestCode}>
               <div>
@@ -215,7 +215,7 @@ function PortalLoginContent() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-hairline rounded-md placeholder:text-muted bg-panel text-ink focus:outline-none focus:ring-coral focus:border-coral sm:text-sm"
+                    className="appearance-none block w-full px-3 py-2 border border-hairline rounded-md placeholder:text-muted bg-panel text-ink focus:outline-none focus:ring-accent focus:border-accent sm:text-sm"
                     placeholder="Enter your email address"
                   />
                 </div>
@@ -237,7 +237,7 @@ function PortalLoginContent() {
                 <button
                   type="submit"
                   disabled={loading || !email.trim()}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-coral hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-accent-on bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Verification Code'}
                 </button>
@@ -257,7 +257,7 @@ function PortalLoginContent() {
                     required
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 border border-hairline rounded-md placeholder:text-muted bg-panel text-ink focus:outline-none focus:ring-coral focus:border-coral sm:text-sm text-center text-lg tracking-widest"
+                    className="appearance-none block w-full px-3 py-2 border border-hairline rounded-md placeholder:text-muted bg-panel text-ink focus:outline-none focus:ring-accent focus:border-accent sm:text-sm text-center text-lg tracking-widest"
                     placeholder="Enter 6-digit code"
                     maxLength={6}
                   />
@@ -282,14 +282,14 @@ function PortalLoginContent() {
                     setError('');
                     setSuccess('');
                   }}
-                  className="flex-1 py-2 px-4 border border-hairline rounded-md text-sm font-medium text-ink bg-panel hover:bg-paper focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral"
+                  className="flex-1 py-2 px-4 border border-hairline rounded-md text-sm font-medium text-ink bg-panel hover:bg-paper focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !verificationCode.trim()}
-                  className="flex-1 py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-coral hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 px-4 border border-transparent rounded-md text-sm font-medium text-accent-on bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Verifying...' : 'Verify Code'}
                 </button>
@@ -314,7 +314,7 @@ function MagicLinkLoading() {
     <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 text-center">
         <div className="flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white text-2xl font-bold animate-pulse">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-on text-2xl font-bold animate-pulse">
             PG
           </div>
         </div>
@@ -325,7 +325,7 @@ function MagicLinkLoading() {
           Please wait while we verify your access.
         </p>
         <div className="flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
         </div>
       </div>
     </div>

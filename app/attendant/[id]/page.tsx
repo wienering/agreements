@@ -440,7 +440,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               backgroundColor: 'var(--admin-surface)',
               borderBottom: '1px solid var(--admin-hairline)',
               padding: '24px 0',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
           >
             <div
@@ -544,7 +543,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   padding: '32px',
                   borderRadius: '2px',
                   border: '1px solid var(--admin-hairline)',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h2
@@ -949,7 +947,6 @@ function EventExpiredError() {
           border: '1px solid var(--admin-hairline)',
           textAlign: 'center',
           maxWidth: '520px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
         <div
@@ -1077,7 +1074,6 @@ function NotFoundError() {
           border: '1px solid var(--admin-hairline)',
           textAlign: 'center',
           maxWidth: '520px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
         <div

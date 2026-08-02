@@ -69,7 +69,6 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
           borderRadius: '2px',
           border: '1px solid var(--admin-hairline)',
           marginBottom: '24px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}
       >
         <h2
@@ -99,7 +98,6 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
           borderRadius: '2px',
           border: '1px solid var(--admin-hairline)',
           marginBottom: '24px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         }}
       >
         <h2
@@ -128,7 +126,6 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
         borderRadius: '2px',
         border: '1px solid var(--admin-hairline)',
         marginBottom: '24px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       }}
     >
       <h2

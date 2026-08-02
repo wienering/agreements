@@ -240,7 +240,7 @@ export default function ThankYouPage() {
         <div style={{
           backgroundColor: 'var(--panel)',
           padding: '40px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: `1px solid var(--hairline)`,
           maxWidth: '420px',
           width: '100%',
@@ -250,11 +250,11 @@ export default function ThankYouPage() {
             fontSize: '24px',
             margin: '0',
             fontWeight: '700',
-            fontFamily: 'var(--font-display), Georgia, serif',
+            fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif',
           }}>
             Confirm Your Email
           </h1>
-          <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px 0 16px' }} aria-hidden="true" />
+          <div style={{ height: '1px', width: '100%', backgroundColor: 'var(--rule-strong)', margin: '12px 0 16px' }} aria-hidden="true" />
           <p style={{
             color: 'var(--muted)',
             fontSize: '16px',
@@ -269,7 +269,7 @@ export default function ThankYouPage() {
               padding: '12px',
               backgroundColor: 'var(--panel)',
                 border: '1px solid var(--alert)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 color: 'var(--alert)',
               fontSize: '14px',
             }}>
@@ -296,7 +296,7 @@ export default function ThankYouPage() {
               width: '100%',
               padding: '12px',
               border: '1px solid var(--hairline)',
-              borderRadius: '6px',
+              borderRadius: '2px',
               backgroundColor: '#fff',
               color: 'var(--ink)',
               fontSize: '14px',
@@ -314,7 +314,7 @@ export default function ThankYouPage() {
               color: isVerifying || !verificationEmail.trim() ? 'var(--muted)' : 'white',
               border: 'none',
               padding: '12px 24px',
-              borderRadius: '6px',
+              borderRadius: '2px',
               cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               fontWeight: '600',
@@ -341,7 +341,7 @@ export default function ThankYouPage() {
         <div style={{
           backgroundColor: 'var(--panel)',
           padding: '40px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: `1px solid var(--hairline)`,
           textAlign: 'center',
           maxWidth: '500px'
@@ -359,7 +359,7 @@ export default function ThankYouPage() {
             fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700',
-            fontFamily: 'var(--font-display), Georgia, serif',
+            fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif',
           }}>
             Agreement Not Found
           </h1>
@@ -446,7 +446,6 @@ export default function ThankYouPage() {
               fontSize: '48px',
               color: 'white',
               animation: 'checkmarkPulse 1s ease-in-out',
-              boxShadow: '0 0 0 0 rgba(63, 111, 79, 0.7)'
             }}>
               <UIcon name="check" style={{ fontSize: '48px', color: 'white' }} title="Success" />
             </div>
@@ -456,12 +455,12 @@ export default function ThankYouPage() {
               fontSize: '48px',
               fontWeight: '800',
               color: 'var(--ink)',
-              fontFamily: 'var(--font-display), Georgia, serif',
+              fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif',
               animation: 'slideIn 0.8s ease-out'
             }}>
               Thank You!
             </h1>
-            <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px auto 16px' }} aria-hidden="true" />
+            <div style={{ height: '1px', width: '100%', backgroundColor: 'var(--rule-strong)', margin: '12px auto 16px' }} aria-hidden="true" />
             <p style={{
               margin: '0 0 24px 0',
               fontSize: '20px',
@@ -477,7 +476,7 @@ export default function ThankYouPage() {
               gap: '8px',
               padding: '12px 24px',
               backgroundColor: 'var(--paper)',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               fontSize: '16px',
               color: 'var(--ink)',
@@ -498,7 +497,7 @@ export default function ThankYouPage() {
           <div style={{
             backgroundColor: 'var(--panel)',
             padding: '32px',
-            borderRadius: '12px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`,
             marginBottom: '32px',
             animation: 'fadeIn 0.8s ease-out 0.2s both'
@@ -662,14 +661,13 @@ export default function ThankYouPage() {
                 color: isDownloading ? 'var(--muted)' : 'white',
                 border: 'none',
                 padding: '16px 32px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 cursor: isDownloading ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
                 fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                boxShadow: 'none',
                 transition: 'all 0.2s ease',
                 minWidth: '180px',
                 justifyContent: 'center'
@@ -693,14 +691,13 @@ export default function ThankYouPage() {
                 color: isEmailing ? 'var(--muted)' : 'white',
                 border: 'none',
                 padding: '16px 32px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 cursor: isEmailing ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
                 fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                boxShadow: 'none',
                 transition: 'all 0.2s ease',
                 minWidth: '180px',
                 justifyContent: 'center'
@@ -721,7 +718,7 @@ export default function ThankYouPage() {
           <div style={{
             backgroundColor: 'var(--panel)',
             padding: '32px',
-            borderRadius: '12px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`,
             marginBottom: '32px',
             animation: 'fadeIn 1.2s ease-out 0.6s both'
@@ -743,7 +740,7 @@ export default function ThankYouPage() {
               <div style={{
                 padding: '20px',
                 backgroundColor: 'var(--paper)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid var(--hairline)`
               }}>
                 <h3 style={{
@@ -777,7 +774,7 @@ export default function ThankYouPage() {
                     backgroundColor: 'var(--coral)',
                     color: 'white',
                     textDecoration: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     fontSize: '14px',
                     fontWeight: '600',
                     transition: 'all 0.2s ease'
@@ -798,7 +795,7 @@ export default function ThankYouPage() {
               <div style={{
                 padding: '20px',
                 backgroundColor: 'var(--paper)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid var(--hairline)`
               }}>
                 <h3 style={{
@@ -832,7 +829,7 @@ export default function ThankYouPage() {
                     backgroundColor: 'var(--coral)',
                     color: 'white',
                     textDecoration: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     fontSize: '14px',
                     fontWeight: '600',
                     transition: 'all 0.2s ease'
@@ -853,7 +850,7 @@ export default function ThankYouPage() {
               <div style={{
                 padding: '20px',
                 backgroundColor: 'var(--paper)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid var(--hairline)`
               }}>
                 <h3 style={{
@@ -914,7 +911,7 @@ export default function ThankYouPage() {
             <div style={{
               backgroundColor: 'var(--panel)',
               padding: '32px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               maxWidth: '400px',
               width: '90%'
@@ -951,7 +948,7 @@ export default function ThankYouPage() {
                     width: '100%',
                     padding: '12px',
                     border: `1px solid var(--hairline)`,
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     backgroundColor: 'var(--panel)',
                     color: 'var(--ink)',
                     fontSize: '14px'
@@ -965,7 +962,7 @@ export default function ThankYouPage() {
                   padding: '12px',
                   backgroundColor: 'var(--panel)',
                 border: '1px solid var(--alert)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 color: 'var(--alert)',
                   fontSize: '14px'
                 }}>
@@ -984,7 +981,7 @@ export default function ThankYouPage() {
                     color: 'var(--muted)',
                     border: `1px solid var(--hairline)`,
                     padding: '12px 24px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     cursor: 'pointer',
                     fontSize: '14px'
                   }}
@@ -999,7 +996,7 @@ export default function ThankYouPage() {
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     cursor: isEmailing ? 'not-allowed' : 'pointer',
                     fontSize: '14px',
                     opacity: isEmailing ? 0.7 : 1

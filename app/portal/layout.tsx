@@ -128,7 +128,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
       <header className="sticky top-0 z-10 border-b border-hairline bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-coral text-white font-bold">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-accent-on font-bold">
               PG
             </div>
             <div className="leading-tight">
@@ -144,7 +144,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
             {isLoggedIn && (
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-coral"></div>
+                  <div className="h-2 w-2 rounded-full bg-accent"></div>
                   <span className="text-muted">
                     Session Active
                   </span>
@@ -157,13 +157,13 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
               <nav className="flex items-center gap-4">
                 <Link
                   href="/portal/dashboard"
-                  className="text-sm font-medium text-ink hover:text-coral"
+                  className="text-sm font-medium text-ink hover:text-accent"
                 >
                   Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 focus:ring-offset-paper"
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-paper"
                 >
                   Logout
                 </button>
@@ -185,7 +185,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           <div className="flex items-center gap-4">
             <span className="text-xs">Secure • Encrypted</span>
             {!isLoggedIn && (
-              <Link href="/portal/login" className="text-xs font-medium text-coral underline-offset-2 hover:underline">
+              <Link href="/portal/login" className="text-xs font-medium text-accent underline-offset-2 hover:underline">
                 Login
               </Link>
             )}

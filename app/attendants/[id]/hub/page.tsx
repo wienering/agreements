@@ -433,7 +433,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               backgroundColor: 'var(--admin-surface)',
               borderBottom: '1px solid var(--admin-hairline)',
               padding: '32px 0',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
             }}
           >
             <div
@@ -457,7 +456,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       color: 'var(--accent-on)',
                       fontSize: '24px',
                       fontWeight: '600',
-                      boxShadow: 'none',
                     }}
                   >
                     <UIcon name="camera" style={{ fontSize: '24px', color: 'var(--accent-on)' }} />
@@ -512,7 +510,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   padding: '32px',
                   borderRadius: '2px',
                   border: '1px solid var(--admin-hairline)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -538,7 +535,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '24px',
-                      boxShadow: 'none',
                     }}
                   >
                     <UIcon name="clipboard" style={{ fontSize: '24px', color: 'var(--accent-on)' }} />
@@ -565,7 +561,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   padding: '32px',
                   borderRadius: '2px',
                   border: '1px solid var(--admin-hairline)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -591,7 +586,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '24px',
-                      boxShadow: 'none',
                     }}
                   >
                     <UIcon name="calendar" style={{ fontSize: '24px', color: 'var(--accent-on)' }} />
@@ -618,7 +612,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   padding: '32px',
                   borderRadius: '2px',
                   border: '1px solid var(--admin-hairline)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -644,7 +637,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '24px',
-                      boxShadow: 'none',
                     }}
                   >
                     <UIcon name="camera" style={{ fontSize: '24px', color: 'var(--accent-on)' }} />
@@ -723,7 +715,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                     borderRadius: '2px',
                     border: '1px solid var(--admin-hairline)',
                     overflow: 'hidden',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
                   }}
                 >
                   {/* Visual Header */}
@@ -845,7 +836,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   borderRadius: '2px',
                   border: '1px solid var(--admin-hairline)',
                   padding: '14px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <h3
@@ -1009,7 +999,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           borderRadius: '2px',
                           border: '1px solid var(--admin-hairline)',
                           overflow: 'hidden',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                           height: '100%',
                           display: 'flex',
                           flexDirection: 'column',

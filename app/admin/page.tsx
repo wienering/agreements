@@ -477,7 +477,6 @@ export default function AdminHome() {
                                 border: `1px solid ${borderColor}`,
                                 borderRadius: '2px',
                                 padding: '12px',
-                                boxShadow: 'none'
                               }}>
                                 <div style={{
                                   color: textColor,

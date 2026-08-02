@@ -540,11 +540,10 @@ export default function ClientAgreementPage() {
         <div style={{
           backgroundColor: 'var(--panel)',
           padding: '40px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: `1px solid var(--hairline)`,
           textAlign: 'center',
           maxWidth: '500px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{
             width: '64px',
@@ -564,7 +563,7 @@ export default function ClientAgreementPage() {
             fontSize: '24px',
             margin: '0 0 16px 0',
             fontWeight: '700',
-            fontFamily: 'var(--font-display), Georgia, serif',
+            fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif',
           }}>
             Agreement Not Found
           </h1>
@@ -579,7 +578,7 @@ export default function ClientAgreementPage() {
           <div style={{
             padding: '16px',
             backgroundColor: 'var(--paper)',
-            borderRadius: '8px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`
           }}>
             <p style={{
@@ -662,12 +661,11 @@ export default function ClientAgreementPage() {
           <div style={{
             backgroundColor: 'var(--panel)',
             padding: '40px',
-            borderRadius: '16px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`,
             textAlign: 'center',
             maxWidth: '400px',
             width: '90%',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             animation: 'slideIn 0.4s ease-out'
           }}>
             {/* Animated Checkmark */}
@@ -683,7 +681,6 @@ export default function ClientAgreementPage() {
               fontSize: '32px',
               color: 'white',
               animation: 'checkmarkPulse 0.6s ease-in-out',
-              boxShadow: '0 0 0 0 rgba(63, 111, 79, 0.7)',
               animationFillMode: 'forwards'
             }}>
               <UIcon name="check" style={{ fontSize: '32px', color: 'white' }} title="Success" />
@@ -694,7 +691,7 @@ export default function ClientAgreementPage() {
               fontSize: '24px',
               fontWeight: '700',
               color: 'var(--ink)',
-              fontFamily: 'var(--font-display), Georgia, serif'
+              fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif'
             }}>
               Success!
             </h2>
@@ -711,7 +708,7 @@ export default function ClientAgreementPage() {
             <div style={{
               padding: '16px',
               backgroundColor: 'var(--paper)',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               fontSize: '14px',
               color: 'var(--muted)'
@@ -741,11 +738,10 @@ export default function ClientAgreementPage() {
           <div style={{
             backgroundColor: 'var(--panel)',
             padding: '40px',
-            borderRadius: '12px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`,
             maxWidth: '500px',
             width: '90%',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
           }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -766,7 +762,7 @@ export default function ClientAgreementPage() {
                 fontSize: '24px', 
                 fontWeight: '700',
                 color: 'var(--ink)',
-                fontFamily: 'var(--font-display), Georgia, serif'
+                fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif'
               }}>
                 Email Verification Required
               </h2>
@@ -803,7 +799,7 @@ export default function ClientAgreementPage() {
                   width: '100%',
                   padding: '16px',
                   border: '2px solid var(--hairline)',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   backgroundColor: '#fff',
                   color: 'var(--ink)',
                   fontSize: '16px',
@@ -826,7 +822,7 @@ export default function ClientAgreementPage() {
                 padding: '12px',
                 backgroundColor: 'var(--panel)',
                 border: '1px solid var(--alert)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 color: 'var(--alert)',
                 fontSize: '14px'
               }}>
@@ -850,7 +846,7 @@ export default function ClientAgreementPage() {
                   color: 'var(--muted)',
                   border: `1px solid var(--hairline)`,
                   padding: '12px 24px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -866,7 +862,7 @@ export default function ClientAgreementPage() {
                   color: isVerifying || !verificationEmail.trim() ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '12px 24px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isVerifying || !verificationEmail.trim() ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
                   fontWeight: '600',
@@ -902,7 +898,7 @@ export default function ClientAgreementPage() {
                 width: '40px',
                 height: '40px',
                 backgroundColor: 'var(--coral)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -963,7 +959,7 @@ export default function ClientAgreementPage() {
               width: '40px',
               height: '40px',
               backgroundColor: 'var(--coral)',
-              borderRadius: '8px',
+              borderRadius: '2px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1000,7 +996,7 @@ export default function ClientAgreementPage() {
             <div style={{
               padding: '12px 16px',
               backgroundColor: 'var(--paper)',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               minWidth: '200px'
             }}>
@@ -1053,7 +1049,7 @@ export default function ClientAgreementPage() {
               <div style={{
                 padding: '12px 16px',
                 backgroundColor: 'var(--paper)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid var(--hairline)`,
                 minWidth: '200px'
               }}>
@@ -1146,7 +1142,7 @@ export default function ClientAgreementPage() {
               <div style={{
                 padding: '12px 16px',
                 backgroundColor: 'var(--paper)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid var(--hairline)`,
                 minWidth: '150px'
               }}>
@@ -1177,7 +1173,7 @@ export default function ClientAgreementPage() {
               <div style={{
                 padding: '8px 16px',
                 backgroundColor: 'var(--panel)',
-                borderRadius: '6px',
+                borderRadius: '2px',
                 border: '1px solid var(--hairline)',
                 display: 'flex',
                 alignItems: 'center',
@@ -1201,11 +1197,10 @@ export default function ClientAgreementPage() {
         <div style={{
           backgroundColor: 'var(--panel)',
           padding: '40px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: `1px solid var(--hairline)`,
           marginBottom: '32px',
           textAlign: 'center',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
         }}>
           <h1 style={{ 
             margin: '0', 
@@ -1213,11 +1208,11 @@ export default function ClientAgreementPage() {
             fontWeight: '800',
             color: 'var(--ink)',
             lineHeight: '1.2',
-            fontFamily: 'var(--font-display), Georgia, serif'
+            fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif'
           }}>
             {agreement.template.title}
           </h1>
-          <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px auto 16px' }} aria-hidden="true" />
+          <div style={{ height: '1px', width: '100%', backgroundColor: 'var(--rule-strong)', margin: '12px auto 16px' }} aria-hidden="true" />
           <p style={{ 
             margin: '0 0 24px 0', 
             color: 'var(--muted)', 
@@ -1232,7 +1227,7 @@ export default function ClientAgreementPage() {
               marginTop: '24px',
               padding: '20px',
               backgroundColor: 'var(--panel)',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: '1px solid var(--hairline)',
               display: 'inline-block'
             }}>
@@ -1271,7 +1266,7 @@ export default function ClientAgreementPage() {
                 marginTop: '24px',
                 padding: '20px',
                 backgroundColor: 'var(--panel)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: '1px solid var(--warn)',
                 display: 'inline-block',
                 textAlign: 'left',
@@ -1323,16 +1318,15 @@ export default function ClientAgreementPage() {
         <div style={{
           backgroundColor: 'var(--panel)',
           padding: '24px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: `1px solid var(--hairline)`,
           marginBottom: '32px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
         }}>
           <div 
             style={{
               backgroundColor: '#fff',
               padding: '32px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: '1px solid var(--hairline)',
               color: 'var(--ink)',
               lineHeight: '1.7',
@@ -1354,10 +1348,9 @@ export default function ClientAgreementPage() {
           <div style={{
             backgroundColor: 'var(--panel)',
             padding: '32px',
-            borderRadius: '12px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`,
             marginBottom: '32px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
           }}>
             <div style={{
               display: 'flex',
@@ -1418,7 +1411,7 @@ export default function ClientAgreementPage() {
                         padding: '16px',
                         borderLeft: '3px solid var(--success)',
                         backgroundColor: 'var(--paper)',
-                        borderRadius: '6px',
+                        borderRadius: '2px',
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                         gap: '12px',
@@ -1485,14 +1478,13 @@ export default function ClientAgreementPage() {
                   color: isDownloading ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '16px 32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isDownloading ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center'
@@ -1516,7 +1508,7 @@ export default function ClientAgreementPage() {
                   color: isEmailing ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '16px 32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isEmailing ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
@@ -1524,7 +1516,6 @@ export default function ClientAgreementPage() {
                   alignItems: 'center',
                   gap: '12px',
                   position: 'relative',
-                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center'
@@ -1547,11 +1538,10 @@ export default function ClientAgreementPage() {
                     backgroundColor: 'var(--coral)',
                     color: 'white',
                     padding: '6px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     fontSize: '12px',
                     fontWeight: '600',
                     animation: 'fadeInOut 3s ease-in-out',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                   }}>
                     Sent!
                   </span>
@@ -1565,14 +1555,13 @@ export default function ClientAgreementPage() {
                   color: 'white',
                   border: 'none',
                   padding: '16px 32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center',
@@ -1618,7 +1607,7 @@ export default function ClientAgreementPage() {
                   )) ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '20px 40px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isSigning ? 'not-allowed' : 'pointer',
                   fontSize: '18px',
                   fontWeight: '700',
@@ -1626,7 +1615,6 @@ export default function ClientAgreementPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '220px',
                   justifyContent: 'center'
@@ -1661,7 +1649,7 @@ export default function ClientAgreementPage() {
                   color: isDownloading ? 'var(--muted)' : 'var(--ink)',
                   border: '1px solid var(--hairline)',
                   padding: '16px 32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isDownloading ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
@@ -1711,7 +1699,7 @@ export default function ClientAgreementPage() {
             <div style={{
               backgroundColor: 'var(--panel)',
               padding: '32px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               maxWidth: '400px',
               width: '90%'
@@ -1720,7 +1708,7 @@ export default function ClientAgreementPage() {
                 margin: '0 0 24px 0', 
                 fontSize: '20px', 
                 color: 'var(--ink)',
-                fontFamily: 'var(--font-display), Georgia, serif'
+                fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif'
               }}>
                 Sign Agreement
               </h2>
@@ -1753,7 +1741,7 @@ export default function ClientAgreementPage() {
                     width: '100%',
                     padding: isMobile ? '16px' : '12px',
                     border: `1px solid var(--hairline)`,
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     backgroundColor: '#fff',
                     color: 'var(--ink)',
                     fontSize: isMobile ? '16px' : '14px',
@@ -1792,7 +1780,7 @@ export default function ClientAgreementPage() {
                     width: '100%',
                     padding: isMobile ? '16px' : '12px',
                     border: `1px solid var(--hairline)`,
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     backgroundColor: '#fff',
                     color: 'var(--ink)',
                     fontSize: isMobile ? '16px' : '14px',
@@ -1809,7 +1797,7 @@ export default function ClientAgreementPage() {
                   padding: '12px',
                   backgroundColor: 'var(--panel)',
                 border: '1px solid var(--alert)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 color: 'var(--alert)',
                   fontSize: '14px'
                 }}>
@@ -1872,7 +1860,7 @@ export default function ClientAgreementPage() {
                     color: 'var(--muted)',
                     border: `1px solid var(--hairline)`,
                     padding: isMobile ? '12px 20px' : '12px 24px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     cursor: 'pointer',
                     fontSize: '14px',
                     flex: isMobile ? '1 1 100%' : '0 0 auto'
@@ -1892,7 +1880,7 @@ export default function ClientAgreementPage() {
                       color: isSigning || !hasAgreedToTerms ? 'var(--muted)' : 'white',
                       border: 'none',
                       padding: '12px 24px',
-                      borderRadius: '6px',
+                      borderRadius: '2px',
                       cursor: isSigning || !hasAgreedToTerms ? 'not-allowed' : 'pointer',
                       fontSize: '14px',
                       opacity: isSigning ? 0.7 : 1,
@@ -1924,7 +1912,7 @@ export default function ClientAgreementPage() {
             <div style={{
               backgroundColor: 'var(--panel)',
               padding: isMobile ? '20px' : '32px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               maxWidth: '400px',
               width: '90%',
@@ -1935,7 +1923,7 @@ export default function ClientAgreementPage() {
                 margin: '0 0 24px 0', 
                 fontSize: isMobile ? '18px' : '20px', 
                 color: 'var(--ink)',
-                fontFamily: 'var(--font-display), Georgia, serif'
+                fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif'
               }}>
                 Email Agreement
               </h2>
@@ -1958,7 +1946,7 @@ export default function ClientAgreementPage() {
                     width: '100%',
                     padding: '12px',
                     border: `1px solid var(--hairline)`,
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     backgroundColor: 'var(--panel)',
                     color: 'var(--ink)',
                     fontSize: '14px'
@@ -1973,7 +1961,7 @@ export default function ClientAgreementPage() {
                   padding: '12px',
                   backgroundColor: 'var(--panel)',
                 border: '1px solid var(--alert)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 color: 'var(--alert)',
                   fontSize: '14px'
                 }}>
@@ -1998,7 +1986,7 @@ export default function ClientAgreementPage() {
                     color: 'var(--muted)',
                     border: `1px solid var(--hairline)`,
                     padding: isMobile ? '12px 20px' : '12px 24px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     cursor: 'pointer',
                     fontSize: '14px',
                     flex: isMobile ? '1 1 100%' : '0 0 auto'
@@ -2014,7 +2002,7 @@ export default function ClientAgreementPage() {
                     color: 'white',
                     border: 'none',
                     padding: '12px 24px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     cursor: isEmailing ? 'not-allowed' : 'pointer',
                     fontSize: '14px',
                     opacity: isEmailing ? 0.7 : 1
@@ -2052,7 +2040,7 @@ export default function ClientAgreementPage() {
                 width: '32px',
                 height: '32px',
                 backgroundColor: 'var(--coral)',
-                borderRadius: '6px',
+                borderRadius: '2px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -2104,7 +2092,7 @@ export default function ClientAgreementPage() {
               marginTop: '16px',
               padding: '12px',
               backgroundColor: 'var(--paper)',
-              borderRadius: '6px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               fontSize: '12px',
               color: 'var(--muted)'

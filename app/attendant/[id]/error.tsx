@@ -29,7 +29,6 @@ export default function Error({
           border: '1px solid var(--admin-hairline)',
           textAlign: 'center',
           maxWidth: '600px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         }}
       >
         <div

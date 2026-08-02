@@ -198,7 +198,7 @@ export default function PortalDashboard() {
     return (
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto mb-4"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent mx-auto mb-4"></div>
           <p className="text-muted">Loading dashboard...</p>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function PortalDashboard() {
               className="w-full flex items-center justify-between p-6 text-left hover:bg-paper transition-colors"
             >
               <div className="flex items-center gap-3">
-                <UIcon name="user" className="text-2xl text-coral" />
+                <UIcon name="user" className="text-2xl text-accent" />
                 <div>
                   <h2 className="text-xl font-semibold text-ink">
                     Your Event Overview
@@ -299,7 +299,7 @@ export default function PortalDashboard() {
                           href={relevantAgreement.stripePaymentLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 block text-sm font-semibold text-ink underline underline-offset-2 hover:text-coral"
+                          className="mt-2 block text-sm font-semibold text-ink underline underline-offset-2 hover:text-accent"
                         >
                           Make Payment →
                         </a>
@@ -365,7 +365,7 @@ export default function PortalDashboard() {
                 onClick={() => setStatusFilter('all')}
                 className={`rounded-md px-4 py-2 text-sm font-medium ${
                   statusFilter === 'all'
-                    ? 'bg-coral text-white'
+                    ? 'bg-accent text-accent-on'
                     : 'border border-hairline bg-panel text-ink hover:bg-paper'
                 }`}
               >
@@ -377,7 +377,7 @@ export default function PortalDashboard() {
                   onClick={() => setStatusFilter(status)}
                   className={`rounded-md px-4 py-2 text-sm font-medium ${
                     statusFilter === status
-                      ? 'bg-coral text-white'
+                      ? 'bg-accent text-accent-on'
                       : 'border border-hairline bg-panel text-ink hover:bg-paper'
                   }`}
                 >
@@ -394,11 +394,11 @@ export default function PortalDashboard() {
                 placeholder="Search agreements..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-md border border-hairline bg-panel px-3 py-2 text-sm placeholder:text-muted focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="rounded-md border border-hairline bg-panel px-3 py-2 text-sm placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
               <button
                 type="submit"
-                className="rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:opacity-90"
               >
                 Search
               </button>
@@ -450,7 +450,7 @@ export default function PortalDashboard() {
                           {/* Event Date - Prominently displayed right below title */}
                           {(agreement.event?.eventDate || data.client.eventDate) && (
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-2 text-base font-semibold text-coral">
+                              <span className="inline-flex items-center gap-2 text-base font-semibold text-accent">
                                 <UIcon name="calendar" className="text-base" />
                                 {formatEventDateToronto(agreement.event?.eventDate || data.client.eventDate!)}
                               </span>
@@ -548,7 +548,7 @@ export default function PortalDashboard() {
                     <div className="flex flex-wrap gap-2">
                       <Link
                         href={`/portal/agreement/${agreement.id}`}
-                        className="inline-flex items-center gap-1 rounded-md bg-coral px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+                        className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-on hover:opacity-90"
                       >
                         <UIcon name="file" className="text-xs" />
                         View Details
@@ -571,7 +571,7 @@ export default function PortalDashboard() {
                           href={agreement.stripePaymentLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md border border-hairline bg-panel px-3 py-1.5 text-xs font-medium text-coral hover:bg-paper"
+                          className="inline-flex items-center gap-1 rounded-md border border-hairline bg-panel px-3 py-1.5 text-xs font-medium text-accent hover:bg-paper"
                         >
                           <UIcon name="credit-card" className="text-xs" />
                           Make Payment

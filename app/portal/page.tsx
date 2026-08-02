@@ -40,7 +40,7 @@ export default function PortalLandingPage() {
       <header className="sticky top-0 z-10 border-b border-hairline/70 bg-paper/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-coral text-white font-bold text-lg">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-accent-on font-bold text-lg">
               PG
             </div>
             <div className="leading-tight">
@@ -71,8 +71,8 @@ export default function PortalLandingPage() {
 
         {/* Features Grid */}
         <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="bg-panel rounded-lg p-8 shadow-lg border border-hairline hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-coral text-white mb-4">
+          <div className="bg-panel rounded-lg p-8 border border-hairline transition-shadow">
+            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-accent text-accent-on mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -85,8 +85,8 @@ export default function PortalLandingPage() {
             </p>
           </div>
 
-          <div className="bg-panel rounded-lg p-8 shadow-lg border border-hairline hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-coral text-white mb-4">
+          <div className="bg-panel rounded-lg p-8 border border-hairline transition-shadow">
+            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-accent text-accent-on mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -99,8 +99,8 @@ export default function PortalLandingPage() {
             </p>
           </div>
 
-          <div className="bg-panel rounded-lg p-8 shadow-lg border border-hairline hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-coral text-white mb-4">
+          <div className="bg-panel rounded-lg p-8 border border-hairline transition-shadow">
+            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-accent text-accent-on mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -113,8 +113,8 @@ export default function PortalLandingPage() {
             </p>
           </div>
 
-          <div className="bg-panel rounded-lg p-8 shadow-lg border border-hairline hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-coral text-white mb-4">
+          <div className="bg-panel rounded-lg p-8 border border-hairline transition-shadow">
+            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-accent text-accent-on mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
@@ -127,8 +127,8 @@ export default function PortalLandingPage() {
             </p>
           </div>
 
-          <div className="bg-panel rounded-lg p-8 shadow-lg border border-hairline hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-coral text-white mb-4">
+          <div className="bg-panel rounded-lg p-8 border border-hairline transition-shadow">
+            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-accent text-accent-on mb-4">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
@@ -141,8 +141,8 @@ export default function PortalLandingPage() {
             </p>
           </div>
 
-          <div className="bg-panel rounded-lg p-8 shadow-lg border border-hairline hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-coral text-white mb-4">
+          <div className="bg-panel rounded-lg p-8 border border-hairline transition-shadow">
+            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-accent text-accent-on mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
               </svg>
@@ -167,7 +167,7 @@ export default function PortalLandingPage() {
             </p>
             <Link
               href="/portal/login"
-              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-coral rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral focus:ring-offset-paper"
+              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold text-accent-on bg-accent rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:ring-offset-paper"
             >
               Access Portal
               <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -197,7 +197,7 @@ export default function PortalLandingPage() {
             </p>
             <a
               href="mailto:info@photoboothguys.ca"
-              className="font-semibold text-ink underline underline-offset-2 hover:text-coral"
+              className="font-semibold text-ink underline underline-offset-2 hover:text-accent"
             >
               Contact Support →
             </a>
@@ -212,7 +212,7 @@ export default function PortalLandingPage() {
             <span>© {new Date().getFullYear()} Photobooth Guys • Client Portal</span>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
               <span>Secure • Encrypted</span>
-              <Link href="/portal/login" className="font-medium text-ink hover:text-coral hover:underline underline-offset-2">
+              <Link href="/portal/login" className="font-medium text-ink hover:text-accent hover:underline underline-offset-2">
                 Login
               </Link>
             </div>

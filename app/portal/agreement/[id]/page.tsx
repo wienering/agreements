@@ -356,7 +356,7 @@ function AgreementDetailContent() {
     return (
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto mb-4"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent mx-auto mb-4"></div>
           <p className="text-muted">Loading agreement...</p>
         </div>
       </div>
@@ -460,7 +460,7 @@ function AgreementDetailContent() {
           <a
             href={`/api/agreements/portal/pdf/${agreement.id}`}
             download
-            className="inline-flex items-center gap-2 rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:opacity-90"
           >
             <UIcon name="file-download" className="text-base" />
             Download PDF
@@ -483,7 +483,7 @@ function AgreementDetailContent() {
               href={agreement.stripePaymentLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral"
+              className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:bg-accent"
             >
               <UIcon name="credit-card" className="text-base" />
               Make Payment
@@ -530,7 +530,7 @@ function AgreementDetailContent() {
       {((agreement.galleryLinks && agreement.galleryLinks.length > 0) || agreement.galleryLink) && (
         <div className="mb-8 rounded-lg border-2 border-hairline bg-panel p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="text-3xl text-coral">
+            <div className="text-3xl text-accent">
               <UIcon name="camera" className="text-3xl" />
             </div>
             <div>
@@ -552,7 +552,7 @@ function AgreementDetailContent() {
                 href={g.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md bg-coral px-6 py-3 text-base font-semibold text-white hover:opacity-90"
+                className="inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 text-base font-semibold text-accent-on hover:opacity-90"
               >
                 View {g.title || 'Gallery'} →
               </a>
@@ -566,7 +566,7 @@ function AgreementDetailContent() {
         <h2 className="text-xl font-semibold text-ink mb-6">Activity Timeline</h2>
         <div className="space-y-4">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-coral">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-accent">
               <UIcon name="paper-plane" className="text-lg" />
             </div>
             <div className="flex-1">
@@ -577,7 +577,7 @@ function AgreementDetailContent() {
 
           {agreement.firstViewedAt && (
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-coral">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-accent">
               <UIcon name="eye" className="text-lg" />
               </div>
               <div className="flex-1">
@@ -605,7 +605,7 @@ function AgreementDetailContent() {
           {/* Payment Status / Balance Due */}
           {agreement.paymentStatus && (
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-coral">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-panel flex items-center justify-center text-accent">
               <UIcon name="credit-card" className="text-lg" />
               </div>
               <div className="flex-1">
@@ -714,7 +714,7 @@ function AgreementDetailContent() {
             <div className="space-y-2">
               <button
                 onClick={() => handleExport('pdf')}
-                className="w-full rounded-md bg-coral px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
+                className="w-full rounded-md bg-accent px-3 py-2 text-sm font-semibold text-accent-on hover:opacity-90"
               >
                 Export as PDF
               </button>
@@ -788,7 +788,7 @@ function AgreementDetailContent() {
             href="https://www.photoboothguys.ca/photo-booth-templates-chooser/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-coral hover:bg-panel transition"
+            className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-accent hover:bg-panel transition"
           >
             <div className="text-2xl text-muted">
               <UIcon name="palette" className="text-2xl" />
@@ -800,8 +800,8 @@ function AgreementDetailContent() {
           </a>
 
           {agreement.selectedBackdropName ? (
-            <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-coral bg-panel">
-              <div className="text-2xl text-coral">
+            <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-accent bg-panel">
+              <div className="text-2xl text-accent">
                 <UIcon name="check" className="text-2xl" />
               </div>
               <div>
@@ -815,7 +815,7 @@ function AgreementDetailContent() {
               href={`${agreement.backdropLink.url}${agreement.backdropLink.url.includes('?') ? '&' : '?'}agreementId=${agreement.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-coral hover:bg-panel transition"
+              className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-accent hover:bg-panel transition"
             >
               <div className="text-2xl text-muted">
                 <UIcon name="camera" className="text-2xl" />
@@ -841,7 +841,7 @@ function AgreementDetailContent() {
             href="https://www.photoboothguys.ca/photobooth-questions/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-coral hover:bg-panel transition"
+            className="flex items-start gap-3 p-4 rounded-lg border border-hairline hover:border-accent hover:bg-panel transition"
           >
             <div className="text-2xl text-muted">
               <UIcon name="question" className="text-2xl" />
@@ -891,13 +891,13 @@ function AgreementDetailContent() {
                 onChange={(e) => setNewNote(e.target.value)}
                 placeholder="Add your note here..."
                 rows={3}
-                className="w-full rounded-md border border-hairline bg-panel px-3 py-2 text-sm placeholder:text-muted focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-md border border-hairline bg-panel px-3 py-2 text-sm placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
             <button
               type="submit"
               disabled={addingNote || !newNote.trim()}
-              className="rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {addingNote ? 'Adding Note...' : 'Add Note'}
             </button>
@@ -936,7 +936,7 @@ export default function AgreementDetail() {
     <Suspense fallback={
       <div className="flex min-h-[calc(100vh-160px)] items-center justify-center">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-coral border-t-transparent mx-auto mb-4"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent mx-auto mb-4"></div>
           <p className="text-muted">Loading...</p>
         </div>
       </div>

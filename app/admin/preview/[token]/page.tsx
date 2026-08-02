@@ -274,11 +274,10 @@ export default function AdminPreviewPage() {
         <div style={{
           backgroundColor: 'var(--panel)',
           padding: '40px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: `1px solid var(--hairline)`,
           textAlign: 'center',
           maxWidth: '500px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{
             width: '64px',
@@ -312,7 +311,7 @@ export default function AdminPreviewPage() {
           <div style={{
             padding: '16px',
             backgroundColor: 'var(--paper)',
-            borderRadius: '8px',
+            borderRadius: '2px',
             border: `1px solid var(--hairline)`
           }}>
             <p style={{
@@ -412,7 +411,7 @@ export default function AdminPreviewPage() {
                     width: '40px',
                     height: '40px',
                     backgroundColor: 'var(--coral)',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -449,7 +448,7 @@ export default function AdminPreviewPage() {
                   <div style={{
                     padding: '12px 16px',
                     backgroundColor: 'var(--paper)',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     border: `1px solid var(--hairline)`,
                     minWidth: '200px'
                   }}>
@@ -502,7 +501,7 @@ export default function AdminPreviewPage() {
                     <div style={{
                       padding: '12px 16px',
                       backgroundColor: 'var(--paper)',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid var(--hairline)`,
                       minWidth: '200px'
                     }}>
@@ -595,7 +594,7 @@ export default function AdminPreviewPage() {
                     <div style={{
                       padding: '12px 16px',
                       backgroundColor: 'var(--paper)',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid var(--hairline)`,
                       minWidth: '150px'
                     }}>
@@ -626,7 +625,7 @@ export default function AdminPreviewPage() {
                     <div style={{
                       padding: '8px 16px',
                       backgroundColor: 'var(--panel)',
-                      borderRadius: '6px',
+                      borderRadius: '2px',
                       border: '1px solid var(--hairline)',
                       display: 'flex',
                       alignItems: 'center',
@@ -650,11 +649,10 @@ export default function AdminPreviewPage() {
             <div style={{
               backgroundColor: 'var(--panel)',
               padding: '40px',
-              borderRadius: '12px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               marginBottom: '32px',
               textAlign: 'center',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
             }}>
               <h1 style={{ 
                 margin: '0', 
@@ -662,11 +660,11 @@ export default function AdminPreviewPage() {
                 fontWeight: '800',
                 color: 'var(--ink)',
                 lineHeight: '1.2',
-                fontFamily: 'var(--font-display), Georgia, serif'
+                fontFamily: 'var(--font-display), Helvetica, Arial, sans-serif'
               }}>
                 {agreement.template.title}
               </h1>
-              <div style={{ height: '2px', width: '4rem', backgroundColor: 'var(--coral)', margin: '12px auto 16px' }} aria-hidden="true" />
+              <div style={{ height: '1px', width: '100%', backgroundColor: 'var(--rule-strong)', margin: '12px auto 16px' }} aria-hidden="true" />
               <p style={{ 
                 margin: '0 0 24px 0', 
                 color: 'var(--muted)', 
@@ -681,7 +679,7 @@ export default function AdminPreviewPage() {
                   marginTop: '24px',
                   padding: '20px',
                   backgroundColor: 'var(--panel)',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: '1px solid var(--hairline)',
                   display: 'inline-block'
                 }}>
@@ -716,16 +714,15 @@ export default function AdminPreviewPage() {
             <div style={{
               backgroundColor: 'var(--panel)',
               padding: '24px',
-              borderRadius: '12px',
+              borderRadius: '2px',
               border: `1px solid var(--hairline)`,
               marginBottom: '32px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
             }}>
               <div 
                 style={{
                   backgroundColor: '#fff',
                   padding: '32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: '1px solid var(--hairline)',
                   color: 'var(--ink)',
                   lineHeight: '1.7',
@@ -743,10 +740,9 @@ export default function AdminPreviewPage() {
               <div style={{
                 backgroundColor: 'var(--panel)',
                 padding: '32px',
-                borderRadius: '12px',
+                borderRadius: '2px',
                 border: `1px solid var(--hairline)`,
                 marginBottom: '32px',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
               }}>
                 <div style={{
                   display: 'flex',
@@ -868,14 +864,13 @@ export default function AdminPreviewPage() {
                   color: isDownloading ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '16px 32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isDownloading ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center'
@@ -899,7 +894,7 @@ export default function AdminPreviewPage() {
                   color: isEmailing ? 'var(--muted)' : 'white',
                   border: 'none',
                   padding: '16px 32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   cursor: isEmailing ? 'not-allowed' : 'pointer',
                   fontSize: '16px',
                   fontWeight: '600',
@@ -907,7 +902,6 @@ export default function AdminPreviewPage() {
                   alignItems: 'center',
                   gap: '12px',
                   position: 'relative',
-                  boxShadow: 'none',
                   transition: 'all 0.2s ease',
                   minWidth: '180px',
                   justifyContent: 'center'
@@ -930,11 +924,10 @@ export default function AdminPreviewPage() {
                     backgroundColor: 'var(--coral)',
                     color: 'white',
                     padding: '6px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     fontSize: '12px',
                     fontWeight: '600',
                     animation: 'fadeInOut 3s ease-in-out',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                   }}>
                     Sent!
                   </span>
@@ -959,7 +952,7 @@ export default function AdminPreviewPage() {
                 <div style={{
                   backgroundColor: 'var(--panel)',
                   padding: '32px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: `1px solid var(--hairline)`,
                   maxWidth: '400px',
                   width: '90%'
@@ -990,7 +983,7 @@ export default function AdminPreviewPage() {
                         width: '100%',
                         padding: '12px',
                         border: `1px solid var(--hairline)`,
-                        borderRadius: '6px',
+                        borderRadius: '2px',
                         backgroundColor: 'var(--panel)',
                         color: 'var(--ink)',
                         fontSize: '14px'
@@ -1005,7 +998,7 @@ export default function AdminPreviewPage() {
                       padding: '12px',
                       backgroundColor: 'var(--panel)',
                 border: '1px solid var(--alert)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 color: 'var(--alert)',
                       fontSize: '14px'
                     }}>
@@ -1029,7 +1022,7 @@ export default function AdminPreviewPage() {
                         color: 'var(--muted)',
                         border: `1px solid var(--hairline)`,
                         padding: '12px 24px',
-                        borderRadius: '6px',
+                        borderRadius: '2px',
                         cursor: 'pointer',
                         fontSize: '14px'
                       }}
@@ -1044,7 +1037,7 @@ export default function AdminPreviewPage() {
                         color: 'white',
                         border: 'none',
                         padding: '12px 24px',
-                        borderRadius: '6px',
+                        borderRadius: '2px',
                         cursor: isEmailing ? 'not-allowed' : 'pointer',
                         fontSize: '14px',
                         opacity: isEmailing ? 0.7 : 1
@@ -1081,7 +1074,7 @@ export default function AdminPreviewPage() {
                     width: '32px',
                     height: '32px',
                     backgroundColor: 'var(--coral)',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1133,7 +1126,7 @@ export default function AdminPreviewPage() {
                   marginTop: '16px',
                   padding: '12px',
                   backgroundColor: 'var(--paper)',
-                  borderRadius: '6px',
+                  borderRadius: '2px',
                   border: `1px solid var(--hairline)`,
                   fontSize: '12px',
                   color: 'var(--muted)'
