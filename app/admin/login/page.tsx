@@ -185,7 +185,7 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-md bg-accent px-4 py-3 text-sm font-semibold text-accent-on hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-md bg-accent px-4 py-3 text-sm font-semibold text-accent-on hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-surface disabled:bg-panel disabled:text-muted disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -210,7 +210,7 @@ export default function AdminLogin() {
                   type="button"
                   onClick={handleResend}
                   disabled={isLoading}
-                  className="w-full rounded-md border border-admin-border bg-transparent px-4 py-2 text-sm font-medium text-admin-text hover:bg-admin-surface-raised focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-md border border-admin-border bg-transparent px-4 py-2 text-sm font-medium text-admin-text hover:bg-admin-surface-raised focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-surface disabled:text-admin-muted disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">

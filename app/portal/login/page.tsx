@@ -231,7 +231,7 @@ function PortalLoginContent() {
                 <button
                   type="submit"
                   disabled={loading || !email.trim()}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-accent-on bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-accent-on bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:bg-panel disabled:text-muted disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Verification Code'}
                 </button>
@@ -283,7 +283,7 @@ function PortalLoginContent() {
                 <button
                   type="submit"
                   disabled={loading || !verificationCode.trim()}
-                  className="flex-1 py-2 px-4 border border-transparent rounded-md text-sm font-medium text-accent-on bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 px-4 border border-transparent rounded-md text-sm font-medium text-accent-on bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:bg-panel disabled:text-muted disabled:cursor-not-allowed"
                 >
                   {loading ? 'Verifying...' : 'Verify Code'}
                 </button>

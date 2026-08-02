@@ -611,7 +611,7 @@ export default function PortalDashboard() {
             <div className="mt-8 flex items-center justify-center gap-2">
               <button
                 disabled={!data.pagination.hasPrev}
-                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:text-muted disabled:cursor-not-allowed"
               >
                 Previous
               </button>
@@ -620,7 +620,7 @@ export default function PortalDashboard() {
               </span>
               <button
                 disabled={!data.pagination.hasNext}
-                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:text-muted disabled:cursor-not-allowed"
               >
                 Next
               </button>

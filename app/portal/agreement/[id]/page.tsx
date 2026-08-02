@@ -897,7 +897,7 @@ function AgreementDetailContent() {
             <button
               type="submit"
               disabled={addingNote || !newNote.trim()}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:bg-accent-hover disabled:bg-panel disabled:text-muted disabled:cursor-not-allowed"
             >
               {addingNote ? 'Adding Note...' : 'Add Note'}
             </button>
