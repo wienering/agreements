@@ -128,24 +128,21 @@ export function SortableTemplateItem({
       ref={setNodeRef}
       style={{
         ...style,
-        backgroundColor: cardBg,
-        border: `1px solid ${borderColor}`,
+        backgroundColor: isDragging ? 'var(--accent-wash)' : cardBg,
+        border: `1px solid ${isDragging ? 'var(--accent)' : borderColor}`,
         borderRadius: '2px',
         padding: '20px',
         cursor: isDragging ? 'grabbing' : 'grab',
         position: 'relative',
         transition: 'all 0.2s ease',
-        boxShadow: isDragging ? '0 8px 25px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
       }}
       onMouseEnter={(e) => {
         if (!isDragging) {
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-          e.currentTarget.style.borderColor = 'var(--admin-hairline)';
+          e.currentTarget.style.borderColor = 'var(--accent)';
         }
       }}
       onMouseLeave={(e) => {
         if (!isDragging) {
-          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
           e.currentTarget.style.borderColor = borderColor;
         }
       }}

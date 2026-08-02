@@ -1554,9 +1554,8 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                             marginBottom: '12px',
                             padding: '12px',
                             backgroundColor: 'var(--admin-surface)',
-                            border: noAgreements ? '2px solid var(--warn)' : `1px solid ${borderColor}`,
-                            borderRadius: '2px',
-                            boxShadow: noAgreements ? '0 0 8px rgba(247, 127, 0, 0.5), 0 0 16px rgba(247, 127, 0, 0.3)' : 'none'
+                            border: `1px solid ${noAgreements ? 'var(--status-action)' : borderColor}`,
+                            borderRadius: '2px'
                           }}>
                             {event.eventName && (
                               <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '15px', fontWeight: '600' }}>

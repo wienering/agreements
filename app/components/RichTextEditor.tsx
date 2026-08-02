@@ -226,7 +226,7 @@ export function RichTextPreview({
         border: '1px solid #d1d5db',
         borderRadius: '2px',
         backgroundColor: 'var(--admin-surface)',
-        fontFamily: 'Georgia, serif',
+        fontFamily: 'var(--font-ui), Helvetica, Arial, sans-serif',
         lineHeight: '1.6',
         fontSize: '16px',
         color: 'var(--admin-text)',

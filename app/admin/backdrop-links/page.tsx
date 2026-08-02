@@ -555,7 +555,7 @@ export default function BackdropLinksPage() {
               padding: '32px',
               width: '90%',
               maxWidth: '500px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+              boxShadow: 'none'
             }}>
               <h2 style={{
                 margin: '0 0 24px 0',

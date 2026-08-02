@@ -1461,7 +1461,7 @@ export default function QuotesPage() {
             borderRadius: '2px',
             padding: '32px',
             border: `1px solid ${borderColor}`,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            boxShadow: 'none'
           }}>
             <h2 style={{ margin: '0 0 16px 0', fontSize: '24px', color: textColor }}>
               Contact Information
@@ -1639,7 +1639,7 @@ export default function QuotesPage() {
             borderRadius: '2px',
             padding: '24px 16px',
             border: `1px solid ${borderColor}`,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            boxShadow: 'none',
             width: '100%',
             minWidth: 0,
             boxSizing: 'border-box',
@@ -1731,7 +1731,7 @@ export default function QuotesPage() {
             borderRadius: '2px',
             padding: '24px 16px',
             border: `1px solid ${borderColor}`,
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            boxShadow: 'none',
             width: '100%',
             minWidth: 0,
             boxSizing: 'border-box',

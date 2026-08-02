@@ -22,99 +22,88 @@ function backdropMatchPageShell(title: string, body: string): string {
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: #1e1b18;
-      color: #ede7dc;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f4f2;
+      color: #1a1a18;
+      font-family: 'Libre Franklin', Helvetica, Arial, sans-serif;
+      font-variant-numeric: tabular-nums;
     }
     .card {
       width: 100%;
       max-width: 420px;
-      background: #1A1A18;
-      border: 1px solid #3d372f;
-      border-radius: 12px;
-      padding: 28px 24px;
-      text-align: center;
+      background: #ffffff;
+      border: 1px solid #e3e3de;
+      border-radius: 2px;
+      padding: 32px 24px;
+      text-align: left;
     }
     .mark {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 16px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 700;
-    }
-    .mark-success {
-      background: color-mix(in srgb, #3f6f4f 24%, #1A1A18);
-      color: #3f6f4f;
-      border: 1px solid color-mix(in srgb, #3f6f4f 40%, #3d372f);
-    }
-    .mark-error {
-      background: color-mix(in srgb, #9E2B2B 20%, #1A1A18);
-      color: #9E2B2B;
-      border: 1px solid color-mix(in srgb, #9E2B2B 35%, #3d372f);
-    }
-    h1 {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
       margin: 0 0 8px;
-      font-size: 20px;
-      line-height: 1.3;
-      color: #c6a04d;
+    }
+    .mark-success { color: #2f6a4c; }
+    .mark-error { color: #9e2b2b; }
+    h1 {
+      margin: 0 0 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1a1a18;
+      font-size: 21px;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      color: #1a1a18;
       font-weight: 600;
     }
     p {
       margin: 0;
-      color: #9a9087;
+      color: #5e5e58;
       font-size: 15px;
       line-height: 1.5;
     }
     .details {
-      margin: 20px 0 24px;
+      margin: 24px 0;
       text-align: left;
-      border: 1px solid #3d372f;
-      border-radius: 8px;
-      overflow: hidden;
+      border-top: 1px solid #e3e3de;
     }
     .detail-row {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 12px 14px;
-      border-bottom: 1px solid #3d372f;
-    }
-    .detail-row:last-child {
-      border-bottom: none;
+      gap: 2px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e3e3de;
     }
     .detail-label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #9a9087;
+      color: #5e5e58;
     }
     .detail-value {
       font-size: 15px;
       line-height: 1.4;
-      color: #ede7dc;
+      color: #1a1a18;
     }
     .confirm-form {
       margin: 0;
     }
     .confirm-button {
       width: 100%;
-      border: 1px solid #c6a04d;
-      border-radius: 8px;
-      background: #c6a04d;
-      color: #1A1A18;
+      border: 1px solid #1e3b31;
+      border-radius: 2px;
+      background: #1e3b31;
+      color: #fbfbf9;
       cursor: pointer;
+      font-family: inherit;
       font-size: 15px;
       font-weight: 600;
       line-height: 1.2;
       padding: 14px 16px;
     }
-    .confirm-button:active {
-      filter: brightness(0.95);
+    .confirm-button:hover {
+      background: #162d25;
+      border-color: #162d25;
     }
   </style>
 </head>
@@ -163,7 +152,7 @@ export function renderBackdropMatchConfirmPage(params: {
 export function renderBackdropMatchSuccessPage(clientName: string): string {
   return backdropMatchPageShell(
     'Backdrop confirmed',
-    `<div class="mark mark-success">✓</div>
+    `<div class="mark mark-success">Confirmed</div>
      <h1>Backdrop attached</h1>
      <p>Backdrop attached to ${escapeHtml(clientName)}&rsquo;s agreement.</p>`,
   );
@@ -172,7 +161,7 @@ export function renderBackdropMatchSuccessPage(clientName: string): string {
 export function renderBackdropMatchErrorPage(): string {
   return backdropMatchPageShell(
     'Link unavailable',
-    `<div class="mark mark-error">!</div>
+    `<div class="mark mark-error">Action needed</div>
      <h1>Link unavailable</h1>
      <p>This link is invalid or has expired.</p>`,
   );

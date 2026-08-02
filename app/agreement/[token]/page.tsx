@@ -1331,7 +1331,7 @@ export default function ClientAgreementPage() {
               color: 'var(--ink)',
               lineHeight: '1.7',
               fontSize: '16px',
-              fontFamily: 'Georgia, serif'
+              fontFamily: 'var(--font-ui), Helvetica, Arial, sans-serif'
             }}
             dangerouslySetInnerHTML={{ 
               __html: sanitizeAgreementHtml(

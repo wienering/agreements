@@ -5137,7 +5137,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               maxHeight: '90vh',
               overflowY: 'auto',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              boxShadow: 'none'
             }}>
               <div style={{
                 display: 'flex',
@@ -5246,7 +5246,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       borderRadius: '50%',
                       backgroundColor: 'white',
                       transition: 'left 0.2s',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      boxShadow: 'none'
                     }} />
                   </button>
                 </div>
@@ -5296,7 +5296,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               maxHeight: '90vh',
               overflow: 'auto',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              boxShadow: 'none'
             }}>
               <div style={{
                 display: 'flex',
@@ -5852,7 +5852,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               maxHeight: '90vh',
               overflow: 'auto',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              boxShadow: 'none'
             }}>
               <div style={{
                 display: 'flex',
@@ -6121,7 +6121,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               maxHeight: '90vh',
               overflow: 'auto',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              boxShadow: 'none',
             }}>
               <div style={{
                 display: 'flex',
@@ -6245,7 +6245,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               width: '100%',
               maxWidth: '400px',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              boxShadow: 'none'
             }}
             onClick={(e) => e.stopPropagation()}
             >
@@ -6359,7 +6359,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       borderRadius: '50%',
                       backgroundColor: 'white',
                       transition: 'left 0.2s',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      boxShadow: 'none'
                     }} />
                   </button>
                 </div>
@@ -6465,7 +6465,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       borderRadius: '50%',
                       backgroundColor: 'white',
                       transition: 'left 0.2s',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      boxShadow: 'none'
                     }} />
                   </button>
                 </div>
@@ -6587,7 +6587,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               width: '100%',
               maxWidth: '400px',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              boxShadow: 'none'
             }}
             onClick={(e) => e.stopPropagation()}
             >

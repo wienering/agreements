@@ -115,7 +115,7 @@ export default function SearchableSelect({
           backgroundColor: style?.backgroundColor || ADMIN_BG,
           border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
           borderRadius: '2px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.35)',
+          boxShadow: 'none',
           zIndex: 1000,
           maxHeight: '200px',
           overflow: 'hidden'

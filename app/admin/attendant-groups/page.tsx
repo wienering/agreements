@@ -448,7 +448,7 @@ export default function AttendantGroupsPage() {
               maxWidth: '500px',
               width: '100%',
               border: `1px solid ${borderColor}`,
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+              boxShadow: 'none'
             }}
             onClick={(e) => e.stopPropagation()}
             >

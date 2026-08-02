@@ -103,7 +103,7 @@ export function LeadOverflowMenu({
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
             borderRadius: '2px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
+            boxShadow: 'none',
             zIndex: 20,
             display: 'grid',
             gap: '4px',

@@ -162,12 +162,11 @@ function PortalLoginContent() {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 text-center">
-          <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-on text-2xl font-bold animate-pulse">
-              PG
-            </div>
+          <div>
+            <p className="text-base font-semibold text-ink">Photobooth Guys</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Client Portal</p>
           </div>
-          <h2 className="mt-6 text-2xl font-bold text-ink">
+          <h2 className="mt-6 text-2xl font-semibold text-ink">
             Logging you in...
           </h2>
           <p className="text-muted">
@@ -185,12 +184,7 @@ function PortalLoginContent() {
     <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-on text-2xl font-bold">
-              PG
-            </div>
-          </div>
-          <h2 className="client-page-title mt-6 text-3xl font-bold text-ink">
+          <h2 className="client-page-title text-3xl text-ink">
             Client Portal Access
           </h2>
           <div className="client-title-rule mx-auto" aria-hidden="true" />
@@ -237,7 +231,7 @@ function PortalLoginContent() {
                 <button
                   type="submit"
                   disabled={loading || !email.trim()}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-accent-on bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-accent-on bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Verification Code'}
                 </button>
@@ -313,10 +307,9 @@ function MagicLinkLoading() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 text-center">
-        <div className="flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-on text-2xl font-bold animate-pulse">
-            PG
-          </div>
+        <div>
+          <p className="text-base font-semibold text-ink">Photobooth Guys</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Client Portal</p>
         </div>
         <h2 className="mt-6 text-2xl font-bold text-ink">
           Logging you in...

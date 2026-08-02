@@ -128,11 +128,8 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
       <header className="sticky top-0 z-10 border-b border-hairline bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-accent-on font-bold">
-              PG
-            </div>
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-wide text-muted uppercase">Photobooth Guys</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Photobooth Guys</p>
               <p className="text-base font-semibold text-ink">
                 Client Portal{clientFirstName ? ` — ${clientFirstName}` : ''}
               </p>

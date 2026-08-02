@@ -32,7 +32,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
       borderRadius: '2px',
       fontSize: '14px',
       fontWeight: '500',
-      boxShadow: '0 2px 10px rgba(26, 26, 24, 0.12)',
+      boxShadow: 'none',
       transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
       transition: 'transform 0.3s ease-in-out',
       maxWidth: '300px',
