@@ -115,7 +115,7 @@ export default function AdminLogin() {
     <main className="min-h-screen bg-admin-bg text-admin-text">
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50">
-          <div className="rounded-lg border border-admin-border bg-admin-surface p-4 shadow-lg">
+          <div className="rounded-lg border border-admin-border bg-admin-surface p-4">
             <div className="flex items-center gap-3">
               <UIcon name="check" className="text-success text-lg" />
               <div>
@@ -136,18 +136,16 @@ export default function AdminLogin() {
 
       <header className="sticky top-0 z-10 border-b border-admin-border bg-admin-surface/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gold font-bold text-[#2A2724]">
-              PG
-            </div>
-            <div className="leading-tight">
-              <p className="text-sm text-admin-muted">Photobooth Guys</p>
-              <p className="text-base font-semibold text-gold">Agreements</p>
-            </div>
+          {/* No tile, no container, no background behind the mark. */}
+          <div className="leading-tight">
+            <p className="text-base font-semibold text-admin-text">Photobooth Guys</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-admin-muted">
+              Agreements
+            </p>
           </div>
           <Link
             href="/"
-            className="rounded-md bg-gold px-4 py-2 text-sm font-semibold text-[#2A2724] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-admin-bg"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-on hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-bg"
           >
             Back to Home
           </Link>
@@ -156,10 +154,10 @@ export default function AdminLogin() {
 
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <div className="rounded-xl border border-admin-border bg-admin-surface p-8 shadow-lg">
+          <div className="rounded-xl border border-admin-border bg-admin-surface p-8">
             <div className="text-center mb-8">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gold/15 border border-gold/30">
-                <UIcon name="lock" className="text-2xl text-gold" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-wash border border-accent/25">
+                <UIcon name="lock" className="text-2xl text-accent" />
               </div>
               <h1 className="admin-page-title text-2xl font-bold text-admin-text">Admin Login</h1>
               <div className="admin-title-rule mx-auto" aria-hidden="true" />
@@ -179,7 +177,7 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@photoboothguys.ca"
-                  className="w-full rounded-md border border-admin-border bg-admin-bg px-3 py-3 text-sm text-admin-text placeholder-admin-muted focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+                  className="w-full rounded-md border border-admin-border bg-admin-bg px-3 py-3 text-sm text-admin-text placeholder-admin-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                   required
                 />
               </div>
@@ -187,11 +185,11 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-md bg-gold px-4 py-3 text-sm font-semibold text-[#2A2724] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-md bg-accent px-4 py-3 text-sm font-semibold text-accent-on hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2A2724] border-t-transparent mr-2" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-on border-t-transparent mr-2" />
                     Sending Magic Link...
                   </div>
                 ) : (
@@ -212,7 +210,7 @@ export default function AdminLogin() {
                   type="button"
                   onClick={handleResend}
                   disabled={isLoading}
-                  className="w-full rounded-md border border-admin-border bg-transparent px-4 py-2 text-sm font-medium text-admin-text hover:bg-admin-surface-raised focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-md border border-admin-border bg-transparent px-4 py-2 text-sm font-medium text-admin-text hover:bg-admin-surface-raised focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-admin-surface disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
@@ -255,7 +253,7 @@ export default function AdminLogin() {
       <footer className="border-t border-admin-border bg-admin-surface py-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-admin-muted">
           <span>© {new Date().getFullYear()} Photobooth Guys • Agreements</span>
-          <Link href="/" className="hover:text-gold">Back to Home</Link>
+          <Link href="/" className="hover:text-accent">Back to Home</Link>
         </div>
       </footer>
     </main>

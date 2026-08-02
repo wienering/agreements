@@ -194,7 +194,7 @@ export default function ArchivedAgreementsPage() {
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             padding: '48px 24px',
             textAlign: 'center',
           }}>
@@ -207,7 +207,7 @@ export default function ArchivedAgreementsPage() {
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             padding: '48px 24px',
             textAlign: 'center',
           }}>
@@ -221,7 +221,7 @@ export default function ArchivedAgreementsPage() {
               <div key={agreement.id} style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,
-                borderRadius: '8px',
+                borderRadius: '2px',
                 padding: '20px',
               }}>
                 <div style={{

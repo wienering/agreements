@@ -20,7 +20,7 @@ type SharedProps = {
   style?: CSSProperties;
 };
 
-const theme = adminTheme.dark;
+const theme = adminTheme.admin;
 
 export function getAdminButtonStyles(
   variant: AdminButtonVariant,
@@ -37,7 +37,7 @@ export function getAdminButtonStyles(
     minHeight: height,
     maxHeight: height,
     padding,
-    borderRadius: '6px',
+    borderRadius: '2px',
     fontSize,
     lineHeight: 1,
     fontWeight: variant === 'primary' ? 600 : 500,
@@ -60,19 +60,19 @@ export function getAdminButtonStyles(
 
   const variants: Record<AdminButtonVariant, CSSProperties> = {
     primary: {
-      backgroundColor: 'var(--gold)',
-      color: 'var(--ink)',
-      border: '1px solid var(--gold)',
+      backgroundColor: 'var(--accent)',
+      color: 'var(--accent-on)',
+      border: '1px solid var(--accent)',
     },
     ghost: {
       backgroundColor: 'transparent',
       color: theme.text,
-      border: `0.5px solid ${theme.border}`,
+      border: `1px solid ${theme.border}`,
     },
     danger: {
       backgroundColor: 'transparent',
       color: 'var(--alert)',
-      border: `0.5px solid ${theme.border}`,
+      border: `1px solid ${theme.border}`,
     },
   };
 
@@ -86,17 +86,19 @@ function applyHover(
 ) {
   if (entering) {
     if (variant === 'primary') {
-      el.style.filter = 'brightness(0.93)';
+      el.style.backgroundColor = 'var(--accent-hover)';
+      el.style.borderColor = 'var(--accent-hover)';
     } else if (variant === 'ghost') {
       el.style.backgroundColor = theme.surfaceHover;
     } else {
       el.style.borderColor = 'var(--alert)';
-      el.style.backgroundColor = 'rgba(179, 57, 43, 0.08)';
+      el.style.backgroundColor = 'rgba(158, 43, 43, 0.08)';
     }
     return;
   }
   if (variant === 'primary') {
-    el.style.filter = 'none';
+    el.style.backgroundColor = 'var(--accent)';
+    el.style.borderColor = 'var(--accent)';
   } else if (variant === 'ghost') {
     el.style.backgroundColor = 'transparent';
   } else {

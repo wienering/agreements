@@ -152,10 +152,10 @@ export async function GET(request: NextRequest) {
 
     // Get status distribution
     const statusDistribution = [
-      { status: 'DRAFT', count: draftAgreements, color: '#dc2626' },
-      { status: 'LIVE', count: liveAgreements, color: '#3d8560' },
-      { status: 'SIGNED', count: signedAgreements, color: '#3d8560' },
-      { status: 'COMPLETED', count: completedAgreements, color: '#7c3aed' }
+      { status: 'DRAFT', count: draftAgreements, color: '#9E2B2B' },
+      { status: 'LIVE', count: liveAgreements, color: '#2F6A4C' },
+      { status: 'SIGNED', count: signedAgreements, color: '#2F6A4C' },
+      { status: 'COMPLETED', count: completedAgreements, color: '#2C5878' }
     ];
 
     // Get top clients by agreement count

@@ -255,8 +255,8 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          border: `2px dashed ${isDragging ? 'var(--gold)' : 'var(--admin-hairline)'}`,
-          borderRadius: '8px',
+          border: `2px dashed ${isDragging ? 'var(--accent)' : 'var(--admin-hairline)'}`,
+          borderRadius: '2px',
           padding: isMobile ? '24px 16px' : '32px',
           textAlign: 'center',
           cursor: 'pointer',
@@ -266,7 +266,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
-            e.currentTarget.style.borderColor = 'var(--gold)';
+            e.currentTarget.style.borderColor = 'var(--accent)';
             e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
           }
         }}
@@ -301,13 +301,13 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
               width: '100%',
               height: '8px',
               backgroundColor: 'var(--admin-hairline)',
-              borderRadius: '4px',
+              borderRadius: '2px',
               overflow: 'hidden',
             }}>
               <div style={{
                 width: `${uploadProgress}%`,
                 height: '100%',
-                backgroundColor: 'var(--gold)',
+                backgroundColor: 'var(--accent)',
                 transition: 'width 0.3s',
               }} />
             </div>
@@ -321,7 +321,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
           padding: '12px',
           backgroundColor: 'var(--admin-surface)',
           border: '1px solid var(--alert)',
-          borderRadius: '6px',
+          borderRadius: '2px',
           color: 'var(--alert)',
           fontSize: '14px',
           marginBottom: '16px',
@@ -347,7 +347,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   padding: '12px',
                   backgroundColor: 'var(--admin-surface)',
                   border: '1px solid var(--admin-hairline)',
-                  borderRadius: '6px',
+                  borderRadius: '2px',
                 }}
               >
                 <UIcon name={getFileIconName(file.fileType)} style={{ fontSize: '24px', color: 'var(--admin-text)' }} />
@@ -365,9 +365,9 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                   rel="noopener noreferrer"
                   style={{
                     padding: isMobile ? '8px 12px' : '6px 12px',
-                    backgroundColor: 'var(--gold)',
-                    color: '#2A2724',
-                    borderRadius: '6px',
+                    backgroundColor: 'var(--accent)',
+                    color: 'var(--accent-on)',
+                    borderRadius: '2px',
                     fontSize: isMobile ? '13px' : '12px',
                     fontWeight: '500',
                     textDecoration: 'none',
@@ -375,10 +375,10 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                     whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--gold)';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--gold)';
+                    e.currentTarget.style.backgroundColor = 'var(--accent)';
                   }}
                 >
                   Open
@@ -394,7 +394,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
                     backgroundColor: deletingFileId === file.id ? 'var(--admin-hairline)' : 'transparent',
                     color: deletingFileId === file.id ? 'var(--admin-muted)' : 'var(--alert)',
                     border: deletingFileId === file.id ? 'none' : '1px solid var(--alert)',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     fontSize: isMobile ? '13px' : '12px',
                     fontWeight: '500',
                     cursor: deletingFileId === file.id ? 'not-allowed' : 'pointer',

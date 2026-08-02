@@ -353,7 +353,7 @@ export default function TemplatesPage() {
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             padding: '20px',
             marginBottom: '24px'
           }}>
@@ -435,7 +435,7 @@ export default function TemplatesPage() {
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,
-                borderRadius: '8px',
+                borderRadius: '2px',
                 padding: '24px',
                 width: '100%',
                 maxWidth: '1200px',
@@ -466,7 +466,7 @@ export default function TemplatesPage() {
                     width: '100%',
                     padding: '8px 12px',
                     border: `1px solid ${borderColor}`,
-                    borderRadius: '4px',
+                    borderRadius: '2px',
                     backgroundColor: cardBg,
                     color: textColor,
                     fontSize: '14px'
@@ -491,7 +491,7 @@ export default function TemplatesPage() {
                     width: '100%',
                     padding: '8px 12px',
                     border: `1px solid ${borderColor}`,
-                    borderRadius: '4px',
+                    borderRadius: '2px',
                     backgroundColor: cardBg,
                     color: textColor,
                     fontSize: '14px'
@@ -568,7 +568,7 @@ export default function TemplatesPage() {
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             padding: '48px 24px',
             textAlign: 'center'
           }}>
@@ -626,7 +626,7 @@ export default function TemplatesPage() {
           }}>
             <div style={{
               backgroundColor: cardBg,
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid ${borderColor}`,
               width: '100%',
               maxWidth: '1200px',
@@ -669,7 +669,7 @@ export default function TemplatesPage() {
                     fontSize: '24px',
                     cursor: 'pointer',
                     padding: '4px',
-                    borderRadius: '4px',
+                    borderRadius: '2px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -689,7 +689,7 @@ export default function TemplatesPage() {
                 <div style={{
                   padding: '16px',
                   backgroundColor: 'var(--admin-bg)',
-                  borderRadius: '6px',
+                  borderRadius: '2px',
                   border: `1px solid ${borderColor}`
                 }}>
                   <RichTextPreview 

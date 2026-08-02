@@ -8,8 +8,7 @@ import { adminTheme } from '../lib/adminTheme';
 import { UIcon } from '../components/UIcon';
 import { AdminButton } from '../components/AdminButton';
 
-const theme = adminTheme.dark;
-const INK = '#2A2724';
+const theme = adminTheme.admin;
 
 export default function AdminLayout({
   children,
@@ -82,7 +81,7 @@ export default function AdminLayout({
     );
   }
 
-  const navActiveBg = 'rgba(var(--accent-rgb), 0.14)';
+  const navActiveBg = 'var(--accent-wash)';
   const navHoverBg = theme.surfaceHover;
 
   return (
@@ -107,7 +106,7 @@ export default function AdminLayout({
         backgroundColor: theme.sidebar,
         color: theme.text,
         padding: '24px 0',
-        boxShadow: '2px 0 4px rgba(0,0,0,0.2)',
+        borderRight: `1px solid ${theme.border}`,
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -119,27 +118,34 @@ export default function AdminLayout({
         transition: 'transform 0.3s ease-in-out',
         overflow: 'hidden',
       }}>
-        <div style={{ padding: '0 24px', marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              backgroundColor: 'var(--gold)',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: INK,
+        {/* The logo lockup sits on the light ground at its natural proportions:
+            no tile, no container, no background behind it. Swap this block for
+            <Image src="/brand/logo-lockup.svg" width={132} /> once that file
+            lands — see the file table in DESIGN.md. */}
+        <div style={{ padding: '0 24px', marginBottom: '28px' }}>
+          <Link href="/admin" style={{ textDecoration: 'none', display: 'inline-block' }}>
+            <span style={{
+              display: 'block',
+              fontSize: '20px',
+              fontWeight: 600,
+              letterSpacing: '0.02em',
+              lineHeight: 1.1,
+              color: theme.text,
             }}>
-              PG
-            </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: 'var(--gold)' }}>Photobooth Guys</h1>
-              <p style={{ margin: 0, color: theme.muted, fontSize: '12px' }}>Agreements Admin</p>
-            </div>
-          </div>
+              Photobooth Guys
+            </span>
+            <span style={{
+              display: 'block',
+              marginTop: '6px',
+              fontSize: '10px',
+              fontWeight: 600,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: theme.muted,
+            }}>
+              Agreements
+            </span>
+          </Link>
         </div>
 
         <nav style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
@@ -157,15 +163,18 @@ export default function AdminLayout({
                 }}
                 style={{
                   display: 'flex',
-                  padding: '12px 24px',
+                  padding: '10px 24px',
+                  borderLeft: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}`,
                   backgroundColor: isActive ? navActiveBg : 'transparent',
-                  color: isActive ? 'var(--gold)' : theme.text,
+                  color: isActive ? 'var(--accent)' : theme.text,
                   textDecoration: 'none',
                   alignItems: 'center',
                   gap: '12px',
-                  fontSize: '16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  letterSpacing: '0.09em',
+                  textTransform: 'uppercase',
                   transition: 'background-color 0.2s, color 0.2s',
-                  fontWeight: isActive ? 600 : 400,
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -246,7 +255,7 @@ export default function AdminLayout({
                 color: theme.text,
                 cursor: 'pointer',
                 padding: '12px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -278,21 +287,7 @@ export default function AdminLayout({
                   color: 'inherit',
                 }}
               >
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  backgroundColor: 'var(--gold)',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  color: INK,
-                }}>
-                  PG
-                </div>
-                <span style={{ fontSize: '16px', fontWeight: '600', color: 'var(--gold)' }}>
+                <span style={{ fontSize: '16px', fontWeight: 600, color: theme.text }}>
                   Photobooth Guys
                 </span>
               </Link>

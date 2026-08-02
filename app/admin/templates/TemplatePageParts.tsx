@@ -33,7 +33,7 @@ export function SmartFieldItem({
       style={{
         padding: '8px 12px',
         backgroundColor: 'var(--admin-bg)',
-        borderRadius: '4px',
+        borderRadius: '2px',
         fontSize: '14px',
         fontFamily: 'monospace',
         color: textColor,
@@ -130,7 +130,7 @@ export function SortableTemplateItem({
         ...style,
         backgroundColor: cardBg,
         border: `1px solid ${borderColor}`,
-        borderRadius: '8px',
+        borderRadius: '2px',
         padding: '20px',
         cursor: isDragging ? 'grabbing' : 'grab',
         position: 'relative',
@@ -165,7 +165,7 @@ export function SortableTemplateItem({
           cursor: 'grab',
           color: 'var(--admin-muted)',
           backgroundColor: 'var(--admin-surface-raised)',
-          borderRadius: '4px',
+          borderRadius: '2px',
           border: `1px solid ${borderColor}`,
           fontSize: '14px',
           fontWeight: 'bold',
@@ -218,7 +218,7 @@ export function SortableTemplateItem({
             color: mutedText,
             backgroundColor: 'var(--admin-surface)',
             padding: '4px 8px',
-            borderRadius: '4px',
+            borderRadius: '2px',
             alignSelf: isMobile ? 'flex-start' : 'auto',
           }}
         >
@@ -232,7 +232,7 @@ export function SortableTemplateItem({
           marginBottom: '12px',
           padding: '12px',
           backgroundColor: 'var(--admin-bg)',
-          borderRadius: '6px',
+          borderRadius: '2px',
           border: `1px solid ${borderColor}`,
         }}
       >
@@ -259,7 +259,7 @@ export function SortableTemplateItem({
             onClick={() => onTogglePreview(template.id)}
             style={{
               backgroundColor: 'transparent',
-              color: 'var(--gold)',
+              color: 'var(--accent)',
               border: 'none',
               padding: '8px 0',
               cursor: 'pointer',
@@ -272,10 +272,10 @@ export function SortableTemplateItem({
               gap: '4px',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--gold)';
+              e.currentTarget.style.color = 'var(--accent)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--gold)';
+              e.currentTarget.style.color = 'var(--accent)';
             }}
           >
             {isExpanded ? (

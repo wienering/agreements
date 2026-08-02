@@ -25,7 +25,7 @@ export default function Error({
         style={{
           backgroundColor: 'var(--admin-surface)',
           padding: '48px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: '1px solid var(--admin-hairline)',
           textAlign: 'center',
           maxWidth: '600px',
@@ -37,7 +37,7 @@ export default function Error({
             width: '64px',
             height: '64px',
             backgroundColor: 'var(--alert)',
-            borderRadius: '12px',
+            borderRadius: '2px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -75,7 +75,7 @@ export default function Error({
               textAlign: 'left',
               backgroundColor: 'var(--admin-bg)',
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: '1px solid var(--admin-hairline)',
             }}
           >
@@ -105,20 +105,20 @@ export default function Error({
           onClick={reset}
           style={{
             padding: '12px 24px',
-            backgroundColor: 'var(--gold)',
-            color: 'var(--ink)',
+            backgroundColor: 'var(--accent)',
+            color: 'var(--accent-on)',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '2px',
             fontSize: '16px',
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'background-color 0.2s',
           }}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--gold)';
+            e.currentTarget.style.backgroundColor = 'var(--accent)';
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--gold)';
+            e.currentTarget.style.backgroundColor = 'var(--accent)';
           }}
         >
           Try Again

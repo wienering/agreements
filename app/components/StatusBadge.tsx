@@ -31,16 +31,16 @@ export function paymentStatusToBadgeVariant(paymentStatus: string): StatusBadgeV
   return 'neutral';
 }
 
-const theme = adminTheme.dark;
+const theme = adminTheme.admin;
 
 export function getStatusBadgeStyles(
   variant: StatusBadgeVariant
 ): CSSProperties {
   const variants: Record<StatusBadgeVariant, CSSProperties> = {
     accent: {
-      color: 'var(--gold)',
-      backgroundColor: 'rgba(var(--accent-rgb), 0.14)',
-      border: '1px solid rgba(var(--accent-rgb), 0.28)',
+      color: 'var(--accent)',
+      backgroundColor: 'var(--accent-wash)',
+      border: '1px solid rgba(var(--accent-rgb), 0.22)',
     },
     neutral: {
       color: theme.muted,
@@ -48,22 +48,23 @@ export function getStatusBadgeStyles(
       border: `1px solid ${theme.border}`,
     },
     warning: {
-      color: 'var(--warn)',
-      backgroundColor: 'rgba(176, 125, 42, 0.12)',
-      border: '1px solid rgba(176, 125, 42, 0.28)',
+      color: 'var(--status-wait)',
+      backgroundColor: 'rgba(44, 88, 120, 0.09)',
+      border: '1px solid rgba(44, 88, 120, 0.22)',
     },
     danger: {
-      color: 'var(--alert)',
-      backgroundColor: 'rgba(179, 57, 43, 0.1)',
-      border: '1px solid rgba(179, 57, 43, 0.25)',
+      color: 'var(--status-action)',
+      backgroundColor: 'rgba(158, 43, 43, 0.08)',
+      border: '1px solid rgba(158, 43, 43, 0.2)',
     },
   };
 
   return {
-    fontSize: '12px',
-    fontWeight: 500,
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.04em',
     padding: '3px 8px',
-    borderRadius: '9999px',
+    borderRadius: '2px',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',

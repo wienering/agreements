@@ -87,8 +87,8 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           width: '100%',
           minHeight: '200px',
           padding: '12px',
-          border: `1px solid ${isFocused ? 'var(--gold)' : 'var(--admin-hairline)'}`,
-          borderRadius: '6px',
+          border: `1px solid ${isFocused ? 'var(--accent)' : 'var(--admin-hairline)'}`,
+          borderRadius: '2px',
           backgroundColor: 'var(--admin-bg)',
           color: 'var(--admin-text)',
           fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -169,10 +169,10 @@ export function RichTextPreview({
     const packagePrice = eventData?.packagePrice || clientData?.packagePrice;
     const eventPrice = packagePrice ? `$${typeof packagePrice === 'number' ? packagePrice.toFixed(2) : packagePrice}` : '';
 
-    const clientChip = (value: string) => `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb;">${escapeHtml(value)}</strong>`;
-    const secondChip = (value: string) => `<strong style="color: #1f2937; background-color: #fef3c7; padding: 2px 6px; border-radius: 4px; border: 1px solid #fcd34d;">${escapeHtml(value)}</strong>`;
-    const eventChip = (value: string) => `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">${escapeHtml(value)}</strong>`;
-    const agreementChip = (value: string) => `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #d8b4fe;">${escapeHtml(value)}</strong>`;
+    const clientChip = (value: string) => `<strong style="color: #1f2937; background-color: #f9fafb; padding: 2px 6px; border-radius: 2px; border: 1px solid #e5e7eb;">${escapeHtml(value)}</strong>`;
+    const secondChip = (value: string) => `<strong style="color: #1f2937; background-color: #fef3c7; padding: 2px 6px; border-radius: 2px; border: 1px solid #fcd34d;">${escapeHtml(value)}</strong>`;
+    const eventChip = (value: string) => `<strong style="color: #1f2937; background-color: #f0f9ff; padding: 2px 6px; border-radius: 2px; border: 1px solid #bae6fd;">${escapeHtml(value)}</strong>`;
+    const agreementChip = (value: string) => `<strong style="color: #1f2937; background-color: #faf5ff; padding: 2px 6px; border-radius: 2px; border: 1px solid #d8b4fe;">${escapeHtml(value)}</strong>`;
 
     // Combined pattern resolves first so "{{client.firstName}} {{client.lastName}}"
     // renders cleanly as "Alice Smith" or "Alice Smith and Bob Jones".
@@ -224,7 +224,7 @@ export function RichTextPreview({
       style={{
         padding: '12px',
         border: '1px solid #d1d5db',
-        borderRadius: '6px',
+        borderRadius: '2px',
         backgroundColor: 'var(--admin-surface)',
         fontFamily: 'Georgia, serif',
         lineHeight: '1.6',

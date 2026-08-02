@@ -172,7 +172,7 @@ export default function AttendantGroupsPage() {
     <code style={{
       backgroundColor: 'var(--admin-bg)',
       padding: '4px 8px',
-      borderRadius: '4px',
+      borderRadius: '2px',
       fontSize: '13px',
       color: textColor,
       wordBreak: 'break-all',
@@ -189,7 +189,7 @@ export default function AttendantGroupsPage() {
           style={{
             backgroundColor: 'var(--admin-hairline)',
             padding: '2px 8px',
-            borderRadius: '4px',
+            borderRadius: '2px',
             fontSize: '12px',
             color: textColor,
           }}
@@ -321,7 +321,7 @@ export default function AttendantGroupsPage() {
         <div className="table-container" style={{
           backgroundColor: cardBg,
           border: `1px solid ${borderColor}`,
-          borderRadius: '8px',
+          borderRadius: '2px',
           overflow: 'hidden'
         }}>
           {loading ? (
@@ -443,7 +443,7 @@ export default function AttendantGroupsPage() {
           >
             <div style={{
               backgroundColor: cardBg,
-              borderRadius: '12px',
+              borderRadius: '2px',
               padding: '32px',
               maxWidth: '500px',
               width: '100%',
@@ -479,7 +479,7 @@ export default function AttendantGroupsPage() {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-bg)',
                     color: textColor,
@@ -507,7 +507,7 @@ export default function AttendantGroupsPage() {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-bg)',
                     color: textColor,
@@ -542,7 +542,7 @@ export default function AttendantGroupsPage() {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-bg)',
                     color: textColor,

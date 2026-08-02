@@ -198,7 +198,7 @@ export default function QuotesPage() {
   const textColor = 'var(--admin-text)';
   const mutedText = 'var(--admin-muted)';
   const borderColor = 'var(--admin-hairline)';
-  const accentColor = 'var(--gold)';
+  const accentColor = 'var(--accent)';
 
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -589,7 +589,7 @@ export default function QuotesPage() {
     <div
       style={{
         padding: '20px',
-        borderRadius: '8px',
+        borderRadius: '2px',
         backgroundColor: 'var(--admin-bg)',
         border: `1px solid ${borderColor}`,
         marginBottom: compareTwoPackages ? '0' : '24px',
@@ -724,7 +724,7 @@ export default function QuotesPage() {
                     onClick={() => selectPackage(hours, optionIndex)}
                     style={{
                       padding: '20px',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `2px solid ${
                         selectedPackage?.kind === 'standard' && selectedPackage.hours === hours
                           ? accentColor
@@ -768,7 +768,7 @@ export default function QuotesPage() {
                       width: '100%',
                       maxWidth: '100%',
                       padding: '8px 12px',
-                      borderRadius: '6px',
+                      borderRadius: '2px',
                       border: `1px solid ${borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -791,7 +791,7 @@ export default function QuotesPage() {
           <div
             style={{
               padding: '20px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `2px solid ${selectedPackage?.kind === 'custom' ? accentColor : borderColor}`,
               backgroundColor:
                 selectedPackage?.kind === 'custom'
@@ -831,7 +831,7 @@ export default function QuotesPage() {
                   width: '100%',
                   maxWidth: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: 'var(--admin-surface)',
                   color: textColor,
@@ -866,7 +866,7 @@ export default function QuotesPage() {
                   width: '100%',
                   maxWidth: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: 'var(--admin-surface)',
                   color: textColor,
@@ -906,7 +906,7 @@ export default function QuotesPage() {
                     width: '100%',
                     maxWidth: '100%',
                     padding: '12px',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-surface)',
                     color: textColor,
@@ -921,9 +921,9 @@ export default function QuotesPage() {
                 style={{
                   padding: '12px 20px',
                   backgroundColor: accentColor,
-                  color: 'var(--ink)',
+                  color: 'var(--accent-on)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   fontSize: '15px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -945,7 +945,7 @@ export default function QuotesPage() {
                 justifyContent: 'space-between',
                 gap: '12px',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 backgroundColor: 'var(--admin-bg)',
                 cursor: selectedPackage?.kind === 'custom' ? 'not-allowed' : 'pointer',
@@ -991,7 +991,7 @@ export default function QuotesPage() {
                 justifyContent: 'space-between',
                 gap: '12px',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 backgroundColor: 'var(--admin-bg)',
                 cursor: 'pointer',
@@ -1012,7 +1012,7 @@ export default function QuotesPage() {
             <div
               style={{
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 backgroundColor: 'var(--admin-bg)',
               }}
@@ -1055,7 +1055,7 @@ export default function QuotesPage() {
                     }}
                     style={{
                       padding: '8px',
-                      borderRadius: '6px',
+                      borderRadius: '2px',
                       border: `1px solid ${borderColor}`,
                       backgroundColor: 'var(--admin-surface)',
                       color: textColor,
@@ -1078,7 +1078,7 @@ export default function QuotesPage() {
           <div
             style={{
               padding: '16px',
-              borderRadius: '8px',
+              borderRadius: '2px',
               border: `1px solid ${borderColor}`,
               backgroundColor: 'var(--admin-bg)',
               display: 'flex',
@@ -1112,7 +1112,7 @@ export default function QuotesPage() {
                   width: '100%',
                   maxWidth: '100%',
                   padding: '12px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: 'var(--admin-surface)',
                   color: textColor,
@@ -1148,7 +1148,7 @@ export default function QuotesPage() {
                   width: '100%',
                   maxWidth: '200px',
                   padding: '12px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: 'var(--admin-surface)',
                   color: textColor,
@@ -1208,7 +1208,7 @@ export default function QuotesPage() {
               backgroundColor: isAdminMode ? 'var(--alert)' : ('var(--admin-hairline)'),
               color: isAdminMode ? 'var(--admin-text)' : textColor,
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '2px',
               fontSize: '14px',
               fontWeight: '600',
               cursor: 'pointer',
@@ -1233,7 +1233,7 @@ export default function QuotesPage() {
         {isAdminMode && (
           <div style={{
             backgroundColor: 'var(--admin-surface-raised)',
-            borderRadius: '12px',
+            borderRadius: '2px',
             padding: '24px',
             marginBottom: '32px',
             border: '2px solid var(--admin-hairline)'
@@ -1248,7 +1248,7 @@ export default function QuotesPage() {
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 {pricingMessage && (
                   <span style={{ 
-                    color: pricingMessage.includes('success') ? 'var(--gold)' : 'var(--alert)',
+                    color: pricingMessage.includes('success') ? 'var(--accent)' : 'var(--alert)',
                     fontSize: '14px',
                     fontWeight: '500'
                   }}>
@@ -1260,10 +1260,10 @@ export default function QuotesPage() {
                   disabled={savingPricing}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: 'var(--gold)',
-                    color: 'var(--ink)',
+                    backgroundColor: 'var(--accent)',
+                    color: 'var(--accent-on)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     fontSize: '14px',
                     fontWeight: '600',
                     cursor: savingPricing ? 'not-allowed' : 'pointer',
@@ -1294,7 +1294,7 @@ export default function QuotesPage() {
                         style={{
                           width: '80px',
                           padding: '8px',
-                          borderRadius: '6px',
+                          borderRadius: '2px',
                           border: `1px solid ${borderColor}`,
                           backgroundColor: 'var(--admin-bg)',
                           color: textColor,
@@ -1326,7 +1326,7 @@ export default function QuotesPage() {
                         style={{
                           width: '70px',
                           padding: '8px',
-                          borderRadius: '6px',
+                          borderRadius: '2px',
                           border: `1px solid ${borderColor}`,
                           backgroundColor: 'var(--admin-bg)',
                           color: textColor,
@@ -1349,7 +1349,7 @@ export default function QuotesPage() {
                         style={{
                           width: '70px',
                           padding: '8px',
-                          borderRadius: '6px',
+                          borderRadius: '2px',
                           border: `1px solid ${borderColor}`,
                           backgroundColor: 'var(--admin-bg)',
                           color: textColor,
@@ -1375,7 +1375,7 @@ export default function QuotesPage() {
                     style={{
                       width: '70px',
                       padding: '8px',
-                      borderRadius: '6px',
+                      borderRadius: '2px',
                       border: `1px solid ${borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -1399,7 +1399,7 @@ export default function QuotesPage() {
                     style={{
                       width: '70px',
                       padding: '8px',
-                      borderRadius: '6px',
+                      borderRadius: '2px',
                       border: `1px solid ${borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -1431,7 +1431,7 @@ export default function QuotesPage() {
                 height: '40px',
                 borderRadius: '50%',
                 backgroundColor: currentStep === step ? accentColor : 
-                                 currentStep > step ? 'var(--gold)' : 
+                                 currentStep > step ? 'var(--accent)' : 
                                  'var(--admin-hairline)',
                 color: currentStep >= step ? 'white' : mutedText,
                 display: 'flex',
@@ -1458,7 +1458,7 @@ export default function QuotesPage() {
         {currentStep === 1 && (
           <div style={{
             backgroundColor: cardBg,
-            borderRadius: '12px',
+            borderRadius: '2px',
             padding: '32px',
             border: `1px solid ${borderColor}`,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
@@ -1492,7 +1492,7 @@ export default function QuotesPage() {
                     style={{
                       width: '100%',
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid ${errors.name ? 'var(--alert)' : borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -1526,7 +1526,7 @@ export default function QuotesPage() {
                     style={{
                       width: '100%',
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid ${errors.email ? 'var(--alert)' : borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -1563,7 +1563,7 @@ export default function QuotesPage() {
                     style={{
                       width: '100%',
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid ${errors.phone ? 'var(--alert)' : borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -1597,7 +1597,7 @@ export default function QuotesPage() {
                     style={{
                       width: '100%',
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid ${errors.eventDate ? 'var(--alert)' : borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       color: textColor,
@@ -1616,9 +1616,9 @@ export default function QuotesPage() {
                   style={{
                     padding: '12px 24px',
                     backgroundColor: accentColor,
-                    color: 'var(--ink)',
+                    color: 'var(--accent-on)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     fontSize: '16px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -1636,7 +1636,7 @@ export default function QuotesPage() {
         {currentStep === 2 && (
           <div style={{
             backgroundColor: cardBg,
-            borderRadius: '12px',
+            borderRadius: '2px',
             padding: '24px 16px',
             border: `1px solid ${borderColor}`,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -1658,7 +1658,7 @@ export default function QuotesPage() {
                 gap: '12px',
                 marginBottom: '24px',
                 padding: '16px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 backgroundColor: 'var(--admin-bg)',
                 cursor: 'pointer',
@@ -1692,7 +1692,7 @@ export default function QuotesPage() {
                   backgroundColor: 'transparent',
                   color: textColor,
                   border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -1709,9 +1709,9 @@ export default function QuotesPage() {
                 style={{
                   padding: '12px 24px',
                   backgroundColor: canProceedToReview ? accentColor : mutedText,
-                  color: 'var(--ink)',
+                  color: 'var(--accent-on)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: canProceedToReview ? 'pointer' : 'not-allowed',
@@ -1728,7 +1728,7 @@ export default function QuotesPage() {
         {currentStep === 3 && (
           <div style={{
             backgroundColor: cardBg,
-            borderRadius: '12px',
+            borderRadius: '2px',
             padding: '24px 16px',
             border: `1px solid ${borderColor}`,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -1746,7 +1746,7 @@ export default function QuotesPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px', minWidth: 0 }}>
               <div style={{
                 padding: '20px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 backgroundColor: 'var(--admin-bg)',
                 border: `1px solid ${borderColor}`,
                 minWidth: 0,
@@ -1770,7 +1770,7 @@ export default function QuotesPage() {
                       key={optionIndex}
                       style={{
                         padding: '20px',
-                        borderRadius: '8px',
+                        borderRadius: '2px',
                         backgroundColor: 'var(--admin-bg)',
                         border: `1px solid ${borderColor}`,
                         minWidth: 0,
@@ -1802,7 +1802,7 @@ export default function QuotesPage() {
                 <>
                   <div style={{
                     padding: '20px',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     backgroundColor: 'var(--admin-bg)',
                     border: `1px solid ${borderColor}`,
                     minWidth: 0,
@@ -1815,9 +1815,9 @@ export default function QuotesPage() {
 
                   <div style={{
                     padding: '20px',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     backgroundColor: accentColor,
-                    color: 'var(--ink)',
+                    color: 'var(--accent-on)',
                     textAlign: 'center',
                   }}>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>Total Cost</h3>
@@ -1837,7 +1837,7 @@ export default function QuotesPage() {
                   backgroundColor: 'transparent',
                   color: textColor,
                   border: `1px solid ${borderColor}`,
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -1851,9 +1851,9 @@ export default function QuotesPage() {
                 style={{
                   padding: '12px 24px',
                   backgroundColor: loading ? mutedText : accentColor,
-                  color: 'var(--ink)',
+                  color: 'var(--accent-on)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   fontSize: '16px',
                   fontWeight: '600',
                   cursor: loading ? 'not-allowed' : 'pointer',

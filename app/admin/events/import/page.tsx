@@ -262,7 +262,7 @@ export default function ImportEventsPage() {
             <button
               onClick={handleImport}
               disabled={!file || importing}
-              className={`w-full md:w-auto px-6 py-3 rounded-lg font-semibold transition-colors ${!file || importing ? 'bg-admin-hairline text-admin-muted cursor-not-allowed' : 'bg-gold text-[#2A2724] hover:brightness-95'}`}
+              className={`w-full md:w-auto px-6 py-3 rounded-lg font-semibold transition-colors ${!file || importing ? 'bg-admin-hairline text-admin-muted cursor-not-allowed' : 'bg-accent text-accent-on hover:brightness-95'}`}
             >
               {importing ? 'Importing...' : 'Import Events'}
             </button>

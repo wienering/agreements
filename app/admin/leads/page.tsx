@@ -532,7 +532,7 @@ export default function LeadsPage() {
               onChange={(event) => setFilterStage(event.target.value)}
               style={{
                 padding: '8px 12px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 backgroundColor: cardBg,
                 color: textColor,
@@ -553,7 +553,7 @@ export default function LeadsPage() {
           style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             padding: '12px 16px',
             marginBottom: '12px',
             display: 'flex',
@@ -573,8 +573,8 @@ export default function LeadsPage() {
                 onClick={() => setTab(option.key)}
                 style={
                   isActive
-                    ? { ...getStatusBadgeStyles('accent'), borderRadius: '6px', fontWeight: 600 }
-                    : { ...getStatusBadgeStyles('neutral'), borderRadius: '6px' }
+                    ? { ...getStatusBadgeStyles('accent'), borderRadius: '2px', fontWeight: 600 }
+                    : { ...getStatusBadgeStyles('neutral'), borderRadius: '2px' }
                 }
               >
                 {option.label} ({count})
@@ -603,7 +603,7 @@ export default function LeadsPage() {
                 boxSizing: 'border-box',
                 padding: '10px 12px',
                 paddingRight: searchQuery ? '40px' : '12px',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 backgroundColor: mainBg,
                 color: textColor,
@@ -642,7 +642,7 @@ export default function LeadsPage() {
           <div
             style={{
               backgroundColor: cardBg,
-              borderRadius: '12px',
+              borderRadius: '2px',
               border: `1px solid ${borderColor}`,
               padding: '48px',
               textAlign: 'center',
@@ -655,7 +655,7 @@ export default function LeadsPage() {
           <div
             style={{
               backgroundColor: cardBg,
-              borderRadius: '12px',
+              borderRadius: '2px',
               border: `1px solid ${borderColor}`,
               padding: '48px',
               textAlign: 'center',
@@ -665,7 +665,7 @@ export default function LeadsPage() {
             No leads match your search.
           </div>
         ) : (
-          <div style={{ backgroundColor: cardBg, borderRadius: '12px', border: `1px solid ${borderColor}`, overflow: 'hidden' }}>
+          <div style={{ backgroundColor: cardBg, borderRadius: '2px', border: `1px solid ${borderColor}`, overflow: 'hidden' }}>
             {tab === 'archived'
               ? renderArchivedList(filteredArchivedLeads)
               : groupedSections?.map((section) => (
@@ -706,7 +706,7 @@ export default function LeadsPage() {
               style={{
                 backgroundColor: cardBg,
                 padding: '24px',
-                borderRadius: '12px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 minWidth: '320px',
               }}
@@ -720,7 +720,7 @@ export default function LeadsPage() {
                   width: '100%',
                   padding: '10px 12px',
                   marginBottom: '16px',
-                  borderRadius: '8px',
+                  borderRadius: '2px',
                   border: `1px solid ${borderColor}`,
                   backgroundColor: mainBg,
                   color: textColor,
@@ -765,7 +765,7 @@ export default function LeadsPage() {
               style={{
                 backgroundColor: cardBg,
                 padding: '24px',
-                borderRadius: '12px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 width: '100%',
                 maxWidth: '480px',
@@ -783,7 +783,7 @@ export default function LeadsPage() {
                       padding: '12px',
                       backgroundColor: 'var(--admin-surface-raised)',
                       color: 'var(--alert)',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       fontSize: '14px',
                     }}
                   >
@@ -838,7 +838,7 @@ export default function LeadsPage() {
               style={{
                 backgroundColor: cardBg,
                 padding: '24px',
-                borderRadius: '12px',
+                borderRadius: '2px',
                 border: `1px solid ${borderColor}`,
                 width: '100%',
                 maxWidth: '480px',
@@ -856,7 +856,7 @@ export default function LeadsPage() {
                       padding: '12px',
                       backgroundColor: 'var(--admin-surface-raised)',
                       color: 'var(--alert)',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       fontSize: '14px',
                     }}
                   >
@@ -923,7 +923,7 @@ function LeadFormFields({
   const inputStyle = {
     width: '100%',
     padding: '10px 12px',
-    borderRadius: '8px',
+    borderRadius: '2px',
     border: `1px solid ${borderColor}`,
     backgroundColor: mainBg,
     color: textColor,

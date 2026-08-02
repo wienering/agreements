@@ -9,7 +9,6 @@ interface ToastProps {
   onClose?: () => void;
 }
 
-const INK = '#2A2724';
 
 export default function Toast({ message, type = 'success', duration = 3000, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
@@ -30,10 +29,10 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
       right: '20px',
       zIndex: 9999,
       padding: '12px 20px',
-      borderRadius: '8px',
+      borderRadius: '2px',
       fontSize: '14px',
       fontWeight: '500',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+      boxShadow: '0 2px 10px rgba(26, 26, 24, 0.12)',
       transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
       transition: 'transform 0.3s ease-in-out',
       maxWidth: '300px',
@@ -42,13 +41,13 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
 
     switch (type) {
       case 'success':
-        return { ...baseStyles, backgroundColor: 'var(--gold)', color: INK };
+        return { ...baseStyles, backgroundColor: 'var(--accent)', color: 'var(--accent-on)' };
       case 'error':
         return { ...baseStyles, backgroundColor: 'var(--alert)', color: '#fff' };
       case 'info':
         return { ...baseStyles, backgroundColor: 'var(--admin-surface-raised)', color: 'var(--admin-text)', border: '1px solid var(--admin-hairline)' };
       default:
-        return { ...baseStyles, backgroundColor: 'var(--gold)', color: INK };
+        return { ...baseStyles, backgroundColor: 'var(--accent)', color: 'var(--accent-on)' };
     }
   };
 

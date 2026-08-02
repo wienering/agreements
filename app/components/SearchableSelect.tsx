@@ -16,7 +16,7 @@ const ADMIN_BG = 'var(--admin-bg)';
 const ADMIN_TEXT = 'var(--admin-text)';
 const ADMIN_MUTED = 'var(--admin-muted)';
 const ADMIN_RAISED = 'var(--admin-surface-raised)';
-const INK = '#2A2724';
+const INK = 'var(--accent-on)';
 
 export default function SearchableSelect({ 
   options, 
@@ -77,7 +77,7 @@ export default function SearchableSelect({
           width: '100%',
           padding: '8px 12px',
           border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
-          borderRadius: '4px',
+          borderRadius: '2px',
           backgroundColor: style?.backgroundColor || ADMIN_BG,
           color: style?.color || ADMIN_TEXT,
           fontSize: '14px',
@@ -114,7 +114,7 @@ export default function SearchableSelect({
           right: 0,
           backgroundColor: style?.backgroundColor || ADMIN_BG,
           border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
-          borderRadius: '4px',
+          borderRadius: '2px',
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.35)',
           zIndex: 1000,
           maxHeight: '200px',
@@ -132,7 +132,7 @@ export default function SearchableSelect({
                 width: '100%',
                 padding: '6px 8px',
                 border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
-                borderRadius: '4px',
+                borderRadius: '2px',
                 fontSize: '14px',
                 outline: 'none',
                 backgroundColor: style?.backgroundColor || ADMIN_BG,
@@ -158,8 +158,8 @@ export default function SearchableSelect({
                   }}
                   onMouseEnter={(e) => {
                     if (value !== option.value) {
-                      e.currentTarget.style.backgroundColor = 'var(--gold)';
-                      e.currentTarget.style.color = INK;
+                      e.currentTarget.style.backgroundColor = 'var(--accent-wash)';
+                      e.currentTarget.style.color = 'var(--accent)';
                     }
                   }}
                   onMouseLeave={(e) => {

@@ -66,7 +66,7 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
         style={{
           backgroundColor: 'var(--admin-surface)',
           padding: '32px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: '1px solid var(--admin-hairline)',
           marginBottom: '24px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -96,7 +96,7 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
         style={{
           backgroundColor: 'var(--admin-surface)',
           padding: '32px',
-          borderRadius: '12px',
+          borderRadius: '2px',
           border: '1px solid var(--admin-hairline)',
           marginBottom: '24px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -125,7 +125,7 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
       style={{
         backgroundColor: 'var(--admin-surface)',
         padding: '32px',
-        borderRadius: '12px',
+        borderRadius: '2px',
         border: '1px solid var(--admin-hairline)',
         marginBottom: '24px',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -165,11 +165,11 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                 padding: '16px',
                 backgroundColor: 'var(--admin-bg)',
                 border: '1px solid var(--admin-hairline)',
-                borderRadius: '8px',
+                borderRadius: '2px',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--gold)';
+                e.currentTarget.style.borderColor = 'var(--accent)';
                 e.currentTarget.style.backgroundColor = 'var(--admin-surface)';
               }}
               onMouseLeave={(e) => {
@@ -202,9 +202,9 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                 rel="noopener noreferrer"
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: 'var(--gold)',
-                  color: 'var(--ink)',
-                  borderRadius: '6px',
+                  backgroundColor: 'var(--accent)',
+                  color: 'var(--accent-on)',
+                  borderRadius: '2px',
                   fontSize: '14px',
                   fontWeight: '500',
                   textDecoration: 'none',
@@ -212,10 +212,10 @@ export default function AttendantFilesSection({ agreementId, attendantId }: Atte
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--gold)';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--gold)';
+                  e.currentTarget.style.backgroundColor = 'var(--accent)';
                 }}
               >
                 Open in Drive

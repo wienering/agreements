@@ -202,7 +202,7 @@ export default function BackdropLinksPage() {
           style={{
             backgroundColor: 'transparent',
             border: `1px solid ${borderColor}`,
-            borderRadius: '4px',
+            borderRadius: '2px',
             cursor: isFirst ? 'not-allowed' : 'pointer',
             color: mutedText,
             opacity: isFirst ? 0.3 : 1,
@@ -223,7 +223,7 @@ export default function BackdropLinksPage() {
           style={{
             backgroundColor: 'transparent',
             border: `1px solid ${borderColor}`,
-            borderRadius: '4px',
+            borderRadius: '2px',
             cursor: isLast ? 'not-allowed' : 'pointer',
             color: mutedText,
             opacity: isLast ? 0.3 : 1,
@@ -401,7 +401,7 @@ export default function BackdropLinksPage() {
         <div className="table-container" style={{
           backgroundColor: cardBg,
           border: `1px solid ${borderColor}`,
-          borderRadius: '8px',
+          borderRadius: '2px',
           overflow: 'hidden'
         }}>
           {loading ? (
@@ -551,7 +551,7 @@ export default function BackdropLinksPage() {
           }}>
             <div style={{
               backgroundColor: cardBg,
-              borderRadius: '8px',
+              borderRadius: '2px',
               padding: '32px',
               width: '90%',
               maxWidth: '500px',
@@ -584,7 +584,7 @@ export default function BackdropLinksPage() {
                   style={{
                     width: '100%',
                     padding: '10px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-bg)',
                     color: textColor,
@@ -612,7 +612,7 @@ export default function BackdropLinksPage() {
                   style={{
                     width: '100%',
                     padding: '10px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-bg)',
                     color: textColor,
@@ -640,7 +640,7 @@ export default function BackdropLinksPage() {
                   style={{
                     width: '100%',
                     padding: '10px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: `1px solid ${borderColor}`,
                     backgroundColor: 'var(--admin-bg)',
                     color: textColor,

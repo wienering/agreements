@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, Cell } from 'recharts';
 import { UIcon } from '../components/UIcon';
-import { accentTokens } from '../lib/adminTheme';
+import { chartTokens, statusTokens } from '../lib/adminTheme';
 import { AdminButton } from '../components/AdminButton';
 import { formatDateToronto } from '@/lib/dates';
 
@@ -189,22 +189,20 @@ export default function AdminHome() {
   const textColor = 'var(--admin-text)';
   const mutedText = 'var(--admin-muted)';
   const borderColor = 'var(--admin-hairline)';
-  // Literal hex (mirrors --accent in globals.css) — recharts passes this
-  // through to SVG fill/stroke attributes, which don't resolve CSS vars.
-  const accentGreen = accentTokens.accent;
+  // Recharts passes colour props straight through to SVG fill/stroke, which do
+  // not resolve CSS vars, so charts read literals from adminTheme.
+  const accentGreen = chartTokens.accent;
 
-  // Overview-only card chrome: a slightly lighter surface than the page
-  // background plus a marginally stronger border so cards read as raised
-  // panels. Scoped to this page (not the shared cardBg/borderColor) so no
-  // other admin page is affected. cardPad uses clamp so the roomier desktop
-  // padding tightens on narrow phones, avoiding horizontal overflow at 375px.
+  // Cards are white on the app background, separated by a hairline and nothing
+  // else. cardPad uses clamp so the roomier desktop padding tightens on narrow
+  // phones, avoiding horizontal overflow at 375px.
   const cardSurface = 'var(--admin-surface)';
   const cardBorderStrong = 'var(--admin-hairline)';
-  const cardShadow = '0 1px 3px rgba(0, 0, 0, 0.45)';
+  const cardShadow = 'none';
   const cardPad = 'clamp(18px, 4vw, 26px)';
-  // Neutral fill for prior-month / secondary chart series. Lightened a few
-  // shades so history reads clearly against cardSurface; current month stays accent.
-  const neutralBar = '#5c5650';
+  // Prior-month and secondary chart series. Quiet enough that the accent-filled
+  // current month is the first thing the eye lands on.
+  const neutralBar = chartTokens.neutral;
 
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
@@ -231,20 +229,10 @@ export default function AdminHome() {
             gap: '16px'
           }}>
             <div style={{ flex: '1', minWidth: '200px' }}>
-              <div style={{
-                fontSize: '11px',
-                fontWeight: 500,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: mutedText,
-                marginBottom: '6px'
-              }}>
-                Photobooth Guys · Agreements admin
-              </div>
+              {/* Title only. The sidebar already says whose product this is. */}
               <h1 className="admin-page-title" style={{
                 margin: 0,
-                fontSize: '22px',
-                fontWeight: 500,
+                fontSize: '21px',
                 color: textColor,
                 lineHeight: 1.2
               }}>
@@ -277,7 +265,7 @@ export default function AdminHome() {
             <>
               <div style={{
                 backgroundColor: cardSurface,
-                borderRadius: '12px',
+                borderRadius: '2px',
                 padding: cardPad,
                 border: `1px solid ${cardBorderStrong}`,
                 boxShadow: cardShadow,
@@ -287,7 +275,7 @@ export default function AdminHome() {
               </div>
               <div style={{
                 backgroundColor: cardSurface,
-                borderRadius: '12px',
+                borderRadius: '2px',
                 padding: cardPad,
                 border: `1px solid ${cardBorderStrong}`,
                 boxShadow: cardShadow,
@@ -300,7 +288,7 @@ export default function AdminHome() {
             <>
               <div style={{
                 backgroundColor: cardSurface,
-                borderRadius: '12px',
+                borderRadius: '2px',
                 padding: cardPad,
                 border: `1px solid ${cardBorderStrong}`,
                 boxShadow: cardShadow,
@@ -332,17 +320,19 @@ export default function AdminHome() {
                   // → Draft → anything else (e.g. Sent, Cancelled) folded into
                   // the neutral tail.
                   const SEGMENT_ORDER = ['COMPLETED', 'LIVE', 'SIGNED', 'DRAFT'] as const;
+                  // Same palette as the status badges, so a segment here and a
+                  // badge in a table say the same thing in the same colour.
                   const segmentColor: Record<string, string> = {
-                    COMPLETED: 'var(--gold)',
-                    LIVE: 'var(--accent-soft)',
-                    SIGNED: 'var(--accent-faint)',
-                    DRAFT: borderColor,
+                    COMPLETED: statusTokens.strong,
+                    LIVE: statusTokens.waitLight,
+                    SIGNED: statusTokens.good,
+                    DRAFT: statusTokens.idle,
                   };
                   const byStatus = new Map(activeByStatus.map((r) => [r.status, r.count]));
                   const rest = activeByStatus.filter((r) => !SEGMENT_ORDER.includes(r.status as typeof SEGMENT_ORDER[number]));
                   const ordered = [
                     ...SEGMENT_ORDER.map((s) => ({ status: s, count: byStatus.get(s) ?? 0, color: segmentColor[s] })),
-                    ...rest.map((r) => ({ status: r.status, count: r.count, color: borderColor })),
+                    ...rest.map((r) => ({ status: r.status, count: r.count, color: chartTokens.neutral })),
                   ];
                   const denom = activeTotal > 0 ? activeTotal : 1;
                   return (
@@ -353,10 +343,10 @@ export default function AdminHome() {
                         style={{
                           display: 'flex',
                           width: '100%',
-                          height: '8px',
-                          borderRadius: '9999px',
+                          height: '10px',
+                          borderRadius: '2px',
                           overflow: 'hidden',
-                          backgroundColor: borderColor,
+                          backgroundColor: 'var(--admin-surface-raised)',
                           marginBottom: '14px',
                         }}
                       >
@@ -448,10 +438,10 @@ export default function AdminHome() {
                   ) : loadForecast && loadForecast.length > 0 ? (
                     <ResponsiveContainer width="100%" height={240}>
                       <ComposedChart data={loadForecast}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartTokens.grid} />
                         <XAxis
                           dataKey="weekLabel"
-                          stroke={mutedText}
+                          stroke={chartTokens.axis}
                           fontSize={10}
                           angle={-40}
                           textAnchor="end"
@@ -459,18 +449,18 @@ export default function AdminHome() {
                         />
                         <YAxis
                           yAxisId="left"
-                          stroke={mutedText}
+                          stroke={chartTokens.axis}
                           fontSize={11}
                           width={36}
-                          label={{ value: 'Events', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: mutedText, fontSize: 10 } }}
+                          label={{ value: 'Events', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: chartTokens.axis, fontSize: 10 } }}
                         />
                         <YAxis
                           yAxisId="right"
                           orientation="right"
-                          stroke={mutedText}
+                          stroke={chartTokens.axis}
                           fontSize={11}
                           width={36}
-                          label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: mutedText, fontSize: 10 } }}
+                          label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: chartTokens.axis, fontSize: 10 } }}
                         />
                         <Tooltip
                           content={({ active, payload, label }) => {
@@ -485,9 +475,9 @@ export default function AdminHome() {
                               <div style={{
                                 backgroundColor: cardBg,
                                 border: `1px solid ${borderColor}`,
-                                borderRadius: '6px',
+                                borderRadius: '2px',
                                 padding: '12px',
-                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                                boxShadow: 'none'
                               }}>
                                 <div style={{
                                   color: textColor,
@@ -539,7 +529,7 @@ export default function AdminHome() {
                           yAxisId="left"
                           dataKey="eventCount"
                           fill={neutralBar}
-                          radius={[4, 4, 0, 0]}
+                          radius={[1, 1, 0, 0]}
                           name="eventCount"
                         />
                         <Line
@@ -570,7 +560,7 @@ export default function AdminHome() {
 
               <div style={{
                 backgroundColor: cardSurface,
-                borderRadius: '12px',
+                borderRadius: '2px',
                 padding: cardPad,
                 border: `1px solid ${cardBorderStrong}`,
                 boxShadow: cardShadow,
@@ -707,7 +697,7 @@ export default function AdminHome() {
                               <div style={{
                                 fontSize: '14px',
                                 fontWeight: 500,
-                                color: isSoonest ? 'var(--gold)' : textColor,
+                                color: isSoonest ? 'var(--accent)' : textColor,
                                 lineHeight: 1.2,
                                 fontVariantNumeric: 'tabular-nums',
                               }}>
@@ -740,7 +730,7 @@ export default function AdminHome() {
         {/* Agreements over time — compact */}
         <div style={{
           backgroundColor: cardSurface,
-          borderRadius: '12px',
+          borderRadius: '2px',
           padding: cardPad,
           border: `1px solid ${cardBorderStrong}`,
           boxShadow: cardShadow,
@@ -779,10 +769,10 @@ export default function AdminHome() {
                   onClick={() => setTimePeriod(period)}
                   style={{
                     padding: '6px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     border: 'none',
                     backgroundColor: timePeriod === period
-                      ? 'var(--gold)'
+                      ? 'var(--accent)'
                       : 'transparent',
                     color: timePeriod === period ? 'var(--ink)' : mutedText,
                     fontSize: '13px',
@@ -800,23 +790,23 @@ export default function AdminHome() {
           {chartData && chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={168}>
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTokens.grid} />
                 <XAxis
                   dataKey="month"
-                  stroke={mutedText}
+                  stroke={chartTokens.axis}
                   fontSize={11}
                   tickMargin={4}
                 />
-                <YAxis stroke={mutedText} fontSize={11} width={32} />
+                <YAxis stroke={chartTokens.axis} fontSize={11} width={32} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: cardBg,
                     border: `1px solid ${borderColor}`,
-                    borderRadius: '6px',
+                    borderRadius: '2px',
                     color: textColor
                   }}
                 />
-                <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                <Bar dataKey="count" radius={[1, 1, 0, 0]}>
                   {chartData.map((entry, index) => (
                     <Cell
                       key={entry.month ?? index}
@@ -844,7 +834,7 @@ export default function AdminHome() {
           <div style={{ marginBottom: '28px' }}>
             <div style={{
               backgroundColor: cardSurface,
-              borderRadius: '12px',
+              borderRadius: '2px',
               padding: cardPad,
               border: `1px solid ${cardBorderStrong}`,
               boxShadow: cardShadow
@@ -868,7 +858,7 @@ export default function AdminHome() {
                   backgroundColor: warnings.summary.expirationWarnings > 0 ? 'var(--alert)' :
                     warnings.summary.redWarnings > 0 ? 'var(--alert)' : 'var(--warn)',
                   color: 'var(--admin-text)',
-                  borderRadius: '20px',
+                  borderRadius: '2px',
                   fontSize: '12px',
                   fontWeight: '600'
                 }}>
@@ -883,7 +873,7 @@ export default function AdminHome() {
                     onClick={() => router.push('/admin/agreements')}
                     style={{
                       padding: '12px',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       border: `1px solid ${borderColor}`,
                       backgroundColor: 'var(--admin-bg)',
                       cursor: 'pointer',
@@ -924,7 +914,7 @@ export default function AdminHome() {
                         backgroundColor: warning.warningType === 'expiration' ? 'var(--alert)' :
                           warning.warningType === 'critical' ? 'var(--alert)' : 'var(--warn)',
                         color: 'var(--admin-text)',
-                        borderRadius: '4px',
+                        borderRadius: '2px',
                         fontSize: '10px',
                         fontWeight: '600'
                       }}>

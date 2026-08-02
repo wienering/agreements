@@ -650,7 +650,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
         <div style={{
           backgroundColor: cardBg,
           border: `1px solid ${borderColor}`,
-          borderRadius: '8px',
+          borderRadius: '2px',
           padding: '16px',
           marginBottom: '24px'
         }}>
@@ -692,7 +692,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   flex: 1,
                   padding: '8px 12px',
                   border: `1px solid ${borderColor}`,
-                  borderRadius: '4px',
+                  borderRadius: '2px',
                   backgroundColor: cardBg,
                   color: textColor,
                   fontSize: '14px',
@@ -709,7 +709,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   color: mutedText,
                   cursor: 'pointer',
                   padding: '8px',
-                  borderRadius: '4px',
+                  borderRadius: '2px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -758,7 +758,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,
-                borderRadius: '8px',
+                borderRadius: '2px',
                 padding: '24px',
                 width: '100%',
                 maxWidth: '800px',
@@ -797,7 +797,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -821,7 +821,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -846,7 +846,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -871,7 +871,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -896,7 +896,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -921,7 +921,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -947,7 +947,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -964,8 +964,8 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                         fontWeight: '500',
                         color: textColor,
                         padding: '10px 12px',
-                        borderRadius: '6px',
-                        border: `1px solid ${newEvent.unlimitedPrints ? 'var(--gold)' : borderColor}`,
+                        borderRadius: '2px',
+                        border: `1px solid ${newEvent.unlimitedPrints ? 'var(--accent)' : borderColor}`,
                         backgroundColor: newEvent.unlimitedPrints ? ('rgba(var(--accent-rgb),0.12)') : cardBg,
                         transition: 'all 0.2s',
                       }}>
@@ -973,11 +973,11 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           type="checkbox"
                           checked={newEvent.unlimitedPrints}
                           onChange={(e) => setNewEvent({ ...newEvent, unlimitedPrints: e.target.checked })}
-                          style={{ width: '16px', height: '16px', accentColor: 'var(--gold)', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ width: '16px', height: '16px', accentColor: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }}
                         />
                         <span>Unlimited Prints</span>
                         {newEvent.unlimitedPrints && (
-                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--gold)', fontWeight: '600' }}>
+                          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--accent)', fontWeight: '600' }}>
                             ∞ Enabled
                           </span>
                         )}
@@ -1000,7 +1000,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1032,7 +1032,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1064,7 +1064,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px',
@@ -1095,7 +1095,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1121,7 +1121,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1146,7 +1146,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1178,7 +1178,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1203,7 +1203,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1228,7 +1228,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1252,7 +1252,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1277,7 +1277,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1302,7 +1302,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1327,7 +1327,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1352,7 +1352,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1378,7 +1378,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px'
@@ -1403,7 +1403,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                           width: '100%',
                           padding: '8px 12px',
                           border: `1px solid ${borderColor}`,
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           backgroundColor: cardBg,
                           color: textColor,
                           fontSize: '14px',
@@ -1471,7 +1471,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
           <div style={{
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             padding: '48px 24px',
             textAlign: 'center'
           }}>
@@ -1486,7 +1486,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               <div key={client.id} style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${borderColor}`,
-                borderRadius: '8px',
+                borderRadius: '2px',
                 padding: '20px'
               }}>
                 <div style={{ 
@@ -1504,10 +1504,10 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                       </h3>
                       {client.isWhitelabelClient && (
                         <span style={{
-                          backgroundColor: 'var(--gold)',
-                          color: 'var(--ink)',
+                          backgroundColor: 'var(--accent)',
+                          color: 'var(--accent-on)',
                           padding: '2px 8px',
-                          borderRadius: '4px',
+                          borderRadius: '2px',
                           fontSize: '11px',
                           fontWeight: '600',
                           textTransform: 'uppercase',
@@ -1555,7 +1555,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                             padding: '12px',
                             backgroundColor: 'var(--admin-surface)',
                             border: noAgreements ? '2px solid var(--warn)' : `1px solid ${borderColor}`,
-                            borderRadius: '6px',
+                            borderRadius: '2px',
                             boxShadow: noAgreements ? '0 0 8px rgba(247, 127, 0, 0.5), 0 0 16px rgba(247, 127, 0, 0.3)' : 'none'
                           }}>
                             {event.eventName && (
@@ -1607,7 +1607,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                               </p>
                             )}
                             {event.unlimitedPrints && (
-                              <p style={{ margin: '0 0 4px 0', color: 'var(--gold)', fontSize: '14px', fontWeight: '600' }}>
+                              <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '14px', fontWeight: '600' }}>
                                 ∞ Unlimited Prints
                               </p>
                             )}
@@ -1650,7 +1650,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                     </div>
                     {/* Fallback: show deprecated client event fields if no events exist */}
                     {(!client.events || client.events.length === 0) && client.eventDate && (
-                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--admin-surface)', border: `1px solid ${borderColor}`, borderRadius: '6px' }}>
+                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--admin-surface)', border: `1px solid ${borderColor}`, borderRadius: '2px' }}>
                         <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '12px', fontStyle: 'italic' }}>
                           (Legacy event data - will be migrated)
                         </p>
@@ -1682,7 +1682,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                       color: mutedText,
                       backgroundColor: 'var(--admin-surface-raised)',
                       padding: '4px 8px',
-                      borderRadius: '4px',
+                      borderRadius: '2px',
                       alignSelf: isMobile ? 'flex-start' : 'auto'
                     }}>
                       Added {formatDateToronto(client.createdAt)}
@@ -1734,7 +1734,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                     padding: '16px',
                     backgroundColor: 'var(--admin-surface)',
                     border: `1px solid ${borderColor}`,
-                    borderRadius: '8px'
+                    borderRadius: '2px'
                   }}>
                     <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: textColor }}>
                       Upload Files to Google Drive
@@ -1764,7 +1764,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
               padding: '16px',
               backgroundColor: cardBg,
               border: `1px solid ${borderColor}`,
-              borderRadius: '8px',
+              borderRadius: '2px',
               flexWrap: 'wrap',
               gap: '12px',
             }}>

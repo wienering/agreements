@@ -65,7 +65,7 @@ export function LeadOverflowMenu({
   const menuItemStyle = {
     width: '100%',
     justifyContent: 'flex-start' as const,
-    borderRadius: '6px',
+    borderRadius: '2px',
   };
 
   const run = (action: () => void) => {
@@ -102,7 +102,7 @@ export function LeadOverflowMenu({
             padding: '6px',
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
-            borderRadius: '8px',
+            borderRadius: '2px',
             boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
             zIndex: 20,
             display: 'grid',

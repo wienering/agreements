@@ -153,7 +153,7 @@ function LeadMarkContactedForm({
             display: 'block',
             marginTop: '4px',
             padding: '6px 8px',
-            borderRadius: '6px',
+            borderRadius: '2px',
             border: `1px solid ${borderColor}`,
             backgroundColor: cardBg,
             color: textColor,
@@ -208,7 +208,7 @@ function LeadInquirySubRow({
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-        <StatusBadge variant={getDateBadgeVariant(dateBadge.group)} style={{ borderRadius: '8px' }}>
+        <StatusBadge variant={getDateBadgeVariant(dateBadge.group)} style={{ borderRadius: '2px' }}>
           {dateBadge.primary}
         </StatusBadge>
         <span style={{ fontSize: '12px', color: mutedText }}>{dateBadge.secondary}</span>
@@ -316,7 +316,7 @@ export function LeadRow({
             alignItems: 'flex-start',
           }}
         >
-          <StatusBadge variant={getDateBadgeVariant(dateBadge.group)} style={{ borderRadius: '8px' }}>
+          <StatusBadge variant={getDateBadgeVariant(dateBadge.group)} style={{ borderRadius: '2px' }}>
             {dateBadge.primary}
           </StatusBadge>
           <span style={{ fontSize: '12px', color: mutedText }}>{dateBadge.secondary}</span>
