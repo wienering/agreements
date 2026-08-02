@@ -29,7 +29,7 @@ function backdropMatchPageShell(title: string, body: string): string {
     .card {
       width: 100%;
       max-width: 420px;
-      background: #2a2724;
+      background: #1A1A18;
       border: 1px solid #3d372f;
       border-radius: 12px;
       padding: 28px 24px;
@@ -47,14 +47,14 @@ function backdropMatchPageShell(title: string, body: string): string {
       font-weight: 700;
     }
     .mark-success {
-      background: color-mix(in srgb, #3f6f4f 24%, #2a2724);
+      background: color-mix(in srgb, #3f6f4f 24%, #1A1A18);
       color: #3f6f4f;
       border: 1px solid color-mix(in srgb, #3f6f4f 40%, #3d372f);
     }
     .mark-error {
-      background: color-mix(in srgb, #b3392b 20%, #2a2724);
-      color: #b3392b;
-      border: 1px solid color-mix(in srgb, #b3392b 35%, #3d372f);
+      background: color-mix(in srgb, #9E2B2B 20%, #1A1A18);
+      color: #9E2B2B;
+      border: 1px solid color-mix(in srgb, #9E2B2B 35%, #3d372f);
     }
     h1 {
       margin: 0 0 8px;
@@ -106,7 +106,7 @@ function backdropMatchPageShell(title: string, body: string): string {
       border: 1px solid #c6a04d;
       border-radius: 8px;
       background: #c6a04d;
-      color: #2a2724;
+      color: #1A1A18;
       cursor: pointer;
       font-size: 15px;
       font-weight: 600;

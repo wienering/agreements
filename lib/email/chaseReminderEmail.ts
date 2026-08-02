@@ -43,7 +43,7 @@ export async function sendChaseReminderEmail({
     <p style="margin:0 0 16px 0;">${bodyMessage}</p>
     ${renderCtaButton({ label: 'Review & Sign Agreement', url: agreementUrl, tone: 'default' })}
     <p style="margin:16px 0 0 0;">If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
-    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
       Agreement ID: ${escapeHtml(agreement.id)} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
     </p>

@@ -40,7 +40,7 @@ function buildSignatureBlockHtml(
         ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' })
         : '';
       return `
-        <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #3f6f4f; background-color: #faf6ef;">
+        <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #3f6f4f; background-color: #FBFBF9;">
           <p style="margin: 0; font-weight: 600;">${escapeHtml(s.signerName)}</p>
           <p style="margin: 4px 0 0 0; font-size: 13px; color: #555;">${escapeHtml(s.signerEmail)}</p>
           <p style="margin: 4px 0 0 0; font-size: 12px; color: #777;">Signed: ${escapeHtml(when)}${s.ip ? ` &middot; IP: ${escapeHtml(s.ip)}` : ''}</p>
@@ -387,7 +387,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
     ${renderNoticeBlock('Digital Signature Information', signatureInfoHtml, 'default')}
     ${renderNoticeBlock('Next Steps', nextStepsHtml, 'default')}
     <p style="margin:16px 0 0 0;">This notification was automatically sent when the client completed the digital signing process.</p>
-    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
       Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
     </p>
@@ -472,16 +472,16 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
     ${renderNoticeBlock('Your Agreement Details', agreementDetailsHtml, 'default')}
     ${renderCtaButton({ label: 'View Your Agreement', url: agreementUrl, tone: 'default' })}
     ${renderNoticeBlock("What's Next?", nextStepsHtml, 'default')}
-    ${renderNoticeBlock('Your Client Portal', `${portalInfoHtml}<p style="margin:16px 0 0 0;"><a href="${portalUrl}" style="color:#C0552F;text-decoration:underline;font-weight:600;">Open Client Portal</a></p>`, 'default')}
+    ${renderNoticeBlock('Your Client Portal', `${portalInfoHtml}<p style="margin:16px 0 0 0;"><a href="${portalUrl}" style="color:#1E3B31;text-decoration:underline;font-weight:600;">Open Client Portal</a></p>`, 'default')}
     ${renderNoticeBlock('Need Help or Have Questions?', `
       Our team is here to help make your event perfect!<br>
       <strong>Email:</strong> info@photoboothguys.ca<br>
       <strong>Phone:</strong> 647-378-5332<br>
-      <strong>Website:</strong> <a href="https://photoboothguys.ca" style="color:#C0552F;text-decoration:underline;">photoboothguys.ca</a>
+      <strong>Website:</strong> <a href="https://photoboothguys.ca" style="color:#1E3B31;text-decoration:underline;">photoboothguys.ca</a>
     `, 'default')}
     <p style="margin:16px 0 0 0;">Once again, thank you for choosing Photobooth Guys. We can't wait to make your event unforgettable!</p>
     <p style="margin:16px 0 0 0;">Best regards,<br><strong>The Photobooth Guys Team</strong></p>
-    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
     </p>
   `;
@@ -555,7 +555,7 @@ async function sendWaitingForSecondSignerEmail(
     ${renderNoticeBlock('Action Required', '<strong>Please review and sign the agreement to complete the process.</strong>', 'default')}
     ${renderCtaButton({ label: 'Review & Sign', url: agreementUrl, tone: 'default' })}
     <p style="margin:16px 0 0 0;">If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
-    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
       Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
     </p>

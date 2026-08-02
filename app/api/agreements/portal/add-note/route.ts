@@ -52,7 +52,7 @@ async function sendNoteNotificationEmail(
     const notePanelHtml = safeNoteContent.replace(/\n/g, '<br>');
 
     const agreementLinkLine = agreement
-      ? `<p style="margin:16px 0 0 0;">You can also <a href="${baseUrl}/agreement/${agreement.uniqueToken}" style="color:#C0552F;text-decoration:underline;">view the agreement</a>.</p>`
+      ? `<p style="margin:16px 0 0 0;">You can also <a href="${baseUrl}/agreement/${agreement.uniqueToken}" style="color:#1E3B31;text-decoration:underline;">view the agreement</a>.</p>`
       : '';
 
     const bodyHtml = `
@@ -61,8 +61,8 @@ async function sendNoteNotificationEmail(
       ${renderNoticeBlock('Note Content', notePanelHtml, 'default')}
       ${renderCtaButton({ label: 'View in Admin', url: adminUrl, tone: 'default' })}
       ${agreementLinkLine}
-      <p style="margin:16px 0 0 0;font-size:14px;color:#6E655A;">This notification was automatically sent when the client added a note in the client portal.</p>
-      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+      <p style="margin:16px 0 0 0;font-size:14px;color:#5E5E58;">This notification was automatically sent when the client added a note in the client portal.</p>
+      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
         Photobooth Guys Agreement Management System<br>
         Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
       </p>

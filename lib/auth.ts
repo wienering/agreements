@@ -18,8 +18,8 @@ export const authOptions: NextAuthOptions = {
         const bodyHtml = `
           <p style="margin:0 0 16px 0;">Sign in to Agreements using the button below.</p>
           ${renderCtaButton({ label: 'Sign In', url, tone: 'default' })}
-          <p style="margin:16px 0 0 0;font-size:13px;color:#6E655A;">If the button does not work, copy and paste this link into your browser:</p>
-          <p style="margin:8px 0 0 0;word-break:break-all;font-size:13px;color:#2A2724;">${url}</p>
+          <p style="margin:16px 0 0 0;font-size:13px;color:#5E5E58;">If the button does not work, copy and paste this link into your browser:</p>
+          <p style="margin:8px 0 0 0;word-break:break-all;font-size:13px;color:#1A1A18;">${url}</p>
         `;
 
         const html = renderEmailLayout({

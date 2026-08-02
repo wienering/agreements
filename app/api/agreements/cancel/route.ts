@@ -125,7 +125,7 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
     <p style="margin:0 0 16px 0;">If you believe this cancellation was made in error, or if you have any questions about this matter, please contact us immediately at <strong>info@photoboothguys.ca</strong>.</p>
     <p style="margin:0 0 16px 0;">We apologize for any inconvenience this may cause.</p>
     <p style="margin:0 0 16px 0;">Best regards,<br><strong>Photobooth Guys Administration</strong></p>
-    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+    <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
       Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
     </p>

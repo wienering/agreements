@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       ${renderContentPanel(processedHtml)}
       <p style="margin:16px 0;">This document was digitally signed and is legally binding.</p>
       <p style="margin:0 0 16px 0;">
-        You can also <a href="${downloadUrl}" style="color:#C0552F;text-decoration:underline;">download a PDF copy</a>.
+        You can also <a href="${downloadUrl}" style="color:#1E3B31;text-decoration:underline;">download a PDF copy</a>.
       </p>
       <p style="margin:0 0 16px 0;">If you have any questions, please contact us at info@photoboothguys.ca</p>
     `;

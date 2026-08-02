@@ -72,9 +72,9 @@ export async function POST(request: NextRequest) {
       <p style="margin:0 0 16px 0;">If you have a moment, we would really appreciate it if you could leave us a Google review. It makes a big difference for a small business like ours, and helps other people find us when they are planning their own events.</p>
       <p style="margin:0 0 16px 0;">If anything was off, just reply to this email and let me know. I would rather hear it from you.</p>
       <p style="margin:16px 0 0 0;">Thanks so much,<br />Photobooth Guys</p>
-      <p style="margin:16px 0 0 0;font-size:13px;color:#6E655A;">If the button doesn't work, copy and paste this link:</p>
-      <p style="margin:4px 0 0 0;word-break:break-all;"><a href="${reviewUrl}" style="color:#C0552F;text-decoration:underline;">${reviewUrl}</a></p>
-      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;">Event ID: ${agreement.id}</p>
+      <p style="margin:16px 0 0 0;font-size:13px;color:#5E5E58;">If the button doesn't work, copy and paste this link:</p>
+      <p style="margin:4px 0 0 0;word-break:break-all;"><a href="${reviewUrl}" style="color:#1E3B31;text-decoration:underline;">${reviewUrl}</a></p>
+      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;">Event ID: ${agreement.id}</p>
     `;
 
     const emailHtml = renderEmailLayout({

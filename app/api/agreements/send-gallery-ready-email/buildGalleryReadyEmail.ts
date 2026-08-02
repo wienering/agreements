@@ -87,7 +87,7 @@ function renderGalleryCtas(galleryLinks: GalleryLink[]): string {
     .map((g) => {
       const title = escapeHtml(friendlyGalleryLabel(g.title));
       const href = escapeHtml(g.url);
-      return `<li style="margin-bottom:8px;"><a href="${href}" style="color:#C0552F;text-decoration:underline;">${title}</a></li>`;
+      return `<li style="margin-bottom:8px;"><a href="${href}" style="color:#1E3B31;text-decoration:underline;">${title}</a></li>`;
     })
     .join('');
   return `<ul style="margin:16px 0;padding-left:20px;">${items}</ul>`;
@@ -127,7 +127,7 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
       ${renderGalleryCtas(galleryLinks)}
       ${
         eventDateFull
-          ? `<p style="margin:0 0 16px 0;font-size:13px;line-height:1.5;color:#6E655A;">${escapeHtml(eventDateFull)}</p>`
+          ? `<p style="margin:0 0 16px 0;font-size:13px;line-height:1.5;color:#5E5E58;">${escapeHtml(eventDateFull)}</p>`
           : ''
       }
       <p style="margin:24px 0 8px 0;font-weight:600;">Enjoyed the booth?</p>

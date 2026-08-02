@@ -154,7 +154,7 @@ function generateVerificationEmail(client: any, code: string): string {
     )}
     <p style="margin:16px 0 0 0;">Once logged in, you'll be able to view all your agreements and add any missing information.</p>
     <p style="margin:16px 0 0 0;">This verification code is valid for 15 minutes only.</p>
-    <p style="margin:8px 0 0 0;">Questions? Contact us at <a href="mailto:info@photoboothguys.ca" style="color:#C0552F;text-decoration:underline;">info@photoboothguys.ca</a></p>
+    <p style="margin:8px 0 0 0;">Questions? Contact us at <a href="mailto:info@photoboothguys.ca" style="color:#1E3B31;text-decoration:underline;">info@photoboothguys.ca</a></p>
   `;
 
   return renderEmailLayout({

@@ -124,16 +124,16 @@ export async function POST(request: NextRequest) {
       <p style="margin:0 0 16px 0;">${emailMessage}</p>
       ${renderCtaButton({ label: 'Review & Sign Agreement', url: clientLink, tone: 'default' })}
       ${renderNoticeBlock(noticeLabel, urgencyContent, noticeTone)}
-      <h2 style="margin:24px 0 12px 0;font-size:17px;font-weight:600;color:#2A2724;">Agreement Preview:</h2>
+      <h2 style="margin:24px 0 12px 0;font-size:17px;font-weight:600;color:#1A1A18;">Agreement Preview:</h2>
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 20px 0;">
         <tr>
-          <td style="padding:16px 18px;background-color:#F2EBDD;border:1px solid #E5DDCF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#2A2724;">
+          <td style="padding:16px 18px;background-color:#F2F2EF;border:1px solid #E3E3DE;font-family:'Libre Franklin', Helvetica, Arial, sans-serif;font-size:14px;line-height:1.65;color:#1A1A18;">
             ${processedHtml.substring(0, 500)}${processedHtml.length > 500 ? '...' : ''}
           </td>
         </tr>
       </table>
       <p style="margin:0 0 16px 0;">To view the complete agreement and sign it digitally, please click the button above.</p>
-      <h2 style="margin:24px 0 12px 0;font-size:17px;font-weight:600;color:#2A2724;">What happens next?</h2>
+      <h2 style="margin:24px 0 12px 0;font-size:17px;font-weight:600;color:#1A1A18;">What happens next?</h2>
       <ul style="margin:0 0 16px 0;padding-left:20px;">
         <li style="margin-bottom:6px;">Review the complete agreement terms and conditions</li>
         <li style="margin-bottom:6px;">Verify all information is correct</li>
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
         <li style="margin-bottom:6px;">Download a copy of your signed agreement</li>
       </ul>
       <p style="margin:0 0 16px 0;">If you have any questions about this agreement, please contact us at info@photoboothguys.ca</p>
-      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#6E655A;text-align:center;">
+      <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
         This email was sent by Photobooth Guys Agreement Management System<br>
         Agreement ID: ${agreement.id} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
       </p>
