@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import {
-  addTorontoCalendarDays,
   formatTorontoWeekLabel,
   getTorontoDateParts,
   getTorontoWeekStart,
@@ -43,13 +42,17 @@ export async function GET(request: NextRequest) {
     // Get current date in Eastern timezone
     const now = new Date();
     const nowEastern = getTorontoDateParts(now);
-    const nowEasternDate = torontoMidnightUtc(nowEastern.year, nowEastern.month, nowEastern.day);
+    // Include the whole current week (Sun–Sat), not just today forward —
+    // otherwise past events earlier in the week (e.g. Sunday) vanish from
+    // the current week's bar while future Sundays still show.
+    const currentWeekStartInfo = getTorontoWeekStart(now);
+    const rangeStart = currentWeekStartInfo.date;
     
-    // Calculate end date (weeks from now) in Eastern timezone
+    // Calculate end date (weeks from current week start) in Eastern timezone
     // Add weeks to the day, handling month/year rollover
-    let endYear = nowEastern.year;
-    let endMonth = nowEastern.month;
-    let endDay = nowEastern.day + (weeks * 7);
+    let endYear = currentWeekStartInfo.year;
+    let endMonth = currentWeekStartInfo.month;
+    let endDay = currentWeekStartInfo.day + (weeks * 7);
     
     // Handle month rollover
     while (endDay > 28) { // Rough check
@@ -68,13 +71,13 @@ export async function GET(request: NextRequest) {
     
     const endDateEastern = torontoMidnightUtc(endYear, endMonth, endDay);
     
-    // Get all upcoming events (non-archived, with eventDate in the future)
+    // Get events in the forecast window (non-archived), from current week start
     // Note: Prisma queries use UTC, so we need to convert our Eastern dates to UTC for comparison
     const events = await prisma.event.findMany({
       where: {
         archived: false,
         eventDate: {
-          gte: nowEasternDate,
+          gte: rangeStart,
           lte: endDateEastern
         }
       },
@@ -97,7 +100,7 @@ export async function GET(request: NextRequest) {
     const clientsWithEvents = await prisma.client.findMany({
       where: {
         eventDate: {
-          gte: nowEasternDate,
+          gte: rangeStart,
           lte: endDateEastern
         }
       },
@@ -183,9 +186,6 @@ export async function GET(request: NextRequest) {
       totalHours: number;
       clientNames: string[];
     }> = [];
-    
-    // Get current week start in Eastern timezone
-    const currentWeekStartInfo = getTorontoWeekStart(now);
     
     for (let i = 0; i < weeks; i++) {
       // Calculate week start date in Eastern timezone using the date components directly
