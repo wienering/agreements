@@ -738,7 +738,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           fontSize: '12px',
                           fontWeight: '600',
                           backgroundColor: getEventTypeColor(nextUpcomingJob.eventType),
-                          color: 'var(--admin-text)',
+                          color: 'var(--accent-on)',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                         }}
@@ -884,7 +884,9 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                           justifyContent: 'center',
                           fontSize: '11px',
                           fontWeight: calendarDay.hasJob ? '700' : '400',
-                          color: calendarDay.isCurrentMonth 
+                          color: calendarDay.hasJob
+                            ? 'var(--accent-on)'
+                            : calendarDay.isCurrentMonth
                             ? 'var(--admin-text)'
                             : 'var(--admin-hairline)',
                           backgroundColor: calendarDay.hasJob
@@ -1025,7 +1027,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                                 fontSize: '11px',
                                 fontWeight: '600',
                                 backgroundColor: getEventTypeColor(job.eventType),
-                                color: 'var(--admin-text)',
+                                color: 'var(--accent-on)',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.05em',
                               }}
@@ -1216,7 +1218,7 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               fontSize: '28px',
             }}
           >
-            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--admin-text)' }} title="Error" />
+            <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--accent-on)' }} title="Error" />
           </div>
           <h1
             style={{

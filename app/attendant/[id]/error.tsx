@@ -44,7 +44,7 @@ export default function Error({
             fontSize: '28px',
           }}
         >
-          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--admin-text)' }} title="Error" />
+          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--accent-on)' }} title="Error" />
         </div>
         <h1
           className="admin-page-title"

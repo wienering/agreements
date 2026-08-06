@@ -962,7 +962,7 @@ function EventExpiredError() {
             fontSize: '28px',
           }}
         >
-          <UIcon name="clock" style={{ fontSize: '28px', color: 'var(--admin-text)' }} />
+          <UIcon name="clock" style={{ fontSize: '28px', color: 'var(--accent-on)' }} />
         </div>
         <h1
           className="admin-page-title"
@@ -1089,7 +1089,7 @@ function NotFoundError() {
             fontSize: '28px',
           }}
         >
-          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--admin-text)' }} title="Warning" />
+          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--accent-on)' }} title="Warning" />
         </div>
         <h1
           className="admin-page-title"
