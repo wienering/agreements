@@ -773,7 +773,7 @@ export default function AdminHome() {
                     backgroundColor: timePeriod === period
                       ? 'var(--accent)'
                       : 'transparent',
-                    color: timePeriod === period ? 'var(--ink)' : mutedText,
+                    color: timePeriod === period ? 'var(--accent-on)' : mutedText,
                     fontSize: '13px',
                     fontWeight: '500',
                     cursor: 'pointer',
@@ -856,7 +856,7 @@ export default function AdminHome() {
                   padding: '4px 12px',
                   backgroundColor: warnings.summary.expirationWarnings > 0 ? 'var(--alert)' :
                     warnings.summary.redWarnings > 0 ? 'var(--alert)' : 'var(--warn)',
-                  color: 'var(--admin-text)',
+                  color: 'var(--accent-on)',
                   borderRadius: '2px',
                   fontSize: '12px',
                   fontWeight: '600'
@@ -912,7 +912,7 @@ export default function AdminHome() {
                         padding: '2px 6px',
                         backgroundColor: warning.warningType === 'expiration' ? 'var(--alert)' :
                           warning.warningType === 'critical' ? 'var(--alert)' : 'var(--warn)',
-                        color: 'var(--admin-text)',
+                        color: 'var(--accent-on)',
                         borderRadius: '2px',
                         fontSize: '10px',
                         fontWeight: '600'
