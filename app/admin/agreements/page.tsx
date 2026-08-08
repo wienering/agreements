@@ -264,6 +264,37 @@ function buildEngagementTooltipHtml(agreement: Agreement): string {
   );
 }
 
+function showEngagementTooltip(anchor: HTMLElement, agreement: Agreement) {
+  document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
+  const tooltip = document.createElement('div');
+  tooltip.className = 'engagement-tooltip';
+  // Tooltip is appended to document.body (outside [data-surface=admin]), so
+  // re-declare the admin tokens here or CSS variables resolve to nothing.
+  tooltip.setAttribute('data-surface', 'admin');
+  const rect = anchor.getBoundingClientRect();
+  const gap = 8;
+  const estimatedWidth = 280;
+  let left = rect.right + gap;
+  let top = rect.top + rect.height / 2;
+  let transform = 'translateY(-50%)';
+  if (left + estimatedWidth > window.innerWidth - 8) {
+    left = Math.max(8, Math.min(rect.left, window.innerWidth - estimatedWidth - 8));
+    top = rect.bottom + gap;
+    transform = 'none';
+  }
+  tooltip.style.cssText =
+    `position: fixed; top: ${top}px; left: ${left}px; transform: ${transform};` +
+    ' background: #ffffff; border: 1px solid var(--admin-hairline); border-radius: 2px; padding: 0;' +
+    ' box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px;' +
+    ' max-width: min(360px, 90vw); font-size: 13px; color: var(--admin-text); overflow: hidden;';
+  tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
+  document.body.appendChild(tooltip);
+}
+
+function hideEngagementTooltip() {
+  document.querySelector('.engagement-tooltip')?.remove();
+}
+
 export default function AgreementsPage() {
   // Set page title
   useEffect(() => {
@@ -2797,35 +2828,6 @@ const normalizePaymentStatus = (value?: string | null) => {
                         overflow: isRowExpanded ? 'visible' : 'hidden',
                         textOverflow: isRowExpanded ? 'clip' : 'ellipsis',
                         wordBreak: isRowExpanded ? 'break-word' : undefined,
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'engagement-tooltip';
-                        const bgColor = 'var(--admin-surface)';
-                        const borderCol = 'var(--admin-hairline)';
-                        const textCol = 'var(--admin-text)';
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const flipLeft = rect.right + 12 + 360 > window.innerWidth;
-                        const positionStyles = flipLeft
-                          ? `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.left - 12}px; transform: translateY(-50%) translateX(-100%);`
-                          : `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.right + 12}px; transform: translateY(-50%);`;
-                        tooltip.style.cssText =
-                          positionStyles +
-                          ' background: ' +
-                          bgColor +
-                          '; border: 1px solid ' +
-                          borderCol +
-                          '; border-radius: 2px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
-                          textCol +
-                          '; overflow: hidden;';
-                        tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
-                        document.body.appendChild(tooltip);
-                      }}
-                      onMouseLeave={() => {
-                        const tooltip = document.querySelector('.engagement-tooltip');
-                        if (tooltip) tooltip.remove();
                       }}
                     >
                       <span style={{
@@ -2834,10 +2836,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                         gap: '8px',
                         maxWidth: isRowExpanded ? undefined : '100%',
                       }}>
-                        <span style={{
-                          overflow: isRowExpanded ? 'visible' : 'hidden',
-                          textOverflow: isRowExpanded ? 'clip' : 'ellipsis',
-                        }}>
+                        <span
+                          style={{
+                            overflow: isRowExpanded ? 'visible' : 'hidden',
+                            textOverflow: isRowExpanded ? 'clip' : 'ellipsis',
+                            cursor: 'pointer',
+                          }}
+                          onMouseEnter={(e) => showEngagementTooltip(e.currentTarget, agreement)}
+                          onMouseLeave={hideEngagementTooltip}
+                        >
                           {agreement.client.firstName} {agreement.client.lastName}
                         </span>
                         <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
@@ -3308,39 +3315,17 @@ const normalizePaymentStatus = (value?: string | null) => {
                         }}>
                           <div style={{ position: 'relative' }}>
                             <h3
-                              style={{ margin: '0', fontSize: '18px', color: textColor, cursor: 'pointer', position: 'relative' }}
+                              style={{ margin: '0', fontSize: '18px', color: textColor, position: 'relative' }}
                               title="Hover for agreement name and email"
-                              onMouseEnter={(e) => {
-                                document.querySelectorAll('.engagement-tooltip').forEach(t => t.remove());
-                                const tooltip = document.createElement('div');
-                                tooltip.className = 'engagement-tooltip';
-                                const bgColor = 'var(--admin-surface)';
-                                const borderCol = 'var(--admin-hairline)';
-                                const textCol = 'var(--admin-text)';
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const flipLeft = rect.right + 12 + 360 > window.innerWidth;
-                                const positionStyles = flipLeft
-                                  ? `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.left - 12}px; transform: translateY(-50%) translateX(-100%);`
-                                  : `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.right + 12}px; transform: translateY(-50%);`;
-                                tooltip.style.cssText =
-                                  positionStyles +
-                                  ' background: ' +
-                                  bgColor +
-                                  '; border: 1px solid ' +
-                                  borderCol +
-                                  '; border-radius: 2px; padding: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); z-index: 1000; min-width: 260px; max-width: min(360px, 90vw); font-size: 13px; color: ' +
-                                  textCol +
-                                  '; overflow: hidden;';
-                                tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
-                                document.body.appendChild(tooltip);
-                              }}
-                              onMouseLeave={() => {
-                                const tooltip = document.querySelector('.engagement-tooltip');
-                                if (tooltip) tooltip.remove();
-                              }}
                             >
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                                {agreement.client.firstName} {agreement.client.lastName}
+                                <span
+                                  style={{ cursor: 'pointer' }}
+                                  onMouseEnter={(e) => showEngagementTooltip(e.currentTarget, agreement)}
+                                  onMouseLeave={hideEngagementTooltip}
+                                >
+                                  {agreement.client.firstName} {agreement.client.lastName}
+                                </span>
                                 <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
                               </span>
                             </h3>
