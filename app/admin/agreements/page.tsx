@@ -293,6 +293,7 @@ export default function AgreementsPage() {
   const [editingExpiration, setEditingExpiration] = useState(false);
   const [newExpirationDate, setNewExpirationDate] = useState('');
   const [editingAgreementId, setEditingAgreementId] = useState<string | null>(null);
+  const [resendExpirationPrompt, setResendExpirationPrompt] = useState<Agreement | null>(null);
   const [editingStatus, setEditingStatus] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [editingStatusAgreementId, setEditingStatusAgreementId] = useState<string | null>(null);
@@ -553,6 +554,9 @@ const normalizePaymentStatus = (value?: string | null) => {
           setEditingExpiration(false);
           setEditingAgreementId(null);
           setNewExpirationDate('');
+        } else if (resendExpirationPrompt) {
+          setResendExpirationPrompt(null);
+          setNewExpirationDate('');
         } else if (showCreateForm) {
           setShowCreateForm(false);
         } else if (selectedAgreement) {
@@ -574,6 +578,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     showPaymentWarningModal,
     editingStatus,
     editingExpiration,
+    resendExpirationPrompt,
     showCreateForm,
     selectedAgreement
   ]);
@@ -582,6 +587,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     showCreateForm ||
     editingStatus ||
     editingExpiration ||
+    Boolean(resendExpirationPrompt) ||
     Boolean(selectedAgreement && !showAttendantModal && !showCopyLinkModal) ||
     Boolean(showCopyLinkModal && copyLinkAgreement) ||
     Boolean(showCancelModal && cancellingAgreement) ||
@@ -1606,7 +1612,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     }
   };
 
-  const handleResendEmail = async (agreement: Agreement) => {
+  const sendResendEmail = async (agreement: Agreement) => {
     try {
       setSendingToClient(prev => ({ ...prev, [agreement.id]: true }));
       const response = await adminFetch('/api/agreements/send', {
@@ -1621,9 +1627,9 @@ const normalizePaymentStatus = (value?: string | null) => {
 
       if (response.ok) {
         // Update the agreement with new email tracking data
-        setAgreements(agreements.map(a => 
-          a.id === agreement.id ? { 
-            ...a, 
+        setAgreements(prev => prev.map(a =>
+          a.id === agreement.id ? {
+            ...a,
             lastEmailedAt: new Date().toISOString(),
             emailSendCount: (a.emailSendCount || 0) + 1
           } : a
@@ -1649,6 +1655,68 @@ const normalizePaymentStatus = (value?: string | null) => {
       showToast('Failed to resend agreement. Please try again later.', 'error');
     } finally {
       setSendingToClient(prev => ({ ...prev, [agreement.id]: false }));
+    }
+  };
+
+  const handleResendEmail = async (agreement: Agreement) => {
+    if (new Date(agreement.expiresAt) < new Date()) {
+      setResendExpirationPrompt(agreement);
+      setNewExpirationDate(getDefaultExpirationDate());
+      return;
+    }
+    await sendResendEmail(agreement);
+  };
+
+  const handleUpdateExpirationAndResend = async () => {
+    if (!resendExpirationPrompt) return;
+
+    if (!newExpirationDate) {
+      showToast('Please select a new expiration date', 'error');
+      return;
+    }
+
+    const expiresAtUtc = fromTorontoDateTimeLocalInput(newExpirationDate);
+    if (Number.isNaN(expiresAtUtc.getTime())) {
+      showToast('Invalid expiration date — please re-select a date and time', 'error');
+      return;
+    }
+
+    const agreement = resendExpirationPrompt;
+
+    try {
+      setSaving(true);
+      const response = await adminFetch('/api/agreements/update-expiration', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: agreement.id,
+          expiresAt: expiresAtUtc.toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        const updatedAgreement = await response.json();
+        setAgreements(prev => prev.map(a =>
+          a.id === agreement.id ? { ...a, expiresAt: updatedAgreement.expiresAt } : a
+        ));
+        setResendExpirationPrompt(null);
+        setNewExpirationDate('');
+        setSaving(false);
+        await sendResendEmail({
+          ...agreement,
+          expiresAt: updatedAgreement.expiresAt,
+        });
+      } else {
+        const error = await response.json();
+        showToast(`Error: ${error.error || 'Failed to update expiration date'}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error updating expiration date:', error);
+      showToast('Failed to update expiration date', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -2738,8 +2806,14 @@ const normalizePaymentStatus = (value?: string | null) => {
                         const bgColor = 'var(--admin-surface)';
                         const borderCol = 'var(--admin-hairline)';
                         const textCol = 'var(--admin-text)';
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const flipLeft = rect.right + 12 + 360 > window.innerWidth;
+                        const positionStyles = flipLeft
+                          ? `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.left - 12}px; transform: translateY(-50%) translateX(-100%);`
+                          : `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.right + 12}px; transform: translateY(-50%);`;
                         tooltip.style.cssText =
-                          'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
+                          positionStyles +
+                          ' background: ' +
                           bgColor +
                           '; border: 1px solid ' +
                           borderCol +
@@ -2747,10 +2821,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                           textCol +
                           '; overflow: hidden;';
                         tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
-                        e.currentTarget.appendChild(tooltip);
+                        document.body.appendChild(tooltip);
                       }}
-                      onMouseLeave={(e) => {
-                        const tooltip = e.currentTarget.querySelector('.engagement-tooltip');
+                      onMouseLeave={() => {
+                        const tooltip = document.querySelector('.engagement-tooltip');
                         if (tooltip) tooltip.remove();
                       }}
                     >
@@ -3243,8 +3317,14 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 const bgColor = 'var(--admin-surface)';
                                 const borderCol = 'var(--admin-hairline)';
                                 const textCol = 'var(--admin-text)';
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const flipLeft = rect.right + 12 + 360 > window.innerWidth;
+                                const positionStyles = flipLeft
+                                  ? `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.left - 12}px; transform: translateY(-50%) translateX(-100%);`
+                                  : `position: fixed; top: ${rect.top + rect.height / 2}px; left: ${rect.right + 12}px; transform: translateY(-50%);`;
                                 tooltip.style.cssText =
-                                  'position: absolute; top: 50%; left: 100%; transform: translateY(-50%); margin-left: 12px; background: ' +
+                                  positionStyles +
+                                  ' background: ' +
                                   bgColor +
                                   '; border: 1px solid ' +
                                   borderCol +
@@ -3252,10 +3332,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                                   textCol +
                                   '; overflow: hidden;';
                                 tooltip.innerHTML = buildEngagementTooltipHtml(agreement);
-                                e.currentTarget.appendChild(tooltip);
+                                document.body.appendChild(tooltip);
                               }}
-                              onMouseLeave={(e) => {
-                                const tooltip = e.currentTarget.querySelector('.engagement-tooltip');
+                              onMouseLeave={() => {
+                                const tooltip = document.querySelector('.engagement-tooltip');
                                 if (tooltip) tooltip.remove();
                               }}
                             >
@@ -4755,6 +4835,84 @@ const normalizePaymentStatus = (value?: string | null) => {
                   disabled={saving}
                 >
                   {saving ? 'Updating...' : 'Update'}
+                </AdminButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Resend Expiration Prompt Modal */}
+        {resendExpirationPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: cardBg,
+              borderRadius: '2px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '400px'
+            }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: textColor }}>
+                Agreement Expired
+              </h3>
+              <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: mutedText }}>
+                This agreement has expired. Choose a new expiration date before resending.
+              </p>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: textColor
+                }}>
+                  New Expiration Date
+                </label>
+                <input
+                  type="datetime-local"
+                  value={newExpirationDate}
+                  onChange={(e) => setNewExpirationDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '2px',
+                    backgroundColor: cardBg,
+                    color: textColor,
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end'
+              }}>
+                <AdminButton
+                  variant="ghost"
+                  onClick={() => {
+                    setResendExpirationPrompt(null);
+                    setNewExpirationDate('');
+                  }}
+                >
+                  Cancel
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
+                  onClick={() => handleUpdateExpirationAndResend()}
+                  disabled={saving || sendingToClient[resendExpirationPrompt.id]}
+                >
+                  {saving || sendingToClient[resendExpirationPrompt.id] ? 'Updating...' : 'Update & Resend'}
                 </AdminButton>
               </div>
             </div>
