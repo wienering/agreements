@@ -2762,7 +2762,6 @@ const normalizePaymentStatus = (value?: string | null) => {
                     minHeight: '56px',
                     userSelect: 'none'
                   }}
-                  title="Click to expand/collapse"
                 >
                   <UIcon
                     name="angle-down"
