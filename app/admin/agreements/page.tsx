@@ -78,6 +78,11 @@ interface Agreement {
     eventPackage?: string;
     packagePrice?: number | string;
   } | null;
+  backdropLinkId?: string | null;
+  backdropLink?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 interface WarningData {
@@ -112,6 +117,37 @@ function UnreadNotesBadge({ count }: { count: number }) {
       }}
     >
       {label}
+    </span>
+  );
+}
+
+const NO_ATTENDANT_FILTER = '__none__';
+
+function getAgreementAttendantName(agreement: Agreement): string | undefined {
+  const name = agreement.backdropLink?.name?.trim();
+  return name || undefined;
+}
+
+function agreementMissingAttendant(agreement: Agreement): boolean {
+  return agreement.status !== 'CANCELLED' && !getAgreementAttendantName(agreement);
+}
+
+function NoAttendantHint() {
+  return (
+    <span
+      title="No attendant assigned to this event"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        fontSize: '12px',
+        color: 'var(--status-idle)',
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <UIcon name="user" style={{ fontSize: '12px', color: 'var(--status-action)', opacity: 0.8 }} />
+      No attendant
     </span>
   );
 }
@@ -309,6 +345,7 @@ export default function AgreementsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [attendantFilter, setAttendantFilter] = useState<string>('ALL');
   const [clients, setClients] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [warningData, setWarningData] = useState<WarningData | null>(null);
@@ -641,13 +678,18 @@ const normalizePaymentStatus = (value?: string | null) => {
   useEffect(() => {
     setActivePage(1);
     setCompletedPage(1);
-  }, [debouncedSearchTerm, statusFilter]);
+  }, [debouncedSearchTerm, statusFilter, attendantFilter]);
 
   // Derived filtered list — computed once per change, no extra setState render
   const filteredAgreements = useMemo(() => {
     let filtered = agreements;
     if (statusFilter !== 'ALL') {
       filtered = filtered.filter(agreement => agreement.status === statusFilter);
+    }
+    if (attendantFilter === NO_ATTENDANT_FILTER) {
+      filtered = filtered.filter(agreement => !getAgreementAttendantName(agreement));
+    } else if (attendantFilter !== 'ALL') {
+      filtered = filtered.filter(agreement => agreement.backdropLink?.id === attendantFilter);
     }
     if (debouncedSearchTerm.trim()) {
       const searchLower = debouncedSearchTerm.toLowerCase();
@@ -665,6 +707,8 @@ const normalizePaymentStatus = (value?: string | null) => {
             (agreement.event.eventPackage && agreement.event.eventPackage.toLowerCase().includes(searchLower))
           ) return true;
         }
+        const attendantName = getAgreementAttendantName(agreement);
+        if (attendantName && attendantName.toLowerCase().includes(searchLower)) return true;
         if (agreement.status.toLowerCase().includes(searchLower)) return true;
         return false;
       });
@@ -678,7 +722,7 @@ const normalizePaymentStatus = (value?: string | null) => {
     };
     filtered = [...filtered].sort((a, b) => getEventTime(a) - getEventTime(b));
     return filtered;
-  }, [agreements, debouncedSearchTerm, statusFilter]);
+  }, [agreements, debouncedSearchTerm, statusFilter, attendantFilter]);
 
   const activeAgreements = useMemo(
     () => filteredAgreements.filter(a => a.status !== 'COMPLETED'),
@@ -2231,7 +2275,7 @@ const normalizePaymentStatus = (value?: string | null) => {
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search agreements by client name, email, template, event details, or status..."
+                placeholder="Search by client, email, template, event, attendant, or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
@@ -2251,6 +2295,49 @@ const normalizePaymentStatus = (value?: string | null) => {
                   e.currentTarget.style.borderColor = borderColor;
                 }}
               />
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              width: isMobile ? '100%' : '240px',
+              flexShrink: 0,
+            }}>
+              <label
+                htmlFor="attendant-filter"
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: textColor,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Attendant
+              </label>
+              <select
+                id="attendant-filter"
+                value={attendantFilter}
+                onChange={(e) => setAttendantFilter(e.target.value)}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '8px 12px',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '2px',
+                  backgroundColor: mainBg,
+                  color: textColor,
+                  fontSize: '14px',
+                }}
+              >
+                <option value="ALL">All attendants</option>
+                <option value={NO_ATTENDANT_FILTER}>No attendant</option>
+                {backdropLinks
+                  .slice()
+                  .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+                  .map(link => (
+                    <option key={link.id} value={link.id}>{link.name}</option>
+                  ))}
+              </select>
             </div>
           </div>
         </div>
@@ -2597,7 +2684,9 @@ const normalizePaymentStatus = (value?: string | null) => {
             <p style={{ margin: '0', color: mutedText, fontSize: '16px' }}>
               {debouncedSearchTerm.trim() 
                 ? `No agreements found matching "${debouncedSearchTerm}".` 
-                : 'No agreements found. Create your first agreement to get started.'}
+                : attendantFilter !== 'ALL'
+                  ? 'No agreements found for this attendant filter.'
+                  : 'No agreements found. Create your first agreement to get started.'}
             </p>
           </div>
         ) : (
@@ -2643,7 +2732,8 @@ const normalizePaymentStatus = (value?: string | null) => {
               const isRowExpanded = expandedRows.has(agreement.id);
               const eventDateRaw = agreement.event?.eventDate || agreement.client.eventDate;
               const eventDateObj = eventDateRaw ? new Date(eventDateRaw) : null;
-              const attendantName = (agreement as any).backdropLink?.name as string | undefined;
+              const attendantName = getAgreementAttendantName(agreement);
+              const missingAttendant = agreementMissingAttendant(agreement);
               const formatEventRelative = (d: Date | null): string => {
                 if (!d || isNaN(d.getTime())) return '';
                 const diffDays = torontoCalendarDaysBetween(new Date(), d);
@@ -2849,7 +2939,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
                       </span>
                     </div>
-                    {(attendantName || isMobile) && (
+                    {(attendantName || missingAttendant || isMobile) && (
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -2857,7 +2947,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                         marginTop: '2px',
                         minWidth: 0,
                       }}>
-                        {attendantName && (
+                        {attendantName ? (
                           <div style={{
                             flex: isMobile ? '1 1 0' : undefined,
                             minWidth: 0,
@@ -2869,11 +2959,18 @@ const normalizePaymentStatus = (value?: string | null) => {
                           }}>
                             Attendant: {attendantName}
                           </div>
-                        )}
+                        ) : missingAttendant ? (
+                          <div style={{
+                            flex: isMobile ? '1 1 0' : undefined,
+                            minWidth: 0,
+                          }}>
+                            <NoAttendantHint />
+                          </div>
+                        ) : null}
                         {isMobile && (
                           <div
                             style={{
-                              flexShrink: attendantName ? 0 : undefined,
+                              flexShrink: (attendantName || missingAttendant) ? 0 : undefined,
                               fontSize: '11px',
                               lineHeight: 1.3,
                               color: statusHint.urgency === 'danger'
@@ -2885,7 +2982,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
-                              maxWidth: attendantName ? '45%' : '100%',
+                              maxWidth: (attendantName || missingAttendant) ? '45%' : '100%',
                             }}
                             title={statusHint.text}
                           >
@@ -3047,12 +3144,14 @@ const normalizePaymentStatus = (value?: string | null) => {
                             Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
                           </span>
                         )}
-                        {attendantName && (
+                        {attendantName ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent)', fontWeight: 500 }}>
                             <UIcon name="link" style={{ fontSize: '12px' }} />
                             Attendant: {attendantName}
                           </span>
-                        )}
+                        ) : missingAttendant ? (
+                          <NoAttendantHint />
+                        ) : null}
                         {agreement.selectedBackdropName && (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--accent)', fontWeight: 500 }}>
                             <UIcon name="camera" style={{ fontSize: '12px' }} />
@@ -3294,6 +3393,8 @@ const normalizePaymentStatus = (value?: string | null) => {
                           if (warningType === 'warning') return '3px solid var(--warn)';
                           return `1px solid ${borderColor}`;
                         };
+                        const attendantName = getAgreementAttendantName(agreement);
+                        const missingAttendant = agreementMissingAttendant(agreement);
 
                     return (
                       <div key={agreement.id} style={{
@@ -3328,6 +3429,15 @@ const normalizePaymentStatus = (value?: string | null) => {
                                 <UnreadNotesBadge count={agreement.unreadNotesCount ?? 0} />
                               </span>
                             </h3>
+                            {attendantName ? (
+                              <div style={{ marginTop: '4px', fontSize: '12px', color: mutedText }}>
+                                Attendant: {attendantName}
+                              </div>
+                            ) : missingAttendant ? (
+                              <div style={{ marginTop: '4px' }}>
+                                <NoAttendantHint />
+                              </div>
+                            ) : null}
                           </div>
                           <div style={{ 
                             display: 'flex', 
