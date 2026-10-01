@@ -1,12 +1,13 @@
 import type { NextAuthOptions } from 'next-auth';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { devLog } from './logger';
 import EmailProvider from 'next-auth/providers/email';
-import { memoryAdapter } from './memory-adapter';
+import { prisma } from './prisma';
 import { renderCtaButton, renderEmailLayout } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
 
 export const authOptions: NextAuthOptions = {
-  adapter: memoryAdapter,
+  adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
       from: process.env.SMTP_FROM,
