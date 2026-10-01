@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { sendViewAlertEmail } from '@/lib/view-alert-email';
@@ -10,6 +11,7 @@ import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
 import { logAgreementActivity } from '@/lib/activityLog';
+import { isCancelledOrVoid, isNotExpired, isSignableStatus } from '@/lib/agreements/signable';
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -24,11 +26,6 @@ export async function POST(request: NextRequest) {
     const agreement = await prisma.agreement.findFirst({
       where: {
         uniqueToken: validatedData.token,
-        OR: [
-          { status: { in: ['SIGNED', 'COMPLETED'] } },
-          { expiresAt: null },
-          { expiresAt: { gte: new Date() } },
-        ],
       },
       include: {
         client: true,
@@ -51,10 +48,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
+    if (isCancelledOrVoid(agreement.status)) {
+      return NextResponse.json(
+        { error: 'This agreement has been cancelled', success: false },
+        { status: 410 },
+      );
+    }
+
+    // SIGNED / COMPLETED stay viewable read-only even if expiresAt has passed.
+    // DRAFT / SENT / LIVE require a null or future expiresAt.
+    const isReadOnlyView =
+      agreement.status === 'SIGNED' || agreement.status === 'COMPLETED';
+    if (!isReadOnlyView) {
+      if (!isSignableStatus(agreement.status) || !isNotExpired(agreement.expiresAt)) {
+        return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
+      }
+    }
+
     const inputEmail = validatedData.email.toLowerCase();
     const primaryEmail = agreement.client.email.toLowerCase();
-    const secondarySignerEnabled = Boolean((agreement as any).secondSignerEnabled);
-    const secondaryEmailRaw = (agreement as any).secondSignerEmail as string | null | undefined;
+    const secondarySignerEnabled = Boolean(agreement.secondSignerEnabled);
+    const secondaryEmailRaw = agreement.secondSignerEmail;
     const secondaryEmail = secondaryEmailRaw ? secondaryEmailRaw.toLowerCase() : null;
 
     const matchesPrimary = primaryEmail === inputEmail;
@@ -111,8 +125,8 @@ export async function POST(request: NextRequest) {
       // Build secondary signer summary (without phone — not needed by client UI)
       const secondSigner = secondarySignerEnabled
         ? {
-            firstName: (agreement as any).secondSignerFirstName || '',
-            lastName: (agreement as any).secondSignerLastName || '',
+            firstName: agreement.secondSignerFirstName || '',
+            lastName: agreement.secondSignerLastName || '',
             email: secondaryEmailRaw || '',
           }
         : null;
@@ -127,8 +141,8 @@ export async function POST(request: NextRequest) {
           }
         : {
             role: 'secondary' as const,
-            firstName: (agreement as any).secondSignerFirstName || '',
-            lastName: (agreement as any).secondSignerLastName || '',
+            firstName: agreement.secondSignerFirstName || '',
+            lastName: agreement.secondSignerLastName || '',
             email: secondaryEmailRaw || validatedData.email,
           };
 
@@ -147,27 +161,79 @@ export async function POST(request: NextRequest) {
           event: agreement.event,
           fields: agreement.fields,
           secondSignerEnabled: secondarySignerEnabled,
-          requireBothSignatures: Boolean((agreement as any).requireBothSignatures),
+          requireBothSignatures: Boolean(agreement.requireBothSignatures),
           secondSigner,
-          signatures: (agreement as any).signatures || [],
+          signatures: agreement.signatures || [],
         }
       });
     } else {
-      // Wrong email — send unauthorized access alert
+      // Wrong email — rate-limit + throttle admin alerts via AuditLog
       const expectedEmails = [agreement.client.email];
       if (secondarySignerEnabled && secondaryEmailRaw) expectedEmails.push(secondaryEmailRaw);
-      devLog('[verify-email] Email mismatch. expected one of:', expectedEmails.join(', '), 'got:', validatedData.email);
+      const ipAddress = getClientIP(request);
+      const attemptedEmail = validatedData.email;
+      devLog('[verify-email] Email mismatch. expected one of:', expectedEmails.join(', '), 'got:', attemptedEmail);
+
       try {
-        await sendUnauthorizedAccessEmail({
-          agreementId: agreement.id,
-          clientEmail: expectedEmails.join(' / '),
-          attemptedEmail: validatedData.email,
-          ipAddress: getClientIP(request),
-          userAgent: request.headers.get('user-agent') || 'Unknown',
-          timestamp: new Date()
+        const now = new Date();
+        const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+        const sixtyMinutesAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+        // Only send the alert if there is no prior WRONG_EMAIL_ATTEMPT for this
+        // agreement in the last 60 minutes (checked before we write the new row).
+        const recentAgreementAttempts = await prisma.auditLog.count({
+          where: {
+            agreementId: agreement.id,
+            action: 'WRONG_EMAIL_ATTEMPT',
+            createdAt: { gte: sixtyMinutesAgo },
+          },
         });
-      } catch (alertErr) {
-        console.error('[verify-email] Unauthorized access email failed:', alertErr);
+        const shouldSendAlert = recentAgreementAttempts === 0;
+
+        await prisma.auditLog.create({
+          data: {
+            agreementId: agreement.id,
+            actor: ipAddress,
+            action: 'WRONG_EMAIL_ATTEMPT',
+            metadata: { ip: ipAddress, attemptedEmail } satisfies Prisma.InputJsonObject,
+          },
+        });
+
+        // Rate-limit by IP across all agreements: >10 attempts in 15 minutes → 429
+        // actor is set to the IP on each WRONG_EMAIL_ATTEMPT row above.
+        const ipAttemptCount = await prisma.auditLog.count({
+          where: {
+            action: 'WRONG_EMAIL_ATTEMPT',
+            actor: ipAddress,
+            createdAt: { gte: fifteenMinutesAgo },
+          },
+        });
+
+        if (ipAttemptCount > 10) {
+          return NextResponse.json({
+            error: 'Too many attempts. Please try again later.',
+            success: false,
+          }, { status: 429 });
+        }
+
+        if (shouldSendAlert) {
+          try {
+            await sendUnauthorizedAccessEmail({
+              agreementId: agreement.id,
+              clientEmail: expectedEmails.join(' / '),
+              attemptedEmail,
+              ipAddress,
+              userAgent: request.headers.get('user-agent') || 'Unknown',
+              timestamp: now,
+            });
+          } catch (alertErr) {
+            console.error('[verify-email] Unauthorized access email failed:', alertErr);
+          }
+        } else {
+          devLog('[verify-email] Skipping unauthorized access email (already alerted within 60 minutes)');
+        }
+      } catch (auditErr) {
+        console.error('[verify-email] Wrong-email audit/throttle failed:', auditErr);
       }
 
       return NextResponse.json({
