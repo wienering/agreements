@@ -1,4 +1,5 @@
 import {
+  formatDateToronto,
   formatEventDateTorontoShort,
   torontoCalendarDaysBetween,
   torontoDateKey,
@@ -95,7 +96,7 @@ export function getQuoteUrl(lead: {
   if (lead.eventDate) {
     params.set(
       'eventDate',
-      new Date(lead.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }),
+      formatDateToronto(lead.eventDate),
     );
   }
   return `/admin/quotes?${params.toString()}`;

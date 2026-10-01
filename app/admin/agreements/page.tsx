@@ -194,7 +194,7 @@ function buildEngagementTooltipHtml(agreement: Agreement): string {
 
   const lastEmailText = agreement.lastEmailedAt
     ? 'Last: ' +
-      escapeHtml(new Date(agreement.lastEmailedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }))
+      escapeHtml(formatDateToronto(agreement.lastEmailedAt))
     : 'Never emailed';
   const lastViewText = lastViewed ? 'Last: ' + escapeHtml(lastViewed) : 'Never viewed';
 
@@ -2880,7 +2880,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                           whiteSpace: 'nowrap',
                         }}>
                           {eventDateObj
-                            ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Toronto' })
+                            ? formatDateToronto(eventDateObj, { month: 'short', day: 'numeric' }, 'en-US')
                             : 'No date'}
                         </div>
                         <div style={{
@@ -2897,7 +2897,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       <>
                         <div style={{ fontSize: '13px', color: textColor, fontWeight: 500, lineHeight: 1.2 }}>
                           {eventDateObj
-                            ? eventDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' })
+                            ? formatDateToronto(eventDateObj, { month: 'short', day: 'numeric', year: 'numeric' }, 'en-US')
                             : 'No date'}
                         </div>
                         <div style={{ fontSize: '11px', color: mutedText, lineHeight: 1.2, marginTop: '2px' }}>
@@ -3129,7 +3129,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                     <div style={{ borderTop: `1px solid ${borderColor}`, padding: '12px 16px 16px 16px' }}>
                       {/* Compact metadata muted line */}
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: mutedText, marginBottom: '12px', alignItems: 'center' }}>
-                        <span>Created {new Date(agreement.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}</span>
+                        <span>Created {formatDateToronto(agreement.createdAt)}</span>
                         {agreement.status !== 'SIGNED' && (
                           <span
                             onClick={(e) => {
@@ -3141,7 +3141,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             title="Click to edit expiration date"
                             style={{ cursor: 'pointer' }}
                           >
-                            Expires {new Date(agreement.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                            Expires {formatDateToronto(agreement.expiresAt)}
                           </span>
                         )}
                         {attendantName ? (
@@ -3468,9 +3468,9 @@ const normalizePaymentStatus = (value?: string | null) => {
                             <span style={{ fontSize: '12px', color: mutedText }}>Event Date</span>
                             <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: textColor }}>
                               {agreement.event?.eventDate 
-                                ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+                                ? formatDateToronto(agreement.event.eventDate)
                                 : agreement.client.eventDate 
-                                  ? new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+                                  ? formatDateToronto(agreement.client.eventDate)
                                   : 'Not set'}
                             </p>
                           </div>
@@ -3478,7 +3478,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                             <span style={{ fontSize: '12px', color: mutedText }}>Signed</span>
                             <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: textColor }}>
                               {agreement.signedAt 
-                                ? new Date(agreement.signedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })
+                                ? formatDateToronto(agreement.signedAt)
                                 : 'Not signed'}
                             </p>
                           </div>
@@ -5055,7 +5055,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                   <p style={{ margin: '0 0 16px 0', color: textColor }}>
                     <strong>Client:</strong> {cancellingAgreement.client.firstName} {cancellingAgreement.client.lastName}<br/>
                     <strong>Template:</strong> {cancellingAgreement.template.title}<br/>
-                    <strong>Signed:</strong> {cancellingAgreement.signedAt ? new Date(cancellingAgreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                    <strong>Signed:</strong> {cancellingAgreement.signedAt ? formatDateTimeToronto(cancellingAgreement.signedAt) : 'N/A'}
                   </p>
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ 
@@ -5247,7 +5247,7 @@ const normalizePaymentStatus = (value?: string | null) => {
                       <strong>Template:</strong> {cancellingAgreement.template.title}
                     </p>
                     <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
-                      <strong>Signed:</strong> {cancellingAgreement.signedAt ? new Date(cancellingAgreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                      <strong>Signed:</strong> {cancellingAgreement.signedAt ? formatDateTimeToronto(cancellingAgreement.signedAt) : 'N/A'}
                     </p>
                     <p style={{ margin: '0 0 4px 0', color: textColor, fontSize: '14px' }}>
                       <strong>Reason:</strong> {cancellationReason}
@@ -5678,11 +5678,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                             color: mutedText,
                             marginBottom: '8px'
                           }}>
-                            <strong>Due Date:</strong> {new Date(invoice.dueDate).toLocaleDateString('en-CA', {
-                              timeZone: 'America/Toronto',
+                            <strong>Due Date:</strong> {formatDateToronto(invoice.dueDate, {
                               year: 'numeric',
                               month: 'long',
-                              day: 'numeric'
+                              day: 'numeric',
                             })}
                           </div>
                           {invoice.invoiceUrl && (
@@ -6222,11 +6221,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       color: textColor,
                       fontWeight: '500'
                     }}>
-                      {new Date(previewAgreement.expiresAt).toLocaleDateString('en-CA', {
-                        timeZone: 'America/Toronto',
+                      {formatDateToronto(previewAgreement.expiresAt, {
                         year: 'numeric',
                         month: 'long',
-                        day: 'numeric'
+                        day: 'numeric',
                       })}
                     </p>
                   </div>
@@ -6309,11 +6307,10 @@ const normalizePaymentStatus = (value?: string | null) => {
                       View & Sign Agreement →
                     </div>
                     <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--admin-muted)' }}>
-                      This agreement expires on {new Date(previewAgreement.expiresAt).toLocaleDateString('en-CA', {
-                        timeZone: 'America/Toronto',
+                      This agreement expires on {formatDateToronto(previewAgreement.expiresAt, {
                         year: 'numeric',
                         month: 'long',
-                        day: 'numeric'
+                        day: 'numeric',
                       })}.
                     </p>
                   </div>

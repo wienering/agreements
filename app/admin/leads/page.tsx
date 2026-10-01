@@ -1,6 +1,7 @@
 'use client';
 
 import { adminFetch } from '@/lib/adminFetch';
+import { formatDateToronto } from '@/lib/dates';
 import { getAgreementViewUrl, getQuoteUrl } from '@/lib/leads/display';
 import { foldLeadsByEmail } from '@/lib/leads/dedup';
 import {
@@ -435,8 +436,7 @@ export default function LeadsPage() {
     }
   };
 
-  const toDateOnly = (value: Date | string) =>
-    new Date(value).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+  const toDateOnly = (value: Date | string) => formatDateToronto(value);
 
   const renderLeadList = (rows: FilteredFoldedLead<LeadRecord>[]) =>
     rows.map(({ folded, forceExpanded }) => (

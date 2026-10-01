@@ -11,6 +11,7 @@ import {
 } from '@/lib/leads/display';
 import { LeadOverflowMenu } from './LeadOverflowMenu';
 import type { FoldedLeadRecord, LeadRecord, ManualArchiveReason } from './types';
+import { formatGroupedNumber } from '@/lib/dates';
 
 type LeadRowProps = {
   folded: FoldedLeadRecord;
@@ -192,7 +193,7 @@ function LeadInquirySubRow({
 }: LeadRowProps & { lead: LeadRecord }) {
   const dateBadge = formatLeadDateBadge(lead.eventDate);
   const quoteTotal =
-    lead.quoteTotal != null ? `$${Number(lead.quoteTotal).toLocaleString('en-CA')}` : null;
+    lead.quoteTotal != null ? `$${formatGroupedNumber(Number(lead.quoteTotal), 'en-CA')}` : null;
 
   return (
     <div
@@ -296,7 +297,7 @@ export function LeadRow({
   const isArchived = Boolean(lead.archivedAt);
   const dateBadge = formatLeadDateBadge(lead.eventDate);
   const quoteTotal =
-    lead.quoteTotal != null ? `$${Number(lead.quoteTotal).toLocaleString('en-CA')}` : null;
+    lead.quoteTotal != null ? `$${formatGroupedNumber(Number(lead.quoteTotal), 'en-CA')}` : null;
 
   return (
     <div style={{ borderBottom: `1px solid ${borderColor}` }}>

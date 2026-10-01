@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { UIcon } from '../../../components/UIcon';
 import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 
 interface AgreementData {
   id: string;
@@ -524,12 +525,11 @@ export default function AdminPreviewPage() {
                         }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                             <UIcon name="calendar" style={{ fontSize: '14px' }} />
-                            {new Date(agreement.client.eventDate).toLocaleDateString('en-CA', { 
-                            timeZone: 'America/Toronto',
+                            {formatDateToronto(agreement.client.eventDate, {
                             weekday: 'short',
                             year: 'numeric',
                             month: 'short',
-                            day: 'numeric'
+                            day: 'numeric',
                           })}
                           </span>
                         </p>
@@ -824,7 +824,7 @@ export default function AdminPreviewPage() {
                       fontSize: '14px', 
                       color: 'var(--ink)' 
                     }}>
-                      {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                      {agreement.signedAt ? formatDateTimeToronto(agreement.signedAt) : 'N/A'}
                     </p>
                   </div>
                   <div>

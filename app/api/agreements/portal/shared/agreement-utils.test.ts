@@ -119,8 +119,7 @@ describe('processHtmlContent', () => {
   });
 
   // Bug: `packagePrice ? formatted : ''` treats 0 as missing, so a free package renders blank.
-  it.skip('formats a package price of 0 as $0.00', () => {
-    const out = processHtmlContent('{{event.price}}', { ...client, packagePrice: 0 }, 'agr-1');
+  it('formats a package price of 0 as $0.00', () => {    const out = processHtmlContent('{{event.price}}', { ...client, packagePrice: 0 }, 'agr-1');
     expect(out).toBe('$0.00');
   });
 });

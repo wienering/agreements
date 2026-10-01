@@ -195,7 +195,11 @@ export function processHtmlContent(
   processedHtml = processedHtml.replace(/\{\{event\.package\}\}/g, esc(eventPackage));
   processedHtml = processedHtml.replace(
     /\{\{event\.price\}\}/g,
-    esc(packagePrice ? `$${Number(packagePrice).toFixed(2)}` : ''),
+    esc(
+      packagePrice !== null && packagePrice !== undefined && packagePrice !== ''
+        ? `$${Number(packagePrice).toFixed(2)}`
+        : '',
+    ),
   );
 
   // Replace agreement fields

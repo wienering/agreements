@@ -4,7 +4,7 @@ import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { UIcon } from '../../components/UIcon';
-import { formatEventDateToronto } from '@/lib/dates';
+import { formatEventDateToronto, formatGroupedNumber } from '@/lib/dates';
 
 interface ContactInfo {
   name: string;
@@ -518,7 +518,7 @@ export default function QuotesPage() {
               )}
             </span>
             <span style={{ color: textColor, fontWeight: '600', flexShrink: 0 }}>
-              ${selectedPackage.price.toLocaleString()}
+              ${formatGroupedNumber(selectedPackage.price)}
             </span>
           </div>
         )}
@@ -568,7 +568,7 @@ export default function QuotesPage() {
                 <strong>Subtotal</strong>
               </span>
               <span style={{ color: textColor, fontWeight: '600', flexShrink: 0 }}>
-                ${calculateSubtotalForDraft(draft, pricing).toLocaleString()}
+                ${formatGroupedNumber(calculateSubtotalForDraft(draft, pricing))}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
@@ -576,7 +576,7 @@ export default function QuotesPage() {
                 <strong>Discount{discount.note ? ` (${discount.note})` : ''}</strong>
               </span>
               <span style={{ color: 'var(--alert)', fontWeight: '600', flexShrink: 0 }}>
-                -${discount.amount.toLocaleString()}
+                -${formatGroupedNumber(discount.amount)}
               </span>
             </div>
           </>
@@ -600,7 +600,7 @@ export default function QuotesPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
           <span style={{ color: mutedText }}>Base Package:</span>
           <span style={{ color: textColor, fontWeight: '600', flexShrink: 0 }}>
-            ${draft.selectedPackage ? draft.selectedPackage.price.toLocaleString() : '0'}
+            ${draft.selectedPackage ? formatGroupedNumber(draft.selectedPackage.price) : '0'}
           </span>
         </div>
         {draft.addons.unlimitedPrints &&
@@ -641,7 +641,7 @@ export default function QuotesPage() {
             >
               <span style={{ color: mutedText }}>Subtotal:</span>
               <span style={{ color: textColor, fontWeight: '600', flexShrink: 0 }}>
-                ${calculateSubtotalForDraft(draft, pricing).toLocaleString()}
+                ${formatGroupedNumber(calculateSubtotalForDraft(draft, pricing))}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
@@ -649,7 +649,7 @@ export default function QuotesPage() {
                 Discount{draft.discount.note ? ` (${draft.discount.note})` : ''}:
               </span>
               <span style={{ color: 'var(--alert)', fontWeight: '600', flexShrink: 0 }}>
-                -${draft.discount.amount.toLocaleString()}
+                -${formatGroupedNumber(draft.discount.amount)}
               </span>
             </div>
           </>
@@ -666,7 +666,7 @@ export default function QuotesPage() {
         >
           <span style={{ color: textColor, fontWeight: '700', fontSize: '18px' }}>Total:</span>
           <span style={{ color: accentColor, fontWeight: '700', fontSize: '20px', flexShrink: 0 }}>
-            ${calculateTotalForDraft(draft, pricing).toLocaleString()}
+            ${formatGroupedNumber(calculateTotalForDraft(draft, pricing))}
           </span>
         </div>
       </div>
@@ -743,7 +743,7 @@ export default function QuotesPage() {
                       {hours} Hours
                     </div>
                     <div style={{ fontSize: '24px', fontWeight: '700', color: accentColor }}>
-                      ${displayPrice.toLocaleString()}
+                      ${formatGroupedNumber(displayPrice)}
                     </div>
                     {hasOverride && (
                       <div
@@ -754,7 +754,7 @@ export default function QuotesPage() {
                           marginTop: '4px',
                         }}
                       >
-                        ${defaultPrice.toLocaleString()} (default)
+                        ${formatGroupedNumber(defaultPrice)} (default)
                       </div>
                     )}
                   </div>
@@ -1792,7 +1792,7 @@ export default function QuotesPage() {
                       >
                         <span style={{ color: textColor, fontWeight: '700', fontSize: '18px' }}>Total:</span>
                         <span style={{ color: accentColor, fontWeight: '700', fontSize: '20px', flexShrink: 0 }}>
-                          ${calculateTotalForDraft(draft, pricing).toLocaleString()}
+                          ${formatGroupedNumber(calculateTotalForDraft(draft, pricing))}
                         </span>
                       </div>
                     </div>
@@ -1822,7 +1822,7 @@ export default function QuotesPage() {
                   }}>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>Total Cost</h3>
                     <div style={{ fontSize: '36px', fontWeight: '700' }}>
-                      ${calculateTotalForDraft(primaryDraft, pricing).toLocaleString()}
+                      ${formatGroupedNumber(calculateTotalForDraft(primaryDraft, pricing))}
                     </div>
                   </div>
                 </>

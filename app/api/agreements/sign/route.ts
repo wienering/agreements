@@ -5,6 +5,7 @@ import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
@@ -39,7 +40,7 @@ function buildSignatureBlockHtml(
   const rows = signatures
     .map((s) => {
       const when = s.signedAt
-        ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' })
+        ? formatDateTimeToronto(s.signedAt)
         : '';
       return `
         <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #3f6f4f; background-color: #FBFBF9;">
@@ -360,7 +361,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
     .map((s: any) => `
       <li>
         <strong>${escapeHtml(s.signerName)}</strong> &lt;${escapeHtml(s.signerEmail)}&gt;
-        — ${s.signedAt ? new Date(s.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+        — ${s.signedAt ? formatDateTimeToronto(s.signedAt) : 'N/A'}
         ${s.ip ? `(IP ${escapeHtml(s.ip)})` : ''}
       </li>`)
     .join('\n');
@@ -382,7 +383,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
     ${secondSignerLine}
     <strong>Template:</strong> ${templateTitle}<br>
     <strong>Agreement ID:</strong> ${agreement.id}<br>
-    <strong>Signed At:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
+    <strong>Signed At:</strong> ${agreement.signedAt ? formatDateTimeToronto(agreement.signedAt) : 'N/A'}<br>
     <strong>IP Address:</strong> ${safeClientIP}`;
 
   const signatureInfoHtml = `
@@ -408,7 +409,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
     <p style="margin:16px 0 0 0;">This notification was automatically sent when the client completed the digital signing process.</p>
     <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
-      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      Generated: ${formatDateTimeToronto(new Date())}
     </p>
   `;
 
@@ -450,7 +451,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   const eventType = escapeHtml(agreement.event?.eventType ?? agreement.client.eventType ?? 'To be confirmed');
   const eventDate = agreement.event?.eventDate ?? agreement.client.eventDate;
   const eventDateText = escapeHtml(
-    eventDate ? new Date(eventDate).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' }) : 'To be confirmed',
+    eventDate ? formatDateToronto(eventDate) : 'To be confirmed',
   );
   const eventPackage = escapeHtml(agreement.event?.eventPackage ?? agreement.client.eventPackage ?? 'Standard Package');
   const packagePrice = agreement.event?.packagePrice ?? agreement.client.packagePrice;
@@ -464,7 +465,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
     <strong>Package:</strong> ${eventPackage}<br>
     ${packagePrice ? `<strong>Investment:</strong> $${Number(packagePrice).toFixed(2)}<br>` : ''}
     <strong>Agreement ID:</strong> ${agreement.id}<br>
-    <strong>Signed On:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}`;
+    <strong>Signed On:</strong> ${agreement.signedAt ? formatDateTimeToronto(agreement.signedAt) : 'N/A'}`;
 
   const nextStepsHtml = `
     <ul style="margin:0;padding-left:20px;">
@@ -501,7 +502,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
     <p style="margin:16px 0 0 0;">Once again, thank you for choosing Photobooth Guys. We can't wait to make your event unforgettable!</p>
     <p style="margin:16px 0 0 0;">Best regards,<br><strong>The Photobooth Guys Team</strong></p>
     <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
-      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      Generated: ${formatDateTimeToronto(new Date())}
     </p>
   `;
 
@@ -576,7 +577,7 @@ async function sendWaitingForSecondSignerEmail(
     <p style="margin:16px 0 0 0;">If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
     <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
-      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      Generated: ${formatDateTimeToronto(new Date())}
     </p>
   `;
 

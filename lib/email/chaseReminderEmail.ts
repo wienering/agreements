@@ -7,6 +7,7 @@ import {
 } from '@/lib/chaseUnsignedAgreement';
 import { renderCtaButton, renderEmailLayout } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
+import { formatDateTimeToronto } from '@/lib/dates';
 
 type SendChaseReminderEmailArgs = {
   agreement: ChaseAgreement;
@@ -45,7 +46,7 @@ export async function sendChaseReminderEmail({
     <p style="margin:16px 0 0 0;">If you have any questions, just reply to this email or contact us at info@photoboothguys.ca.</p>
     <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
-      Agreement ID: ${escapeHtml(agreement.id)} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      Agreement ID: ${escapeHtml(agreement.id)} | Generated: ${formatDateTimeToronto(new Date())}
     </p>
   `;
 

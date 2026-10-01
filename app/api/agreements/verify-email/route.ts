@@ -11,6 +11,7 @@ import { escapeHtml } from '@/lib/htmlEscape';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { handleApiError } from '@/lib/handleApiError';
 import { logAgreementActivity } from '@/lib/activityLog';
+import { formatDateTimeToronto } from '@/lib/dates';
 import { isCancelledOrVoid, isNotExpired, isSignableStatus } from '@/lib/agreements/signable';
 
 const verifyEmailSchema = z.object({
@@ -280,7 +281,7 @@ async function sendUnauthorizedAccessEmail(data: {
       <li><strong>Attempted Email:</strong> ${safeAttemptedEmail}</li>
       <li><strong>IP Address:</strong> ${safeIpAddress}</li>
       <li><strong>User Agent:</strong> ${safeUserAgent}</li>
-      <li><strong>Timestamp:</strong> ${data.timestamp.toLocaleString('en-CA', { timeZone: 'America/Toronto' })}</li>
+      <li><strong>Timestamp:</strong> ${formatDateTimeToronto(data.timestamp)}</li>
     </ul>`;
 
   const bodyHtml = `

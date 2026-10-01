@@ -68,19 +68,28 @@ export function utcDateKey(date: Date | string | number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Display date in Toronto. */
+/**
+ * Grouped price number. Preserves the call site's locale (`undefined` uses the runtime default).
+ * Number formatting has no time zone.
+ */
+export function formatGroupedNumber(value: number, locale?: string): string {
+  return locale === undefined ? value.toLocaleString() : value.toLocaleString(locale);
+}
+
+/** Display date in Toronto. Locale defaults to en-CA; the time zone is always America/Toronto. */
 export function formatDateToronto(
   date: Date | string | number,
   options: Intl.DateTimeFormatOptions = {},
+  locale = 'en-CA',
 ): string {
   const d = coerceDate(date);
   if (!isValidDate(d)) {
     console.error('[dates] formatDateToronto: invalid date input', date);
     return INVALID_DATE_FALLBACK;
   }
-  return d.toLocaleDateString('en-CA', {
-    timeZone: TORONTO_TZ,
+  return d.toLocaleDateString(locale, {
     ...options,
+    timeZone: TORONTO_TZ,
   });
 }
 
@@ -88,15 +97,16 @@ export function formatDateToronto(
 export function formatDateTimeToronto(
   date: Date | string | number,
   options: Intl.DateTimeFormatOptions = {},
+  locale = 'en-CA',
 ): string {
   const d = coerceDate(date);
   if (!isValidDate(d)) {
     console.error('[dates] formatDateTimeToronto: invalid date input', date);
     return INVALID_DATE_FALLBACK;
   }
-  return d.toLocaleString('en-CA', {
-    timeZone: TORONTO_TZ,
+  return d.toLocaleString(locale, {
     ...options,
+    timeZone: TORONTO_TZ,
   });
 }
 
@@ -129,7 +139,13 @@ export function parseTorontoCalendarDateKey(dateKey: string): Date | null {
     return null;
   }
 
-  return torontoMidnightUtc(year, month, day);
+  const instant = torontoMidnightUtc(year, month, day);
+  const parts = getTorontoDateParts(instant);
+  if (parts.year !== year || parts.month !== month || parts.day !== day) {
+    return null;
+  }
+
+  return instant;
 }
 
 /**

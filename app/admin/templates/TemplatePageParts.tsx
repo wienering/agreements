@@ -1,6 +1,7 @@
 'use client';
 
 import { RichTextPreview } from '../../components/RichTextEditor';
+import { formatDateToronto } from '@/lib/dates';
 import { AdminButton } from '../../components/AdminButton';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -220,7 +221,7 @@ export function SortableTemplateItem({
           }}
         >
           Created{' '}
-          {new Date(template.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+          {formatDateToronto(template.createdAt)}
         </span>
       </div>
 

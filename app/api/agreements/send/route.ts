@@ -11,6 +11,7 @@ import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/ema
 import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
+import { formatDateTimeToronto, formatEventDateToronto } from '@/lib/dates';
 
 const sendAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -74,18 +75,9 @@ export async function POST(request: NextRequest) {
     const newSendCount = currentSendCount + 1;
     
     // Format expiration date for display
-    const formatExpirationDate = (expiresAt: Date | null) => {
-      if (!expiresAt) return 'No expiration date set';
-      return expiresAt.toLocaleDateString('en-CA', { 
-        timeZone: 'America/Toronto',
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
-
-    const expirationDate = formatExpirationDate(agreement.expiresAt);
+    const expirationDate = agreement.expiresAt
+      ? formatEventDateToronto(agreement.expiresAt)
+      : 'No expiration date set';
     
     // Different messaging based on send count
     let emailSubject, emailTitle, emailMessage, emailUrgency;
@@ -143,7 +135,7 @@ export async function POST(request: NextRequest) {
       <p style="margin:0 0 16px 0;">If you have any questions about this agreement, please contact us at info@photoboothguys.ca</p>
       <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
         This email was sent by Photobooth Guys Agreement Management System<br>
-        Agreement ID: ${agreement.id} | Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+        Agreement ID: ${agreement.id} | Generated: ${formatDateTimeToronto(new Date())}
       </p>
     `;
 

@@ -17,3 +17,13 @@ Total signed with mergedHtml: 31
 Likely affected: 4
 
 Re-run: `npx tsx scripts/list-affected-agreement-dates.ts`
+
+## Bookly date-only shifts
+
+Date-only Bookly bookings were stored as UTC midnight (`new Date('YYYY-MM-DD')`). That instant is the previous evening in Toronto, so the event shows up one calendar day early. The original booking date is the UTC calendar day of the stored instant. New Bookly date-only bookings are stored as midnight on that Toronto calendar day, the same instant the admin event form stores for a datetime-local value of `YYYY-MM-DDT00:00`.
+
+`scripts/list-bookly-date-shifts.ts` lists events that still have `eventDate` at exactly 00:00:00.000 UTC. It prints the client name, the stored instant (and the Toronto date that instant currently shows), and the date it probably should be. The script only reads. It leaves the database unchanged.
+
+An admin event entered at 8:00 PM EDT or 7:00 PM EST is also stored at 00:00 UTC. Check a row before correcting it by hand.
+
+Run: `npx tsx scripts/list-bookly-date-shifts.ts`

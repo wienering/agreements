@@ -1,6 +1,7 @@
 'use client';
 
 import { adminFetch } from '@/lib/adminFetch';
+import { formatDateToronto } from '@/lib/dates';
 import { useState, useEffect } from 'react';
 import { AdminButton } from '../../../components/AdminButton';
 import { useRouter } from 'next/navigation';
@@ -240,7 +241,7 @@ export default function ArchivedAgreementsPage() {
                       {agreement.client.firstName} {agreement.client.lastName} ({agreement.client.email})
                     </p>
                     <p style={{ margin: '0 0 4px 0', color: mutedText, fontSize: '14px' }}>
-                      Archived: {new Date(agreement.archivedAt).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                      Archived: {formatDateToronto(agreement.archivedAt)}
                     </p>
                   </div>
                   <StatusBadge variant={agreementStatusToBadgeVariant(agreement.status)}>

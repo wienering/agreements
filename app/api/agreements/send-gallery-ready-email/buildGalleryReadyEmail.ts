@@ -6,6 +6,7 @@ import {
   renderEmailLayout,
 } from '@/lib/email/layout';
 import { getEmailGreeting } from '@/lib/email/greeting';
+import { formatDateToronto, formatEventDateToronto } from '@/lib/dates';
 
 export type GalleryLink = { title: string; url: string };
 
@@ -100,20 +101,10 @@ export function buildGalleryReadyEmail(agreement: GalleryReadyAgreement): { subj
   }
 
   const eventDateFull = agreement.event?.eventDate
-    ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', {
-        timeZone: 'America/Toronto',
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
+    ? formatEventDateToronto(agreement.event.eventDate)
     : null;
   const eventDateShort = agreement.event?.eventDate
-    ? new Date(agreement.event.eventDate).toLocaleDateString('en-CA', {
-        timeZone: 'America/Toronto',
-        month: 'long',
-        day: 'numeric',
-      })
+    ? formatDateToronto(agreement.event.eventDate, { month: 'long', day: 'numeric' })
     : null;
   const eventType = escapeHtml(agreement.event?.eventType || 'event');
   const clientGreeting = escapeHtml(getEmailGreeting(agreement.client));

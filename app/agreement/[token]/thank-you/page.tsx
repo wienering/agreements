@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { UIcon } from '../../../components/UIcon';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 
 interface AgreementData {
   id: string;
@@ -570,7 +571,7 @@ export default function ThankYouPage() {
                     fontSize: '14px',
                     color: 'var(--muted)'
                   }}>
-                    {new Date(agreement.event?.eventDate ?? agreement.client.eventDate!).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' })}
+                    {formatDateToronto(agreement.event?.eventDate ?? agreement.client.eventDate!)}
                   </p>
                 )}
                 <p style={{
@@ -631,13 +632,12 @@ export default function ThankYouPage() {
                   color: 'var(--ink)',
                   fontWeight: '500'
                 }}>
-                  {agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { 
-                    timeZone: 'America/Toronto',
+                  {agreement.signedAt ? formatDateTimeToronto(agreement.signedAt, {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   }) : 'N/A'}
                 </p>
               </div>

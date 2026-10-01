@@ -3,6 +3,8 @@
  * Kept free of Prisma / Next so it can be unit-tested in isolation.
  */
 
+import { parseTorontoCalendarDateKey } from '@/lib/dates';
+
 export type BooklyWebhookPayload = {
   email?: string;
   firstName?: string;
@@ -119,11 +121,24 @@ export function splitName(fullName: string | undefined): { firstName: string; la
   return { firstName, lastName };
 }
 
+const DATE_ONLY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
 export function parseDate(dateStr: string | undefined): Date | null {
   if (!dateStr) return null;
 
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+
+  // Admin events store a Toronto wall-clock instant (datetime-local via
+  // fromTorontoDateTimeLocalInput). A date-only booking is that same day at
+  // 00:00 Toronto, which parseTorontoCalendarDateKey stores. `new Date('YYYY-MM-DD')`
+  // is UTC midnight and shows as the previous evening in Toronto.
+  if (DATE_ONLY_KEY.test(trimmed)) {
+    return parseTorontoCalendarDateKey(trimmed);
+  }
+
   try {
-    const date = new Date(dateStr);
+    const date = new Date(trimmed);
     return isNaN(date.getTime()) ? null : date;
   } catch {
     return null;
@@ -138,7 +153,7 @@ export function parseDate(dateStr: string | undefined): Date | null {
  * malformed input so a bad extras blob never blocks event creation.
  */
 export function hasUnlimitedPrintsExtra(
-  extras: string | Record<string, string | number> | null | undefined,
+  extras: string | Record<string, string | number> | readonly unknown[] | null | undefined,
 ): boolean {
   if (extras === null || extras === undefined) return false;
 
@@ -233,8 +248,14 @@ export function mapBooklyToClient(data: BooklyWebhookPayload): MappedBooklyClien
     data.service?.duration ||
     null;
 
-  // Extract price
-  const price = parsePrice(data.price || data.packagePrice || data.service?.price);
+  // Extract price. 0 is a real price; only null/undefined means "not provided".
+  const rawPrice =
+    data.price !== undefined && data.price !== null
+      ? data.price
+      : data.packagePrice !== undefined && data.packagePrice !== null
+        ? data.packagePrice
+        : data.service?.price;
+  const price = parsePrice(rawPrice);
 
   // Extract notes
   const notes = data.notes || data.customerNotes || data.customer?.notes || null;
