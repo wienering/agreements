@@ -2,29 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
+import { agreementListSlimSelect } from '@/lib/agreements/listSelect';
 
 export async function GET(request: NextRequest) {
   try {
 
     await requireAdmin(request);
+    const slim = request.nextUrl.searchParams.get('slim') === '1';
     const [agreements, unreadNoteCounts] = await Promise.all([
-      prisma.agreement.findMany({
-        where: {
-          archived: false, // Only show non-archived agreements
-        },
-        include: {
-          client: true,
-          template: true,
-          event: true,
-          backdropLink: {
-            select: {
-              id: true,
-              name: true,
+      slim
+        ? prisma.agreement.findMany({
+            where: {
+              archived: false, // Only show non-archived agreements
             },
-          },
-        },
-        orderBy: { createdAt: 'desc' }, // Will be sorted by event date on frontend
-      }),
+            select: agreementListSlimSelect,
+            orderBy: { createdAt: 'desc' }, // Will be sorted by event date on frontend
+          })
+        : prisma.agreement.findMany({
+            where: {
+              archived: false, // Only show non-archived agreements
+            },
+            include: {
+              client: true,
+              template: true,
+              event: true,
+              backdropLink: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' }, // Will be sorted by event date on frontend
+          }),
       prisma.$queryRaw<Array<{ agreementId: string; unreadNotesCount: number }>>`
         SELECT
           a.id AS "agreementId",
