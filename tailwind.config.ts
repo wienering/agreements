@@ -15,9 +15,10 @@ const config: Config = {
         ui: ['var(--font-ui)', 'Helvetica', 'Arial', 'sans-serif'],
       },
       colors: {
-        /* Semantic tokens — resolve per data-surface in globals.css */
+        /* CSS variables from :root in globals.css */
         paper: 'var(--paper)',
         ink: 'var(--ink)',
+        /* Deprecated aliases of accent. Existing classes still resolve. */
         coral: 'var(--coral)',
         gold: 'var(--gold)',
         panel: 'var(--panel)',
@@ -36,19 +37,23 @@ const config: Config = {
         'status-idle': 'var(--status-idle)',
         accent: {
           DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
           soft: 'var(--accent-soft)',
           faint: 'var(--accent-faint)',
           wash: 'var(--accent-wash)',
           on: 'var(--accent-on)',
-          hover: 'var(--accent-hover)',
         },
         admin: {
           bg: 'var(--admin-bg)',
-          sidebar: 'var(--paper)',
-          card: 'var(--admin-surface)',
+          surface: 'var(--admin-surface)',
+          'surface-raised': 'var(--admin-surface-raised)',
           text: 'var(--admin-text)',
           muted: 'var(--admin-muted)',
+          hairline: 'var(--admin-hairline)',
+          /* Existing class names that predate the hairline key */
           border: 'var(--admin-hairline)',
+          sidebar: 'var(--paper)',
+          card: 'var(--admin-surface)',
           accent: 'var(--accent)',
           'accent-hover': 'var(--accent-hover)',
         },

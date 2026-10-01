@@ -43,7 +43,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
       case 'success':
         return { ...baseStyles, backgroundColor: 'var(--accent)', color: 'var(--accent-on)' };
       case 'error':
-        return { ...baseStyles, backgroundColor: 'var(--alert)', color: '#fff' };
+        return { ...baseStyles, backgroundColor: 'var(--alert)', color: 'var(--accent-on)' };
       case 'info':
         return { ...baseStyles, backgroundColor: 'var(--admin-surface-raised)', color: 'var(--admin-text)', border: '1px solid var(--admin-hairline)' };
       default:

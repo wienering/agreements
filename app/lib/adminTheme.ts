@@ -1,20 +1,19 @@
 /**
  * Admin theme — see DESIGN.md.
  *
- * The admin surface is light: a --paper sidebar panel against white content
- * areas on a --app-bg page ground, divided by hairlines.
+ * Light only. There is no dark branch.
  *
  * Everything that can read a CSS custom property does. The literals below exist
  * only for Recharts, which passes its colour props straight through to SVG
- * fill/stroke attributes where var() does not resolve. This file is the single
- * source of those literals: they mirror globals.css and must be changed with it.
+ * fill/stroke attributes where var() does not resolve. These hex values are the
+ * same colours as the matching tokens in globals.css and must change with them.
  */
 
 /** Mirrors --accent / --accent-soft / --accent-faint in globals.css. */
 export const accentTokens = {
-  accent: '#1E3B31',
-  soft: '#35594B',
-  faint: '#C6CFC9',
+  accent: '#1e3b31',
+  soft: '#35594b',
+  faint: '#c6cfc9',
 } as const;
 
 /**
@@ -22,24 +21,28 @@ export const accentTokens = {
  * and a badge in a table say the same thing with the same colour.
  */
 export const chartTokens = {
-  /** Prior-month and secondary series. Reads as a quiet neutral beside accent. */
-  neutral: '#C6CFC9',
-  /** Current month, and any series the eye should land on first. */
-  accent: '#1E3B31',
-  grid: '#E3E3DE',
-  axis: '#5E5E58',
-  surface: '#FFFFFF',
-  ink: '#1A1A18',
+  /** Prior-month and secondary series. Same hex as --accent-faint. */
+  neutral: '#c6cfc9',
+  /** Current month, and any series the eye should land on first. --accent */
+  accent: '#1e3b31',
+  /** --hairline */
+  grid: '#e3e3de',
+  /** --muted */
+  axis: '#5e5e58',
+  /** --admin-surface */
+  surface: '#ffffff',
+  /** --ink */
+  ink: '#1a1a18',
 } as const;
 
 /** Agreement pipeline. Every one of these is paired with its written label. */
 export const statusTokens = {
-  idle: '#6B6B64',
-  wait: '#2C5878',
-  waitLight: '#5A88A8',
-  good: '#2F6A4C',
-  strong: '#1E3B31',
-  action: '#9E2B2B',
+  idle: '#6b6b64',
+  wait: '#2c5878',
+  waitLight: '#5a88a8',
+  good: '#2f6a4c',
+  strong: '#1e3b31',
+  action: '#9e2b2b',
 } as const;
 
 export const adminTheme = {

@@ -95,7 +95,6 @@ export default function RichTextEditor({ value, onChange, placeholder, style }: 
           fontSize: '14px',
           lineHeight: '1.5',
           resize: 'vertical',
-          outline: 'none',
           transition: 'border-color 0.2s',
           whiteSpace: 'pre-wrap',
           ...style

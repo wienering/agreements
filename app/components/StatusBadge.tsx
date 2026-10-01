@@ -49,13 +49,13 @@ export function getStatusBadgeStyles(
     },
     warning: {
       color: 'var(--status-wait)',
-      backgroundColor: 'rgba(44, 88, 120, 0.09)',
-      border: '1px solid rgba(44, 88, 120, 0.22)',
+      backgroundColor: 'rgba(var(--status-wait-rgb), 0.09)',
+      border: '1px solid rgba(var(--status-wait-rgb), 0.22)',
     },
     danger: {
       color: 'var(--status-action)',
-      backgroundColor: 'rgba(158, 43, 43, 0.08)',
-      border: '1px solid rgba(158, 43, 43, 0.2)',
+      backgroundColor: 'rgba(var(--status-action-rgb), 0.08)',
+      border: '1px solid rgba(var(--status-action-rgb), 0.2)',
     },
   };
 

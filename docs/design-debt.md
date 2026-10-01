@@ -10,21 +10,21 @@ Tracked items from the design-system migration audit and polish pass. Not in sco
 - Consider a shared `lib/design-tokens.ts` (or similar) consumed by CSS custom properties, quote PDF, agreement PDF, and `lib/email/layout.ts`.
 
 ### Keyboard focus outline pass
-- Spec: visible keyboard focus with 2px accent outline.
-- Many controls use `outline: 'none'` without a tokenized replacement (`SearchableSelect`, `RichTextEditor`, admin filter inputs, agreement signature fields, inline-styled admin forms).
-- Audit and replace with a shared focus style (`outline: 2px solid var(--accent)` or surface-appropriate equivalent).
+- Done: global `:focus-visible` in `globals.css` — `outline: 2px solid var(--accent)` and `outline-offset: 2px` on `a`, `button`, `input`, `select`, `textarea`, and `[tabindex]`.
+- Done: removed bare `outline: 'none'` from `SearchableSelect` and `RichTextEditor` (no replacement focus style).
+- Still open: inline `outline: 'none'` outside `app/components/` (`app/admin/agreements/page.tsx`, `app/admin/clients/page.tsx`, `app/agreement/[token]/page.tsx`). Those inline styles beat the global rule.
 
 ### Surface-aware shared components
-- `StatusBadge` hardcodes `var(--gold)` on the accent variant; warning variant uses literal `rgba(176, 125, 42, …)` from the old warn hex.
-- `Toast` success type hardcodes `var(--gold)`; error type uses `#fff`.
-- `FileUpload`, `SearchableSelect`, `RichTextEditor`, `AdminButton` assume admin tokens.
-- Parameterize by surface or split into client/admin variants so reuse cannot leak gold onto client or coral onto admin.
+- Done: `StatusBadge` accent, warning, and danger variants use tokens (`--accent`, `--accent-wash`, `--accent-rgb`, `--status-wait`, `--status-wait-rgb`, `--status-action`, `--status-action-rgb`). No `var(--gold)` and no literal rgba.
+- Done: `Toast` success uses `--accent` / `--accent-on`. Error text uses `--accent-on` instead of `#fff`.
+- Still open: `FileUpload`, `SearchableSelect`, `RichTextEditor`, and `AdminButton` assume admin tokens. `AdminButton` danger hover and `FileUpload` still use literal rgba.
+- Parameterize by surface or split into client/admin variants so reuse cannot leak the old coral/gold aliases onto the wrong surface.
 
 ## Medium priority
 
 ### adminTheme cleanup
-- Flatten `adminTheme.dark` nesting (dark-only app; the `.dark` key is legacy shape).
-- Promote `#3F3A34` (`adminHeaderAddButton.hover`) to a named admin raised-hover token in `globals.css`.
+- Done: no dark-theme branch. `adminTheme` is light only (`adminTheme.admin`). Chart and status literals match the `:root` hex in `globals.css`.
+- Done: `adminHeaderAddButton.hover` is `var(--panel)`, the same colour as `--admin-surface-raised`. The old `#3F3A34` hover is gone.
 
 ### Email route inline hex consolidation
 - Several API routes still inline `#C0552F`, `#2A2724`, `#F2EBDD`, etc. instead of importing constants from `lib/email/layout.ts`.
@@ -36,7 +36,7 @@ Tracked items from the design-system migration audit and polish pass. Not in sco
 - Centralize on `accentTokens` or a shared design-tokens module.
 
 ### Toast and misc hardcoded colors
-- `Toast` error type: `color: '#fff'` → token or `var(--admin-text)` / white-on-alert pattern.
+- Done: `Toast` error text is `var(--accent-on)` (light text on the alert fill).
 - `admin/page.tsx` chart `neutralBar = '#5c5650'` — unmapped admin neutral.
 - Client/admin `#fff` signature field backgrounds in agreement and preview pages → `var(--paper)`.
 
