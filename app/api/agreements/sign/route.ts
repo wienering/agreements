@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
@@ -10,6 +11,7 @@ import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/ema
 import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
+import { isCancelledOrVoid, isOpenForSigning } from '@/lib/agreements/signable';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -60,13 +62,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = signAgreementSchema.parse(body);
 
-    // Find the agreement by token
+    // Find the agreement by token (expiry checked via shared helper below)
     const agreement = await prisma.agreement.findFirst({
       where: {
         uniqueToken: validatedData.token,
-        expiresAt: {
-          gte: new Date()
-        }
       },
       include: {
         client: true,
@@ -82,6 +81,30 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+    if (agreement.status === 'SIGNED') {
+      return NextResponse.json({
+        error: 'This agreement has already been signed'
+      }, { status: 400 });
+    }
+
+    if (isCancelledOrVoid(agreement.status)) {
+      return NextResponse.json({
+        error: 'This agreement has been cancelled'
+      }, { status: 410 });
+    }
+
+    if (agreement.status === 'COMPLETED') {
+      return NextResponse.json({
+        error: 'This agreement is no longer available for signing'
+      }, { status: 400 });
+    }
+
+    if (!isOpenForSigning(agreement)) {
+      return NextResponse.json({
+        error: 'Agreement not found or has expired'
+      }, { status: 404 });
+    }
+
     // Determine which contact this signer is (primary or secondary)
     const providedEmail = validatedData.clientEmail.trim().toLowerCase();
     const providedName = validatedData.clientName.trim().toLowerCase();
@@ -89,12 +112,12 @@ export async function POST(request: NextRequest) {
     const primaryEmail = (agreement.client.email || '').toLowerCase();
     const primaryName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim().toLowerCase();
 
-    const secondSignerEnabled = Boolean((agreement as any).secondSignerEnabled);
+    const secondSignerEnabled = Boolean(agreement.secondSignerEnabled);
     const secondaryEmail = secondSignerEnabled
-      ? ((agreement as any).secondSignerEmail || '').toLowerCase()
+      ? (agreement.secondSignerEmail || '').toLowerCase()
       : '';
-    const secondaryFirstName = (agreement as any).secondSignerFirstName || '';
-    const secondaryLastName = (agreement as any).secondSignerLastName || '';
+    const secondaryFirstName = agreement.secondSignerFirstName || '';
+    const secondaryLastName = agreement.secondSignerLastName || '';
     const secondaryName = `${secondaryFirstName} ${secondaryLastName}`.trim().toLowerCase();
 
     let signerRole: 'primary' | 'secondary' | null = null;
@@ -115,20 +138,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check if already SIGNED — no further signatures may be recorded
-    if (agreement.status === 'SIGNED') {
-      return NextResponse.json({
-        error: 'This agreement has already been signed'
-      }, { status: 400 });
-    }
-
     const clientIP = getClientIP(request);
     const userAgent = request.headers.get('user-agent') || 'Unknown';
 
     // Has this signer already signed?
-    const existingSignatures = (agreement as any).signatures || [];
-    const alreadySigned = existingSignatures.some(
-      (s: any) => (s.signerEmail || '').toLowerCase() === providedEmail,
+    const alreadySigned = agreement.signatures.some(
+      (s) => (s.signerEmail || '').toLowerCase() === providedEmail,
     );
     if (alreadySigned) {
       return NextResponse.json({
@@ -141,7 +156,18 @@ export async function POST(request: NextRequest) {
       : `${secondaryFirstName} ${secondaryLastName}`.trim();
     const signerEmail = signerRole === 'primary'
       ? agreement.client.email
-      : (agreement as any).secondSignerEmail;
+      : agreement.secondSignerEmail!;
+
+    // Exact HTML the signer saw (before the signature details block is appended)
+    const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
+    const baseHtml = processHtmlContent(
+      htmlToProcess,
+      agreement.client,
+      agreement.id,
+      agreement.event,
+      pickSecondSigner(agreement),
+    );
+    const contentHash = createHash('sha256').update(baseHtml, 'utf8').digest('hex');
 
     // Upsert the signature row
     await prisma.signature.upsert({
@@ -159,6 +185,7 @@ export async function POST(request: NextRequest) {
         signedAt: new Date(),
         ip: clientIP,
         userAgent,
+        contentHash,
       },
       update: {
         signerName,
@@ -166,11 +193,12 @@ export async function POST(request: NextRequest) {
         signedAt: new Date(),
         ip: clientIP,
         userAgent,
+        contentHash,
       },
     });
 
     // Determine if this completes the agreement
-    const requireBoth = secondSignerEnabled && Boolean((agreement as any).requireBothSignatures);
+    const requireBoth = secondSignerEnabled && Boolean(agreement.requireBothSignatures);
 
     // Re-read all signatures after the upsert
     const allSignatures = await prisma.signature.findMany({
@@ -188,17 +216,8 @@ export async function POST(request: NextRequest) {
       signer: signerRole === 'primary' ? 'client' : 'secondSigner',
     } as const;
 
-    let updatedAgreement: any;
+    let updatedAgreement;
     if (isFinalSignature) {
-      // Build the merged snapshot from primary client's perspective and append signature blocks.
-      const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;
-      const baseHtml = processHtmlContent(
-        htmlToProcess,
-        agreement.client,
-        agreement.id,
-        agreement.event,
-        pickSecondSigner(agreement),
-      );
       const signatureBlock = requireBoth
         ? buildSignatureBlockHtml(
             allSignatures.map((s) => ({
@@ -291,13 +310,13 @@ export async function POST(request: NextRequest) {
     // client UI does not have to handle two different shapes.
     const responseAgreement = {
       ...updatedAgreement,
-      secondSignerEnabled: Boolean((updatedAgreement as any).secondSignerEnabled),
-      requireBothSignatures: Boolean((updatedAgreement as any).requireBothSignatures),
-      secondSigner: (updatedAgreement as any).secondSignerEnabled
+      secondSignerEnabled: Boolean(updatedAgreement.secondSignerEnabled),
+      requireBothSignatures: Boolean(updatedAgreement.requireBothSignatures),
+      secondSigner: updatedAgreement.secondSignerEnabled
         ? {
-            firstName: (updatedAgreement as any).secondSignerFirstName || '',
-            lastName: (updatedAgreement as any).secondSignerLastName || '',
-            email: (updatedAgreement as any).secondSignerEmail || '',
+            firstName: updatedAgreement.secondSignerFirstName || '',
+            lastName: updatedAgreement.secondSignerLastName || '',
+            email: updatedAgreement.secondSignerEmail || '',
           }
         : null,
     };
