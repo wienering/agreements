@@ -19,7 +19,7 @@ This system enables Photobooth Guys to create, send, and manage client agreement
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.1.3 (App Router)
+- **Framework**: Next.js 15.5.7 (App Router)
 - **Language**: TypeScript 5
 - **Database**: PostgreSQL with Prisma ORM 6.16.3
 - **Authentication**: NextAuth 4.24.10
