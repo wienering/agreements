@@ -11,6 +11,7 @@ import {
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
 import { logAgreementActivity } from '@/lib/activityLog';
+import { formatDateTimeToronto } from '@/lib/dates';
 
 const addNoteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(1000, 'Note content must be less than 1000 characters'),
@@ -64,7 +65,7 @@ async function sendNoteNotificationEmail(
       <p style="margin:16px 0 0 0;font-size:14px;color:#5E5E58;">This notification was automatically sent when the client added a note in the client portal.</p>
       <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
         Photobooth Guys Agreement Management System<br>
-        Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+        Generated: ${formatDateTimeToronto(new Date())}
       </p>
     `;
 

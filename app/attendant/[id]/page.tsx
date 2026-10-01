@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import AttendantFilesSection from './AttendantFilesSection';
 import { UIcon } from '../../components/UIcon';
+import { formatDateToronto } from '@/lib/dates';
 
 interface AttendantPageProps {
   params: Promise<{ id: string }>;
@@ -46,12 +47,11 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
     
     // Format event date for title (e.g., "November 2, 2025")
     const formattedEventDate = eventDate
-      ? new Date(eventDate).toLocaleDateString('en-US', {
-          timeZone: 'America/Toronto',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
+      ? formatDateToronto(
+          eventDate,
+          { year: 'numeric', month: 'long', day: 'numeric' },
+          'en-US',
+        )
       : null;
 
     const title = formattedEventDate 
@@ -294,12 +294,11 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
 
     // Format event date for display (e.g., "November 2, 2025")
     const formattedEventDate = eventDate
-      ? new Date(eventDate).toLocaleDateString('en-US', {
-          timeZone: 'America/Toronto',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
+      ? formatDateToronto(
+          eventDate,
+          { year: 'numeric', month: 'long', day: 'numeric' },
+          'en-US',
+        )
       : null;
 
     // Format time with duration (e.g., "8:00 pm - 6 hours")

@@ -6,7 +6,7 @@ import {
   parsePrice,
   splitName,
 } from '@/lib/bookly/mapping';
-import { torontoDateKey } from '@/lib/dates';
+import { fromTorontoDateTimeLocalInput, torontoDateKey } from '@/lib/dates';
 
 describe('splitName', () => {
   it('returns empty parts for missing or blank input', () => {
@@ -216,9 +216,13 @@ describe('mapBooklyToClient', () => {
   // Bug: a date-only bookingDate is parsed with `new Date`, which treats
   // YYYY-MM-DD as UTC midnight. In America/Toronto that is the previous evening,
   // so 2026-06-15 displays as 2026-06-14.
-  it.skip('keeps a date-only booking on that America/Toronto calendar day', () => {
+  it('keeps a date-only booking on that America/Toronto calendar day', () => {
     const mapped = mapBooklyToClient({ email: 'a@b.com', bookingDate: '2026-06-15' });
     expect(torontoDateKey(mapped.eventDate!)).toBe('2026-06-15');
+    // Admin UI stores datetime-local 00:00 as a Toronto wall-clock instant.
+    expect(mapped.eventDate?.toISOString()).toBe(
+      fromTorontoDateTimeLocalInput('2026-06-15T00:00').toISOString(),
+    );
   });
 
   it('falls back to the date alone when the combined date-time is invalid', () => {
@@ -237,7 +241,7 @@ describe('mapBooklyToClient', () => {
 
   // Bug: `data.price || data.packagePrice || data.service?.price` treats 0 as
   // missing, so an explicit free price is dropped (or replaced by the next field).
-  it.skip('keeps an explicit price of 0', () => {
+  it('keeps an explicit price of 0', () => {
     expect(mapBooklyToClient({ email: 'a@b.com', price: 0 }).packagePrice).toBe(0);
   });
 });

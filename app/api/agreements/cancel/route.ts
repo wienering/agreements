@@ -9,6 +9,7 @@ import { renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
+import { formatDateTimeToronto } from '@/lib/dates';
 
 const cancelAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -103,8 +104,8 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
     <strong>Email:</strong> ${clientEmail}<br>
     <strong>Template:</strong> ${templateTitle}<br>
     <strong>Agreement ID:</strong> ${agreement.id}<br>
-    <strong>Originally Signed:</strong> ${agreement.signedAt ? new Date(agreement.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
-    <strong>Cancelled On:</strong> ${agreement.cancelledAt ? new Date(agreement.cancelledAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}<br>
+    <strong>Originally Signed:</strong> ${agreement.signedAt ? formatDateTimeToronto(agreement.signedAt) : 'N/A'}<br>
+    <strong>Cancelled On:</strong> ${agreement.cancelledAt ? formatDateTimeToronto(agreement.cancelledAt) : 'N/A'}<br>
     <strong>Cancelled By:</strong> ${safeAdminName}<br>
     <strong>Reason:</strong> ${safeReason}`;
 
@@ -127,7 +128,7 @@ async function sendCancellationEmail(agreement: any, reason: string, adminName: 
     <p style="margin:0 0 16px 0;">Best regards,<br><strong>Photobooth Guys Administration</strong></p>
     <p style="margin:24px 0 0 0;font-size:12px;line-height:1.5;color:#5E5E58;text-align:center;">
       Photobooth Guys Agreement Management System<br>
-      Generated: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      Generated: ${formatDateTimeToronto(new Date())}
     </p>
   `;
 

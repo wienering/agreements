@@ -129,6 +129,9 @@ describe('parseTorontoCalendarDateKey / format helpers', () => {
     const d = parseTorontoCalendarDateKey('2026-07-04');
     expect(d).not.toBeNull();
     expect(torontoDateKey(d!)).toBe('2026-07-04');
+    const leap = parseTorontoCalendarDateKey('2024-02-29');
+    expect(leap).not.toBeNull();
+    expect(torontoDateKey(leap!)).toBe('2024-02-29');
   });
 
   it('rejects invalid keys', () => {
@@ -156,7 +159,7 @@ describe('parseTorontoCalendarDateKey / format helpers', () => {
   // Bug: the YYYY-MM-DD guard only checks month 0–11 and day 1–31. Impossible
   // days are not rejected; torontoMidnightUtc then rolls them forward.
   // 2026-02-31 becomes 2026-03-01T05:00:00.000Z (March 1, midnight EST).
-  it.skip('rejects calendar keys that are not real days', () => {
+  it('rejects calendar keys that are not real days', () => {
     expect(parseTorontoCalendarDateKey('2026-02-31')).toBeNull();
     expect(parseTorontoCalendarDateKey('2026-02-29')).toBeNull();
     expect(parseTorontoCalendarDateKey('2026-04-31')).toBeNull();

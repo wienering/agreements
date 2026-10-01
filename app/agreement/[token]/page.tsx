@@ -7,7 +7,7 @@ import { UIcon } from '../../components/UIcon';
 import { applySignerSmartFields, pickSecondSigner } from '@/lib/agreementSmartFields';
 import { escapeHtml } from '@/lib/htmlEscape';
 import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
-import { formatDateToronto } from '@/lib/dates';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 
 interface SignatureRecord {
   signerName: string;
@@ -1072,12 +1072,11 @@ export default function ClientAgreementPage() {
                   }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       <UIcon name="calendar" style={{ fontSize: '14px' }} />
-                      {new Date(agreement.event?.eventDate ?? agreement.client.eventDate!).toLocaleDateString('en-CA', { 
-                      timeZone: 'America/Toronto',
+                      {formatDateToronto(agreement.event?.eventDate ?? agreement.client.eventDate!, {
                       weekday: 'short',
                       year: 'numeric',
                       month: 'short',
-                      day: 'numeric'
+                      day: 'numeric',
                     })}
                     </span>
                   </p>
@@ -1438,7 +1437,7 @@ export default function ClientAgreementPage() {
                           DATE & TIME SIGNED
                         </p>
                         <p style={{ margin: '0', fontSize: '14px', color: 'var(--ink)' }}>
-                          {row.signedAt ? new Date(row.signedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : 'N/A'}
+                          {row.signedAt ? formatDateTimeToronto(row.signedAt) : 'N/A'}
                         </p>
                       </div>
                       {row.ip && (
