@@ -31,5 +31,9 @@ _legacy-sql-backup
 *.log
 .DS_Store
 
+# Local scratch
+scratchpad/
+test-quote.pdf
+
 # Vercel
 .vercel
