@@ -36,7 +36,7 @@ function checkCsrf(request?: NextRequest): void {
   const csrfValid = headerValue === CSRF_VALUE;
 
   if (!csrfValid) {
-    const enforce = process.env.CSRF_ENFORCE === 'true';
+    const enforce = process.env.CSRF_ENFORCE !== 'false';
     const logLine = `[CSRF] Missing or invalid ${CSRF_HEADER} header on ${method} ${path} (got: ${headerValue ?? 'none'})`;
 
     if (enforce) {
