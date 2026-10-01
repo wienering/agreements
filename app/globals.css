@@ -11,18 +11,12 @@
 
 /* ---------------------------------------------------------------------------
    Design tokens — see DESIGN.md
-   Scoped by data-surface on layout roots.
-
-   Token *names* are load-bearing (~158 usages of the --accent alias), so this
-   pass changes values behind the existing names rather than renaming. Two names
-   now hold a colour their name no longer describes: --coral and --gold are both
-   the deep green accent. Renaming them is a separate pass.
+   One palette on :root. Client and admin used to declare the same values twice.
    --------------------------------------------------------------------------- */
 
-[data-surface='client'] {
+:root {
   --paper: #fbfbf9;
   --ink: #1a1a18;
-  --coral: #1e3b31;
   --panel: #f2f2ef;
   --hairline: #e3e3de;
   --muted: #5e5e58;
@@ -35,13 +29,15 @@
 
   --status-good: #2f6a4c;
   --status-wait: #2c5878;
+  --status-wait-rgb: 44, 88, 120;
   --status-wait-lt: #5a88a8;
   --status-action: #9e2b2b;
+  --status-action-rgb: 158, 43, 43;
   --status-idle: #6b6b64;
 
-  font-family: var(--font-ui), system-ui, sans-serif;
-
-  --accent: var(--coral);
+  /* Canonical accent. --coral and --gold are deprecated aliases — do not use
+     them in new styles. A later pass will replace existing references. */
+  --accent: #1e3b31;
   --accent-rgb: 30, 59, 49;
   --accent-hover: #162d25;
   --accent-soft: #35594b;
@@ -50,6 +46,22 @@
   --accent-wash: #edf2ef;
   /* Text and icons sitting on an accent fill */
   --accent-on: #fbfbf9;
+  --coral: var(--accent); /* deprecated */
+  --gold: var(--accent); /* deprecated */
+
+  /* Admin ground and cards. These values are not in the shared palette. */
+  --admin-bg: #f4f4f2;
+  --admin-surface: #ffffff;
+  /* Same values as the shared tokens; kept so existing var(--admin-*) calls resolve */
+  --admin-surface-raised: var(--panel);
+  --admin-text: var(--ink);
+  --admin-muted: var(--muted);
+  --admin-hairline: var(--hairline);
+}
+
+[data-surface='client'],
+[data-surface='admin'] {
+  font-family: var(--font-ui), system-ui, sans-serif;
 }
 
 [data-surface='client'] .client-page-title {
@@ -65,43 +77,6 @@
   width: 100%;
   background-color: var(--rule-strong);
   margin-top: 0.75rem;
-}
-
-[data-surface='admin'] {
-  --admin-bg: #f4f4f2;
-  --admin-surface: #ffffff;
-  --admin-surface-raised: #f2f2ef;
-  --admin-text: #1a1a18;
-  --admin-muted: #5e5e58;
-  --admin-hairline: #e3e3de;
-  --ink: #1a1a18;
-  --gold: #1e3b31;
-  --success: #2f6a4c;
-  --warn: #2c5878;
-  --alert: #9e2b2b;
-
-  /* Sidebar panel and inset fills, shared with the client surface */
-  --paper: #fbfbf9;
-  --panel: #f2f2ef;
-  --hairline: #e3e3de;
-  --muted: #5e5e58;
-  --rule-strong: #1a1a18;
-
-  --status-good: #2f6a4c;
-  --status-wait: #2c5878;
-  --status-wait-lt: #5a88a8;
-  --status-action: #9e2b2b;
-  --status-idle: #6b6b64;
-
-  font-family: var(--font-ui), system-ui, sans-serif;
-
-  --accent: var(--gold);
-  --accent-rgb: 30, 59, 49;
-  --accent-hover: #162d25;
-  --accent-soft: #35594b;
-  --accent-faint: #c6cfc9;
-  --accent-wash: #edf2ef;
-  --accent-on: #fbfbf9;
 }
 
 [data-surface='admin'] .admin-page-title {
@@ -130,6 +105,20 @@ body {
   font-family: var(--font-ui), Helvetica, Arial, sans-serif;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard focus. In @layer base so a component that already draws its own
+   focus ring (focus:outline-none + focus:ring) can still replace it. */
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 }
 
 /* Admin overview: active agreements + upcoming events */

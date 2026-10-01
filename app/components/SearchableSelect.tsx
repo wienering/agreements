@@ -134,7 +134,6 @@ export default function SearchableSelect({
                 border: `1px solid ${style?.borderColor || ADMIN_BORDER}`,
                 borderRadius: '2px',
                 fontSize: '14px',
-                outline: 'none',
                 backgroundColor: style?.backgroundColor || ADMIN_BG,
                 color: style?.color || ADMIN_TEXT
               }}
