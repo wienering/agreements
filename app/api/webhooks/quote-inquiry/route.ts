@@ -100,6 +100,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, leadId: lead.id });
   } catch (error) {
-    return handleApiError(error, 'webhooks/quote-inquiry');
+    return handleApiError(error, 'webhooks/quote-inquiry', request.method);
   }
 }

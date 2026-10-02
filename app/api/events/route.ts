@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
-    return handleApiError(error, 'events');
+    return handleApiError(error, 'events', request.method);
   }
 }
 

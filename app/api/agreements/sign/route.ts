@@ -329,7 +329,7 @@ export async function POST(request: NextRequest) {
       signerRole,
     });
   } catch (error) {
-    return handleApiError(error, 'agreements/sign');
+    return handleApiError(error, 'agreements/sign', request.method);
   }
 }
 

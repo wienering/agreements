@@ -201,6 +201,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/portal/add-note');
+    return handleApiError(error, 'agreements/portal/add-note', request.method);
   }
 }

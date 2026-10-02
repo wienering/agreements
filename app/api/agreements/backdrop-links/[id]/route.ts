@@ -64,7 +64,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/backdrop-links/[id]');
+    return handleApiError(error, 'agreements/backdrop-links/[id]', request.method);
   }
 }
 

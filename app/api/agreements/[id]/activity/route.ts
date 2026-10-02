@@ -62,6 +62,6 @@ export async function GET(
   } catch (error) {
     const authResponse = adminAuthResponse(error);
     if (authResponse) return authResponse;
-    return handleApiError(error, 'agreements/[id]/activity');
+    return handleApiError(error, 'agreements/[id]/activity', request.method);
   }
 }

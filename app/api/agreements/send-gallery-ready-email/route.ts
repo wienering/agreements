@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       html,
     });
   } catch (error) {
-    return handleApiError(error, 'agreements/send-gallery-ready-email');
+    return handleApiError(error, 'agreements/send-gallery-ready-email', request.method);
   }
 }
 
@@ -144,6 +144,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    return handleApiError(error, 'agreements/send-gallery-ready-email');
+    return handleApiError(error, 'agreements/send-gallery-ready-email', request.method);
   }
 }

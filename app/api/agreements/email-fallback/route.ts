@@ -91,6 +91,6 @@ Contact: info@photoboothguys.ca
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/email-fallback');
+    return handleApiError(error, 'agreements/email-fallback', request.method);
   }
 }
