@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCalendarFeed,
+  calendarFeedStatusLabel,
   calendarFeedWindow,
   isIncludedInCalendarFeed,
   parseEventDurationMinutes,
   parseEventStartTime,
+  selectOneAgreementPerEvent,
   toCalendarFeedEvent,
   type CalendarFeedSource,
 } from '@/lib/calendarFeed';
@@ -85,10 +87,15 @@ describe('isIncludedInCalendarFeed', () => {
     expect(isIncludedInCalendarFeed(eventOn('2026-09-02T03:30:00.000Z'), NOW)).toBe(false);
   });
 
-  it('only includes signed agreements that are not archived or cancelled', () => {
-    expect(isIncludedInCalendarFeed(source({ status: 'SENT' }), NOW)).toBe(false);
+  it.each(['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED'])('includes %s agreements', (status) => {
+    expect(isIncludedInCalendarFeed(source({ status }), NOW)).toBe(true);
+  });
+
+  it('excludes cancelled, void and archived agreements', () => {
     expect(isIncludedInCalendarFeed(source({ status: 'CANCELLED' }), NOW)).toBe(false);
+    expect(isIncludedInCalendarFeed(source({ status: 'VOID' }), NOW)).toBe(false);
     expect(isIncludedInCalendarFeed(source({ archived: true }), NOW)).toBe(false);
+    expect(isIncludedInCalendarFeed(source({ status: 'DRAFT', archived: true }), NOW)).toBe(false);
     expect(isIncludedInCalendarFeed(source({ cancelledAt: new Date() }), NOW)).toBe(false);
   });
 
@@ -237,6 +244,7 @@ describe('toCalendarFeedEvent', () => {
         'Attendant: Alex',
         'Payment: Deposit paid',
         'Admin: https://agreements.photoboothguys.ca/admin/agreements?agreement=agr_123',
+        'Status: Signed',
       ].join('\n'),
     );
   });
@@ -250,18 +258,175 @@ describe('toCalendarFeedEvent', () => {
     );
     expect(event?.summary).toBe('Jane Smith');
     expect(event?.description).toBe(
-      'Payment: Not recorded\nAdmin: https://agreements.photoboothguys.ca/admin/agreements?agreement=agr_123',
+      'Payment: Not recorded\nAdmin: https://agreements.photoboothguys.ca/admin/agreements?agreement=agr_123\nStatus: Signed',
     );
   });
 });
 
+describe('calendarFeedStatusLabel', () => {
+  const twoSigners = {
+    client: { ...source().client, email: 'Jane@Example.com' },
+    secondSignerEnabled: true,
+    requireBothSignatures: true,
+    secondSignerEmail: 'sam@example.com',
+  };
+
+  it.each([
+    ['DRAFT', 'Draft (not sent)'],
+    ['SENT', 'Sent, not signed'],
+    ['LIVE', 'Sent, not signed'],
+    ['SIGNED', 'Signed'],
+    ['COMPLETED', 'Completed'],
+  ])('labels %s as %s', (status, label) => {
+    expect(calendarFeedStatusLabel(source({ status }))).toBe(label);
+  });
+
+  it('labels a two-signer agreement with one signature as signed by one of two', () => {
+    expect(
+      calendarFeedStatusLabel(
+        source({ ...twoSigners, status: 'LIVE', signatures: [{ signerEmail: 'jane@example.com' }] }),
+      ),
+    ).toBe('Signed by one of two');
+    expect(
+      calendarFeedStatusLabel(
+        source({ ...twoSigners, status: 'SENT', signatures: [{ signerEmail: 'SAM@example.com ' }] }),
+      ),
+    ).toBe('Signed by one of two');
+  });
+
+  it('keeps "Sent, not signed" when nobody has signed or only one signature is needed', () => {
+    expect(calendarFeedStatusLabel(source({ ...twoSigners, status: 'LIVE', signatures: [] }))).toBe(
+      'Sent, not signed',
+    );
+    expect(
+      calendarFeedStatusLabel(
+        source({
+          ...twoSigners,
+          requireBothSignatures: false,
+          status: 'LIVE',
+          signatures: [{ signerEmail: 'jane@example.com' }],
+        }),
+      ),
+    ).toBe('Sent, not signed');
+  });
+
+  it('uses the plain signed label once both have signed', () => {
+    expect(
+      calendarFeedStatusLabel(
+        source({
+          ...twoSigners,
+          status: 'SIGNED',
+          signatures: [{ signerEmail: 'jane@example.com' }, { signerEmail: 'sam@example.com' }],
+        }),
+      ),
+    ).toBe('Signed');
+  });
+
+  it('puts the status on the last line of the description', () => {
+    const description = toCalendarFeedEvent(source({ status: 'DRAFT' }))?.description ?? '';
+    expect(description.split('\n').pop()).toBe('Status: Draft (not sent)');
+  });
+});
+
+describe('selectOneAgreementPerEvent', () => {
+  const day = (n: number) => new Date(Date.UTC(2026, 8, n, 12));
+  const ids = (sources: CalendarFeedSource[]) => sources.map((s) => s.id).sort();
+
+  it('prefers the signed agreement even when a newer unsigned one exists', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'draft_new', eventId: 'evt_1', status: 'DRAFT', createdAt: day(20) }),
+      source({ id: 'signed_old', eventId: 'evt_1', status: 'SIGNED', createdAt: day(1) }),
+      source({ id: 'sent_mid', eventId: 'evt_1', status: 'SENT', createdAt: day(10) }),
+    ]);
+    expect(ids(chosen)).toEqual(['signed_old']);
+  });
+
+  it('treats completed as signed', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'done', eventId: 'evt_1', status: 'COMPLETED', createdAt: day(1) }),
+      source({ id: 'live', eventId: 'evt_1', status: 'LIVE', createdAt: day(5) }),
+    ]);
+    expect(ids(chosen)).toEqual(['done']);
+  });
+
+  it('otherwise keeps the most recently created agreement', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'older', eventId: 'evt_1', status: 'SENT', createdAt: day(1) }),
+      source({ id: 'newer', eventId: 'evt_1', status: 'DRAFT', createdAt: day(9) }),
+    ]);
+    expect(ids(chosen)).toEqual(['newer']);
+  });
+
+  it('picks the newest of several signed agreements', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'signed_a', eventId: 'evt_1', status: 'SIGNED', createdAt: day(1) }),
+      source({ id: 'signed_b', eventId: 'evt_1', status: 'SIGNED', createdAt: day(3) }),
+    ]);
+    expect(ids(chosen)).toEqual(['signed_b']);
+  });
+
+  it('does not treat a half-signed agreement as signed', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({
+        id: 'half_signed',
+        eventId: 'evt_1',
+        status: 'LIVE',
+        createdAt: day(1),
+        secondSignerEnabled: true,
+        requireBothSignatures: true,
+        secondSignerEmail: 'sam@example.com',
+        client: { ...source().client, email: 'jane@example.com' },
+        signatures: [{ signerEmail: 'jane@example.com' }],
+      }),
+      source({ id: 'newer_draft', eventId: 'evt_1', status: 'DRAFT', createdAt: day(2) }),
+    ]);
+    expect(ids(chosen)).toEqual(['newer_draft']);
+  });
+
+  it('keeps one entry per event and never merges agreements without an event record', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'a1', eventId: 'evt_1', status: 'SIGNED' }),
+      source({ id: 'a2', eventId: 'evt_1', status: 'DRAFT' }),
+      source({ id: 'b1', eventId: 'evt_2', status: 'SENT' }),
+      source({ id: 'legacy_1', eventId: null }),
+      source({ id: 'legacy_2', eventId: null }),
+    ]);
+    expect(ids(chosen)).toEqual(['a1', 'b1', 'legacy_1', 'legacy_2']);
+  });
+});
+
 describe('buildCalendarFeed', () => {
+  it('writes one entry per event, keeping the UID of the chosen agreement', () => {
+    const feed = buildCalendarFeed(
+      [
+        source({ id: 'agr_draft', eventId: 'evt_1', status: 'DRAFT', createdAt: new Date('2026-09-20') }),
+        source({ id: 'agr_signed', eventId: 'evt_1', status: 'SIGNED', createdAt: new Date('2026-09-01') }),
+      ],
+      NOW,
+    );
+    expect(feed.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+    expect(feed).toContain('UID:agr_signed@agreements.photoboothguys.ca');
+    expect(feed).not.toContain('agr_draft@');
+  });
+
+  it('ignores excluded agreements when choosing the entry for an event', () => {
+    const feed = buildCalendarFeed(
+      [
+        source({ id: 'agr_void', eventId: 'evt_1', status: 'VOID', createdAt: new Date('2026-09-20') }),
+        source({ id: 'agr_sent', eventId: 'evt_1', status: 'SENT', createdAt: new Date('2026-09-01') }),
+      ],
+      NOW,
+    );
+    expect(feed).toContain('UID:agr_sent@agreements.photoboothguys.ca');
+    expect(feed.replace(/\r\n /g, '')).toContain('\\nStatus: Sent\\, not signed');
+  });
+
   it('writes only included agreements, with escaped and folded text', () => {
     const feed = buildCalendarFeed(
       [
         source(),
         source({ id: 'agr_old' }, { eventDate: new Date('2026-08-01T12:00:00.000Z') }),
-        source({ id: 'agr_draft', status: 'DRAFT' }),
+        source({ id: 'agr_void', status: 'VOID' }),
       ],
       NOW,
     );
@@ -269,7 +434,7 @@ describe('buildCalendarFeed', () => {
 
     expect(unfolded).toContain('UID:agr_123@agreements.photoboothguys.ca');
     expect(unfolded).not.toContain('agr_old@');
-    expect(unfolded).not.toContain('agr_draft@');
+    expect(unfolded).not.toContain('agr_void@');
     expect(unfolded).toContain('LOCATION:Royal York\\, Toronto');
     expect(unfolded).toContain('DESCRIPTION:Phone: 416-555-0100\\nPackage: 3 hr Photo Booth');
     feed.split('\r\n').forEach((line) => {
