@@ -2,9 +2,11 @@ import { prisma } from '@/lib/prisma';
 import { getBackdropThumbnailUrl } from '@/lib/backdropThumbnail';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { AttendantUnavailable } from '../../components/attendant/AttendantUnavailable';
 import { BackdropSection } from '../../components/attendant/BackdropSection';
+import { BrandMark } from '../../components/attendant/BrandMark';
 import { FilesSection, type AttendantFile } from '../../components/attendant/FilesSection';
-import { UIcon } from '../../components/UIcon';
+import { SummaryField, SummaryText } from '../../components/attendant/SummaryField';
 import { formatDateToronto } from '@/lib/dates';
 
 interface AttendantPageProps {
@@ -125,7 +127,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
 
     // If agreement not found, show custom error page
     if (!agreement || !agreement.client) {
-      return <NotFoundError />;
+      return <AttendantUnavailable variant="missing" />;
     }
 
     const { client, event, backdropLink, selectedBackdropName, showPhoneNumberAlways, forceVirtualGreenScreen } = agreement;
@@ -284,7 +286,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
 
     // If event has expired (more than 24 hours after), show expired message
     if (isEventExpired) {
-      return <EventExpiredError />;
+      return <AttendantUnavailable variant="expired" />;
     }
 
     let files: AttendantFile[] = [];
@@ -347,194 +349,22 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
       const cleaned = phone.replace(/[^\d+]/g, '');
       return `tel:${cleaned}`;
     };
-
     return (
       <>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes fadeIn {
+        <style>{`
+          @keyframes attendant-fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
           }
-          .back-to-hub-link:hover {
-            background-color: var(--admin-hairline) !important;
-            border-color: var(--admin-muted) !important;
-          }
-          @media (max-width: 1024px) {
-            .attendant-main {
-              grid-template-columns: 1fr !important;
-              display: flex !important;
-              flex-direction: column !important;
-              padding: 32px 24px !important;
-              gap: 24px !important;
-              max-width: 100% !important;
-            }
-            .attendant-right-column {
-              position: static !important;
-              order: 1 !important;
-              margin-bottom: 0 !important;
-              width: 100% !important;
-              max-width: 100% !important;
-            }
-            .attendant-left-column {
-              order: 0 !important;
-              width: 100% !important;
-              max-width: 100% !important;
-            }
-            .attendant-header {
-              padding: 20px 0 !important;
-            }
-            .attendant-header-content {
-              padding: 0 24px !important;
-            }
-            .attendant-card {
-              padding: 24px !important;
-              width: 100% !important;
-              max-width: 100% !important;
-            }
-            .attendant-card-grid {
-              grid-template-columns: 1fr !important;
-              gap: 20px !important;
-            }
-          }
-          @media (max-width: 1000px) {
-            .attendant-main {
-              padding: 28px 20px !important;
-            }
-            .attendant-header-content {
-              padding: 0 20px !important;
-            }
-            .attendant-card {
-              padding: 24px !important;
-            }
-          }
-          @media (max-width: 980px) {
-            .attendant-main {
-              padding: 24px 20px !important;
-            }
-            .attendant-header-content {
-              padding: 0 20px !important;
-            }
-          }
-          @media (max-width: 768px) {
-            .attendant-main {
-              padding: 24px 16px !important;
-            }
-            .attendant-header {
-              padding: 16px 0 !important;
-            }
-            .attendant-header-content {
-              padding: 0 16px !important;
-            }
-            .attendant-card {
-              padding: 20px !important;
-            }
-            .attendant-footer {
-              padding: 32px 16px 0 16px !important;
-            }
-          }
-          .address-link {
-            transition: color 0.2s;
-          }
-          .address-link:hover {
-            color: var(--accent) !important;
-          }
-          a[href^="tel:"] {
-            transition: color 0.2s;
-          }
-          a[href^="tel:"]:hover {
-            color: var(--accent) !important;
-          }
-        `}} />
-        <div
-          style={{
-            minHeight: '100vh',
-            backgroundColor: 'var(--admin-bg)',
-            fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-            color: 'var(--admin-text)',
-            animation: 'fadeIn 0.3s ease-out',
-          }}
-        >
-          {/* Header */}
-          <header
-            className="attendant-header"
-            style={{
-              backgroundColor: 'var(--admin-surface)',
-              borderBottom: '1px solid var(--admin-hairline)',
-              padding: '24px 0',
-            }}
-          >
-            <div
-              className="attendant-header-content"
-              style={{
-                maxWidth: '1200px',
-                margin: '0 auto',
-                padding: '0 32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    backgroundColor: 'var(--accent)',
-                    borderRadius: '2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-on)',
-                    fontSize: '20px',
-                    fontWeight: '600',
-                  }}
-                >
-                  <UIcon name="camera" style={{ fontSize: '24px', color: 'var(--accent-on)' }} />
-                </div>
-                <div>
-                  <h1
-                    className="admin-page-title"
-                    style={{
-                      margin: '0',
-                      fontSize: '24px',
-                      fontWeight: '700',
-                      color: 'var(--admin-text)',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    Photobooth Guys
-                  </h1>
-                  <p
-                    style={{
-                      margin: '4px 0 0 0',
-                      fontSize: '14px',
-                      color: 'var(--admin-muted)',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Event Information
-                  </p>
-                </div>
-              </div>
+        `}</style>
+        <div className="min-h-screen animate-[attendant-fade-in_0.3s_ease-out] bg-admin-bg font-ui text-admin-text">
+          <header className="border-b border-admin-hairline bg-admin-surface py-4 min-[769px]:py-5 min-[1025px]:py-6">
+            <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 min-[769px]:px-5 min-[1001px]:px-6 min-[1025px]:px-8">
+              <BrandMark size="header" subtitle="Event Information" />
               {hubLink && (
                 <Link
                   href={hubLink}
-                  className="back-to-hub-link"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 16px',
-                    backgroundColor: 'var(--admin-hairline)',
-                    color: 'var(--admin-text)',
-                    borderRadius: '2px',
-                    textDecoration: 'none',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s',
-                    border: '1px solid var(--admin-hairline)',
-                  }}
+                  className="inline-flex items-center gap-2 rounded-sm border border-admin-hairline bg-admin-hairline px-4 py-2 text-sm font-medium text-admin-text no-underline transition-all duration-200 hover:border-admin-muted"
                 >
                   <span>←</span>
                   <span>Back to Hub</span>
@@ -543,210 +373,62 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
             </div>
           </header>
 
-          {/* Main Content — summary left; event files right only when files exist */}
           <main
-            style={{
-              maxWidth: '1400px',
-              margin: '0 auto',
-              padding: '48px 32px',
-              display: 'grid',
-              gridTemplateColumns: showFiles ? '1fr 380px' : 'minmax(0, 1fr)',
-              gap: '32px',
-              alignItems: 'start',
-            }}
-            className="attendant-main"
+            className={`mx-auto flex w-full max-w-full flex-col items-start gap-6 px-4 py-6 min-[769px]:px-5 min-[981px]:py-7 min-[1001px]:px-6 min-[1001px]:py-8 min-[1025px]:grid min-[1025px]:max-w-[1400px] min-[1025px]:gap-8 min-[1025px]:px-8 min-[1025px]:py-12 ${
+              showFiles ? 'min-[1025px]:grid-cols-[1fr_380px]' : 'min-[1025px]:grid-cols-1'
+            }`}
           >
-            <div className="attendant-left-column">
-              <div
-                className="attendant-card"
-                style={{
-                  backgroundColor: 'var(--admin-surface)',
-                  padding: '32px',
-                  borderRadius: '2px',
-                  border: '1px solid var(--admin-hairline)',
-                }}
-              >
-                <h2
-                  style={{
-                    margin: '0 0 24px 0',
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: 'var(--admin-text)',
-                    paddingBottom: '16px',
-                    borderBottom: '1px solid var(--admin-hairline)',
-                  }}
-                >
+            <div className="w-full max-w-full">
+              <div className="w-full max-w-full rounded-sm border border-admin-hairline bg-admin-surface p-5 min-[769px]:p-6 min-[1025px]:p-8">
+                <h2 className="m-0 mb-6 border-b border-admin-hairline pb-4 text-xl font-bold text-admin-text">
                   Event Summary
                 </h2>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '20px',
-                  }}
-                >
+                <div className="flex flex-col gap-5">
                   {formattedEventDate && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '18px',
-                          color: 'var(--admin-text)',
-                          fontWeight: '600',
-                          lineHeight: '1.6',
-                        }}
-                      >
-                        {formattedEventDate}
-                      </p>
-                    </div>
+                    <p className="m-0 text-lg font-semibold leading-[1.6] text-admin-text">{formattedEventDate}</p>
                   )}
 
                   {formattedTimeWithDuration && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: 'var(--admin-muted)',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Start Time:
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: 'var(--admin-text)',
-                          fontWeight: '500',
-                        }}
-                      >
-                        {formattedTimeWithDuration}
-                      </p>
-                    </div>
+                    <SummaryField label="Start Time:">
+                      <SummaryText>{formattedTimeWithDuration}</SummaryText>
+                    </SummaryField>
                   )}
 
                   {(isWhitelabelClient ? eventContactName : client.firstName) && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: 'var(--admin-muted)',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        {isWhitelabelClient ? 'Event Contact Name:' : 'Client Name:'}
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: 'var(--admin-text)',
-                          fontWeight: '500',
-                        }}
-                      >
-                        {isWhitelabelClient ? eventContactName : client.firstName}
-                      </p>
-                    </div>
+                    <SummaryField label={isWhitelabelClient ? 'Event Contact Name:' : 'Client Name:'}>
+                      <SummaryText>{isWhitelabelClient ? eventContactName : client.firstName}</SummaryText>
+                    </SummaryField>
                   )}
 
                   {(isWhitelabelClient ? eventContactPhone : client.phone) &&
                     (isEventWithin24Hours || showPhoneNumberAlways) && (
-                      <div>
-                        <p
-                          style={{
-                            margin: '0 0 4px 0',
-                            fontSize: '14px',
-                            color: 'var(--admin-muted)',
-                            fontWeight: '600',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          {isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}
-                        </p>
+                      <SummaryField label={isWhitelabelClient ? 'Event Contact Phone:' : 'Contact Phone:'}>
                         <a
-                          href={
-                            getTelLink(isWhitelabelClient ? eventContactPhone : client.phone) || '#'
-                          }
-                          style={{
-                            margin: '0',
-                            fontSize: '16px',
-                            color: 'var(--accent)',
-                            fontWeight: '500',
-                            textDecoration: 'none',
-                            display: 'block',
-                          }}
+                          href={getTelLink(isWhitelabelClient ? eventContactPhone : client.phone) || '#'}
+                          className="block text-base font-medium text-accent no-underline transition-colors duration-200 hover:text-accent"
                         >
                           {isWhitelabelClient ? eventContactPhone : client.phone}
                         </a>
-                      </div>
+                      </SummaryField>
                     )}
 
                   {eventLocation && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: 'var(--admin-muted)',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Event Address:
-                      </p>
+                    <SummaryField label="Event Address:">
                       <a
                         href={getGoogleMapsUrl(eventLocation) || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="address-link"
-                        style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: 'var(--accent)',
-                          fontWeight: '500',
-                          textDecoration: 'none',
-                          lineHeight: '1.6',
-                          display: 'block',
-                        }}
+                        className="block text-base font-medium leading-[1.6] text-accent no-underline transition-colors duration-200 hover:text-accent"
                       >
                         {eventLocation}
                       </a>
-                    </div>
+                    </SummaryField>
                   )}
 
                   {backdropLink?.name && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: 'var(--admin-muted)',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Attendant:
-                      </p>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: 'var(--admin-text)',
-                          fontWeight: '500',
-                        }}
-                      >
-                        {backdropLink.name}
-                      </p>
-                    </div>
+                    <SummaryField label="Attendant:">
+                      <SummaryText>{backdropLink.name}</SummaryText>
+                    </SummaryField>
                   )}
 
                   <BackdropSection
@@ -756,416 +438,52 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   />
 
                   {event?.unlimitedPrints && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '12px 16px',
-                        backgroundColor: 'rgba(var(--accent-rgb), 0.12)',
-                        borderRadius: '2px',
-                        border: '1px solid rgba(var(--accent-rgb), 0.35)',
-                      }}
-                    >
-                      <span style={{ fontSize: '20px', color: 'var(--accent)', fontWeight: '700', lineHeight: '1' }}>∞</span>
-                      <p
-                        style={{
-                          margin: '0',
-                          fontSize: '16px',
-                          color: 'var(--accent)',
-                          fontWeight: '700',
-                          letterSpacing: '0.01em',
-                        }}
-                      >
-                        Unlimited Prints
-                      </p>
+                    <div className="flex items-center gap-2.5 rounded-sm border border-[rgba(var(--accent-rgb),0.35)] bg-[rgba(var(--accent-rgb),0.12)] px-4 py-3">
+                      <span className="text-xl font-bold leading-none text-accent">∞</span>
+                      <p className="m-0 text-base font-bold tracking-[0.01em] text-accent">Unlimited Prints</p>
                     </div>
                   )}
 
                   {notes && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: 'var(--admin-muted)',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Additional Info:
-                      </p>
-                      <div
-                        style={{
-                          marginTop: '8px',
-                        }}
-                      >
+                    <SummaryField label="Additional Info:">
+                      <div className="mt-2">
                         {(notes || '').split('\n').map((line: string, idx: number) => (
                           <p
                             key={idx}
-                            style={{
-                              margin: idx > 0 ? '8px 0 0 0' : '0',
-                              fontSize: '16px',
-                              color: 'var(--admin-text)',
-                              fontWeight: '500',
-                              lineHeight: '1.6',
-                              whiteSpace: 'pre-wrap',
-                            }}
+                            className={`m-0 whitespace-pre-wrap text-base font-medium leading-[1.6] text-admin-text ${
+                              idx > 0 ? 'mt-2' : ''
+                            }`}
                           >
                             {line}
                           </p>
                         ))}
                       </div>
-                    </div>
+                    </SummaryField>
                   )}
                 </div>
               </div>
             </div>
 
             {showFiles && attendantId && (
-              <div
-                className="attendant-right-column"
-                style={{
-                  position: 'sticky',
-                  top: '24px',
-                }}
-              >
+              <div className="static order-1 w-full max-w-full min-[1025px]:sticky min-[1025px]:top-6">
                 <FilesSection files={files} error={filesError} />
               </div>
             )}
           </main>
 
-          {/* Footer */}
-          <footer
-            className="attendant-footer"
-            style={{
-              maxWidth: '1400px',
-              margin: '0 auto',
-              padding: '48px 32px 0 32px',
-              marginTop: '48px',
-              paddingTop: '32px',
-              borderTop: '1px solid var(--admin-hairline)',
-              textAlign: 'center',
-            }}
-          >
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  marginBottom: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    backgroundColor: 'var(--accent)',
-                    borderRadius: '2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-on)',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                  }}
-                >
-                  <UIcon name="camera" style={{ fontSize: '24px', color: 'var(--accent-on)' }} />
-                </div>
-                <h3
-                  style={{
-                    margin: '0',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: 'var(--admin-text)',
-                  }}
-                >
-                  Photobooth Guys
-                </h3>
-              </div>
-              <p
-                style={{
-                  margin: '0',
-                  fontSize: '14px',
-                  color: 'var(--admin-muted)',
-                }}
-              >
-                Professional photo booth services for your special events
-              </p>
-            </footer>
+          <footer className="mx-auto mt-12 max-w-[1400px] border-t border-admin-hairline px-4 pb-0 pt-8 text-center min-[769px]:px-8">
+            <div className="mb-2">
+              <BrandMark size="footer" />
+            </div>
+            <p className="m-0 text-sm text-admin-muted">
+              Professional photo booth services for your special events
+            </p>
+          </footer>
         </div>
       </>
     );
   } catch (error) {
     console.error('Error fetching agreement:', error);
-    return <NotFoundError />;
+    return <AttendantUnavailable variant="missing" />;
   }
-}
-
-// Custom error component for when event has expired (24 hours after event)
-function EventExpiredError() {
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--admin-bg)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-        padding: '32px',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--admin-surface)',
-          padding: '48px',
-          borderRadius: '2px',
-          border: '1px solid var(--admin-hairline)',
-          textAlign: 'center',
-          maxWidth: '520px',
-        }}
-      >
-        <div
-          style={{
-            width: '64px',
-            height: '64px',
-            backgroundColor: 'var(--warn)',
-            borderRadius: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px auto',
-            fontSize: '28px',
-          }}
-        >
-          <UIcon name="clock" style={{ fontSize: '28px', color: 'var(--accent-on)' }} />
-        </div>
-        <h1
-          className="admin-page-title"
-          style={{
-            color: 'var(--admin-text)',
-            fontSize: '24px',
-            margin: '0 0 16px 0',
-            fontWeight: '700',
-          }}
-        >
-          Event Information Expired
-        </h1>
-        <p
-          style={{
-            color: 'var(--admin-muted)',
-            fontSize: '16px',
-            margin: '0 0 24px 0',
-            lineHeight: '1.6',
-          }}
-        >
-          This event information is no longer available. Event details are only accessible up to 24 hours after the event date and time.
-        </p>
-        <div
-          style={{
-            padding: '16px',
-            backgroundColor: 'var(--admin-bg)',
-            borderRadius: '2px',
-            border: '1px solid var(--admin-hairline)',
-            marginBottom: '24px',
-          }}
-        >
-          <p
-            style={{
-              margin: '0',
-              fontSize: '14px',
-              color: 'var(--admin-muted)',
-              lineHeight: '1.6',
-            }}
-          >
-            If you need access to this information, please contact{' '}
-            <strong style={{ color: 'var(--accent)', fontWeight: '600' }}>info@photoboothguys.ca</strong>
-          </p>
-        </div>
-        <div
-          style={{
-            paddingTop: '24px',
-            borderTop: '1px solid var(--admin-hairline)',
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                backgroundColor: 'var(--accent)',
-                borderRadius: '2px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--accent-on)',
-                fontSize: '16px',
-                fontWeight: '600',
-              }}
-            >
-              <UIcon name="camera" style={{ fontSize: '16px', color: 'var(--accent-on)' }} />
-            </div>
-            <h3
-              style={{
-                margin: '0',
-                fontSize: '16px',
-                fontWeight: '700',
-                color: 'var(--admin-text)',
-              }}
-            >
-              Photobooth Guys
-            </h3>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Custom error component for when agreement is not found
-function NotFoundError() {
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--admin-bg)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-        padding: '32px',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'var(--admin-surface)',
-          padding: '48px',
-          borderRadius: '2px',
-          border: '1px solid var(--admin-hairline)',
-          textAlign: 'center',
-          maxWidth: '520px',
-        }}
-      >
-        <div
-          style={{
-            width: '64px',
-            height: '64px',
-            backgroundColor: 'var(--alert)',
-            borderRadius: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px auto',
-            fontSize: '28px',
-          }}
-        >
-          <UIcon name="circle-exclamation" style={{ fontSize: '28px', color: 'var(--accent-on)' }} title="Warning" />
-        </div>
-        <h1
-          className="admin-page-title"
-          style={{
-            color: 'var(--admin-text)',
-            fontSize: '24px',
-            margin: '0 0 16px 0',
-            fontWeight: '700',
-          }}
-        >
-          Event Details Not Found
-        </h1>
-        <p
-          style={{
-            color: 'var(--admin-muted)',
-            fontSize: '16px',
-            margin: '0 0 24px 0',
-            lineHeight: '1.6',
-          }}
-        >
-          We could not find the event details for the provided link. The link may
-          be incorrect or the event may have been removed.
-        </p>
-        <div
-          style={{
-            padding: '16px',
-            backgroundColor: 'var(--admin-bg)',
-            borderRadius: '2px',
-            border: '1px solid var(--admin-hairline)',
-            marginBottom: '24px',
-          }}
-        >
-          <p
-            style={{
-              margin: '0',
-              fontSize: '14px',
-              color: 'var(--admin-muted)',
-              lineHeight: '1.6',
-            }}
-          >
-            Please contact us at{' '}
-            <strong style={{ color: 'var(--accent)', fontWeight: '600' }}>info@photoboothguys.ca</strong>{' '}
-            if you believe this is an error.
-          </p>
-        </div>
-        <div
-          style={{
-            paddingTop: '24px',
-            borderTop: '1px solid var(--admin-hairline)',
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}
-          >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                backgroundColor: 'var(--accent)',
-                borderRadius: '2px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--accent-on)',
-                fontSize: '16px',
-                fontWeight: '600',
-              }}
-            >
-              <UIcon name="camera" style={{ fontSize: '16px', color: 'var(--accent-on)' }} />
-            </div>
-            <h3
-              style={{
-                margin: '0',
-                fontSize: '16px',
-                fontWeight: '700',
-                color: 'var(--admin-text)',
-              }}
-            >
-              Photobooth Guys
-            </h3>
-            <a
-              href="tel:+16473785332"
-              style={{
-                fontSize: '14px',
-                color: 'var(--accent)',
-                textDecoration: 'none',
-                marginLeft: '12px',
-              }}
-            >
-              647-378-5332
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
