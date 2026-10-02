@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
 import { devLog } from '@/lib/logger';
+import { isFullyPaid, paymentStatusAfterStripeInvoice } from '@/lib/paymentStatus';
 
 export async function POST(request: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 
       // Extract agreementId from invoice metadata
       const agreementId = invoice.metadata?.agreementId;
-      const invoiceType = invoice.metadata?.invoiceType as 'deposit' | 'remaining' | 'full' | undefined;
+      const invoiceType = invoice.metadata?.invoiceType;
 
       if (!agreementId) {
         console.warn('Invoice paid but no agreementId in metadata:', invoice.id);
@@ -97,34 +98,19 @@ export async function POST(request: NextRequest) {
       // Get receipt URL from invoice
       const receiptUrl = invoice.hosted_invoice_url || invoice.invoice_pdf || null;
 
-      // Determine new payment status based on invoice type and current status
-      let newPaymentStatus: string;
-      const currentPaymentStatus = agreement.paymentStatus || 'Not Paid';
-
-      if (invoiceType === 'deposit') {
-        // Deposit invoice paid
-        newPaymentStatus = 'Deposit Paid';
-      } else if (invoiceType === 'remaining') {
-        // Remaining balance invoice paid
-        // Check if deposit was already paid
-        if (currentPaymentStatus === 'Deposit Paid') {
-          newPaymentStatus = 'Fully Paid';
-        } else {
-          newPaymentStatus = 'Balance Paid';
-        }
-      } else if (invoiceType === 'full') {
-        // Full invoice paid (single invoice for entire amount)
-        newPaymentStatus = 'Fully Paid';
-      } else {
-        // Unknown invoice type, default to "Paid"
-        console.warn(`Unknown invoice type: ${invoiceType}, defaulting to "Paid"`);
-        newPaymentStatus = 'Paid';
+      // New payment status, in the same values the admin dropdown uses; null leaves it unchanged
+      const newPaymentStatus = paymentStatusAfterStripeInvoice(invoiceType, agreement.paymentStatus);
+      if (newPaymentStatus === null && !isFullyPaid(agreement.paymentStatus)) {
+        console.warn(
+          `Stripe invoice paid for agreement ${agreementId} (type: ${invoiceType ?? 'none'}) but payment status left as "${agreement.paymentStatus ?? ''}". Set it by hand.`,
+        );
       }
 
       // Prepare update data
-      const updateData: any = {
-        paymentStatus: newPaymentStatus,
-      };
+      const updateData: { paymentStatus?: string; stripeReceiptLink?: string } = {};
+      if (newPaymentStatus !== null) {
+        updateData.paymentStatus = newPaymentStatus;
+      }
 
       // Update receipt link if available
       if (receiptUrl) {
@@ -132,17 +118,20 @@ export async function POST(request: NextRequest) {
       }
 
       // Update the agreement
-      await prisma.agreement.update({
-        where: { id: agreementId },
-        data: updateData,
-      });
+      if (Object.keys(updateData).length > 0) {
+        await prisma.agreement.update({
+          where: { id: agreementId },
+          data: updateData,
+        });
+      }
 
-      devLog(`Updated agreement ${agreementId}: paymentStatus = ${newPaymentStatus}`);
+      const storedPaymentStatus = newPaymentStatus ?? agreement.paymentStatus;
+      devLog(`Updated agreement ${agreementId}: paymentStatus = ${storedPaymentStatus}`);
 
       return NextResponse.json({
         received: true,
         agreementId,
-        paymentStatus: newPaymentStatus,
+        paymentStatus: storedPaymentStatus,
         invoiceType,
       });
     }

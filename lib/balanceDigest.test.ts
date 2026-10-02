@@ -63,10 +63,16 @@ describe('isIncludedInBalanceDigest', () => {
     expect(isIncludedInBalanceDigest(candidate({ paymentStatus: 'Fully paid' }), NOW)).toBe(false);
   });
 
+  it('treats every spelling of fully paid as paid, including Stripe\'s', () => {
+    for (const paymentStatus of ['fully paid', 'Fully Paid', ' FULLY  PAID ', 'Paid', 'Balance Paid']) {
+      expect(isIncludedInBalanceDigest(candidate({ paymentStatus }), NOW)).toBe(false);
+    }
+  });
+
   it('keeps other payment statuses, including an empty one', () => {
     expect(isIncludedInBalanceDigest(candidate({ paymentStatus: null }), NOW)).toBe(true);
     expect(isIncludedInBalanceDigest(candidate({ paymentStatus: 'Balance due' }), NOW)).toBe(true);
-    expect(isIncludedInBalanceDigest(candidate({ paymentStatus: 'fully paid' }), NOW)).toBe(true);
+    expect(isIncludedInBalanceDigest(candidate({ paymentStatus: 'Deposit Paid' }), NOW)).toBe(true);
   });
 
   it('excludes a snooze dated after today and includes one dated today or earlier', () => {

@@ -91,6 +91,8 @@ export async function findBalanceDigestAgreements(now = new Date()): Promise<Bal
       cancelledAt: null,
       AND: [
         {
+          // Coarse filter only: other spellings of fully paid get through here and are
+          // dropped by isIncludedInBalanceDigest, which uses isFullyPaid().
           OR: [{ paymentStatus: null }, { paymentStatus: { not: FULLY_PAID_STATUS } }],
         },
         {
