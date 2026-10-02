@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/archive-leads",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/balance-digest",
+      "schedule": "45 13 * * *"
     }
   ]
 }
