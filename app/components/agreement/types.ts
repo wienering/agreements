@@ -52,6 +52,8 @@ export interface AgreementRecord {
   signedFromIP: string | null;
   mergedHtml: string | null;
   customHtmlContent?: string | null;
+  /** Filled document returned by the admin preview API. */
+  renderedHtml?: string | null;
   event?: AgreementEvent | null;
   fields?: Array<{
     key: string;
@@ -77,8 +79,11 @@ export function viewerHasSigned(
   return signatures.some((signature) => signature.signerEmail.toLowerCase() === email.toLowerCase());
 }
 
-/** Signed snapshot first, then a per-agreement body, then the template. */
+/** A pre-rendered document, then the signed snapshot, then custom wording, then the template. */
 export function renderedAgreementHtml(agreement: AgreementRecord): string {
+  if (agreement.renderedHtml) {
+    return agreement.renderedHtml;
+  }
   if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
     return agreement.mergedHtml;
   }
