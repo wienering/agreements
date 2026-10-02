@@ -18,9 +18,6 @@ const config: Config = {
         /* CSS variables from :root in globals.css */
         paper: 'var(--paper)',
         ink: 'var(--ink)',
-        /* Deprecated aliases of accent. Existing classes still resolve. */
-        coral: 'var(--coral)',
-        gold: 'var(--gold)',
         panel: 'var(--panel)',
         hairline: 'var(--hairline)',
         muted: 'var(--muted)',

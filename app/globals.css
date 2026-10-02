@@ -35,8 +35,7 @@
   --status-action-rgb: 158, 43, 43;
   --status-idle: #6b6b64;
 
-  /* Canonical accent. --coral and --gold are deprecated aliases — do not use
-     them in new styles. A later pass will replace existing references. */
+  /* Canonical accent. */
   --accent: #1e3b31;
   --accent-rgb: 30, 59, 49;
   --accent-hover: #162d25;
@@ -46,8 +45,6 @@
   --accent-wash: #edf2ef;
   /* Text and icons sitting on an accent fill */
   --accent-on: #fbfbf9;
-  --coral: var(--accent); /* deprecated */
-  --gold: var(--accent); /* deprecated */
 
   /* Admin ground and cards. These values are not in the shared palette. */
   --admin-bg: #f4f4f2;
