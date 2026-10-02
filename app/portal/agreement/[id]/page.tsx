@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '../../../components/UIcon';
-import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
-import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
+import { AgreementDocument } from '@/app/components/agreement/AgreementDocument';
+import { formatDateTimeToronto } from '@/lib/dates';
 
 interface Agreement {
   id: string;
@@ -69,9 +69,6 @@ function AgreementDetailContent() {
   const [newNote, setNewNote] = useState('');
   const [addingNote, setAddingNote] = useState(false);
   const [isAdminPreview, setIsAdminPreview] = useState(false);
-  const [isAgreementExpanded, setIsAgreementExpanded] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [hasMoreContent, setHasMoreContent] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -242,27 +239,6 @@ function AgreementDetailContent() {
       hour: '2-digit',
       minute: '2-digit',
     });
-
-  // Check content height after render to determine if accordion is needed
-  useEffect(() => {
-    if (contentRef.current && data?.agreement?.mergedHtml) {
-      const element = contentRef.current;
-      // Check if content height exceeds approximately 20 lines (30rem = ~480px)
-      // Using a small delay to ensure content is fully rendered
-      const checkHeight = () => {
-        const maxHeight = 30 * 16; // 30rem in pixels (assuming 16px base)
-        setHasMoreContent(element.scrollHeight > maxHeight);
-      };
-      
-      // Check immediately and after a short delay to account for rendering
-      checkHeight();
-      const timeoutId = setTimeout(checkHeight, 100);
-      
-      return () => clearTimeout(timeoutId);
-    } else {
-      setHasMoreContent(false);
-    }
-  }, [data?.agreement?.mergedHtml]);
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -631,44 +607,7 @@ function AgreementDetailContent() {
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          <div className="rounded-lg border border-hairline bg-panel p-6">
-            <h2 className="text-xl font-semibold text-ink mb-4">Agreement Content</h2>
-            {agreement.mergedHtml ? (
-              <div>
-                <div 
-                  ref={contentRef}
-                  className={`prose max-w-none text-ink transition-all duration-300 ${
-                    !isAgreementExpanded && hasMoreContent ? 'max-h-[30rem] overflow-hidden' : ''
-                  }`}
-                  style={!isAgreementExpanded && hasMoreContent ? {
-                    maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)'
-                  } : {}}
-                  dangerouslySetInnerHTML={{ __html: sanitizeAgreementHtml(agreement.mergedHtml ?? '') }}
-                />
-                {hasMoreContent && (
-                  <div className="mt-4 pt-4 border-t border-hairline">
-                    <button
-                      onClick={() => setIsAgreementExpanded(!isAgreementExpanded)}
-                      className="flex items-center justify-center gap-2 w-full rounded-md bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-hairline transition-colors"
-                    >
-                      <span>{isAgreementExpanded ? 'Show Less' : 'Show More'}</span>
-                      <svg
-                        className={`h-5 w-5 transition-transform ${isAgreementExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-muted">No content available for this agreement.</p>
-            )}
-          </div>
+          <AgreementDocument mode="readonly" html={agreement.mergedHtml} />
         </div>
 
         {/* Sidebar */}
