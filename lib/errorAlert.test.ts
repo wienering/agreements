@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   ERROR_ALERT_WINDOW_MS,
   buildErrorAlertSignature,
+  formatErrorAlertMessage,
   shouldSendErrorAlert,
 } from '@/lib/errorAlert';
 
@@ -90,5 +91,39 @@ describe('shouldSendErrorAlert', () => {
         recent: recent(5 * 60 * 1000, withSecrets),
       }),
     ).toBe(false);
+  });
+});
+
+describe('formatErrorAlertMessage', () => {
+  const previous = process.env.VERCEL_ENV;
+
+  afterEach(() => {
+    if (previous === undefined) {
+      delete process.env.VERCEL_ENV;
+    } else {
+      process.env.VERCEL_ENV = previous;
+    }
+  });
+
+  it('names the Vercel environment', () => {
+    process.env.VERCEL_ENV = 'preview';
+    const text = formatErrorAlertMessage({
+      route: '/api/agreements/send',
+      method: 'POST',
+      message: 'database timed out',
+      now,
+    });
+    expect(text).toContain('Environment: preview');
+  });
+
+  it('uses local when VERCEL_ENV is unset', () => {
+    delete process.env.VERCEL_ENV;
+    const text = formatErrorAlertMessage({
+      route: '/api/agreements/send',
+      method: 'POST',
+      message: 'database timed out',
+      now,
+    });
+    expect(text).toContain('Environment: local');
   });
 });

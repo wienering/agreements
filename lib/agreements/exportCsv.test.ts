@@ -50,7 +50,8 @@ function agreement(overrides: {
 }
 
 function parsedRows(csv: string): Record<string, string>[] {
-  return Papa.parse<Record<string, string>>(csv, { header: true, skipEmptyLines: true }).data;
+  const body = csv.charCodeAt(0) === 0xfeff ? csv.slice(1) : csv;
+  return Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true }).data;
 }
 
 describe('buildAgreementsCsv', () => {
@@ -184,8 +185,10 @@ describe('buildAgreementsCsv', () => {
     expect(parsedRows(buildAgreementsCsv([agreement({})]))[0].Email).toBe('ada@example.com');
   });
 
-  it('writes the header row in column order', () => {
-    const [header] = buildAgreementsCsv([]).split('\n');
+  it('writes a UTF-8 BOM and the header row in column order', () => {
+    const csv = buildAgreementsCsv([]);
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    const [header] = csv.slice(1).split('\n');
     expect(header).toBe(AGREEMENT_CSV_COLUMNS.join(','));
   });
 });

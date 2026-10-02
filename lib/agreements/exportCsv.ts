@@ -90,15 +90,17 @@ export function selectAgreementsForExport(
     });
 }
 
+const UTF8_BOM = '\uFEFF';
+
 export function buildAgreementsCsv(agreements: AgreementExportSource[]): string {
-  if (agreements.length === 0) {
-    return `${AGREEMENT_CSV_COLUMNS.join(',')}\n`;
-  }
-  const records = agreements.map(agreementToCsvRecord);
-  return Papa.unparse(records, {
-    columns: [...AGREEMENT_CSV_COLUMNS],
-    newline: '\n',
-  });
+  const body =
+    agreements.length === 0
+      ? `${AGREEMENT_CSV_COLUMNS.join(',')}\n`
+      : Papa.unparse(agreements.map(agreementToCsvRecord), {
+          columns: [...AGREEMENT_CSV_COLUMNS],
+          newline: '\n',
+        });
+  return `${UTF8_BOM}${body}`;
 }
 
 function agreementToCsvRecord(agreement: AgreementExportSource): Record<CsvColumn, string> {

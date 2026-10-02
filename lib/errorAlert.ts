@@ -89,6 +89,7 @@ export function formatErrorAlertMessage(input: {
   });
   const lines = [
     'Server error',
+    `Environment: ${alertEnvironment()}`,
     `Route: ${redactSensitive(stripQuery(input.route) || 'unknown')}`,
     `Method: ${redactSensitive(input.method || 'UNKNOWN')}`,
     `Time: ${time}`,
@@ -162,6 +163,11 @@ export async function reportServerError(input: {
   } catch (alertError) {
     console.error('[error-alert] failed to send', alertError);
   }
+}
+
+function alertEnvironment(): string {
+  const value = process.env.VERCEL_ENV?.trim();
+  return value || 'local';
 }
 
 function stripQuery(route: string): string {
