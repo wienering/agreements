@@ -6,6 +6,7 @@ import {
   isIncludedInCalendarFeed,
   parseEventDurationMinutes,
   parseEventStartTime,
+  selectOneAgreementPerEvent,
   toCalendarFeedEvent,
   type CalendarFeedSource,
 } from '@/lib/calendarFeed';
@@ -327,7 +328,99 @@ describe('calendarFeedStatusLabel', () => {
   });
 });
 
+describe('selectOneAgreementPerEvent', () => {
+  const day = (n: number) => new Date(Date.UTC(2026, 8, n, 12));
+  const ids = (sources: CalendarFeedSource[]) => sources.map((s) => s.id).sort();
+
+  it('prefers the signed agreement even when a newer unsigned one exists', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'draft_new', eventId: 'evt_1', status: 'DRAFT', createdAt: day(20) }),
+      source({ id: 'signed_old', eventId: 'evt_1', status: 'SIGNED', createdAt: day(1) }),
+      source({ id: 'sent_mid', eventId: 'evt_1', status: 'SENT', createdAt: day(10) }),
+    ]);
+    expect(ids(chosen)).toEqual(['signed_old']);
+  });
+
+  it('treats completed as signed', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'done', eventId: 'evt_1', status: 'COMPLETED', createdAt: day(1) }),
+      source({ id: 'live', eventId: 'evt_1', status: 'LIVE', createdAt: day(5) }),
+    ]);
+    expect(ids(chosen)).toEqual(['done']);
+  });
+
+  it('otherwise keeps the most recently created agreement', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'older', eventId: 'evt_1', status: 'SENT', createdAt: day(1) }),
+      source({ id: 'newer', eventId: 'evt_1', status: 'DRAFT', createdAt: day(9) }),
+    ]);
+    expect(ids(chosen)).toEqual(['newer']);
+  });
+
+  it('picks the newest of several signed agreements', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'signed_a', eventId: 'evt_1', status: 'SIGNED', createdAt: day(1) }),
+      source({ id: 'signed_b', eventId: 'evt_1', status: 'SIGNED', createdAt: day(3) }),
+    ]);
+    expect(ids(chosen)).toEqual(['signed_b']);
+  });
+
+  it('does not treat a half-signed agreement as signed', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({
+        id: 'half_signed',
+        eventId: 'evt_1',
+        status: 'LIVE',
+        createdAt: day(1),
+        secondSignerEnabled: true,
+        requireBothSignatures: true,
+        secondSignerEmail: 'sam@example.com',
+        client: { ...source().client, email: 'jane@example.com' },
+        signatures: [{ signerEmail: 'jane@example.com' }],
+      }),
+      source({ id: 'newer_draft', eventId: 'evt_1', status: 'DRAFT', createdAt: day(2) }),
+    ]);
+    expect(ids(chosen)).toEqual(['newer_draft']);
+  });
+
+  it('keeps one entry per event and never merges agreements without an event record', () => {
+    const chosen = selectOneAgreementPerEvent([
+      source({ id: 'a1', eventId: 'evt_1', status: 'SIGNED' }),
+      source({ id: 'a2', eventId: 'evt_1', status: 'DRAFT' }),
+      source({ id: 'b1', eventId: 'evt_2', status: 'SENT' }),
+      source({ id: 'legacy_1', eventId: null }),
+      source({ id: 'legacy_2', eventId: null }),
+    ]);
+    expect(ids(chosen)).toEqual(['a1', 'b1', 'legacy_1', 'legacy_2']);
+  });
+});
+
 describe('buildCalendarFeed', () => {
+  it('writes one entry per event, keeping the UID of the chosen agreement', () => {
+    const feed = buildCalendarFeed(
+      [
+        source({ id: 'agr_draft', eventId: 'evt_1', status: 'DRAFT', createdAt: new Date('2026-09-20') }),
+        source({ id: 'agr_signed', eventId: 'evt_1', status: 'SIGNED', createdAt: new Date('2026-09-01') }),
+      ],
+      NOW,
+    );
+    expect(feed.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+    expect(feed).toContain('UID:agr_signed@agreements.photoboothguys.ca');
+    expect(feed).not.toContain('agr_draft@');
+  });
+
+  it('ignores excluded agreements when choosing the entry for an event', () => {
+    const feed = buildCalendarFeed(
+      [
+        source({ id: 'agr_void', eventId: 'evt_1', status: 'VOID', createdAt: new Date('2026-09-20') }),
+        source({ id: 'agr_sent', eventId: 'evt_1', status: 'SENT', createdAt: new Date('2026-09-01') }),
+      ],
+      NOW,
+    );
+    expect(feed).toContain('UID:agr_sent@agreements.photoboothguys.ca');
+    expect(feed.replace(/\r\n /g, '')).toContain('\\nStatus: Sent\\, not signed');
+  });
+
   it('writes only included agreements, with escaped and folded text', () => {
     const feed = buildCalendarFeed(
       [

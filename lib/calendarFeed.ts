@@ -234,9 +234,35 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
   };
 }
 
+function isPreferredOver(candidate: CalendarFeedSource, current: CalendarFeedSource): boolean {
+  const candidateSigned = FULLY_SIGNED_STATUSES.has(candidate.status);
+  const currentSigned = FULLY_SIGNED_STATUSES.has(current.status);
+  if (candidateSigned !== currentSigned) return candidateSigned;
+
+  const candidateCreated = candidate.createdAt?.getTime() ?? 0;
+  const currentCreated = current.createdAt?.getTime() ?? 0;
+  if (candidateCreated !== currentCreated) return candidateCreated > currentCreated;
+
+  return candidate.id > current.id;
+}
+
+/**
+ * One agreement per Event record: the signed one if any, otherwise the most recently created.
+ * Agreements without an Event record are never merged.
+ */
+export function selectOneAgreementPerEvent(sources: CalendarFeedSource[]): CalendarFeedSource[] {
+  const chosen = new Map<string, CalendarFeedSource>();
+  for (const source of sources) {
+    const key = source.eventId ? `event:${source.eventId}` : `agreement:${source.id}`;
+    const current = chosen.get(key);
+    if (!current || isPreferredOver(source, current)) chosen.set(key, source);
+  }
+  return [...chosen.values()];
+}
+
 export function buildCalendarFeed(sources: CalendarFeedSource[], now = new Date()): string {
-  const events = sources
-    .filter((source) => isIncludedInCalendarFeed(source, now))
+  const included = sources.filter((source) => isIncludedInCalendarFeed(source, now));
+  const events = selectOneAgreementPerEvent(included)
     .map(toCalendarFeedEvent)
     .filter((event): event is IcsEvent => event !== null);
 
