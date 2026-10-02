@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { AdminButton } from '@/app/components/AdminButton';
-import { adminAgreementPath, type BalanceAction } from '@/lib/balanceActionToken';
+import type { BalanceAction } from '@/lib/balanceActionToken';
 import { adminFetch } from '@/lib/adminFetch';
 
 const ACTION_TITLE: Record<BalanceAction, string> = {
@@ -34,7 +34,7 @@ export function BalanceActionForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
-  const adminHref = adminAgreementPath(agreementId);
+  const adminHref = `/admin/agreements?agreement=${encodeURIComponent(agreementId)}`;
 
   async function submit() {
     setBusy(true);
