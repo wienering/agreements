@@ -3,8 +3,9 @@ import { AdminButton } from '../../../components/AdminButton';
 import { UIcon } from '../../../components/UIcon';
 import { AgreementRow, type RowActions } from './AgreementRow';
 import { CompletedAgreementCard } from './CompletedAgreementCard';
-import type { Agreement, BackdropLinkOption } from './types';
-import { ITEMS_PER_PAGE, NO_ATTENDANT_FILTER, STATUS_FILTERS } from './types';
+import { attendantFilterOptions } from './agreementUtils';
+import type { Agreement, AttendantConflict, BackdropLinkOption } from './types';
+import { DOUBLE_BOOKED_FILTER, ITEMS_PER_PAGE, NO_ATTENDANT_FILTER, STATUS_FILTERS } from './types';
 
 function Pager({
   page,
@@ -93,6 +94,8 @@ export function AgreementsList({
   expandedRows,
   toggleRow,
   warningType,
+  conflictsFor,
+  doubleBookedCount,
   actions,
 }: {
   searchInputRef: RefObject<HTMLInputElement | null>;
@@ -120,9 +123,11 @@ export function AgreementsList({
   expandedRows: Set<string>;
   toggleRow: (id: string) => void;
   warningType: (agreement: Agreement) => string | null;
+  conflictsFor: (agreement: Agreement) => AttendantConflict[];
+  doubleBookedCount: number;
   actions: RowActions;
 }) {
-  const sortedLinks = [...backdropLinks].sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+  const attendantOptions = attendantFilterOptions(backdropLinks);
 
   return (
     <>
@@ -159,9 +164,12 @@ export function AgreementsList({
             >
               <option value="ALL">All attendants</option>
               <option value={NO_ATTENDANT_FILTER}>No attendant</option>
-              {sortedLinks.map((link) => (
-                <option key={link.id} value={link.id}>
-                  {link.name}
+              <option value={DOUBLE_BOOKED_FILTER}>
+                Double-booked{doubleBookedCount > 0 ? ` (${doubleBookedCount})` : ''}
+              </option>
+              {attendantOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -196,7 +204,9 @@ export function AgreementsList({
           <p className="m-0 text-base text-admin-muted">
             {debouncedSearchTerm.trim()
               ? `No agreements found matching "${debouncedSearchTerm}".`
-              : attendantFilter !== 'ALL'
+              : attendantFilter === DOUBLE_BOOKED_FILTER
+                ? 'No double-booked attendants coming up.'
+                : attendantFilter !== 'ALL'
                 ? 'No agreements found for this attendant filter.'
                 : 'No agreements found. Create your first agreement to get started.'}
           </p>
@@ -220,6 +230,7 @@ export function AgreementsList({
                     expanded={expandedRows.has(agreement.id)}
                     onToggle={() => toggleRow(agreement.id)}
                     warningType={warningType(agreement)}
+                    conflicts={conflictsFor(agreement)}
                     actions={actions}
                   />
                 ))}

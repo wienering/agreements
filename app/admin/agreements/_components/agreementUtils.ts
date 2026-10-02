@@ -3,12 +3,42 @@ import {
   toTorontoDateTimeLocalInput,
   torontoCalendarDaysBetween,
 } from '@/lib/dates';
-import type { Agreement, GalleryLink } from './types';
-import { NO_ATTENDANT_FILTER } from './types';
+import type { Agreement, BackdropLinkOption, GalleryLink } from './types';
+import { DOUBLE_BOOKED_FILTER, NO_ATTENDANT_FILTER } from './types';
 
+/** The attendant record's name, falling back to the backdrop link name. */
 export function getAgreementAttendantName(agreement: Agreement): string | undefined {
-  const name = agreement.backdropLink?.name?.trim();
+  const name = agreement.backdropLink?.attendant?.name?.trim() || agreement.backdropLink?.name?.trim();
   return name || undefined;
+}
+
+/** Name to show for a backdrop link in pickers: the attendant's name, flagged when inactive. */
+export function backdropLinkLabel(link: BackdropLinkOption): string {
+  const attendant = link.attendant;
+  if (!attendant) return link.name;
+  const name = attendant.name === link.name ? attendant.name : `${attendant.name} (${link.name})`;
+  return attendant.active ? name : `${name} — inactive`;
+}
+
+/** Attendant filter value: the attendant when the link has one, otherwise the link itself. */
+export function attendantFilterValue(link: BackdropLinkOption): string {
+  return link.attendantId ? `attendant:${link.attendantId}` : `link:${link.id}`;
+}
+
+/** One filter option per attendant (or per unlinked backdrop link), sorted by name. */
+export function attendantFilterOptions(links: BackdropLinkOption[]): { value: string; label: string }[] {
+  const options = new Map<string, string>();
+  for (const link of links) {
+    const value = attendantFilterValue(link);
+    if (options.has(value)) continue;
+    const label = link.attendant
+      ? `${link.attendant.name}${link.attendant.active ? '' : ' — inactive'}`
+      : link.name;
+    options.set(value, label);
+  }
+  return [...options.entries()]
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 export function agreementMissingAttendant(agreement: Agreement): boolean {
@@ -87,6 +117,7 @@ export function filterAgreements(
   statusFilter: string,
   attendantFilter: string,
   debouncedSearchTerm: string,
+  doubleBookedIds: ReadonlySet<string> = new Set(),
 ): Agreement[] {
   let filtered = agreements;
   if (statusFilter !== 'ALL') {
@@ -94,6 +125,14 @@ export function filterAgreements(
   }
   if (attendantFilter === NO_ATTENDANT_FILTER) {
     filtered = filtered.filter((agreement) => !getAgreementAttendantName(agreement));
+  } else if (attendantFilter === DOUBLE_BOOKED_FILTER) {
+    filtered = filtered.filter((agreement) => doubleBookedIds.has(agreement.id));
+  } else if (attendantFilter.startsWith('attendant:')) {
+    const attendantId = attendantFilter.slice('attendant:'.length);
+    filtered = filtered.filter((agreement) => agreement.backdropLink?.attendantId === attendantId);
+  } else if (attendantFilter.startsWith('link:')) {
+    const linkId = attendantFilter.slice('link:'.length);
+    filtered = filtered.filter((agreement) => agreement.backdropLink?.id === linkId);
   } else if (attendantFilter !== 'ALL') {
     filtered = filtered.filter((agreement) => agreement.backdropLink?.id === attendantFilter);
   }
