@@ -451,27 +451,35 @@ const agreements = await prisma.agreement.findMany({
 
 ## Migrations
 
-Migrations are located in `prisma/migrations/`. Key migrations:
+`prisma/migrations/0_baseline` holds the whole schema as of 2026-10-02. Production has it recorded as applied. The 26 migrations before it are kept for reference in `prisma/migrations_archive/` (with a backup of their `_prisma_migrations` rows) and are no longer used.
 
-1. **20251001210413_init** - Initial schema
-2. **20241202000000_add_event_fields_to_client** - Added event fields (deprecated)
-3. **20241202000001_add_event_fields** - Event field additions
-4. **20241202000002_update_agreement_status_enum** - Status enum updates
-5. **20250104000000_add_event_model** - New Event model
-6. **20250105000000_add_whitelist_client_fields** - Whitelabel functionality (renamed from whitelist)
+`DATABASE_URL` points at the production database, so **don't run `prisma migrate dev`, `prisma migrate reset` or `prisma db push`** against it. They can drop or rewrite data. Make schema changes this way instead:
 
-### Running Migrations
+### Making a schema change
 
-```bash
-# Apply pending migrations
-npx prisma migrate deploy
+Use Neon's **direct** connection for every command below, not the pooled one. Take `DATABASE_URL`, remove `-pooler` from the hostname, and drop the `pgbouncer`, `connection_limit` and `pool_timeout` parameters (keep `sslmode`). Put it in a `DIRECT_DATABASE_URL` environment variable for your terminal session only, and never commit it.
 
-# Create new migration
-npx prisma migrate dev --name migration_name
+1. **Edit `prisma/schema.prisma`.**
+2. **Create a folder** for the migration, named with a UTC timestamp and a short description:
+   `prisma/migrations/20261015143000_add_deposit_due_date/`
+3. **Generate the SQL** by comparing the live database with the edited schema. This only reads the database:
+   ```bash
+   npx prisma migrate diff \
+     --from-url "$DIRECT_DATABASE_URL" \
+     --to-schema-datamodel prisma/schema.prisma \
+     --script \
+     --output prisma/migrations/20261015143000_add_deposit_due_date/migration.sql
+   ```
+   Use `--output` rather than `>`: in Windows PowerShell 5.1, `>` writes UTF-16 and breaks the file.
+4. **Review `migration.sql`.** Make sure it only does what you intended. Look hard at any `DROP`, `ALTER COLUMN ... TYPE`, or `NOT NULL` added to an existing table, which fails or loses data if rows already exist. Edit the SQL if needed (for example, add a default or backfill before a `NOT NULL`), then commit it with the schema change.
+5. **Apply it** once the change is merged and you're ready:
+   ```bash
+   DATABASE_URL="$DIRECT_DATABASE_URL" npx prisma migrate deploy
+   ```
+   In PowerShell: `$env:DATABASE_URL = $env:DIRECT_DATABASE_URL; npx prisma migrate deploy`, then close that terminal.
+6. **Check** with `DATABASE_URL="$DIRECT_DATABASE_URL" npx prisma migrate status`. It should say the database schema is up to date.
 
-# Reset database (development only)
-npx prisma migrate reset
-```
+Run `npx prisma generate` (part of `npm run build`) so the Prisma client matches the new schema. Vercel builds only run `prisma generate`; they never apply migrations.
 
 ## Database Best Practices
 
