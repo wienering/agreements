@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { handleApiError } from '@/lib/handleApiError';
 import { generateAgreementPdf } from '@/lib/pdf/agreement';
+import { SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 const pdfRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -13,12 +14,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = pdfRequestSchema.parse(body);
 
-    // Find the agreement by token (allow both signed and unsigned)
+    // Find the agreement by token. Signed agreements (SIGNED or COMPLETED) ignore the expiry date.
     const agreement = await prisma.agreement.findFirst({
       where: {
         uniqueToken: validatedData.token,
         OR: [
-          { status: 'SIGNED' },
+          { status: { in: [...SIGNED_STATUSES] } },
           { expiresAt: null },
           { expiresAt: { gte: new Date() } }
         ]
