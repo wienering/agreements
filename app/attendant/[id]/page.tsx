@@ -2,7 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { getBackdropThumbnailUrl } from '@/lib/backdropThumbnail';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import AttendantFilesSection from './AttendantFilesSection';
+import { BackdropSection } from '../../components/attendant/BackdropSection';
+import { FilesSection, type AttendantFile } from '../../components/attendant/FilesSection';
 import { UIcon } from '../../components/UIcon';
 import { formatDateToronto } from '@/lib/dates';
 
@@ -39,6 +40,7 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
     if (!agreement) {
       return {
         title: 'Event Details Not Found',
+        robots: { index: false, follow: false },
       };
     }
 
@@ -60,11 +62,13 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
 
     return {
       title,
+      robots: { index: false, follow: false },
     };
   } catch (error) {
     console.error('Error generating metadata:', error);
     return {
       title: 'Event Details',
+      robots: { index: false, follow: false },
     };
   }
 }
@@ -184,15 +188,6 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     const eventDuration = event ? event.eventDuration : client.eventDuration;
     const notes = event ? event.notes : client.notes;
 
-    const fileCount = await prisma.clientFile.count({
-      where: {
-        clientId: agreement.clientId,
-        ...(agreement.eventId
-          ? { OR: [{ eventId: agreement.eventId }, { eventId: null }] }
-          : {}),
-      },
-    });
-    
     // For whitelabel clients, get event-specific contact info
     const isWhitelabelClient = client.isWhitelabelClient || false;
     const eventContactName = event?.eventName || client.firstName;
@@ -291,6 +286,33 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     if (isEventExpired) {
       return <EventExpiredError />;
     }
+
+    let files: AttendantFile[] = [];
+    let filesError: string | null = null;
+    if (attendantId) {
+      try {
+        files = await prisma.clientFile.findMany({
+          where: {
+            clientId: agreement.clientId,
+            ...(agreement.eventId
+              ? { OR: [{ eventId: agreement.eventId }, { eventId: null }] }
+              : {}),
+          },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            fileName: true,
+            fileType: true,
+            fileSize: true,
+            googleDriveLink: true,
+          },
+        });
+      } catch (error) {
+        console.error('Error fetching attendant files:', error);
+        filesError = 'Failed to load files';
+      }
+    }
+    const showFiles = files.length > 0 || Boolean(filesError);
 
     // Format event date for display (e.g., "November 2, 2025")
     const formattedEventDate = eventDate
@@ -528,7 +550,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               margin: '0 auto',
               padding: '48px 32px',
               display: 'grid',
-              gridTemplateColumns: fileCount > 0 ? '1fr 380px' : 'minmax(0, 1fr)',
+              gridTemplateColumns: showFiles ? '1fr 380px' : 'minmax(0, 1fr)',
               gap: '32px',
               alignItems: 'start',
             }}
@@ -727,54 +749,11 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                     </div>
                   )}
 
-                  {(forceVirtualGreenScreen || selectedBackdropName) && (
-                    <div>
-                      <p
-                        style={{
-                          margin: '0 0 4px 0',
-                          fontSize: '14px',
-                          color: 'var(--accent)',
-                          fontWeight: '600',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        Selected Backdrop:
-                      </p>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {backdropThumbnailUrl && (
-                          <img
-                            src={backdropThumbnailUrl}
-                            alt=""
-                            style={{
-                              width: '64px',
-                              height: '64px',
-                              objectFit: 'cover',
-                              borderRadius: '2px',
-                              border: '1px solid var(--admin-hairline)',
-                            }}
-                          />
-                        )}
-                        <p
-                          style={{
-                            margin: '0',
-                            fontSize: '16px',
-                            color: 'var(--accent)',
-                            fontWeight: '600',
-                          }}
-                        >
-                          {forceVirtualGreenScreen ? 'Virtual Green Screen' : selectedBackdropName}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  <BackdropSection
+                    name={selectedBackdropName}
+                    thumbnailUrl={backdropThumbnailUrl}
+                    forceVirtualGreenScreen={forceVirtualGreenScreen}
+                  />
 
                   {event?.unlimitedPrints && (
                     <div
@@ -844,7 +823,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
               </div>
             </div>
 
-            {fileCount > 0 && attendantId && (
+            {showFiles && attendantId && (
               <div
                 className="attendant-right-column"
                 style={{
@@ -852,7 +831,7 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
                   top: '24px',
                 }}
               >
-                <AttendantFilesSection agreementId={agreement.id} attendantId={attendantId} />
+                <FilesSection files={files} error={filesError} />
               </div>
             )}
           </main>
