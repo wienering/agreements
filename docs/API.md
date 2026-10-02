@@ -242,33 +242,60 @@ Generate PDF of a signed agreement.
 
 ---
 
-### PUT /api/agreements/update-status
+### GET /api/agreements/[id]
 
-Update agreement status.
+Get one agreement, in the same shape as a row from the agreements list, plus `unreadNotesCount`.
+
+**Authentication**: Admin (NextAuth)
+
+**Response**: `200 OK`
+```json
+{ /* Agreement object */ }
+```
+
+**Errors**:
+- `404` - Agreement not found
+
+---
+
+### PATCH /api/agreements/[id]
+
+Update one or more admin fields on an agreement. Every field is optional. Unknown keys are rejected. This is the route the admin agreements page uses for single-field edits.
 
 **Authentication**: Admin (NextAuth)
 
 **Request Body**:
 ```json
 {
-  "id": "string (required)",
-  "status": "DRAFT | LIVE | SIGNED | COMPLETED (required)"
+  "expiresAt": "string (ISO date, optional)",
+  "galleryLink": "string (URL or empty to clear, optional)",
+  "galleryLinks": [{ "title": "string", "url": "string" }],
+  "nextAction": "string (max 500 characters, optional)",
+  "paymentStatus": "string (optional)",
+  "stripePaymentLink": "string (URL or empty, optional)",
+  "stripeReceiptLink": "string (URL or empty, optional)",
+  "showPhoneNumberAlways": "boolean (optional)",
+  "forceVirtualGreenScreen": "boolean (optional)",
+  "chaserPaused": "boolean (optional)",
+  "backdropLinkId": "string | null (optional)",
+  "markNotesViewed": "boolean (optional, sets notesLastViewedAt)",
+  "status": "DRAFT | LIVE | SIGNED | COMPLETED (optional)"
 }
 ```
 
 **Response**: `200 OK`
 ```json
-{ /* Updated Agreement object */ }
+{ /* Updated Agreement object, same shape as GET */ }
 ```
 
 **Errors**:
-- `400` - Invalid status or validation error
-- `403` - Cannot change status of signed agreement (except to COMPLETED/CANCELLED)
-- `404` - Agreement not found
+- `400` - Validation failed, or a database constraint rejected the status
+- `403` - Cannot change the status of a signed agreement except to COMPLETED
+- `404` - Agreement not found, or `backdropLinkId` does not match a backdrop link
 
 **Status Rules**:
-- SIGNED agreements can only transition to COMPLETED or CANCELLED
-- COMPLETED automatically sets `archived: true`
+- A signed agreement can only move to COMPLETED
+- Completing an agreement does not archive it
 
 ---
 
@@ -402,7 +429,7 @@ Get agreements for a specific client.
 
 ### GET /api/agreements/admin-preview
 
-Get agreement preview for admin.
+Get an agreement preview for an admin. Ignores expiration.
 
 **Authentication**: Admin (NextAuth)
 
@@ -410,10 +437,27 @@ Get agreement preview for admin.
 - `token` (required) - Agreement token
 
 **Response**: `200 OK`
+
+The agreement record, including `client`, `template`, and `event`. `template.internalTitle` is omitted, and `template.htmlContent` stays the stored template source.
+
+`renderedHtml` is the filled-in document:
+
+- Signed agreement with a snapshot: `mergedHtml`
+- Otherwise: custom wording when the agreement has it, then the template, with tokens filled in
+
 ```json
 {
-  "agreement": { /* Agreement object */ },
-  "processedHtml": "string"
+  "id": "string",
+  "status": "DRAFT | LIVE | SIGNED | COMPLETED | CANCELLED",
+  "mergedHtml": "string | null",
+  "customHtmlContent": "string | null",
+  "renderedHtml": "string",
+  "client": { /* Client object */ },
+  "template": {
+    "title": "string",
+    "htmlContent": "string"
+  },
+  "event": { /* Event object | null */ }
 }
 ```
 

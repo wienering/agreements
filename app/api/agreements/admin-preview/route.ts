@@ -86,16 +86,14 @@ export async function GET(request: NextRequest) {
       packagePrice: agreement.client.packagePrice ? Number(agreement.client.packagePrice) : null
     };
 
-    // Return the agreement with processed HTML
-    // Only return public title to admins, not internal title
+    // Keep the stored template source. renderedHtml is the filled document:
+    // the signed snapshot when one exists, otherwise custom wording, then the template.
     const { internalTitle, ...publicTemplate } = agreement.template;
     return NextResponse.json({
       ...agreement,
       client,
-      template: {
-        ...publicTemplate,
-        htmlContent: processedHtml
-      }
+      template: publicTemplate,
+      renderedHtml: processedHtml,
     });
 
   } catch (error) {

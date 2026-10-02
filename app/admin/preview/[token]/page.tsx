@@ -31,13 +31,7 @@ export default function AdminPreviewPage() {
 
       if (response.ok) {
         const data = (await response.json()) as AgreementRecord;
-        // The preview API fills tokens and returns that document as template.htmlContent,
-        // while customHtmlContent is still the stored source. Keep the filled copy in
-        // the custom slot so the shared rule selects it without showing raw tokens.
-        setAgreement({
-          ...data,
-          customHtmlContent: data.customHtmlContent ? data.template.htmlContent : data.customHtmlContent,
-        });
+        setAgreement(data);
         setLoading(false);
       } else if (response.status === 401) {
         setError('Authentication required. Please log in as admin.');
