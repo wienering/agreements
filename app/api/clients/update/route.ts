@@ -3,7 +3,6 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { devLog } from '@/lib/logger';
-import { SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 const clientUpdateSchema = z.object({
   id: z.string().min(1, 'Client ID is required'),
@@ -81,7 +80,8 @@ export async function PUT(request: NextRequest) {
     const signedAgreements = await prisma.agreement.findMany({
       where: {
         clientId: validatedData.id,
-        status: { in: [...SIGNED_STATUSES] },
+        // Only while SIGNED: once COMPLETED, returning clients' details are editable again.
+        status: 'SIGNED',
       },
       select: { id: true, uniqueToken: true },
     });

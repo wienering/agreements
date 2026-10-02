@@ -210,7 +210,11 @@ function renderDocumentPdf(htmlContent: string, agreement: AgreementPdfSource): 
       }
       addText(`Name: ${signature.signerName}`);
       addText(`Email: ${signature.signerEmail}`);
-      addText(`Date & Time Signed: ${signature.signedAt ? formatDateTimeToronto(signature.signedAt) : 'N/A'}`);
+      // No signing date recorded (e.g. an old agreement marked completed by hand): leave the line off.
+      const signedAt = signature.signedAt ?? agreement.signedAt;
+      if (signedAt) {
+        addText(`Date & Time Signed: ${formatDateTimeToronto(signedAt)}`);
+      }
       addText(`IP Address: ${signature.ip || 'N/A'}`);
       yPosition += 3;
     });
