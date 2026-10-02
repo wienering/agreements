@@ -36,16 +36,40 @@ export default function AdminLayout({
 
   const isPreviewRoute = pathname?.startsWith('/admin/preview/');
 
-  const navItems = [
-    { id: 'overview', label: 'Overview', iconName: 'chart-line-up', href: '/admin', tooltip: 'Dashboard overview and statistics' },
-    { id: 'clients', label: 'Clients', iconName: 'users', href: '/admin/clients', tooltip: 'Manage client information' },
-    { id: 'import-events', label: 'Import Events', iconName: 'file-import', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
-    { id: 'templates', label: 'Templates', iconName: 'document', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
-    { id: 'quotes', label: 'Quotes', iconName: 'dollar', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
-    { id: 'leads', label: 'Leads', iconName: 'target', href: '/admin/leads', tooltip: 'Lead pipeline and follow-up tracking' },
-    { id: 'agreements', label: 'Agreements', iconName: 'file-signature', href: '/admin/agreements', tooltip: 'Manage client agreements' },
-    { id: 'backdrop-links', label: 'Backdrop Links', iconName: 'picture', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
-    { id: 'attendant-groups', label: 'Attendant Hubs', iconName: 'users-alt', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
+  const navGroups = [
+    {
+      id: 'today',
+      label: 'Today',
+      items: [
+        { id: 'overview', label: 'Overview', iconName: 'chart-line-up', href: '/admin', tooltip: 'Dashboard overview and statistics' },
+      ],
+    },
+    {
+      id: 'pipeline',
+      label: 'Pipeline',
+      items: [
+        { id: 'leads', label: 'Leads', iconName: 'target', href: '/admin/leads', tooltip: 'Lead pipeline and follow-up tracking' },
+        { id: 'quotes', label: 'Quotes', iconName: 'dollar', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
+        { id: 'agreements', label: 'Agreements', iconName: 'file-signature', href: '/admin/agreements', tooltip: 'Manage client agreements' },
+      ],
+    },
+    {
+      id: 'clients',
+      label: 'Clients',
+      items: [
+        { id: 'clients', label: 'Clients', iconName: 'users', href: '/admin/clients', tooltip: 'Manage client information' },
+      ],
+    },
+    {
+      id: 'setup',
+      label: 'Setup',
+      items: [
+        { id: 'templates', label: 'Templates', iconName: 'document', href: '/admin/templates', tooltip: 'Create and edit agreement templates' },
+        { id: 'backdrop-links', label: 'Backdrop Links', iconName: 'picture', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
+        { id: 'attendant-groups', label: 'Attendant Hubs', iconName: 'users-alt', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
+        { id: 'import-events', label: 'Import Events', iconName: 'file-import', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
+      ],
+    },
   ];
 
   if (status === 'loading') {
@@ -149,49 +173,70 @@ export default function AdminLayout({
         </div>
 
         <nav style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                title={item.tooltip}
-                onClick={() => {
-                  if (isMobile) {
-                    setIsMobileMenuOpen(false);
-                  }
-                }}
+          {navGroups.map((group, groupIndex) => (
+            <div key={group.id} style={{ marginTop: groupIndex === 0 ? 0 : '16px' }}>
+              <p
+                id={`admin-nav-${group.id}`}
                 style={{
-                  display: 'flex',
-                  padding: '10px 24px',
-                  borderLeft: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}`,
-                  backgroundColor: isActive ? navActiveBg : 'transparent',
-                  color: isActive ? 'var(--accent)' : theme.text,
-                  textDecoration: 'none',
-                  alignItems: 'center',
-                  gap: '12px',
-                  fontSize: '13px',
+                  margin: 0,
+                  padding: groupIndex === 0 ? '0 24px 6px' : '8px 24px 6px',
+                  fontSize: '10px',
                   fontWeight: 600,
-                  letterSpacing: '0.09em',
+                  letterSpacing: '0.16em',
                   textTransform: 'uppercase',
-                  transition: 'background-color 0.2s, color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = navHoverBg;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
+                  color: theme.muted,
+                  lineHeight: 1.2,
                 }}
               >
-                <UIcon name={item.iconName} style={{ fontSize: '20px', width: '1.25em', flexShrink: 0 }} />
-                {item.label}
-              </Link>
-            );
-          })}
+                {group.label}
+              </p>
+              <div role="group" aria-labelledby={`admin-nav-${group.id}`}>
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      title={item.tooltip}
+                      onClick={() => {
+                        if (isMobile) {
+                          setIsMobileMenuOpen(false);
+                        }
+                      }}
+                      style={{
+                        display: 'flex',
+                        padding: '10px 24px',
+                        borderLeft: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}`,
+                        backgroundColor: isActive ? navActiveBg : 'transparent',
+                        color: isActive ? 'var(--accent)' : theme.text,
+                        textDecoration: 'none',
+                        alignItems: 'center',
+                        gap: '12px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        letterSpacing: '0.09em',
+                        textTransform: 'uppercase',
+                        transition: 'background-color 0.2s, color 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = navHoverBg;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
+                    >
+                      <UIcon name={item.iconName} style={{ fontSize: '20px', width: '1.25em', flexShrink: 0 }} />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div style={{
