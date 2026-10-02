@@ -304,7 +304,7 @@ export function AgreementRow({
                   {actions.sendingToClient[agreement.id] ? 'Sending...' : 'Resend Email'}
                 </AdminButton>
               )}
-              {agreement.status === 'COMPLETED' && !agreement.reviewRequestSentAt && (
+              {agreement.status !== 'CANCELLED' && !agreement.cancelledAt && !agreement.reviewRequestSentAt && (
                 <AdminButton
                   variant="ghost"
                   onClick={() => actions.onReview(agreement)}
@@ -314,7 +314,7 @@ export function AgreementRow({
                   {actions.sendingReviewRequest[agreement.id] ? 'Sending...' : 'Request Google Review'}
                 </AdminButton>
               )}
-              {agreement.status === 'COMPLETED' && agreement.reviewRequestSentAt && (
+              {agreement.reviewRequestSentAt && (
                 <ReviewStamp sentAt={agreement.reviewRequestSentAt} />
               )}
               {agreement.status === 'DRAFT' && (

@@ -416,8 +416,12 @@ export function useAgreementCommands({
   };
 
   const handleSendReviewRequest = async (agreement: Agreement, reviewMarket: 'ontario' | 'calgary' = 'ontario') => {
-    if (agreement.status !== 'COMPLETED') {
-      showToast('Review requests can only be sent for completed agreements', 'error');
+    if (agreement.status === 'CANCELLED' || agreement.cancelledAt) {
+      showToast('Review requests can’t be sent for cancelled agreements', 'error');
+      return false;
+    }
+    if (agreement.reviewRequestSentAt) {
+      showToast('A review request has already been sent for this agreement', 'error');
       return false;
     }
     if (!agreement.client?.email) {
@@ -432,6 +436,10 @@ export function useAgreementCommands({
         body: JSON.stringify({ agreementId: agreement.id, reviewMarket }),
       });
       const data = await response.json();
+      if (response.ok && data.dryRun) {
+        showToast(data.message || 'Dry run: nothing was sent.', 'info');
+        return true;
+      }
       if (response.ok) {
         const sentAt = data.reviewRequestSentAt || new Date().toISOString();
         mergeRow(agreement.id, { reviewRequestSentAt: sentAt });

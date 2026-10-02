@@ -10,6 +10,7 @@ import { AdminButton } from '../components/AdminButton';
 import { formatDateToronto } from '@/lib/dates';
 import type { WeeklyLoadForecast } from '@/lib/analytics/DashboardCharts';
 import { CalendarFeedCard } from './_components/CalendarFeedCard';
+import { FollowupsDryRunCard } from './_components/FollowupsDryRunCard';
 
 const WeeklyLoadChart = dynamic(
   () => import('@/lib/analytics/DashboardCharts').then((mod) => mod.WeeklyLoadChart),
@@ -528,6 +529,7 @@ export default function AdminHome() {
           </div>
         )}
 
+        <FollowupsDryRunCard className={cardClass} />
         <CalendarFeedCard className={cardClass} />
       </div>
     </div>

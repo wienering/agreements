@@ -10,6 +10,7 @@ import type { useAgreementDetail } from '../_hooks/useAgreementDetail';
 import { formatClientNoteTimestamp } from './noteTime';
 import { backdropLinkLabel } from './agreementUtils';
 import { AttendantConflictWarning } from './AttendantConflictWarning';
+import { FollowUpsPanel } from './FollowUpsPanel';
 import type { Agreement, BackdropLinkOption } from './types';
 import { CloseIconButton } from './ModalFrame';
 import { UnreadNotesBadge } from './UnreadNotesBadge';
@@ -128,6 +129,7 @@ export function AgreementDrawer({
     galleryLinks,
     setGalleryLinks,
     galleryEmailSentAt,
+    followupsVersion,
     nextAction,
     setNextAction,
     selectedBackdropLinkId,
@@ -346,21 +348,38 @@ export function AgreementDrawer({
                     </>
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleSendGalleryReadyEmail}
-                  disabled={sendingGalleryEmail || !galleryLinks.some((link) => link.url.trim())}
-                  className={`flex items-center gap-1.5 rounded border-0 px-4 py-2 text-[13px] font-medium text-accent-on ${
-                    sendingGalleryEmail ? 'cursor-not-allowed bg-admin-hairline' : 'cursor-pointer bg-accent'
-                  }`}
-                >
-                  {sendingGalleryEmail ? 'Sending...' : (
-                    <>
-                      <UIcon name="envelope" className="text-sm" />
-                      Send Gallery Ready Email
-                    </>
-                  )}
-                </button>
+                {galleryEmailSentAt ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSendGalleryReadyEmail(true)}
+                    disabled={sendingGalleryEmail || !galleryLinks.some((link) => link.url.trim())}
+                    title="Send the gallery email again, for example after changing the link. The review request timing doesn't change."
+                    className="flex items-center gap-1.5 rounded border border-admin-hairline bg-admin-surface-raised px-4 py-2 text-[13px] font-medium text-admin-text disabled:cursor-not-allowed"
+                  >
+                    {sendingGalleryEmail ? 'Sending...' : (
+                      <>
+                        <UIcon name="refresh" className="text-sm" />
+                        Resend
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSendGalleryReadyEmail(false)}
+                    disabled={sendingGalleryEmail || !galleryLinks.some((link) => link.url.trim())}
+                    className={`flex items-center gap-1.5 rounded border-0 px-4 py-2 text-[13px] font-medium text-accent-on ${
+                      sendingGalleryEmail ? 'cursor-not-allowed bg-admin-hairline' : 'cursor-pointer bg-accent'
+                    }`}
+                  >
+                    {sendingGalleryEmail ? 'Sending...' : (
+                      <>
+                        <UIcon name="envelope" className="text-sm" />
+                        Send now
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               {galleryEmailSentAt && (
                 <div className="mt-2 flex items-center gap-2 rounded border border-admin-hairline bg-admin-surface-raised px-3 py-2.5 text-xs text-admin-text">
@@ -377,6 +396,7 @@ export function AgreementDrawer({
                   </span>
                 </div>
               )}
+              <FollowUpsPanel agreementId={detail.id} refreshKey={followupsVersion} />
               <label className={`${smallLabelClass} mt-3`}>Next Action (displayed to client)</label>
               <input
                 type="text"
