@@ -9,6 +9,7 @@ import { chartTokens, statusTokens } from '../lib/adminTheme';
 import { AdminButton } from '../components/AdminButton';
 import { formatDateToronto } from '@/lib/dates';
 import type { WeeklyLoadForecast } from '@/lib/analytics/DashboardCharts';
+import { CalendarFeedCard } from './_components/CalendarFeedCard';
 
 const WeeklyLoadChart = dynamic(
   () => import('@/lib/analytics/DashboardCharts').then((mod) => mod.WeeklyLoadChart),
@@ -527,6 +528,7 @@ export default function AdminHome() {
           </div>
         )}
 
+        <CalendarFeedCard className={cardClass} />
       </div>
     </div>
   );
