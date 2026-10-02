@@ -68,7 +68,7 @@ function processHtmlContent(html: string, client: any, agreementId: string, even
 
 ### Overview
 
-Agreements are the core entity linking clients, templates, and events. They progress through statuses: DRAFT → LIVE → SIGNED → COMPLETED.
+Agreements are the core entity linking clients, templates, and events. They progress through statuses: DRAFT → SENT → SIGNED → COMPLETED.
 
 ### High-Level Lifecycle
 
@@ -84,7 +84,7 @@ Agreements are the core entity linking clients, templates, and events. They prog
    ├─ Processes template HTML (smart fields)
    ├─ Generates unique access link
    ├─ Sends email via SMTP
-   └─ Updates status to LIVE
+   └─ Updates status to SENT
 
 3. VIEW
    Client views agreement
@@ -112,11 +112,10 @@ Agreements are the core entity linking clients, templates, and events. They prog
 ```typescript
 enum AgreementStatus {
   DRAFT      // Initial state
-  LIVE       // Sent to client
+  SENT       // Sent to client
   SIGNED     // Digitally signed
   COMPLETED  // Event completed
   CANCELLED  // Cancelled
-  VOID       // Invalid
 }
 ```
 

@@ -674,12 +674,10 @@ function statusBadgeClass(status: string) {
     case 'COMPLETED':
       return 'bg-panel text-success border border-hairline';
     case 'SENT':
-    case 'LIVE':
       return 'bg-panel text-ink border border-hairline';
     case 'DRAFT':
       return 'bg-panel text-warn border border-hairline';
     case 'CANCELLED':
-    case 'VOID':
       return 'bg-panel text-alert border border-hairline';
     default:
       return 'bg-panel text-muted border border-hairline';

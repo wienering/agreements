@@ -4,7 +4,6 @@ import {
   resolveAgreementEventDate,
   torontoDateKey,
 } from '@/lib/dates';
-import { canonicalStatus } from '@/lib/agreementStatus';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
 
 const FORMULA_PREFIX = /^[=+\-@\t\r]/;
@@ -117,7 +116,7 @@ function agreementToCsvRecord(agreement: AgreementExportSource): Record<CsvColum
     Venue: cell(preferText(agreement.event?.eventLocation, agreement.client.eventLocation)),
     Package: cell(preferText(agreement.event?.eventPackage, agreement.client.eventPackage)),
     Price: cell(formatPrice(agreement.event?.packagePrice ?? agreement.client.packagePrice)),
-    'Agreement status': cell(canonicalStatus(agreement.status)),
+    'Agreement status': cell(agreement.status),
     'Payment status': cell(displayPaymentStatus(agreement.paymentStatus)),
     Attendant: cell(agreement.backdropLink?.attendant?.name || agreement.backdropLink?.name),
     'Signed date': csvDate(agreement.signedAt),

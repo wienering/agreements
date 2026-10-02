@@ -7,7 +7,7 @@ import {
 import type { ConflictBuffers } from '@/lib/attendants/conflictSettings';
 
 /** Statuses that hold an attendant's time. Drafts count: some real bookings stay as drafts. */
-export const CONFLICT_STATUSES = ['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED'] as const;
+export const CONFLICT_STATUSES = ['DRAFT', 'SENT', 'SIGNED', 'COMPLETED'] as const;
 
 export type ConflictAgreement = EventScheduleSource & {
   id: string;

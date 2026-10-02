@@ -13,7 +13,6 @@ import {
   torontoMonthKey,
   torontoStartOfTodayUtc,
 } from '@/lib/dates';
-import { canonicalStatus, SENT_STATUSES } from '@/lib/agreementStatus';
 
 /** Non-archived agreements bucketed by effective event date in Eastern Time. */
 async function fetchAgreementEventDatesForChart(): Promise<Date[]> {
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
       prisma.client.count(),
       prisma.template.count(),
       prisma.agreement.count({ where: { status: 'DRAFT' } }),
-      prisma.agreement.count({ where: { status: { in: [...SENT_STATUSES] } } }),
+      prisma.agreement.count({ where: { status: 'SENT' } }),
       prisma.agreement.count({ where: { status: 'SIGNED' } }),
       prisma.agreement.count({ where: { status: 'COMPLETED' } })
     ]);
@@ -265,7 +264,7 @@ export async function GET(request: NextRequest) {
       ? Math.round(((currentPeriodClients - previousPeriodClients) / previousPeriodClients) * 100)
       : currentPeriodClients > 0 ? 100 : 0;
 
-    // Get upcoming events (next 14 calendar days including today) from agreements with DRAFT, LIVE, or SIGNED status
+    // Get upcoming events (next 14 calendar days including today) from agreements with DRAFT, SENT, or SIGNED status
     const startOfToday = torontoStartOfTodayUtc();
     const endOfRange = addTorontoCalendarDaysFrom(startOfToday, 13);
     const endOfRangeParts = getTorontoDateParts(endOfRange);
@@ -285,7 +284,7 @@ export async function GET(request: NextRequest) {
     const upcomingAgreements = await prisma.agreement.findMany({
       where: {
         status: {
-          in: ['DRAFT', ...SENT_STATUSES, 'SIGNED']
+          in: ['DRAFT', 'SENT', 'SIGNED']
         },
         archived: false,
         OR: [
@@ -394,16 +393,12 @@ export async function GET(request: NextRequest) {
         'SENT',
         'SIGNED',
         'COMPLETED',
-        'CANCELLED',
-        'VOID'
+        'CANCELLED'
       ] as const;
 
-      // LIVE rows count as SENT.
-      const countByStatus: Record<string, number> = {};
-      for (const g of activeStatusGroups) {
-        const status = canonicalStatus(g.status);
-        countByStatus[status] = (countByStatus[status] ?? 0) + g._count.id;
-      }
+      const countByStatus: Record<string, number> = Object.fromEntries(
+        activeStatusGroups.map((g) => [g.status, g._count.id])
+      );
 
       const byStatus = ALL_STATUSES.map((status) => ({
         status,

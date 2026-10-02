@@ -12,7 +12,7 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 import { handleApiError } from '@/lib/handleApiError';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { formatDateTimeToronto } from '@/lib/dates';
-import { isCancelledOrVoid, isNotExpired, isSignableStatus } from '@/lib/agreements/signable';
+import { isCancelled, isNotExpired, isSignableStatus } from '@/lib/agreements/signable';
 import { isSigned } from '@/lib/agreementStatus';
 
 const verifyEmailSchema = z.object({
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
-    if (isCancelledOrVoid(agreement.status)) {
+    if (isCancelled(agreement.status)) {
       return NextResponse.json(
         { error: 'This agreement has been cancelled', success: false },
         { status: 410 },
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // SIGNED / COMPLETED stay viewable read-only even if expiresAt has passed.
-    // DRAFT / SENT / LIVE require a null or future expiresAt.
+    // DRAFT / SENT require a null or future expiresAt.
     const isReadOnlyView = isSigned(agreement.status);
     if (!isReadOnlyView) {
       if (!isSignableStatus(agreement.status) || !isNotExpired(agreement.expiresAt)) {

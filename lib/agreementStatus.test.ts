@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  agreementStatusLabel,
-  canonicalStatus,
-  isSent,
-  isSigned,
-  manualStatusChangeError,
-  SIGNED_STATUSES,
-} from '@/lib/agreementStatus';
+import { agreementStatusLabel, isSigned, manualStatusChangeError, SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 describe('isSigned', () => {
   it('is true for SIGNED and COMPLETED', () => {
@@ -15,7 +8,7 @@ describe('isSigned', () => {
   });
 
   it('is false for everything else', () => {
-    for (const status of ['DRAFT', 'SENT', 'LIVE', 'CANCELLED', 'VOID', '', null, undefined, 'signed']) {
+    for (const status of ['DRAFT', 'SENT', 'CANCELLED', '', null, undefined, 'signed']) {
       expect(isSigned(status)).toBe(false);
     }
   });
@@ -25,16 +18,13 @@ describe('isSigned', () => {
   });
 });
 
-describe('SENT and the old LIVE', () => {
-  it('treats LIVE as SENT', () => {
-    expect(isSent('SENT')).toBe(true);
-    expect(isSent('LIVE')).toBe(true);
-    expect(isSent('DRAFT')).toBe(false);
-    expect(isSent('SIGNED')).toBe(false);
-    expect(canonicalStatus('LIVE')).toBe('SENT');
-    expect(canonicalStatus('SIGNED')).toBe('SIGNED');
-    expect(agreementStatusLabel('LIVE')).toBe('Sent');
+describe('agreementStatusLabel', () => {
+  it('labels each status', () => {
+    expect(agreementStatusLabel('DRAFT')).toBe('Draft');
     expect(agreementStatusLabel('SENT')).toBe('Sent');
+    expect(agreementStatusLabel('SIGNED')).toBe('Signed');
+    expect(agreementStatusLabel('COMPLETED')).toBe('Completed');
+    expect(agreementStatusLabel('CANCELLED')).toBe('Cancelled');
   });
 });
 
@@ -47,7 +37,7 @@ describe('manualStatusChangeError', () => {
     ['COMPLETED', 'CANCELLED'],
     ['DRAFT', 'SENT'],
     ['SENT', 'DRAFT'],
-    ['LIVE', 'SIGNED'],
+    ['SENT', 'SIGNED'],
     ['SENT', 'COMPLETED'],
     ['CANCELLED', 'SIGNED'],
   ] as const)('allows %s to %s', (from, to) => {

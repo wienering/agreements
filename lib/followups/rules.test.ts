@@ -75,13 +75,12 @@ describe('gallery email eligibility', () => {
     expect(galleryEmailStatus(sent, NOW, LAUNCH).kind).toBe('sent');
   });
 
-  it('skips cancelled, void and archived agreements', () => {
+  it('skips cancelled and archived agreements', () => {
     expect(galleryDue(agreement({ status: 'CANCELLED' }))).toBe(false);
-    expect(galleryDue(agreement({ status: 'VOID' }))).toBe(false);
     expect(galleryDue(agreement({ archived: true }))).toBe(false);
     expect(galleryDue(agreement({ cancelledAt: new Date() }))).toBe(false);
     expect(galleryDue(agreement({ status: 'COMPLETED' }))).toBe(true);
-    expect(galleryDue(agreement({ status: 'LIVE' }))).toBe(true);
+    expect(galleryDue(agreement({ status: 'SENT' }))).toBe(true);
   });
 
   it('accepts any capitalisation of Fully paid, and the old "Paid" and "Balance Paid"', () => {

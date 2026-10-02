@@ -30,7 +30,7 @@ async function runChaseUnsigned(baseUrl: string) {
   const now = new Date();
   const candidates = await prisma.agreement.findMany({
     where: {
-      status: { in: ['SENT', 'LIVE'] },
+      status: 'SENT',
       archived: false,
       chaserPaused: false,
       reminderCount: { lt: 2 },

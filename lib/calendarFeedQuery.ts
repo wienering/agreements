@@ -42,7 +42,7 @@ const calendarFeedSelect = {
 } satisfies Prisma.AgreementSelect;
 
 /**
- * Active (not cancelled, void or archived) agreements with an event date near the feed window.
+ * Active (not cancelled or archived) agreements with an event date near the feed window.
  * The range is padded by a day each side; callers apply the exact Toronto-day filter.
  */
 export async function findCalendarFeedAgreements(now = new Date()): Promise<CalendarFeedSource[]> {

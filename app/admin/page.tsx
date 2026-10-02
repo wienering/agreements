@@ -62,11 +62,9 @@ interface DashboardStats {
 const AGREEMENT_STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Draft',
   SENT: 'Sent',
-  LIVE: 'Sent',
   SIGNED: 'Signed',
   COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
-  VOID: 'Void'
+  CANCELLED: 'Cancelled'
 };
 
 function getAgreementsChartNote(

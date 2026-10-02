@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isSent, isSigned, SIGNED_STATUSES } from '@/lib/agreementStatus';
+import { isSigned, SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
 
     // Check for unsigned agreements
     const unsignedAgreements = sessionClient.agreements.filter(agreement => 
-      agreement.status === 'DRAFT' || isSent(agreement.status)
+      agreement.status === 'DRAFT' || agreement.status === 'SENT'
     );
 
     if (unsignedAgreements.length > 0) {

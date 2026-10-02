@@ -25,7 +25,7 @@ const NOW = new Date('2026-10-01T16:00:00.000Z');
 function listItem(overrides: Record<string, unknown> = {}) {
   return {
     id: AGREEMENT_ID,
-    status: 'LIVE',
+    status: 'SENT',
     mergedHtml: '<p>merged</p>',
     customHtmlContent: '<p>custom</p>',
     client: { id: 'client_1', firstName: 'Ada', lastName: 'Lovelace', eventDate: null },
@@ -36,7 +36,7 @@ function listItem(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function primeAgreement(status = 'LIVE', item = listItem({ status })) {
+function primeAgreement(status = 'SENT', item = listItem({ status })) {
   prismaMock.agreement.findUnique.mockImplementation(async (args: { select?: unknown }) => {
     if (args?.select) {
       return { id: AGREEMENT_ID, status };
@@ -68,17 +68,13 @@ describe('agreementPatchSchema', () => {
   });
 
   it('rejects statuses outside the manual list', () => {
-    const result = agreementPatchSchema.safeParse({ status: 'VOID' });
+    const result = agreementPatchSchema.safeParse({ status: 'PENDING' });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe(
         'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED',
       );
     }
-  });
-
-  it('reads the old LIVE as SENT', () => {
-    expect(agreementPatchSchema.parse({ status: 'LIVE' })).toEqual({ status: 'SENT' });
   });
 
   it('stores any capitalisation of a payment status as the list value', () => {
@@ -221,7 +217,7 @@ describe('patchAgreement', () => {
 
   it('returns the updated agreement in the list-item shape', async () => {
     const item = listItem();
-    primeAgreement('LIVE', item);
+    primeAgreement('DRAFT', item);
 
     const result = await patchAgreement(
       AGREEMENT_ID,
@@ -229,12 +225,11 @@ describe('patchAgreement', () => {
         expiresAt: '2026-12-01T17:00:00.000Z',
         showPhoneNumberAlways: true,
         forceVirtualGreenScreen: false,
-        status: 'LIVE',
+        status: 'SENT',
       },
       { now: () => NOW },
     );
 
-    // LIVE is written as SENT.
     expect(prismaMock.agreement.update).toHaveBeenCalledWith({
       where: { id: AGREEMENT_ID },
       data: {
@@ -271,7 +266,6 @@ describe('patchAgreement', () => {
   it.each([
     ['SIGNED', 'DRAFT'],
     ['SIGNED', 'SENT'],
-    ['SIGNED', 'LIVE'],
     ['COMPLETED', 'DRAFT'],
     ['COMPLETED', 'SENT'],
   ])('blocks a %s agreement going back to %s', async (from, to) => {
@@ -366,7 +360,7 @@ describe('patchAgreement', () => {
   });
 
   it('does not rewrite unrelated constraint errors as a status failure', async () => {
-    prismaMock.agreement.findUnique.mockResolvedValueOnce({ id: AGREEMENT_ID, status: 'LIVE' });
+    prismaMock.agreement.findUnique.mockResolvedValueOnce({ id: AGREEMENT_ID, status: 'SENT' });
     prismaMock.agreement.update.mockRejectedValueOnce(new Error('some constraint failed'));
 
     await expect(patchAgreement(AGREEMENT_ID, { nextAction: 'Call' })).rejects.toThrow('some constraint failed');

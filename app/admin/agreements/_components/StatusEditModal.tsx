@@ -1,4 +1,3 @@
-import { canonicalStatus } from '@/lib/agreementStatus';
 import { AdminButton } from '../../../components/AdminButton';
 import { ModalFrame, ModalTitle } from './ModalFrame';
 import { fieldClass, labelClass, modalActionsClass } from './uiClasses';
@@ -31,7 +30,7 @@ export function StatusEditModal({
     <ModalFrame maxWidthClass="max-w-[400px]">
       <ModalTitle>Edit Agreement Status</ModalTitle>
       <label className={labelClass}>New Status</label>
-      <select value={canonicalStatus(status)} onChange={(event) => onStatusChange(event.target.value)} className={`${fieldClass} mb-4`}>
+      <select value={status} onChange={(event) => onStatusChange(event.target.value)} className={`${fieldClass} mb-4`}>
         {OPTIONS.map(([value, label]) => (
           <option key={value} value={value}>
             {label}

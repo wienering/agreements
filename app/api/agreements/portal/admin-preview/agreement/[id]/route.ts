@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
-import { canonicalStatus, isSigned } from '@/lib/agreementStatus';
+import { isSigned } from '@/lib/agreementStatus';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
 
 export async function GET(
@@ -113,7 +113,7 @@ export async function GET(
       agreement: {
         id: agreement.id,
         uniqueToken: agreement.uniqueToken,
-        status: canonicalStatus(agreement.status),
+        status: agreement.status,
         expiresAt: agreement.expiresAt?.toISOString() || null,
         createdAt: agreement.createdAt.toISOString(),
         signedAt: agreement.signedAt?.toISOString() || null,

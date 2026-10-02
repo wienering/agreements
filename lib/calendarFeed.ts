@@ -32,8 +32,8 @@ export type EventScheduleSource = {
   event?: EventDetailFields | null;
 };
 
-/** Agreement statuses that appear in the feed. CANCELLED and VOID never do. */
-export const CALENDAR_FEED_STATUSES = ['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED'] as const;
+/** Agreement statuses that appear in the feed. CANCELLED never does. */
+export const CALENDAR_FEED_STATUSES = ['DRAFT', 'SENT', 'SIGNED', 'COMPLETED'] as const;
 
 const FULLY_SIGNED_STATUSES = new Set(['SIGNED', 'COMPLETED']);
 

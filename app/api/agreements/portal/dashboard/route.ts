@@ -3,7 +3,7 @@ import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
-import { canonicalStatus, isSigned as isSignedStatus, SENT_STATUSES } from '@/lib/agreementStatus';
+import { isSigned as isSignedStatus } from '@/lib/agreementStatus';
 import { isSignableStatus } from '@/lib/agreements/signable';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
 
@@ -79,8 +79,7 @@ export async function GET(request: NextRequest) {
 
     // Add status filter
     if (status && status !== 'all') {
-      // SENT also matches rows still holding the old LIVE name.
-      whereClause.status = status === 'SENT' ? { in: [...SENT_STATUSES] } : status;
+      whereClause.status = status;
     }
 
     // Add search filter
@@ -166,7 +165,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: agreement.id,
-        status: canonicalStatus(agreement.status),
+        status: agreement.status,
         uniqueToken: agreement.uniqueToken,
         createdAt: agreement.createdAt,
         updatedAt: agreement.updatedAt,
@@ -201,7 +200,7 @@ export async function GET(request: NextRequest) {
         signatures: agreement.signatures,
         summary: {
           templateTitle: publicTemplate.title,
-          status: canonicalStatus(agreement.status),
+          status: agreement.status,
           createdAt: agreement.createdAt,
           signedAt: agreement.signedAt,
           expiresAt: agreement.expiresAt,
@@ -232,8 +231,7 @@ export async function GET(request: NextRequest) {
     });
 
     const statusSummary = statusCounts.reduce((acc, item) => {
-      const status = canonicalStatus(item.status);
-      acc[status] = (acc[status] ?? 0) + item._count.status;
+      acc[item.status] = item._count.status;
       return acc;
     }, {} as Record<string, number>);
 
@@ -256,7 +254,7 @@ export async function GET(request: NextRequest) {
       },
       filters: {
         statusSummary,
-        availableStatuses: ['DRAFT', 'SENT', 'SIGNED', 'VOID', 'COMPLETED', 'CANCELLED']
+        availableStatuses: ['DRAFT', 'SENT', 'SIGNED', 'COMPLETED', 'CANCELLED']
       },
       client: {
         id: sessionClient.id,

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { addTorontoCalendarDaysFrom } from '@/lib/dates';
-import { isSent } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,8 +50,7 @@ export async function GET(request: NextRequest) {
     // Calculate pipeline metrics
     const totalAgreements = conversions.length;
     const draftCount = statusCounts.find(s => s.status === 'DRAFT')?._count.id || 0;
-    // Sent agreements, including rows still holding the old LIVE name.
-    const liveCount = statusCounts.filter(s => isSent(s.status)).reduce((sum, s) => sum + s._count.id, 0);
+    const liveCount = statusCounts.find(s => s.status === 'SENT')?._count.id || 0;
     const signedCount = statusCounts.find(s => s.status === 'SIGNED')?._count.id || 0;
     const completedCount = statusCounts.find(s => s.status === 'COMPLETED')?._count.id || 0;
     const cancelledCount = statusCounts.find(s => s.status === 'CANCELLED')?._count.id || 0;

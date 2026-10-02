@@ -67,9 +67,9 @@ export function isFollowupRunHour(now: Date): boolean {
   return hour === FOLLOWUP_RUN_HOUR;
 }
 
-/** Active: not cancelled, not void, not archived. Drafts count. */
+/** Active: not cancelled, not archived. Drafts count. */
 export function isActiveForFollowups(a: Pick<FollowupAgreement, 'status' | 'archived' | 'cancelledAt'>): boolean {
-  return a.status !== 'CANCELLED' && a.status !== 'VOID' && !a.archived && !a.cancelledAt;
+  return a.status !== 'CANCELLED' && !a.archived && !a.cancelledAt;
 }
 
 export const DRAFT_SKIP_REASON = 'Agreement is a draft';
@@ -121,7 +121,7 @@ export function reviewRequestDueDateKey(galleryEmailSentAt: Date): string {
 /** Where the gallery email stands, for the agreement page and the daily run. */
 export function galleryEmailStatus(a: FollowupAgreement, now: Date, launchKey: string): FollowupStatus {
   if (a.galleryEmailSentAt) return { kind: 'sent', at: a.galleryEmailSentAt };
-  if (!isActiveForFollowups(a)) return { kind: 'skipped', reason: 'Agreement is cancelled, void or archived' };
+  if (!isActiveForFollowups(a)) return { kind: 'skipped', reason: 'Agreement is cancelled or archived' };
   if (isDraft(a)) return { kind: 'skipped', reason: DRAFT_SKIP_REASON };
   const eventKey = eventDateKey(a);
   if (!eventKey) return { kind: 'waiting', reason: 'No event date' };
@@ -139,7 +139,7 @@ export function galleryEmailStatus(a: FollowupAgreement, now: Date, launchKey: s
 /** Where the review request stands. */
 export function reviewRequestStatus(a: FollowupAgreement, now: Date, launchKey: string): FollowupStatus {
   if (a.reviewRequestSentAt) return { kind: 'sent', at: a.reviewRequestSentAt };
-  if (!isActiveForFollowups(a)) return { kind: 'skipped', reason: 'Agreement is cancelled, void or archived' };
+  if (!isActiveForFollowups(a)) return { kind: 'skipped', reason: 'Agreement is cancelled or archived' };
   if (isDraft(a)) return { kind: 'skipped', reason: DRAFT_SKIP_REASON };
   if (a.reviewReceived) return { kind: 'skipped', reason: 'Already reviewed' };
   if (!isOnOrAfterLaunch(a, launchKey)) {
@@ -197,7 +197,7 @@ export function planFollowups(agreements: FollowupAgreement[], now: Date, launch
 export function manualReviewRefusal(
   a: Pick<FollowupAgreement, 'status' | 'archived' | 'cancelledAt' | 'reviewRequestSentAt'>,
 ): string | null {
-  if (!isActiveForFollowups(a)) return 'This agreement is cancelled, void or archived.';
+  if (!isActiveForFollowups(a)) return 'This agreement is cancelled or archived.';
   if (a.reviewRequestSentAt) return 'A review request has already been sent for this agreement.';
   return null;
 }

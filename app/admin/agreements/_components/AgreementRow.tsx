@@ -1,6 +1,6 @@
 import { formatDateTimeToronto, formatDateToronto, torontoCalendarDaysBetween } from '@/lib/dates';
 import { buildAgreementStatusHint } from '@/lib/agreementTrackingUi';
-import { canonicalStatus, isSent, isSigned } from '@/lib/agreementStatus';
+import { isSigned } from '@/lib/agreementStatus';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
 import { AdminButton } from '../../../components/AdminButton';
 import { StatusBadge, agreementStatusToBadgeVariant, paymentStatusToBadgeVariant } from '../../../components/StatusBadge';
@@ -70,11 +70,11 @@ export function AgreementRow({
   const missingAttendant = agreementMissingAttendant(agreement);
   const paymentStatusLabel = displayPaymentStatus(agreement.paymentStatus);
   const showFollowUpPad =
-    isSent(agreement.status) &&
+    agreement.status === 'SENT' &&
     agreement.lastEmailedAt &&
     torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date()) >= 3;
   const daysSinceEmailed =
-    isSent(agreement.status) && agreement.lastEmailedAt
+    agreement.status === 'SENT' && agreement.lastEmailedAt
       ? torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date())
       : null;
   const isUnresponsive = daysSinceEmailed !== null && daysSinceEmailed >= 3;
@@ -204,7 +204,7 @@ export function AgreementRow({
               title="Click to edit status"
               style={{ fontSize: '10px', padding: '2px 6px', gap: '3px' }}
             >
-              {canonicalStatus(agreement.status)}
+              {agreement.status}
             </StatusBadge>
           </span>
         </div>
@@ -214,7 +214,7 @@ export function AgreementRow({
             onClick={() => actions.onEditStatus(agreement)}
             title="Click to edit status"
           >
-            {canonicalStatus(agreement.status)}
+            {agreement.status}
           </StatusBadge>
         </span>
         {paymentStatusLabel && (
@@ -297,7 +297,7 @@ export function AgreementRow({
               >
                 Attendant View
               </AdminButton>
-              {(isSent(agreement.status) || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
+              {(agreement.status === 'SENT' || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
                 <AdminButton
                   variant="ghost"
                   onClick={() => actions.onResend(agreement)}
