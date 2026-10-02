@@ -107,7 +107,7 @@ export async function findBalanceDigestAgreements(now = new Date()): Promise<Bal
       cancelledAt: null,
       AND: [
         {
-          OR: [{ paymentStatus: null }, { paymentStatus: { not: FULLY_PAID_STATUS } }],
+          paymentStatus: { not: FULLY_PAID_STATUS },
         },
         {
           OR: [

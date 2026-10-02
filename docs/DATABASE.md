@@ -179,8 +179,6 @@ enum AgreementStatus {
   DRAFT      // Being prepared. Never moved to SENT automatically.
   SENT       // Emailed to the client, not fully signed yet
   SIGNED     // Fully signed (every required signer)
-  VOID       // Old value, unused. Removed in the status cleanup.
-  LIVE       // Old name for SENT. Read as SENT, never written. Removed in the status cleanup.
   COMPLETED  // Signed, and the event is over
   CANCELLED  // Cancelled by admin
 }
@@ -202,6 +200,9 @@ DRAFT → SENT → SIGNED → COMPLETED
 **Payment status** is one of `PAYMENT_STATUSES` in `lib/paymentStatus.ts`: Not paid, Invoice issued,
 Deposit paid, Balance due, Fully paid. New agreements start as Not paid. Every writer stores the list
 value; `normalizePaymentStatus()` maps other capitalisations, and the old "Paid" / "Balance Paid", to it.
+In the database the column is NOT NULL, defaults to 'Not paid', and the `Agreement_paymentStatus_check`
+CHECK constraint allows only those five values. Prisma can't express or detect CHECK constraints, so
+`migrate diff` never shows it; if the list changes, add a migration that drops and re-adds the constraint.
 
 **Archiving**: `archived` is separate from status. Archiving an agreement archives its Event once every
 agreement on that Event is archived; unarchiving an agreement unarchives its Event (`lib/agreements/archiveSync.ts`).
