@@ -36,6 +36,9 @@ describe('buildFollowupDigestSections', () => {
       agreement('a_held', 'Hank', { paymentStatus: 'Deposit paid', galleryHeldAlertAt: new Date('2026-10-18T14:00:00.000Z') }),
       agreement('a_paused', 'Paul', { followUpsPaused: true }),
       agreement('a_old', 'Olga', { event: { eventDate: new Date('2026-09-20T12:00:00.000Z') } }),
+      agreement('a_draft', 'Dora', { status: 'DRAFT' }),
+      agreement('a_draft_owing', 'Drew', { status: 'DRAFT', paymentStatus: 'Deposit paid' }),
+      agreement('a_draft_review', 'Dina', { status: 'DRAFT', galleryEmailSentAt: new Date('2026-10-17T20:00:00.000Z') }),
     ],
     NOW,
     LAUNCH,
@@ -59,6 +62,13 @@ describe('buildFollowupDigestSections', () => {
     const names = [...sections.goingOut, ...sections.held].map((i) => i.clientName);
     expect(names).not.toContain('Paul Smith');
     expect(names).not.toContain('Olga Smith');
+  });
+
+  it('leaves drafts out of both sections', () => {
+    const names = [...sections.goingOut, ...sections.held].map((i) => i.clientName);
+    expect(names).not.toContain('Dora Smith');
+    expect(names).not.toContain('Drew Smith');
+    expect(names).not.toContain('Dina Smith');
   });
 });
 

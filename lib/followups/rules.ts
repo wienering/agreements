@@ -1,4 +1,4 @@
-import { FULLY_PAID_STATUS } from '@/lib/balanceDigest';
+import { isFullyPaid } from '@/lib/paymentStatus';
 import {
   addTorontoCalendarDays,
   parseTorontoCalendarDateKey,
@@ -72,9 +72,19 @@ export function isActiveForFollowups(a: Pick<FollowupAgreement, 'status' | 'arch
   return a.status !== 'CANCELLED' && a.status !== 'VOID' && !a.archived && !a.cancelledAt;
 }
 
-/** Only "Fully paid" counts as nothing owing. Any other status, including blank, is owing. */
+export const DRAFT_SKIP_REASON = 'Agreement is a draft';
+
+/**
+ * Drafts never get an automatic follow-up: not every agreement is sent to the client.
+ * The manual Send now, Resend and Request Google Review buttons still work on drafts.
+ */
+export function isDraft(a: Pick<FollowupAgreement, 'status'>): boolean {
+  return a.status === 'DRAFT';
+}
+
+/** Only a fully-paid status (any capitalisation, or the old "Paid"/"Balance Paid") counts as nothing owing. */
 export function hasNoBalanceOwing(paymentStatus: string | null): boolean {
-  return paymentStatus === FULLY_PAID_STATUS;
+  return isFullyPaid(paymentStatus);
 }
 
 export function hasGalleryLink(a: Pick<FollowupAgreement, 'galleryLink' | 'galleryLinks'>): boolean {
@@ -112,6 +122,7 @@ export function reviewRequestDueDateKey(galleryEmailSentAt: Date): string {
 export function galleryEmailStatus(a: FollowupAgreement, now: Date, launchKey: string): FollowupStatus {
   if (a.galleryEmailSentAt) return { kind: 'sent', at: a.galleryEmailSentAt };
   if (!isActiveForFollowups(a)) return { kind: 'skipped', reason: 'Agreement is cancelled, void or archived' };
+  if (isDraft(a)) return { kind: 'skipped', reason: DRAFT_SKIP_REASON };
   const eventKey = eventDateKey(a);
   if (!eventKey) return { kind: 'waiting', reason: 'No event date' };
   if (eventKey < launchKey) return { kind: 'skipped', reason: 'Event is before automatic follow-ups started' };
@@ -129,6 +140,7 @@ export function galleryEmailStatus(a: FollowupAgreement, now: Date, launchKey: s
 export function reviewRequestStatus(a: FollowupAgreement, now: Date, launchKey: string): FollowupStatus {
   if (a.reviewRequestSentAt) return { kind: 'sent', at: a.reviewRequestSentAt };
   if (!isActiveForFollowups(a)) return { kind: 'skipped', reason: 'Agreement is cancelled, void or archived' };
+  if (isDraft(a)) return { kind: 'skipped', reason: DRAFT_SKIP_REASON };
   if (a.reviewReceived) return { kind: 'skipped', reason: 'Already reviewed' };
   if (!isOnOrAfterLaunch(a, launchKey)) {
     return eventDateKey(a)

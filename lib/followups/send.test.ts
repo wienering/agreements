@@ -121,6 +121,17 @@ describe('sendGalleryEmail', () => {
     expect(mocks.logAgreementActivity).toHaveBeenCalledWith(ID, 'GALLERY_EMAIL_SENT', expect.objectContaining({ resend: true }));
   });
 
+  it('lets you Send now and Resend by hand on a draft', async () => {
+    mocks.prisma.agreement.findUnique.mockResolvedValue(record({ status: 'DRAFT' }));
+    expect((await sendGalleryEmail(ID, { ...auto, trigger: 'manual' })).status).toBe('sent');
+
+    mocks.prisma.agreement.findUnique.mockResolvedValue(
+      record({ status: 'DRAFT', galleryEmailSentAt: new Date('2026-10-18T14:00:00.000Z') }),
+    );
+    expect((await sendGalleryEmail(ID, { ...auto, trigger: 'manual', resend: true })).status).toBe('sent');
+    expect(mocks.sendEmail).toHaveBeenCalledTimes(2);
+  });
+
   it('refuses a resend before the first send', async () => {
     const result = await sendGalleryEmail(ID, { ...auto, trigger: 'manual', resend: true });
     expect(result.status).toBe('refused');
