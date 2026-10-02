@@ -338,7 +338,6 @@ Backdrop selection options for agreements.
 | displayOrder | Int | Display order |
 | createdAt | DateTime | Creation timestamp |
 | updatedAt | DateTime | Last update timestamp |
-
 | attendantId | String? | Foreign key to Attendant |
 
 **Relationships**:
