@@ -126,7 +126,9 @@ model Agreement {
   viewCount          Int                   @default(0)
   
   // Portal enhancement fields
-  paymentStatus      String?
+  /// One of PAYMENT_STATUSES in lib/paymentStatus.ts. A CHECK constraint in the
+  /// 20261002204242_status_cleanup_contract migration enforces the list (Prisma can't express it).
+  paymentStatus      String                @default("Not paid")
   stripePaymentLink  String?
   stripeReceiptLink  String?
   galleryLink        String?   // Deprecated: use galleryLinks. Kept for backward compatibility.
@@ -372,8 +374,6 @@ enum AgreementStatus {
   DRAFT
   SENT
   SIGNED
-  VOID
-  LIVE
   COMPLETED
   CANCELLED
 }
