@@ -13,6 +13,7 @@ import { handleApiError } from '@/lib/handleApiError';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { formatDateTimeToronto } from '@/lib/dates';
 import { isCancelledOrVoid, isNotExpired, isSignableStatus } from '@/lib/agreements/signable';
+import { isSigned } from '@/lib/agreementStatus';
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -58,8 +59,7 @@ export async function POST(request: NextRequest) {
 
     // SIGNED / COMPLETED stay viewable read-only even if expiresAt has passed.
     // DRAFT / SENT / LIVE require a null or future expiresAt.
-    const isReadOnlyView =
-      agreement.status === 'SIGNED' || agreement.status === 'COMPLETED';
+    const isReadOnlyView = isSigned(agreement.status);
     if (!isReadOnlyView) {
       if (!isSignableStatus(agreement.status) || !isNotExpired(agreement.expiresAt)) {
         return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       }
 
       let processedHtml;
-      if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+      if (isSigned(agreement.status) && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {
         const htmlToProcess = agreement.customHtmlContent || agreement.template.htmlContent;

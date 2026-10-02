@@ -76,4 +76,43 @@ describe('generateAgreementPdf', () => {
     expect(widths.every((width) => width === 215.9 - 50)).toBe(true);
     expect(widths).not.toContain(210 - 50);
   });
+
+  const printed = () => splitTextToSize.mock.calls.map((call) => String(call[0]));
+
+  it('prints a completed agreement as signed, leaving the signing date off when none was recorded', async () => {
+    await generateAgreementPdf({ ...agreement, status: 'COMPLETED', signatures: [], signedAt: null }, 'document');
+
+    const lines = printed();
+    expect(lines).toContain('DIGITAL SIGNATURE:');
+    expect(lines.some((line) => line.includes('UNSIGNED DRAFT'))).toBe(false);
+    expect(lines.some((line) => line.startsWith('Date & Time Signed'))).toBe(false);
+    expect(lines.some((line) => line.includes('N/A') && line.includes('Signed'))).toBe(false);
+  });
+
+  it('uses the agreement signedAt when the signature record has no date', async () => {
+    await generateAgreementPdf(
+      {
+        ...agreement,
+        status: 'COMPLETED',
+        signedAt: new Date('2026-05-01T16:00:00.000Z'),
+        signatures: [{ signerName: 'Ada Lovelace', signerEmail: 'ada@example.com', signedAt: null }],
+      },
+      'document',
+    );
+
+    expect(printed().filter((line) => line.startsWith('Date & Time Signed'))).toHaveLength(1);
+  });
+
+  it('prints the signing date from the signature record', async () => {
+    await generateAgreementPdf(
+      {
+        ...agreement,
+        status: 'SIGNED',
+        signatures: [{ signerName: 'Ada Lovelace', signerEmail: 'ada@example.com', signedAt: new Date('2026-05-02T16:00:00.000Z') }],
+      },
+      'document',
+    );
+
+    expect(printed().filter((line) => line.startsWith('Date & Time Signed'))).toHaveLength(1);
+  });
 });

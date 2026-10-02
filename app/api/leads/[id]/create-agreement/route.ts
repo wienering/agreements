@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { z } from 'zod';
+import { DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 
 const schema = z.object({
   templateId: z.string().min(1, 'Template ID is required'),
@@ -65,6 +66,7 @@ export async function POST(
         leadId,
         uniqueToken,
         status: 'DRAFT',
+        paymentStatus: DEFAULT_PAYMENT_STATUS,
         customHtmlContent: template.htmlContent,
       },
       include: {

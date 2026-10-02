@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { sendViewAlertEmail } from '@/lib/view-alert-email';
 import { handleApiError } from '@/lib/handleApiError';
+import { SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 // Helper function to get client IP
 function getClientIP(request: NextRequest): string {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
       where: {
         uniqueToken: token,
         OR: [
-          { status: 'SIGNED' }, // Signed agreements bypass expiration
+          { status: { in: [...SIGNED_STATUSES] } }, // Signed/completed agreements bypass expiration
           { expiresAt: null },
           { expiresAt: { gte: new Date() } }
         ]

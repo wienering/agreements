@@ -396,6 +396,8 @@ enum AgreementActivityType {
   FOLLOWUPS_PAUSED
   FOLLOWUPS_RESUMED
   FOLLOWUP_EMAIL_FAILED
+  /// The daily cron moved a SIGNED agreement to COMPLETED the day after its event. Nothing is sent.
+  AUTO_COMPLETED
 }
 
 enum LeadStage {

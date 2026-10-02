@@ -101,7 +101,7 @@ describe('renderBalanceDigestEmail with follow-ups', () => {
       adminUrl: 'a',
     };
     const email = renderBalanceDigestEmail([block], followups);
-    expect(email.subject).toBe('Balance due: 1 event in the next 10 days');
+    expect(email.subject).toBe('Balance due: 1 event');
     expect(email.html).toContain('Follow-ups going out today');
   });
 

@@ -673,6 +673,7 @@ function statusBadgeClass(status: string) {
     case 'SIGNED':
     case 'COMPLETED':
       return 'bg-panel text-success border border-hairline';
+    case 'SENT':
     case 'LIVE':
       return 'bg-panel text-ink border border-hairline';
     case 'DRAFT':

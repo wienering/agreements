@@ -80,6 +80,7 @@ export async function PUT(request: NextRequest) {
     const signedAgreements = await prisma.agreement.findMany({
       where: {
         clientId: validatedData.id,
+        // Only while SIGNED: once COMPLETED, returning clients' details are editable again.
         status: 'SIGNED',
       },
       select: { id: true, uniqueToken: true },

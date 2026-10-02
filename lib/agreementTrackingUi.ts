@@ -138,6 +138,8 @@ export function getActivityTimelineLabel(
       return 'Follow-ups resumed';
     case 'FOLLOWUP_EMAIL_FAILED':
       return m?.email === 'review' ? 'Review request failed to send' : 'Gallery email failed to send';
+    case 'AUTO_COMPLETED':
+      return 'Marked completed automatically (day after the event)';
     default:
       return type;
   }

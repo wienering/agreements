@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   extractAttendantIdFromUrl,
   galleryLinksFromAgreement,
-  normalizePaymentStatus,
+  paymentStatusSelectValue,
 } from '../_components/agreementUtils';
 import type { Agreement, BackdropLinkOption, BackdropOption, GalleryLink } from '../_components/types';
 import { patchAgreement } from './patchAgreement';
@@ -175,7 +175,7 @@ export function useAgreementDetail({
 
   const hydrate = useCallback((agreement: Agreement) => {
     setEditingContent(agreement.customHtmlContent || agreement.template.htmlContent || '');
-    setPaymentStatus(normalizePaymentStatus(agreement.paymentStatus));
+    setPaymentStatus(paymentStatusSelectValue(agreement.paymentStatus));
     setStripePaymentLink(agreement.stripePaymentLink || '');
     setStripeReceiptLink(agreement.stripeReceiptLink || '');
     setGalleryLinks(galleryLinksFromAgreement(agreement));
@@ -467,7 +467,8 @@ export function useAgreementDetail({
     setSaving(true);
     try {
       const updated = await patchAgreement(detail.id, {
-        paymentStatus: paymentStatus || '',
+        // A blank status is left as it is: the list has no blank value.
+        ...(paymentStatus ? { paymentStatus } : {}),
         stripePaymentLink: stripePaymentLink || '',
         stripeReceiptLink: stripeReceiptLink || '',
         galleryLinks: galleryLinks.filter((link) => link.url.trim()),

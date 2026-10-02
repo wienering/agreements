@@ -2,6 +2,7 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { formatDateToronto } from '@/lib/dates';
+import { agreementStatusLabel } from '@/lib/agreementStatus';
 import { useState, useEffect } from 'react';
 import { AdminButton } from '../../../components/AdminButton';
 import { useRouter } from 'next/navigation';
@@ -15,7 +16,7 @@ import {
 interface Agreement {
   id: string;
   uniqueToken: string;
-  status: 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'SENT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
   expiresAt: string;
   createdAt: string;
   archivedAt: string;
@@ -245,7 +246,7 @@ export default function ArchivedAgreementsPage() {
                     </p>
                   </div>
                   <StatusBadge variant={agreementStatusToBadgeVariant(agreement.status)}>
-                    {agreement.status.charAt(0) + agreement.status.slice(1).toLowerCase()}
+                    {agreementStatusLabel(agreement.status)}
                   </StatusBadge>
                 </div>
                 <div style={{

@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { canonicalStatus, isSigned as isSignedStatus, SENT_STATUSES } from '@/lib/agreementStatus';
+import { isSignableStatus } from '@/lib/agreements/signable';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,7 +70,8 @@ export async function GET(request: NextRequest) {
 
     // Add status filter
     if (status && status !== 'all') {
-      whereClause.status = status;
+      // SENT also matches rows still holding the old LIVE name.
+      whereClause.status = status === 'SENT' ? { in: [...SENT_STATUSES] } : status;
     }
 
     // Add search filter
@@ -126,11 +130,11 @@ export async function GET(request: NextRequest) {
       let processedHtml;
 
       // Use customHtmlContent if available, otherwise fall back to template.htmlContent
-      const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+      const htmlToProcess = isSignedStatus(agreement.status) && agreement.mergedHtml
         ? agreement.mergedHtml
         : (agreement.customHtmlContent || agreement.template.htmlContent);
 
-      if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+      if (isSignedStatus(agreement.status) && agreement.mergedHtml) {
         processedHtml = agreement.mergedHtml;
       } else {
         processedHtml = processHtmlContent(
@@ -151,7 +155,7 @@ export async function GET(request: NextRequest) {
 
       return {
         id: agreement.id,
-        status: agreement.status,
+        status: canonicalStatus(agreement.status),
         uniqueToken: agreement.uniqueToken,
         createdAt: agreement.createdAt,
         updatedAt: agreement.updatedAt,
@@ -160,7 +164,7 @@ export async function GET(request: NextRequest) {
         viewCount: agreement.viewCount,
         firstViewedAt: agreement.firstViewedAt,
         lastViewedAt: agreement.lastViewedAt,
-        paymentStatus: agreement.paymentStatus,
+        paymentStatus: displayPaymentStatus(agreement.paymentStatus),
         stripePaymentLink: agreement.stripePaymentLink,
         stripeReceiptLink: agreement.stripeReceiptLink,
         galleryLink: agreement.galleryLink,
@@ -186,13 +190,13 @@ export async function GET(request: NextRequest) {
         signatures: agreement.signatures,
         summary: {
           templateTitle: publicTemplate.title,
-          status: agreement.status,
+          status: canonicalStatus(agreement.status),
           createdAt: agreement.createdAt,
           signedAt: agreement.signedAt,
           expiresAt: agreement.expiresAt,
-          isExpired: agreement.status !== 'SIGNED' && (agreement.expiresAt ? new Date() > agreement.expiresAt : false),
-          canSign: agreement.status === 'DRAFT' || agreement.status === 'SENT',
-          isSigned: agreement.status === 'SIGNED',
+          isExpired: !isSignedStatus(agreement.status) && (agreement.expiresAt ? new Date() > agreement.expiresAt : false),
+          canSign: isSignableStatus(agreement.status),
+          isSigned: isSignedStatus(agreement.status),
           daysUntilExpiry: agreement.expiresAt ? Math.ceil((agreement.expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null
         },
         event: agreement.event ? {
@@ -217,7 +221,8 @@ export async function GET(request: NextRequest) {
     });
 
     const statusSummary = statusCounts.reduce((acc, item) => {
-      acc[item.status] = item._count.status;
+      const status = canonicalStatus(item.status);
+      acc[status] = (acc[status] ?? 0) + item._count.status;
       return acc;
     }, {} as Record<string, number>);
 
@@ -234,7 +239,7 @@ export async function GET(request: NextRequest) {
       },
       filters: {
         statusSummary,
-        availableStatuses: ['DRAFT', 'SENT', 'SIGNED', 'VOID', 'LIVE', 'COMPLETED', 'CANCELLED']
+        availableStatuses: ['DRAFT', 'SENT', 'SIGNED', 'VOID', 'COMPLETED', 'CANCELLED']
       },
       client: {
         id: client.id,

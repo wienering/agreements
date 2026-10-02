@@ -168,11 +168,12 @@ export async function POST(request: NextRequest) {
 
       devLog('Agreement email sent successfully:', info);
 
-      // Update agreement status to LIVE if it was DRAFT and track email send
+      // Emailing a draft makes it SENT; other statuses are kept. Track the email send.
+      const nextStatus = agreement.status === 'DRAFT' ? 'SENT' : agreement.status;
       await prisma.agreement.update({
         where: { id: agreement.id },
-        data: { 
-          status: agreement.status === 'DRAFT' ? 'LIVE' : agreement.status,
+        data: {
+          status: nextStatus,
           lastEmailedAt: new Date(),
           emailSendCount: { increment: 1 }
         }
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest) {
         recipientEmail: agreement.client.email,
         ccEmails: ccList,
         agreementId: agreement.id,
-        status: 'LIVE'
+        status: nextStatus
       });
     } catch (emailError: any) {
       console.error('Email sending failed:', emailError);

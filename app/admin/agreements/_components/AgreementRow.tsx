@@ -1,5 +1,7 @@
 import { formatDateTimeToronto, formatDateToronto, torontoCalendarDaysBetween } from '@/lib/dates';
 import { buildAgreementStatusHint } from '@/lib/agreementTrackingUi';
+import { canonicalStatus, isSent, isSigned } from '@/lib/agreementStatus';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 import { AdminButton } from '../../../components/AdminButton';
 import { StatusBadge, agreementStatusToBadgeVariant, paymentStatusToBadgeVariant } from '../../../components/StatusBadge';
 import { UIcon } from '../../../components/UIcon';
@@ -66,12 +68,13 @@ export function AgreementRow({
   const eventDateObj = eventDateRaw ? new Date(eventDateRaw) : null;
   const attendantName = getAgreementAttendantName(agreement);
   const missingAttendant = agreementMissingAttendant(agreement);
+  const paymentStatusLabel = displayPaymentStatus(agreement.paymentStatus);
   const showFollowUpPad =
-    agreement.status === 'LIVE' &&
+    isSent(agreement.status) &&
     agreement.lastEmailedAt &&
     torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date()) >= 3;
   const daysSinceEmailed =
-    agreement.status === 'LIVE' && agreement.lastEmailedAt
+    isSent(agreement.status) && agreement.lastEmailedAt
       ? torontoCalendarDaysBetween(agreement.lastEmailedAt, new Date())
       : null;
   const isUnresponsive = daysSinceEmailed !== null && daysSinceEmailed >= 3;
@@ -188,10 +191,10 @@ export function AgreementRow({
               <WarningIcon warningType={warningType} />
             </span>
           )}
-          {agreement.paymentStatus && (
-            <StatusBadge variant={paymentStatusToBadgeVariant(agreement.paymentStatus)} title="Payment status" style={{ fontSize: '10px', padding: '2px 6px', gap: '3px' }}>
+          {paymentStatusLabel && (
+            <StatusBadge variant={paymentStatusToBadgeVariant(paymentStatusLabel)} title="Payment status" style={{ fontSize: '10px', padding: '2px 6px', gap: '3px' }}>
               <UIcon name="credit-card" className="text-[10px]" />
-              {agreement.paymentStatus}
+              {paymentStatusLabel}
             </StatusBadge>
           )}
           <span onClick={(event) => event.stopPropagation()} className="inline-flex shrink-0">
@@ -201,7 +204,7 @@ export function AgreementRow({
               title="Click to edit status"
               style={{ fontSize: '10px', padding: '2px 6px', gap: '3px' }}
             >
-              {agreement.status}
+              {canonicalStatus(agreement.status)}
             </StatusBadge>
           </span>
         </div>
@@ -211,14 +214,14 @@ export function AgreementRow({
             onClick={() => actions.onEditStatus(agreement)}
             title="Click to edit status"
           >
-            {agreement.status}
+            {canonicalStatus(agreement.status)}
           </StatusBadge>
         </span>
-        {agreement.paymentStatus && (
+        {paymentStatusLabel && (
           <span className="hidden md:inline-flex">
-            <StatusBadge variant={paymentStatusToBadgeVariant(agreement.paymentStatus)} title="Payment status">
+            <StatusBadge variant={paymentStatusToBadgeVariant(paymentStatusLabel)} title="Payment status">
               <UIcon name="credit-card" className="text-xs" />
-              {agreement.paymentStatus}
+              {paymentStatusLabel}
             </StatusBadge>
           </span>
         )}
@@ -233,7 +236,7 @@ export function AgreementRow({
           <div className="border-t border-admin-hairline px-4 pb-4 pt-3">
             <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-admin-muted">
               <span>Created {formatDateToronto(agreement.createdAt)}</span>
-              {agreement.status !== 'SIGNED' && (
+              {!isSigned(agreement.status) && (
                 <span
                   onClick={(event) => {
                     event.stopPropagation();
@@ -294,7 +297,7 @@ export function AgreementRow({
               >
                 Attendant View
               </AdminButton>
-              {(agreement.status === 'LIVE' || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
+              {(isSent(agreement.status) || agreement.status === 'SIGNED') && agreement.lastEmailedAt && (
                 <AdminButton
                   variant="ghost"
                   onClick={() => actions.onResend(agreement)}

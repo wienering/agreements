@@ -4,7 +4,7 @@ import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
-import { stripeInvoiceTypeFor } from '@/lib/paymentStatus';
+import { paymentStatusAfterInvoiceIssued, stripeInvoiceTypeFor } from '@/lib/paymentStatus';
 import Stripe from 'stripe';
 import {
   addTorontoCalendarDays,
@@ -403,13 +403,13 @@ export async function POST(request: NextRequest) {
     const primaryInvoiceUrl = invoiceResults[0]?.invoiceUrl || '';
     const allInvoiceUrls = invoiceResults.map(r => r.invoiceUrl).filter(Boolean).join(', ');
 
+    // Not paid becomes Invoice issued; a recorded deposit or balance is kept for the webhook.
+    const nextPaymentStatus = paymentStatusAfterInvoiceIssued(agreement.paymentStatus);
     await prisma.agreement.update({
       where: { id: validatedData.agreementId },
       data: {
         stripePaymentLink: primaryInvoiceUrl || agreement.stripePaymentLink,
-        paymentStatus: 'Invoice issued', // Sent to client; follow-up statuses come from Stripe webhooks or manual edits
-        // Store additional invoice info in a JSON format if needed
-        // For now, we'll store the primary URL
+        ...(nextPaymentStatus ? { paymentStatus: nextPaymentStatus } : {}),
       },
     });
 

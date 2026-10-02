@@ -67,12 +67,35 @@ describe('agreementPatchSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects statuses outside the existing enum', () => {
-    const result = agreementPatchSchema.safeParse({ status: 'CANCELLED' });
+  it('rejects statuses outside the manual list', () => {
+    const result = agreementPatchSchema.safeParse({ status: 'VOID' });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe(
-        'Status must be DRAFT, LIVE, SIGNED, or COMPLETED',
+        'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED',
+      );
+    }
+  });
+
+  it('reads the old LIVE as SENT', () => {
+    expect(agreementPatchSchema.parse({ status: 'LIVE' })).toEqual({ status: 'SENT' });
+  });
+
+  it('stores any capitalisation of a payment status as the list value', () => {
+    expect(agreementPatchSchema.parse({ paymentStatus: 'fully PAID' })).toEqual({ paymentStatus: 'Fully paid' });
+    expect(agreementPatchSchema.parse({ paymentStatus: 'Balance Paid' })).toEqual({ paymentStatus: 'Fully paid' });
+    expect(agreementPatchSchema.parse({ paymentStatus: 'Paid' })).toEqual({ paymentStatus: 'Fully paid' });
+    expect(agreementPatchSchema.parse({ paymentStatus: 'Not Paid' })).toEqual({ paymentStatus: 'Not paid' });
+    expect(agreementPatchSchema.parse({ paymentStatus: 'Deposit Paid' })).toEqual({ paymentStatus: 'Deposit paid' });
+    expect(agreementPatchSchema.parse({ paymentStatus: 'invoice issued' })).toEqual({ paymentStatus: 'Invoice issued' });
+  });
+
+  it('rejects a payment status outside the list', () => {
+    const result = agreementPatchSchema.safeParse({ paymentStatus: 'Partly paid' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe(
+        'Payment status must be one of: Not paid, Invoice issued, Deposit paid, Balance due, Fully paid',
       );
     }
   });
@@ -86,7 +109,7 @@ describe('agreementPatchSchema', () => {
     }
   });
 
-  it('allows payment and gallery fields to be blank strings', () => {
+  it('allows gallery and link fields to be blank strings, and treats a blank payment status as no change', () => {
     expect(
       agreementPatchSchema.parse({
         galleryLink: '',
@@ -98,7 +121,7 @@ describe('agreementPatchSchema', () => {
       galleryLink: '',
       stripePaymentLink: '',
       stripeReceiptLink: '',
-      paymentStatus: '',
+      paymentStatus: undefined,
     });
   });
 });
@@ -137,7 +160,7 @@ describe('buildAgreementPatchData', () => {
     });
   });
 
-  it('clears galleries, next action, and payment fields when they are sent blank', () => {
+  it('clears galleries, next action, and payment links when sent blank, but never blanks the payment status', () => {
     expect(
       buildAgreementPatchData(
         agreementPatchSchema.parse({
@@ -153,7 +176,6 @@ describe('buildAgreementPatchData', () => {
       galleryLinks: [],
       galleryLink: null,
       nextAction: null,
-      paymentStatus: null,
       stripePaymentLink: null,
       stripeReceiptLink: null,
     });
@@ -212,13 +234,14 @@ describe('patchAgreement', () => {
       { now: () => NOW },
     );
 
+    // LIVE is written as SENT.
     expect(prismaMock.agreement.update).toHaveBeenCalledWith({
       where: { id: AGREEMENT_ID },
       data: {
         expiresAt: new Date('2026-12-01T17:00:00.000Z'),
         showPhoneNumberAlways: true,
         forceVirtualGreenScreen: false,
-        status: 'LIVE',
+        status: 'SENT',
       },
     });
     expect(result).toEqual({ ...item, unreadNotesCount: 2 });
@@ -245,15 +268,45 @@ describe('patchAgreement', () => {
     expect(prismaMock.agreement.update).not.toHaveBeenCalled();
   });
 
-  it('blocks status changes away from a signed agreement', async () => {
-    primeAgreement('SIGNED');
+  it.each([
+    ['SIGNED', 'DRAFT'],
+    ['SIGNED', 'SENT'],
+    ['SIGNED', 'LIVE'],
+    ['COMPLETED', 'DRAFT'],
+    ['COMPLETED', 'SENT'],
+  ])('blocks a %s agreement going back to %s', async (from, to) => {
+    primeAgreement(from);
 
-    await expect(patchAgreement(AGREEMENT_ID, { status: 'DRAFT' })).rejects.toMatchObject({
+    await expect(patchAgreement(AGREEMENT_ID, { status: to })).rejects.toMatchObject({
       name: 'AgreementPatchError',
       status: 403,
       message:
-        'Cannot change status of signed agreements except to COMPLETED or CANCELLED. Once an agreement is signed, it becomes legally binding.',
+        from === 'SIGNED'
+          ? 'A signed agreement can only move to COMPLETED or CANCELLED. Once an agreement is signed, it becomes legally binding.'
+          : 'A completed agreement can only move to SIGNED or CANCELLED. Once an agreement is signed, it becomes legally binding.',
     });
+    expect(prismaMock.agreement.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['SIGNED', 'CANCELLED'],
+    ['COMPLETED', 'SIGNED'],
+    ['COMPLETED', 'CANCELLED'],
+  ])('allows a %s agreement to move to %s', async (from, to) => {
+    primeAgreement(from);
+
+    await patchAgreement(AGREEMENT_ID, { status: to });
+
+    expect(prismaMock.agreement.update).toHaveBeenCalledWith({
+      where: { id: AGREEMENT_ID },
+      data: { status: to },
+    });
+  });
+
+  it('refuses CANCELLED for an unsigned agreement', async () => {
+    primeAgreement('SENT');
+
+    await expect(patchAgreement(AGREEMENT_ID, { status: 'CANCELLED' })).rejects.toMatchObject({ status: 403 });
     expect(prismaMock.agreement.update).not.toHaveBeenCalled();
   });
 

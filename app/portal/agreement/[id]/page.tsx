@@ -10,7 +10,7 @@ import { formatDateTimeToronto } from '@/lib/dates';
 interface Agreement {
   id: string;
   uniqueToken: string;
-  status: 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED' | 'VOID';
+  status: 'DRAFT' | 'SENT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED' | 'VOID';
   expiresAt: string | null;
   createdAt: string;
   signedAt: string | null;
@@ -219,6 +219,7 @@ function AgreementDetailContent() {
       case 'SIGNED':
       case 'COMPLETED':
         return 'bg-panel text-success border border-hairline';
+      case 'SENT':
       case 'LIVE':
         return 'bg-panel text-ink border border-hairline';
       case 'DRAFT':
@@ -442,7 +443,7 @@ function AgreementDetailContent() {
             Download PDF
           </a>
 
-          {agreement.status === 'SIGNED' && (
+          {(agreement.status === 'SIGNED' || agreement.status === 'COMPLETED') && (
             <a
               href={`/agreement/${agreement.uniqueToken}`}
               target="_blank"

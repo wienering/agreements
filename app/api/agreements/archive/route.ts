@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { handleApiError } from '@/lib/handleApiError';
+import { setAgreementArchived } from '@/lib/agreements/archiveSync';
 
 const archiveAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -23,13 +24,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
-    const updatedAgreement = await prisma.agreement.update({
-      where: { id: agreement.id },
-      data: {
-        archived: true,
-        archivedAt: new Date(),
-      },
-    });
+    // Archives the Event too once all of its agreements are archived.
+    const updatedAgreement = await setAgreementArchived(agreement.id, true);
 
     return NextResponse.json({
       message: 'Agreement archived successfully',
@@ -55,13 +51,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
-    const updatedAgreement = await prisma.agreement.update({
-      where: { id: agreement.id },
-      data: {
-        archived: false,
-        archivedAt: null,
-      },
-    });
+    // Unarchives the Event too.
+    const updatedAgreement = await setAgreementArchived(agreement.id, false);
 
     return NextResponse.json({
       message: 'Agreement unarchived successfully',

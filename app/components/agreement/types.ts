@@ -1,3 +1,5 @@
+import { isSigned } from '@/lib/agreementStatus';
+
 export interface SignatureRecord {
   signerName: string;
   signerEmail: string;
@@ -84,7 +86,7 @@ export function renderedAgreementHtml(agreement: AgreementRecord): string {
   if (agreement.renderedHtml) {
     return agreement.renderedHtml;
   }
-  if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+  if (isSigned(agreement.status) && agreement.mergedHtml) {
     return agreement.mergedHtml;
   }
   return agreement.customHtmlContent || agreement.template.htmlContent;

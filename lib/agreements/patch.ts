@@ -2,6 +2,8 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { findAgreementListItem } from '@/lib/agreements/listItem';
+import { manualStatusChangeError, type ManualStatus } from '@/lib/agreementStatus';
+import { normalizePaymentStatus, PAYMENT_STATUSES } from '@/lib/paymentStatus';
 
 const galleryEntrySchema = z
   .object({
@@ -10,10 +12,28 @@ const galleryEntrySchema = z
   })
   .strict();
 
-const SIGNED_STATUS_TRANSITIONS = ['COMPLETED', 'CANCELLED'];
+/**
+ * A submitted payment status: any capitalisation of a list value (or the old "Paid" /
+ * "Balance Paid"), stored as the list value. Blank leaves the stored value as it is.
+ */
+const paymentStatusInputSchema = z
+  .string()
+  .transform((value, ctx) => {
+    if (!value.trim()) return undefined;
+    const normalized = normalizePaymentStatus(value);
+    if (!normalized) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Payment status must be one of: ${PAYMENT_STATUSES.join(', ')}` });
+      return z.NEVER;
+    }
+    return normalized;
+  });
 
-const SIGNED_STATUS_ERROR =
-  'Cannot change status of signed agreements except to COMPLETED or CANCELLED. Once an agreement is signed, it becomes legally binding.';
+/** LIVE is the old name for SENT; a page loaded before the rename may still send it. */
+const statusInputSchema = z
+  .enum(['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED', 'CANCELLED'], {
+    errorMap: () => ({ message: 'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED' }),
+  })
+  .transform((value): ManualStatus => (value === 'LIVE' ? 'SENT' : value));
 
 /**
  * Every field is optional. Unknown keys are rejected.
@@ -25,7 +45,7 @@ export const agreementPatchSchema = z
     galleryLink: z.string().url('Invalid gallery link URL').or(z.literal('')).optional(),
     galleryLinks: z.array(galleryEntrySchema).optional(),
     nextAction: z.string().max(500, 'Next action must be 500 characters or less').optional(),
-    paymentStatus: z.string().optional(),
+    paymentStatus: paymentStatusInputSchema.optional(),
     stripePaymentLink: z.string().url('Invalid payment link URL').optional().or(z.literal('')),
     stripeReceiptLink: z.string().url('Invalid receipt link URL').optional().or(z.literal('')),
     showPhoneNumberAlways: z.boolean().optional(),
@@ -33,11 +53,7 @@ export const agreementPatchSchema = z
     chaserPaused: z.boolean().optional(),
     backdropLinkId: z.string().nullable().optional(),
     markNotesViewed: z.boolean().optional(),
-    status: z
-      .enum(['DRAFT', 'LIVE', 'SIGNED', 'COMPLETED'], {
-        errorMap: () => ({ message: 'Status must be DRAFT, LIVE, SIGNED, or COMPLETED' }),
-      })
-      .optional(),
+    status: statusInputSchema.optional(),
   })
   .strict();
 
@@ -92,7 +108,7 @@ export function buildAgreementPatchData(
   }
 
   if (input.paymentStatus !== undefined) {
-    data.paymentStatus = input.paymentStatus || null;
+    data.paymentStatus = input.paymentStatus;
   }
 
   if (input.stripePaymentLink !== undefined) {
@@ -152,20 +168,10 @@ export async function patchAgreement(id: string, body: unknown, options: PatchAg
     throw new AgreementPatchError(404, 'Agreement not found');
   }
 
-  if (
-    input.status !== undefined &&
-    existing.status === 'SIGNED' &&
-    !SIGNED_STATUS_TRANSITIONS.includes(input.status)
-  ) {
-    console.error(
-      'Attempted to change status of signed agreement:',
-      id,
-      'from',
-      existing.status,
-      'to',
-      input.status,
-    );
-    throw new AgreementPatchError(403, SIGNED_STATUS_ERROR);
+  const statusError = input.status !== undefined ? manualStatusChangeError(existing.status, input.status) : null;
+  if (statusError) {
+    console.error('Refused status change:', id, 'from', existing.status, 'to', input.status);
+    throw new AgreementPatchError(403, statusError);
   }
 
   if (input.backdropLinkId) {

@@ -8,6 +8,7 @@ import {
   TORONTO_TZ,
 } from '@/lib/dates';
 import { buildIcsCalendar, type IcsEvent } from '@/lib/ics';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 
 export const CALENDAR_FEED_PAST_DAYS = 30;
 export const CALENDAR_FEED_FUTURE_MONTHS = 18;
@@ -249,7 +250,7 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
     source.client.phone?.trim() ? `Phone: ${source.client.phone.trim()}` : null,
     details.packageName ? `Package: ${details.packageName}` : null,
     attendantName ? `Attendant: ${attendantName}` : null,
-    `Payment: ${source.paymentStatus?.trim() || 'Not recorded'}`,
+    `Payment: ${displayPaymentStatus(source.paymentStatus) ?? 'Not recorded'}`,
     `Admin: ${adminUrl}`,
     `Status: ${calendarFeedStatusLabel(source)}`,
   ]

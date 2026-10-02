@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { isSigned } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
     devLog('🔍 Admin Preview API: mergedHtml length:', agreement.mergedHtml?.length || 0);
     devLog('🔍 Admin Preview API: Template content length:', agreement.template.htmlContent?.length || 0);
     
-    if (agreement.status === 'SIGNED') {
+    if (isSigned(agreement.status)) {
       if (agreement.mergedHtml && agreement.mergedHtml.trim().length > 0) {
         // Use the saved snapshot for signed agreements
         devLog('🔍 Admin Preview API: Using saved snapshot for signed agreement');

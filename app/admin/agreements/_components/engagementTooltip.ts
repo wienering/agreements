@@ -1,10 +1,11 @@
 import { escapeHtml } from '@/lib/htmlEscape';
+import { canonicalStatus, isSent } from '@/lib/agreementStatus';
 import { formatDateToronto, torontoCalendarDaysBetween } from '@/lib/dates';
 import type { Agreement } from './types';
 
 const STATUS_BADGE: Record<string, string> = {
   SIGNED: 'bg-success',
-  LIVE: 'bg-accent',
+  SENT: 'bg-accent',
   DRAFT: 'bg-warn',
   COMPLETED: 'bg-success',
   CANCELLED: 'bg-alert',
@@ -16,9 +17,10 @@ function buildEngagementTooltipHtml(agreement: Agreement): string {
     : null;
   const viewCount = agreement.viewCount || 0;
   const lastViewed = agreement.lastViewedAt ? formatDateToronto(agreement.lastViewedAt) : null;
-  const needsFollowUp = agreement.status === 'LIVE' && daysSinceEmailed && daysSinceEmailed >= 3;
+  const status = canonicalStatus(agreement.status);
+  const needsFollowUp = isSent(agreement.status) && daysSinceEmailed && daysSinceEmailed >= 3;
   const notViewed = viewCount === 0;
-  const statusClass = STATUS_BADGE[agreement.status] ?? 'bg-admin-muted';
+  const statusClass = STATUS_BADGE[status] ?? 'bg-admin-muted';
 
   const lastEmailText = agreement.lastEmailedAt
     ? 'Last: ' + escapeHtml(formatDateToronto(agreement.lastEmailedAt))
@@ -47,7 +49,7 @@ function buildEngagementTooltipHtml(agreement: Agreement): string {
     '<span class="ml-auto rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white ' +
     statusClass +
     '">' +
-    escapeHtml(agreement.status) +
+    escapeHtml(status) +
     '</span></div>' +
     '<div class="px-4 py-3.5">' +
     '<div class="mb-3.5 border-b border-admin-hairline pb-3.5">' +

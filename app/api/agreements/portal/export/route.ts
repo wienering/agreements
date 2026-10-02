@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
+import { canonicalStatus, isSigned } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
     const exportData = agreements.map(agreement => {
       const baseData = {
         id: agreement.id,
-        status: agreement.status,
+        status: canonicalStatus(agreement.status),
         createdAt: agreement.createdAt,
         updatedAt: agreement.updatedAt,
         signedAt: agreement.signedAt,
@@ -137,11 +138,11 @@ export async function GET(request: NextRequest) {
       if (includeHtml) {
         // Process HTML content
         // Use customHtmlContent if available, otherwise fall back to template.htmlContent
-        const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+        const htmlToProcess = isSigned(agreement.status) && agreement.mergedHtml
           ? agreement.mergedHtml
           : (agreement.customHtmlContent || agreement.template.htmlContent);
-        
-        let processedHtml = agreement.status === 'SIGNED' && agreement.mergedHtml
+
+        let processedHtml = isSigned(agreement.status) && agreement.mergedHtml
           ? agreement.mergedHtml
           : processHtmlContent(
               htmlToProcess,

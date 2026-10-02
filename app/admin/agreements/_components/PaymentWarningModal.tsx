@@ -1,3 +1,4 @@
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 import { AdminButton } from '../../../components/AdminButton';
 import { UIcon } from '../../../components/UIcon';
 import { ModalFrame } from './ModalFrame';
@@ -30,7 +31,7 @@ export function PaymentWarningModal({
         <p className="mb-1 mt-0 text-sm text-admin-text"><strong>Client:</strong> {agreement.client.firstName} {agreement.client.lastName}</p>
         <p className="mb-1 mt-0 text-sm text-admin-text"><strong>Template:</strong> {agreement.template.title}</p>
         <p className="m-0 text-sm text-admin-text">
-          <strong>Current Payment Status:</strong> <span className="font-semibold text-warn">{agreement.paymentStatus || 'Not Set'}</span>
+          <strong>Current Payment Status:</strong> <span className="font-semibold text-warn">{displayPaymentStatus(agreement.paymentStatus) ?? 'Not Set'}</span>
         </p>
       </div>
       <p className="mb-6 mt-0 text-sm leading-normal text-admin-text">Are you sure you want to proceed with marking this agreement as completed?</p>

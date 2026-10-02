@@ -12,6 +12,7 @@ import { reportServerError } from '@/lib/errorAlert';
 import { buildFollowupDigestSections, hasFollowupDigestItems } from '@/lib/followups/digest';
 import { followupsLaunchDateKey } from '@/lib/followups/rules';
 import { loadFollowupCandidates } from '@/lib/followups/run';
+import { autoCompleteDryRun, runAutoComplete, type AutoCompleteSummary } from '@/lib/autoComplete';
 
 // Vercel cron invokes this endpoint with GET (user agent: vercel-cron/1.0).
 // Manual triggers can use POST. Both require the CRON_SECRET bearer token.
@@ -36,6 +37,17 @@ async function handler(request: NextRequest) {
 
   const now = new Date();
 
+  // Automatic Completed first (status only, nothing sent), so the digest sees today's statuses.
+  // A failure here is reported but never stops the digest.
+  let autoComplete: AutoCompleteSummary | null = null;
+  try {
+    autoComplete = await runAutoComplete({ now, dryRun: autoCompleteDryRun() });
+    console.log('[balance-digest] auto-complete', autoComplete);
+  } catch (error) {
+    console.error('[balance-digest] auto-complete failed', error);
+    await reportServerError({ route: '/api/cron/balance-digest (auto-complete)', method: request.method, error });
+  }
+
   try {
     const rows = await findBalanceDigestAgreements(now);
     const followups = buildFollowupDigestSections(
@@ -49,6 +61,7 @@ async function handler(request: NextRequest) {
         ok: true,
         sent: false,
         count: 0,
+        autoComplete,
         ranAt: now.toISOString(),
       });
     }
@@ -109,6 +122,7 @@ async function handler(request: NextRequest) {
       count: rows.length,
       followupsGoingOut: followups.goingOut.length,
       galleriesHeld: followups.held.length,
+      autoComplete,
       ranAt: now.toISOString(),
     });
   } catch (error) {
