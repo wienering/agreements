@@ -4,9 +4,10 @@ import {
   torontoCalendarDaysBetween,
   torontoDateKey,
 } from '@/lib/dates';
+import { isFullyPaid, PAYMENT_STATUS_FULLY_PAID } from '@/lib/paymentStatus';
 
-/** Exact option value from the admin payment status select. */
-export const FULLY_PAID_STATUS = 'Fully paid';
+/** The value written when marking paid. Use isFullyPaid() to check, not an exact match. */
+export const FULLY_PAID_STATUS = PAYMENT_STATUS_FULLY_PAID;
 
 /** Inclusive window: today through this many Toronto calendar days ahead. */
 export const BALANCE_DIGEST_LOOKAHEAD_DAYS = 10;
@@ -55,7 +56,7 @@ export function isIncludedInBalanceDigest(
   if (agreement.status !== 'SIGNED') return false;
   if (agreement.archived) return false;
   if (agreement.cancelledAt) return false;
-  if (agreement.paymentStatus === FULLY_PAID_STATUS) return false;
+  if (isFullyPaid(agreement.paymentStatus)) return false;
   if (isSnoozedPastToday(agreement.balanceDigestSnoozedUntil, now)) return false;
 
   const eventDate = resolveAgreementEventDate(agreement);

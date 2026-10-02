@@ -15,6 +15,7 @@ import {
 import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { formatDateToronto } from '@/lib/dates';
+import { SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     const agreement = await prisma.agreement.findFirst({
       where: {
         uniqueToken: validatedData.token,
-        status: 'SIGNED' // Only allow email for signed agreements
+        status: { in: [...SIGNED_STATUSES] }, // Only signed agreements (SIGNED or COMPLETED)
       },
       include: {
         client: true,

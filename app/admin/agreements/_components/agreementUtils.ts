@@ -48,7 +48,7 @@ export function agreementMissingAttendant(agreement: Agreement): boolean {
 export function normalizePaymentStatus(value?: string | null) {
   if (!value) return '';
   const v = value.trim().toLowerCase();
-  if (v === 'fully paid' || v === 'paid in full' || v === 'paid') return 'Fully paid';
+  if (v === 'fully paid' || v === 'paid in full' || v === 'paid' || v === 'balance paid') return 'Fully paid';
   if (v === 'balance due') return 'Balance due';
   if (v === 'deposit paid' || v === 'deposit') return 'Deposit paid';
   if (v === 'not paid' || v === 'unpaid') return 'Not paid';

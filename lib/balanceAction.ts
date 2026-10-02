@@ -1,4 +1,4 @@
-import { FULLY_PAID_STATUS } from '@/lib/balanceDigest';
+import { isFullyPaid } from '@/lib/paymentStatus';
 
 export type BalanceActionAgreementState = {
   paymentStatus: string | null;
@@ -9,7 +9,7 @@ export type BalanceActionAgreementState = {
 
 /** Why a digest action should be refused. Null means the action can proceed. */
 export function balanceActionRefusal(agreement: BalanceActionAgreementState): string | null {
-  if (agreement.paymentStatus === FULLY_PAID_STATUS) {
+  if (isFullyPaid(agreement.paymentStatus)) {
     return 'This agreement is already paid. Nothing was changed.';
   }
   if (agreement.status === 'CANCELLED' || agreement.cancelledAt) {

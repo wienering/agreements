@@ -75,13 +75,20 @@ describe('gallery email eligibility', () => {
     expect(galleryEmailStatus(sent, NOW, LAUNCH).kind).toBe('sent');
   });
 
-  it('skips cancelled, void and archived agreements but counts drafts', () => {
+  it('skips cancelled, void and archived agreements', () => {
     expect(galleryDue(agreement({ status: 'CANCELLED' }))).toBe(false);
     expect(galleryDue(agreement({ status: 'VOID' }))).toBe(false);
     expect(galleryDue(agreement({ archived: true }))).toBe(false);
     expect(galleryDue(agreement({ cancelledAt: new Date() }))).toBe(false);
-    expect(galleryDue(agreement({ status: 'DRAFT' }))).toBe(true);
     expect(galleryDue(agreement({ status: 'COMPLETED' }))).toBe(true);
+    expect(galleryDue(agreement({ status: 'LIVE' }))).toBe(true);
+  });
+
+  it('accepts any capitalisation of Fully paid, and the old "Paid" and "Balance Paid"', () => {
+    for (const paymentStatus of ['Fully Paid', 'FULLY PAID', ' fully  paid ', 'Paid', 'Balance Paid']) {
+      expect(galleryDue(agreement({ paymentStatus }))).toBe(true);
+      expect(isGalleryEmailHeld(agreement({ paymentStatus }), NOW, LAUNCH)).toBe(false);
+    }
   });
 
   it('is paused while follow-ups are paused, and goes out on the next run after unpausing', () => {
@@ -129,8 +136,8 @@ describe('launch cutoff', () => {
 });
 
 describe('balance hold', () => {
-  it('holds the gallery when anything other than "Fully paid" is recorded, including blank', () => {
-    for (const paymentStatus of [null, '', 'Deposit paid', 'Balance due', 'Not paid', 'Invoice issued', 'fully paid']) {
+  it('holds the gallery when anything other than fully paid is recorded, including blank', () => {
+    for (const paymentStatus of [null, '', 'Deposit paid', 'Deposit Paid', 'Balance due', 'Not paid', 'Invoice issued']) {
       const a = agreement({ paymentStatus });
       expect(galleryDue(a)).toBe(false);
       expect(isGalleryEmailHeld(a, NOW, LAUNCH)).toBe(true);
@@ -230,6 +237,45 @@ describe('review request eligibility', () => {
     const plan = planFollowups([agreement()], NOW, LAUNCH);
     expect(plan.galleryEmails).toHaveLength(1);
     expect(plan.reviewRequests).toHaveLength(0);
+  });
+});
+
+describe('drafts', () => {
+  const gallerySent = new Date('2026-10-17T20:00:00.000Z');
+
+  it('never get an automatic gallery email, and show why', () => {
+    const draft = agreement({ status: 'DRAFT' });
+    expect(galleryDue(draft)).toBe(false);
+    expect(galleryEmailStatus(draft, NOW, LAUNCH)).toEqual({ kind: 'skipped', reason: 'Agreement is a draft' });
+  });
+
+  it('never get an automatic review request, even after a manual gallery send', () => {
+    const draft = agreement({ status: 'DRAFT', galleryEmailSentAt: gallerySent });
+    expect(reviewDue(draft)).toBe(false);
+    expect(reviewRequestStatus(draft, NOW, LAUNCH)).toEqual({ kind: 'skipped', reason: 'Agreement is a draft' });
+    expect(galleryEmailStatus(draft, NOW, LAUNCH).kind).toBe('sent');
+  });
+
+  it('are never held or alerted, even with a balance owing', () => {
+    const draft = agreement({ status: 'DRAFT', paymentStatus: 'Deposit paid' });
+    expect(isGalleryEmailHeld(draft, NOW, LAUNCH)).toBe(false);
+  });
+
+  it('stay out of the daily plan completely', () => {
+    const plan = planFollowups(
+      [
+        agreement({ id: 'draft_due', status: 'DRAFT' }),
+        agreement({ id: 'draft_owing', status: 'DRAFT', paymentStatus: null }),
+        agreement({ id: 'draft_review', status: 'DRAFT', galleryEmailSentAt: gallerySent }),
+      ],
+      NOW,
+      LAUNCH,
+    );
+    expect(plan).toEqual({ galleryEmails: [], reviewRequests: [], held: [] });
+  });
+
+  it('can still get a manual review request', () => {
+    expect(manualReviewRefusal(agreement({ status: 'DRAFT' }))).toBeNull();
   });
 });
 

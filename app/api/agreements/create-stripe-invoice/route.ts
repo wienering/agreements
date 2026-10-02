@@ -4,6 +4,7 @@ import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
+import { stripeInvoiceTypeFor } from '@/lib/paymentStatus';
 import Stripe from 'stripe';
 import {
   addTorontoCalendarDays,
@@ -367,7 +368,7 @@ export async function POST(request: NextRequest) {
         } : undefined,
         metadata: {
           agreementId: agreement.id,
-          invoiceType: invoiceDetails.needsTwoInvoices ? 'remaining' : 'full',
+          invoiceType: stripeInvoiceTypeFor(validatedData.invoiceType, invoiceDetails.needsTwoInvoices),
         },
       });
 
