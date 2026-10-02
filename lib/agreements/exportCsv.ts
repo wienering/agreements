@@ -91,6 +91,9 @@ export function selectAgreementsForExport(
 }
 
 export function buildAgreementsCsv(agreements: AgreementExportSource[]): string {
+  if (agreements.length === 0) {
+    return `${AGREEMENT_CSV_COLUMNS.join(',')}\n`;
+  }
   const records = agreements.map(agreementToCsvRecord);
   return Papa.unparse(records, {
     columns: [...AGREEMENT_CSV_COLUMNS],
@@ -138,5 +141,7 @@ function formatPrice(value: PriceValue | undefined): string {
 }
 
 function cell(value: string | null | undefined): string {
-  return sanitizeSpreadsheetCell(value?.trim() ?? '');
+  if (value == null) return '';
+  const withoutOuterSpaces = value.replace(/^[ ]+|[ ]+$/g, '');
+  return sanitizeSpreadsheetCell(withoutOuterSpaces);
 }
