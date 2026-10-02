@@ -38,7 +38,7 @@ const calendarFeedSelect = {
     },
   },
   event: { select: eventDetailSelect },
-  backdropLink: { select: { name: true } },
+  backdropLink: { select: { name: true, attendant: { select: { name: true } } } },
 } satisfies Prisma.AgreementSelect;
 
 /**

@@ -17,12 +17,18 @@ const ADMIN_ORIGIN = 'https://agreements.photoboothguys.ca';
 const UID_DOMAIN = 'agreements.photoboothguys.ca';
 const MAX_DURATION_MINUTES = 24 * 60;
 
-type EventDetailFields = {
+export type EventDetailFields = {
   eventDate: Date | null;
   eventLocation: string | null;
   eventStartTime: string | null;
   eventDuration: string | null;
   eventPackage: string | null;
+};
+
+/** What's needed to place an agreement's event in time: the Event record, then the client fields. */
+export type EventScheduleSource = {
+  client: EventDetailFields;
+  event?: EventDetailFields | null;
 };
 
 /** Agreement statuses that appear in the feed. CANCELLED and VOID never do. */
@@ -50,7 +56,7 @@ export type CalendarFeedSource = {
     email?: string | null;
   };
   event?: EventDetailFields | null;
-  backdropLink?: { name: string } | null;
+  backdropLink?: { name: string; attendant?: { name: string } | null } | null;
 };
 
 function dateKeyFromParts(year: number, month: number, day: number): string {
@@ -135,7 +141,7 @@ export function parseEventDurationMinutes(value: string | null | undefined): num
 }
 
 /** Event details from the Event record when linked, otherwise the legacy client fields. */
-function eventDetails(source: CalendarFeedSource) {
+function eventDetails(source: EventScheduleSource) {
   const from = source.event ?? source.client;
   return {
     location: from.eventLocation?.trim() || null,
@@ -182,21 +188,25 @@ export function adminAgreementUrl(agreementId: string): string {
   return `${ADMIN_ORIGIN}${adminAgreementPath(agreementId)}`;
 }
 
-export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null {
+export type EventSchedule = {
+  /** Toronto calendar day, YYYY-MM-DD. */
+  dateKey: string;
+  /** Start and end instants when the start time can be read; null means an all-day event. */
+  start: Date | null;
+  end: Date | null;
+};
+
+/**
+ * When an event happens: its Toronto day and, if the start time can be read, its start and
+ * end (start plus duration, 3 hours when the duration can't be read). Null without a date.
+ */
+export function resolveEventSchedule(source: EventScheduleSource): EventSchedule | null {
   const eventDate = resolveAgreementEventDate(source);
   if (!eventDate) return null;
 
   const dateKey = torontoDateKey(eventDate);
   const details = eventDetails(source);
-  const clientName = `${source.client.firstName} ${source.client.lastName}`.trim();
-  const adminUrl = adminAgreementUrl(source.id);
-
   const start = parseEventStartTime(details.startTime);
-  let timing: IcsEvent['timing'] = {
-    kind: 'allDay',
-    startDateKey: dateKey,
-    endDateKey: nextDateKey(dateKey),
-  };
   if (start) {
     const hh = String(start.hour).padStart(2, '0');
     const mm = String(start.minute).padStart(2, '0');
@@ -204,18 +214,41 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
     if (!Number.isNaN(startInstant.getTime())) {
       const durationMinutes =
         parseEventDurationMinutes(details.duration) ?? DEFAULT_EVENT_DURATION_MINUTES;
-      timing = {
-        kind: 'timed',
+      return {
+        dateKey,
         start: startInstant,
         end: new Date(startInstant.getTime() + durationMinutes * 60_000),
       };
     }
   }
+  return { dateKey, start: null, end: null };
+}
 
+/** The attendant's name for display: the attendant record first, then the backdrop link name. */
+export function attendantNameOf(
+  backdropLink: { name: string; attendant?: { name: string } | null } | null | undefined,
+): string | null {
+  return backdropLink?.attendant?.name?.trim() || backdropLink?.name?.trim() || null;
+}
+
+export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null {
+  const schedule = resolveEventSchedule(source);
+  if (!schedule) return null;
+  const { dateKey } = schedule;
+  const details = eventDetails(source);
+  const clientName = `${source.client.firstName} ${source.client.lastName}`.trim();
+  const adminUrl = adminAgreementUrl(source.id);
+
+  const timing: IcsEvent['timing'] =
+    schedule.start && schedule.end
+      ? { kind: 'timed', start: schedule.start, end: schedule.end }
+      : { kind: 'allDay', startDateKey: dateKey, endDateKey: nextDateKey(dateKey) };
+
+  const attendantName = attendantNameOf(source.backdropLink);
   const description = [
     source.client.phone?.trim() ? `Phone: ${source.client.phone.trim()}` : null,
     details.packageName ? `Package: ${details.packageName}` : null,
-    source.backdropLink?.name?.trim() ? `Attendant: ${source.backdropLink.name.trim()}` : null,
+    attendantName ? `Attendant: ${attendantName}` : null,
     `Payment: ${source.paymentStatus?.trim() || 'Not recorded'}`,
     `Admin: ${adminUrl}`,
     `Status: ${calendarFeedStatusLabel(source)}`,
@@ -234,7 +267,9 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
   };
 }
 
-function isPreferredOver(candidate: CalendarFeedSource, current: CalendarFeedSource): boolean {
+type EventChoiceSource = Pick<CalendarFeedSource, 'id' | 'status' | 'eventId' | 'createdAt'>;
+
+function isPreferredOver(candidate: EventChoiceSource, current: EventChoiceSource): boolean {
   const candidateSigned = FULLY_SIGNED_STATUSES.has(candidate.status);
   const currentSigned = FULLY_SIGNED_STATUSES.has(current.status);
   if (candidateSigned !== currentSigned) return candidateSigned;
@@ -250,8 +285,8 @@ function isPreferredOver(candidate: CalendarFeedSource, current: CalendarFeedSou
  * One agreement per Event record: the signed one if any, otherwise the most recently created.
  * Agreements without an Event record are never merged.
  */
-export function selectOneAgreementPerEvent(sources: CalendarFeedSource[]): CalendarFeedSource[] {
-  const chosen = new Map<string, CalendarFeedSource>();
+export function selectOneAgreementPerEvent<T extends EventChoiceSource>(sources: T[]): T[] {
+  const chosen = new Map<string, T>();
   for (const source of sources) {
     const key = source.eventId ? `event:${source.eventId}` : `agreement:${source.id}`;
     const current = chosen.get(key);

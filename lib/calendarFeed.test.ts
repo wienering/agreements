@@ -249,6 +249,14 @@ describe('toCalendarFeedEvent', () => {
     );
   });
 
+  it("uses the attendant record's name over the backdrop link name", () => {
+    const event = toCalendarFeedEvent(
+      source({ backdropLink: { name: 'Alex link', attendant: { name: 'Alex Rivera' } } }),
+    );
+    expect(event?.description).toContain('Attendant: Alex Rivera');
+    expect(event?.description).not.toContain('Alex link');
+  });
+
   it('leaves out unknown details and uses the name alone without a package', () => {
     const event = toCalendarFeedEvent(
       source(
