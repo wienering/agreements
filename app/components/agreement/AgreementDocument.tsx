@@ -12,9 +12,8 @@ type Delivery = ReturnType<typeof useAgreementDelivery>;
 
 type EventKey = 'eventDate' | 'eventType' | 'eventLocation' | 'eventStartTime' | 'eventDuration' | 'eventPackage';
 
-function eventField(agreement: AgreementRecord, key: EventKey, preferEvent: boolean): string | null {
-  const fromEvent = preferEvent ? agreement.event?.[key] : undefined;
-  const value = fromEvent ?? agreement.client[key];
+function eventField(agreement: AgreementRecord, key: EventKey): string | null {
+  const value = agreement.event?.[key] ?? agreement.client[key];
   return value ? String(value) : null;
 }
 
@@ -67,15 +66,14 @@ export function AgreementDocument(props: AgreementDocumentProps) {
   }
 
   const { mode, agreement, delivery } = props;
-  const preferEvent = mode === 'sign';
   const responsive = mode === 'sign';
-  const html = renderedAgreementHtml(agreement, mode);
-  const eventDate = eventField(agreement, 'eventDate', preferEvent);
-  const eventType = eventField(agreement, 'eventType', preferEvent);
-  const eventLocation = eventField(agreement, 'eventLocation', preferEvent);
-  const eventStartTime = eventField(agreement, 'eventStartTime', preferEvent);
-  const eventDuration = eventField(agreement, 'eventDuration', preferEvent);
-  const eventPackage = eventField(agreement, 'eventPackage', preferEvent);
+  const html = renderedAgreementHtml(agreement);
+  const eventDate = eventField(agreement, 'eventDate');
+  const eventType = eventField(agreement, 'eventType');
+  const eventLocation = eventField(agreement, 'eventLocation');
+  const eventStartTime = eventField(agreement, 'eventStartTime');
+  const eventDuration = eventField(agreement, 'eventDuration');
+  const eventPackage = eventField(agreement, 'eventPackage');
   const showEvent = Boolean(eventDate || eventType || eventLocation);
 
   return (

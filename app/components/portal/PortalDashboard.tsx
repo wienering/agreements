@@ -88,6 +88,7 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+  const pageRef = useRef(1);
   const router = useRouter();
   const isAdmin = mode === 'adminPreview';
 
@@ -137,6 +138,9 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
       if (searchQuery) {
         params.append('search', searchQuery);
       }
+      if (!isAdmin) {
+        params.append('page', String(pageRef.current));
+      }
 
       const url = isAdmin
         ? `/api/agreements/portal/admin-preview?${params.toString()}`
@@ -185,6 +189,7 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
         fetchDashboardData();
       }
     } else if (!loading) {
+      pageRef.current = 1;
       fetchDashboardData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -210,6 +215,12 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!isAdmin) pageRef.current = 1;
+    fetchDashboardData();
+  };
+
+  const loadPage = (nextPage: number) => {
+    pageRef.current = nextPage;
     fetchDashboardData();
   };
 
@@ -633,6 +644,7 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
               <button
                 type="button"
                 disabled={!data.pagination.hasPrev}
+                onClick={() => loadPage(data.pagination.page - 1)}
                 className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:cursor-not-allowed disabled:text-muted"
               >
                 Previous
@@ -643,6 +655,7 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
               <button
                 type="button"
                 disabled={!data.pagination.hasNext}
+                onClick={() => loadPage(data.pagination.page + 1)}
                 className="rounded-md border border-hairline bg-panel px-4 py-2 text-sm font-medium text-ink hover:bg-paper disabled:cursor-not-allowed disabled:text-muted"
               >
                 Next

@@ -77,10 +77,8 @@ export function viewerHasSigned(
   return signatures.some((signature) => signature.signerEmail.toLowerCase() === email.toLowerCase());
 }
 
-export function renderedAgreementHtml(agreement: AgreementRecord, mode: 'sign' | 'adminPreview'): string {
-  if (mode === 'adminPreview') {
-    return agreement.template.htmlContent;
-  }
+/** Signed snapshot first, then a per-agreement body, then the template. */
+export function renderedAgreementHtml(agreement: AgreementRecord): string {
   if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
     return agreement.mergedHtml;
   }
