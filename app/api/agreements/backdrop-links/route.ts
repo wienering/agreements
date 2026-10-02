@@ -5,11 +5,13 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { handleApiError } from '@/lib/handleApiError';
+import { attendantIdFromBackdropUrl } from '@/lib/attendantIdentity';
 
 const createBackdropLinkSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200, 'Name must be 200 characters or less'),
   url: z.string().url('Invalid URL'),
   displayOrder: z.number().int().optional(),
+  attendantId: z.string().min(1).nullable().optional(),
 });
 
 // GET - List all backdrop links
@@ -18,7 +20,8 @@ export async function GET(request: NextRequest) {
 
     await requireAdmin(request);
     const backdropLinks = await prisma.backdropLink.findMany({
-      orderBy: { displayOrder: 'asc' }
+      orderBy: { displayOrder: 'asc' },
+      include: { attendant: { select: { id: true, name: true, active: true } } },
     });
 
     return NextResponse.json({
@@ -56,13 +59,31 @@ export async function POST(request: NextRequest) {
     // Generate unique ID
     const id = randomBytes(16).toString('hex');
 
+    // Use the chosen attendant; if none was chosen, match the attendant ID in the URL.
+    let attendantId: string | null = null;
+    if (validatedData.attendantId) {
+      const attendant = await prisma.attendant.findUnique({ where: { id: validatedData.attendantId } });
+      if (!attendant) {
+        return NextResponse.json({ error: 'Attendant not found' }, { status: 400 });
+      }
+      attendantId = attendant.id;
+    } else if (validatedData.attendantId === undefined) {
+      const externalId = attendantIdFromBackdropUrl(validatedData.url);
+      if (externalId) {
+        const attendant = await prisma.attendant.findUnique({ where: { externalId } });
+        attendantId = attendant?.id ?? null;
+      }
+    }
+
     const backdropLink = await prisma.backdropLink.create({
       data: {
         id,
         name: validatedData.name,
         url: validatedData.url,
-        displayOrder
-      }
+        displayOrder,
+        attendantId,
+      },
+      include: { attendant: { select: { id: true, name: true, active: true } } },
     });
 
     devLog('Created backdrop link:', backdropLink.id);

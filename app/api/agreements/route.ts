@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   name: true,
+                  attendantId: true,
+                  attendant: { select: { id: true, name: true, active: true } },
                 },
               },
             },
@@ -179,6 +181,8 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             name: true,
+            attendantId: true,
+            attendant: { select: { id: true, name: true, active: true } },
           },
         },
       },

@@ -268,9 +268,29 @@ model BackdropLink {
   displayOrder Int         @default(0)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+  attendantId  String?
+  attendant    Attendant?  @relation(fields: [attendantId], references: [id], onDelete: SetNull)
   agreements   Agreement[]
 
   @@index([displayOrder])
+  @@index([attendantId])
+}
+
+/// A person who runs events. Assigned to agreements through their backdrop link.
+model Attendant {
+  id            String         @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  active        Boolean        @default(true)
+  /// The attendant's ID in the backdrop selection tool. Hub, job-page and backdrop links use it.
+  externalId    String         @unique
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  backdropLinks BackdropLink[]
+
+  @@index([active])
 }
 
 model AttendantGroup {

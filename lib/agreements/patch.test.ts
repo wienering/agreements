@@ -180,7 +180,12 @@ describe('agreement list slim select', () => {
     expect(templateListSlimSelect).not.toHaveProperty('htmlContent');
     expect(agreementListSlimSelect.template.select.title).toBe(true);
     expect(agreementListSlimSelect.client).toBe(true);
-    expect(agreementListSlimSelect.backdropLink.select).toEqual({ id: true, name: true });
+    expect(agreementListSlimSelect.backdropLink.select).toEqual({
+      id: true,
+      name: true,
+      attendantId: true,
+      attendant: { select: { id: true, name: true, active: true } },
+    });
   });
 });
 

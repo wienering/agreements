@@ -228,6 +228,8 @@ export default function AgreementsAdminPage() {
           statusFilter={list.statusFilter}
           setStatusFilter={list.setStatusFilter}
           attendantFilter={list.attendantFilter}
+          conflictsFor={list.getAgreementConflicts}
+          doubleBookedCount={list.doubleBookedCount}
           setAttendantFilter={list.setAttendantFilter}
           backdropLinks={list.backdropLinks}
           debouncedSearchTerm={list.debouncedSearchTerm}

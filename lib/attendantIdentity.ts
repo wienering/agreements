@@ -22,6 +22,29 @@ export function urlContainsBoundedAttendantId(url: string, attendantId: string):
   return false;
 }
 
+/**
+ * The backdrop-tool attendant ID in a backdrop link URL (/select/{id} or ?attendantId={id}),
+ * or null when the URL has none or it isn't a valid ID.
+ */
+export function attendantIdFromBackdropUrl(url: string): string | null {
+  const pathMatch = url.match(/\/select\/([^/?#&]+)/);
+  let candidate: string | null = null;
+  if (pathMatch) {
+    try {
+      candidate = decodeURIComponent(pathMatch[1]);
+    } catch {
+      candidate = pathMatch[1];
+    }
+  } else {
+    try {
+      candidate = new URL(url).searchParams.get('attendantId');
+    } catch {
+      candidate = null;
+    }
+  }
+  return candidate && isValidAttendantCuid(candidate) ? candidate : null;
+}
+
 export function backdropLinkContainsAnyBoundedAttendantId(
   url: string,
   attendantIds: string[]

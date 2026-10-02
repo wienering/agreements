@@ -14,7 +14,18 @@ interface BackdropLink {
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
+  attendantId?: string | null;
+  attendant?: { id: string; name: string; active: boolean } | null;
 }
+
+interface AttendantOption {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
+/** Form value for "match the attendant ID in the URL" when adding a link. */
+const MATCH_FROM_URL = '__match__';
 
 export default function BackdropLinksPage() {
   // Set page title
@@ -27,6 +38,8 @@ export default function BackdropLinksPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingLink, setEditingLink] = useState<BackdropLink | null>(null);
   const [formData, setFormData] = useState({ name: '', url: '', displayOrder: 0 });
+  const [attendantChoice, setAttendantChoice] = useState<string>(MATCH_FROM_URL);
+  const [attendants, setAttendants] = useState<AttendantOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const router = useRouter();
@@ -39,6 +52,10 @@ export default function BackdropLinksPage() {
 
   useEffect(() => {
     fetchBackdropLinks();
+    adminFetch('/api/admin/attendants')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setAttendants(data?.attendants || []))
+      .catch((error) => console.error('Error fetching attendants:', error));
   }, []);
 
   const fetchBackdropLinks = async () => {
@@ -60,8 +77,9 @@ export default function BackdropLinksPage() {
     setFormData({ 
       name: '', 
       url: '', 
-      displayOrder: backdropLinks.length + 1 
+      displayOrder: backdropLinks.length + 1
     });
+    setAttendantChoice(MATCH_FROM_URL);
     setShowAddModal(true);
   };
 
@@ -72,6 +90,7 @@ export default function BackdropLinksPage() {
       url: link.url,
       displayOrder: link.displayOrder
     });
+    setAttendantChoice(link.attendantId ?? '');
     setShowAddModal(true);
   };
 
@@ -84,10 +103,12 @@ export default function BackdropLinksPage() {
       
       const method = editingLink ? 'PUT' : 'POST';
 
+      const attendantId =
+        attendantChoice === MATCH_FROM_URL ? undefined : attendantChoice === '' ? null : attendantChoice;
       const response = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, attendantId })
       });
 
       if (response.ok) {
@@ -264,6 +285,14 @@ export default function BackdropLinksPage() {
       </div>
     );
   };
+
+  const renderAttendantLabel = (link: BackdropLink) => (
+    <div style={{ color: mutedText, fontSize: '12px', marginTop: '2px' }}>
+      {link.attendant
+        ? `Attendant: ${link.attendant.name}${link.attendant.active ? '' : ' (inactive)'}`
+        : 'No attendant record'}
+    </div>
+  );
 
   const renderLinkCell = (link: BackdropLink) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -495,6 +524,7 @@ export default function BackdropLinksPage() {
                         </td>
                         <td style={{ padding: '16px' }}>
                           <div style={{ color: textColor, fontSize: '14px', fontWeight: '500' }}>{link.name}</div>
+                          {renderAttendantLabel(link)}
                         </td>
                         <td style={{ padding: '16px' }}>{renderLinkCell(link)}</td>
                         <td style={{ padding: '16px', width: '180px', minWidth: '180px' }}>{renderAttendantHubCell(link)}</td>
@@ -519,6 +549,9 @@ export default function BackdropLinksPage() {
                     mutedText={mutedText}
                     actions={renderBackdropActions(link)}
                   >
+                    <AdminMobileField label="Attendant" mutedText={mutedText}>
+                      {renderAttendantLabel(link)}
+                    </AdminMobileField>
                     <AdminMobileField label="Order" mutedText={mutedText}>
                       {renderOrderControls(link, index)}
                     </AdminMobileField>
@@ -620,6 +653,40 @@ export default function BackdropLinksPage() {
                     boxSizing: 'border-box'
                   }}
                 />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: textColor
+                }}>
+                  Attendant
+                </label>
+                <select
+                  value={attendantChoice}
+                  onChange={(e) => setAttendantChoice(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    borderRadius: '2px',
+                    border: `1px solid ${borderColor}`,
+                    backgroundColor: 'var(--admin-bg)',
+                    color: textColor,
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {!editingLink && <option value={MATCH_FROM_URL}>Match the attendant ID in the URL</option>}
+                  <option value="">No attendant</option>
+                  {attendants.map((attendant) => (
+                    <option key={attendant.id} value={attendant.id}>
+                      {attendant.name}{attendant.active ? '' : ' (inactive)'}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ marginBottom: '24px' }}>

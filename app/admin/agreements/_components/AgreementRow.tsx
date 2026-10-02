@@ -11,7 +11,8 @@ import {
 } from './agreementUtils';
 import { hideEngagementTooltip, showEngagementTooltip } from './engagementTooltip';
 import { NoAttendantHint } from './NoAttendantHint';
-import type { Agreement } from './types';
+import { ConflictList, DoubleBookingBadge } from './DoubleBookingBadge';
+import type { Agreement, AttendantConflict } from './types';
 import { UnreadNotesBadge } from './UnreadNotesBadge';
 import { hintTextClass } from './uiClasses';
 
@@ -51,12 +52,14 @@ export function AgreementRow({
   expanded,
   onToggle,
   warningType,
+  conflicts = [],
   actions,
 }: {
   agreement: Agreement;
   expanded: boolean;
   onToggle: () => void;
   warningType: string | null;
+  conflicts?: AttendantConflict[];
   actions: RowActions;
 }) {
   const eventDateRaw = agreement.event?.eventDate || agreement.client.eventDate;
@@ -145,7 +148,10 @@ export function AgreementRow({
           {(attendantName || missingAttendant) && (
             <div className="mt-0.5 flex min-w-0 items-center gap-2">
               {attendantName ? (
-                <div className="min-w-0 flex-1 truncate text-xs text-admin-muted md:flex-none">Attendant: {attendantName}</div>
+                <div className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
+                  <span className="min-w-0 truncate text-xs text-admin-muted">Attendant: {attendantName}</span>
+                  <DoubleBookingBadge conflicts={conflicts} />
+                </div>
               ) : (
                 <div className="min-w-0 flex-1 md:flex-none">
                   <NoAttendantHint />
@@ -254,6 +260,11 @@ export function AgreementRow({
                 </span>
               )}
             </div>
+            {conflicts.length > 0 && (
+              <div className="mb-3">
+                <ConflictList conflicts={conflicts} />
+              </div>
+            )}
             <div className="flex flex-wrap gap-2" onClick={(event) => event.stopPropagation()}>
               <AdminButton variant="ghost" onClick={() => actions.onEdit(agreement)} title="Edit agreement content">
                 Edit

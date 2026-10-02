@@ -3,7 +3,34 @@
 import { adminFetch } from '@/lib/adminFetch';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { filterAgreements } from '../_components/agreementUtils';
-import { ITEMS_PER_PAGE, type Agreement, type BackdropLinkOption, type ClientOption, type TemplateOption, type WarningData } from '../_components/types';
+import {
+  ITEMS_PER_PAGE,
+  type Agreement,
+  type AttendantConflict,
+  type BackdropLinkOption,
+  type ClientOption,
+  type TemplateOption,
+  type WarningData,
+} from '../_components/types';
+
+const NO_CONFLICTS: AttendantConflict[] = [];
+
+/** Changes when anything that affects double-bookings changes: assignment, date, time or status. */
+function conflictInputsKey(agreements: Agreement[]): string {
+  return agreements
+    .map((a) =>
+      [
+        a.id,
+        a.status,
+        a.backdropLinkId ?? '',
+        a.event?.eventDate ?? a.client.eventDate ?? '',
+        a.event?.eventStartTime ?? '',
+        a.event?.eventDuration ?? '',
+      ].join('|'),
+    )
+    .sort()
+    .join(';');
+}
 
 export function useAgreementsList() {
   const hasFetchedData = useRef(false);
@@ -17,6 +44,7 @@ export function useAgreementsList() {
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
   const [warningData, setWarningData] = useState<WarningData | null>(null);
   const [backdropLinks, setBackdropLinks] = useState<BackdropLinkOption[]>([]);
+  const [conflicts, setConflicts] = useState<Record<string, AttendantConflict[]>>({});
   const [activePage, setActivePage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
   const [completedExpanded, setCompletedExpanded] = useState(false);
@@ -91,6 +119,29 @@ export function useAgreementsList() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const conflictKey = useMemo(() => conflictInputsKey(agreements), [agreements]);
+  useEffect(() => {
+    if (!conflictKey) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await adminFetch('/api/admin/attendants/conflicts');
+        if (!response.ok || cancelled) return;
+        const data = await response.json();
+        if (!cancelled) setConflicts(data.conflicts || {});
+      } catch (error) {
+        console.error('Error fetching attendant conflicts:', error);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [conflictKey]);
+
+  const doubleBookedIds = useMemo(() => new Set(Object.keys(conflicts)), [conflicts]);
+  const getAgreementConflicts = (agreement: Agreement) => conflicts[agreement.id] ?? NO_CONFLICTS;
+
   useEffect(() => {
     setActivePage(1);
     setCompletedPage(1);
@@ -109,8 +160,8 @@ export function useAgreementsList() {
   };
 
   const filteredAgreements = useMemo(
-    () => filterAgreements(agreements, statusFilter, attendantFilter, debouncedSearchTerm),
-    [agreements, debouncedSearchTerm, statusFilter, attendantFilter],
+    () => filterAgreements(agreements, statusFilter, attendantFilter, debouncedSearchTerm, doubleBookedIds),
+    [agreements, debouncedSearchTerm, statusFilter, attendantFilter, doubleBookedIds],
   );
 
   const activeAgreements = useMemo(
@@ -164,6 +215,8 @@ export function useAgreementsList() {
     completedTotalPages,
     paginatedCompleted,
     getAgreementWarningType,
+    getAgreementConflicts,
+    doubleBookedCount: doubleBookedIds.size,
     replaceAgreement,
     prependAgreement,
     removeAgreement,

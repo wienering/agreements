@@ -8,6 +8,8 @@ import { AdminButton } from '../../../components/AdminButton';
 import { UIcon } from '../../../components/UIcon';
 import type { useAgreementDetail } from '../_hooks/useAgreementDetail';
 import { formatClientNoteTimestamp } from './noteTime';
+import { backdropLinkLabel } from './agreementUtils';
+import { AttendantConflictWarning } from './AttendantConflictWarning';
 import type { Agreement, BackdropLinkOption } from './types';
 import { CloseIconButton } from './ModalFrame';
 import { UnreadNotesBadge } from './UnreadNotesBadge';
@@ -406,10 +408,11 @@ export function AgreementDrawer({
                 <option value="">No backdrop link</option>
                 {backdropLinks.map((link) => (
                   <option key={link.id} value={link.id}>
-                    {link.name}
+                    {backdropLinkLabel(link)}
                   </option>
                 ))}
               </select>
+              <AttendantConflictWarning agreementId={detail.id} backdropLinkId={selectedBackdropLinkId} />
               {selectedBackdropLinkId && attendantId && (
                 <div className="mb-3">
                   <label className={smallLabelClass}>Select Backdrop</label>

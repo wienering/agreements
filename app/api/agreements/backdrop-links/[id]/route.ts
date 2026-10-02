@@ -9,6 +9,7 @@ const updateBackdropLinkSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200, 'Name must be 200 characters or less').optional(),
   url: z.string().url('Invalid URL').optional(),
   displayOrder: z.number().int().optional(),
+  attendantId: z.string().min(1).nullable().optional(),
 });
 
 // PUT - Update backdrop link
@@ -51,10 +52,21 @@ export async function PUT(
       updateData.displayOrder = validatedData.displayOrder;
     }
 
+    if (validatedData.attendantId !== undefined) {
+      if (validatedData.attendantId !== null) {
+        const attendant = await prisma.attendant.findUnique({ where: { id: validatedData.attendantId } });
+        if (!attendant) {
+          return NextResponse.json({ error: 'Attendant not found' }, { status: 400 });
+        }
+      }
+      updateData.attendantId = validatedData.attendantId;
+    }
+
     // Update the backdrop link
     const updatedLink = await prisma.backdropLink.update({
       where: { id },
-      data: updateData
+      data: updateData,
+      include: { attendant: { select: { id: true, name: true, active: true } } },
     });
 
     devLog('Updated backdrop link:', updatedLink.id);

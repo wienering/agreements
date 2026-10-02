@@ -39,6 +39,7 @@ const agreementExportSelect = {
   backdropLink: {
     select: {
       name: true,
+      attendant: { select: { name: true } },
     },
   },
 } as const;

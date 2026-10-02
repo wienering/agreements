@@ -51,7 +51,7 @@ export type AgreementExportSource = {
     eventPackage: string | null;
     packagePrice: PriceValue;
   } | null;
-  backdropLink?: { name: string } | null;
+  backdropLink?: { name: string; attendant?: { name: string } | null } | null;
 };
 
 /** Spreadsheet apps treat a leading = + - @ tab or CR as a formula. */
@@ -117,7 +117,7 @@ function agreementToCsvRecord(agreement: AgreementExportSource): Record<CsvColum
     Price: cell(formatPrice(agreement.event?.packagePrice ?? agreement.client.packagePrice)),
     'Agreement status': cell(agreement.status),
     'Payment status': cell(agreement.paymentStatus),
-    Attendant: cell(agreement.backdropLink?.name),
+    Attendant: cell(agreement.backdropLink?.attendant?.name || agreement.backdropLink?.name),
     'Signed date': csvDate(agreement.signedAt),
     'Created date': csvDate(agreement.createdAt),
   };

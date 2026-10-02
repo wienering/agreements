@@ -1,4 +1,19 @@
+export type { AttendantConflict } from '@/lib/attendants/conflicts';
+
 export type AgreementStatus = 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
+
+export interface AttendantSummary {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
+export interface AgreementBackdropLink {
+  id: string;
+  name: string;
+  attendantId?: string | null;
+  attendant?: AttendantSummary | null;
+}
 
 export interface GalleryLink {
   title: string;
@@ -75,7 +90,7 @@ export interface Agreement {
   template: AgreementTemplate;
   event?: AgreementEvent | null;
   backdropLinkId?: string | null;
-  backdropLink?: { id: string; name: string } | null;
+  backdropLink?: AgreementBackdropLink | null;
 }
 
 export interface WarningData {
@@ -104,6 +119,8 @@ export interface BackdropLinkOption {
   id: string;
   name: string;
   url?: string;
+  attendantId?: string | null;
+  attendant?: AttendantSummary | null;
 }
 
 export interface BackdropOption {
@@ -126,6 +143,7 @@ export interface InvoiceResult {
 }
 
 export const NO_ATTENDANT_FILTER = '__none__';
+export const DOUBLE_BOOKED_FILTER = '__double_booked__';
 export const ITEMS_PER_PAGE = 25;
 
 export const STATUS_FILTERS = [
