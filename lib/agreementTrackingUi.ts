@@ -116,6 +116,10 @@ export function getActivityTimelineLabel(
       if (cleared) return 'Backdrop selection cleared';
       return name ? `Backdrop selected: ${name}` : 'Backdrop selected';
     }
+    case 'PAYMENT_MARKED_PAID':
+      return 'Marked paid from the balance digest';
+    case 'BALANCE_REMINDER_SENT':
+      return 'Balance reminder sent to client';
     default:
       return type;
   }
