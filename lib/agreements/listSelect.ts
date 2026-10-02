@@ -74,6 +74,8 @@ const agreementListSlimScalars = {
   chaserPaused: true,
   reminderCount: true,
   lastReminderAt: true,
+  balanceDigestSnoozedUntil: true,
+  balanceReminderSentAt: true,
 } satisfies BooleanSelect<
   Omit<Prisma.AgreementSelect, AgreementRelationKeys | 'mergedHtml' | 'customHtmlContent'>
 >;
