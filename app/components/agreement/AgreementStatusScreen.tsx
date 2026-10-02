@@ -18,7 +18,9 @@ export function AgreementStatusScreen({
   return (
     <div
       data-surface="client"
-      className="flex min-h-screen flex-col items-center justify-center gap-6 bg-paper px-6 font-ui"
+      className={`flex min-h-screen flex-col items-center justify-center gap-6 bg-paper font-ui ${
+        kind === 'error' ? 'px-6' : ''
+      }`}
     >
       {kind === 'loading' ? (
         <>
