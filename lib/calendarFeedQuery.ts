@@ -1,5 +1,9 @@
 import { Prisma } from '@prisma/client';
-import { calendarFeedWindow, type CalendarFeedSource } from '@/lib/calendarFeed';
+import {
+  CALENDAR_FEED_STATUSES,
+  calendarFeedWindow,
+  type CalendarFeedSource,
+} from '@/lib/calendarFeed';
 import { addTorontoCalendarDaysFrom, parseTorontoCalendarDateKey } from '@/lib/dates';
 import { prisma } from '@/lib/prisma';
 
@@ -17,12 +21,19 @@ const calendarFeedSelect = {
   archived: true,
   cancelledAt: true,
   paymentStatus: true,
+  createdAt: true,
   updatedAt: true,
+  eventId: true,
+  secondSignerEnabled: true,
+  secondSignerEmail: true,
+  requireBothSignatures: true,
+  signatures: { select: { signerEmail: true } },
   client: {
     select: {
       firstName: true,
       lastName: true,
       phone: true,
+      email: true,
       ...eventDetailSelect,
     },
   },
@@ -31,7 +42,7 @@ const calendarFeedSelect = {
 } satisfies Prisma.AgreementSelect;
 
 /**
- * Signed, active agreements with an event date near the feed window.
+ * Active (not cancelled, void or archived) agreements with an event date near the feed window.
  * The range is padded by a day each side; callers apply the exact Toronto-day filter.
  */
 export async function findCalendarFeedAgreements(now = new Date()): Promise<CalendarFeedSource[]> {
@@ -41,7 +52,7 @@ export async function findCalendarFeedAgreements(now = new Date()): Promise<Cale
 
   return prisma.agreement.findMany({
     where: {
-      status: 'SIGNED',
+      status: { in: [...CALENDAR_FEED_STATUSES] },
       archived: false,
       cancelledAt: null,
       OR: [

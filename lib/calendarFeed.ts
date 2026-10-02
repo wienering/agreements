@@ -25,17 +25,29 @@ type EventDetailFields = {
   eventPackage: string | null;
 };
 
+/** Agreement statuses that appear in the feed. CANCELLED and VOID never do. */
+export const CALENDAR_FEED_STATUSES = ['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED'] as const;
+
+const FULLY_SIGNED_STATUSES = new Set(['SIGNED', 'COMPLETED']);
+
 export type CalendarFeedSource = {
   id: string;
   status: string;
   archived: boolean;
   cancelledAt: Date | null;
   paymentStatus: string | null;
+  createdAt?: Date | null;
   updatedAt?: Date | null;
+  eventId?: string | null;
+  secondSignerEnabled?: boolean;
+  secondSignerEmail?: string | null;
+  requireBothSignatures?: boolean;
+  signatures?: { signerEmail: string }[];
   client: EventDetailFields & {
     firstName: string;
     lastName: string;
     phone: string | null;
+    email?: string | null;
   };
   event?: EventDetailFields | null;
   backdropLink?: { name: string } | null;
@@ -62,7 +74,8 @@ export function calendarFeedWindow(now = new Date()): { fromKey: string; toKey: 
 }
 
 export function isIncludedInCalendarFeed(source: CalendarFeedSource, now = new Date()): boolean {
-  if (source.status !== 'SIGNED' || source.archived || source.cancelledAt) return false;
+  if (!(CALENDAR_FEED_STATUSES as readonly string[]).includes(source.status)) return false;
+  if (source.archived || source.cancelledAt) return false;
   const eventDate = resolveAgreementEventDate(source);
   if (!eventDate) return false;
   const key = torontoDateKey(eventDate);
@@ -138,6 +151,33 @@ function nextDateKey(dateKey: string): string {
   return dateKeyFromParts(next.year, next.month, next.day);
 }
 
+/**
+ * True when both signatures are required and exactly one has been given.
+ * Mirrors the sign route: signatures are matched to the client and second-signer emails.
+ */
+function isSignedByOneOfTwo(source: CalendarFeedSource): boolean {
+  if (!source.secondSignerEnabled || !source.requireBothSignatures) return false;
+  const signers = new Set((source.signatures ?? []).map((s) => s.signerEmail.trim().toLowerCase()));
+  const primaryEmail = source.client.email?.trim().toLowerCase();
+  const secondaryEmail = source.secondSignerEmail?.trim().toLowerCase();
+  const primarySigned = Boolean(primaryEmail && signers.has(primaryEmail));
+  const secondarySigned = Boolean(secondaryEmail && signers.has(secondaryEmail));
+  return primarySigned !== secondarySigned;
+}
+
+export function calendarFeedStatusLabel(source: CalendarFeedSource): string {
+  switch (source.status) {
+    case 'SIGNED':
+      return 'Signed';
+    case 'COMPLETED':
+      return 'Completed';
+    case 'DRAFT':
+      return 'Draft (not sent)';
+    default:
+      return isSignedByOneOfTwo(source) ? 'Signed by one of two' : 'Sent, not signed';
+  }
+}
+
 export function adminAgreementUrl(agreementId: string): string {
   return `${ADMIN_ORIGIN}${adminAgreementPath(agreementId)}`;
 }
@@ -178,6 +218,7 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
     source.backdropLink?.name?.trim() ? `Attendant: ${source.backdropLink.name.trim()}` : null,
     `Payment: ${source.paymentStatus?.trim() || 'Not recorded'}`,
     `Admin: ${adminUrl}`,
+    `Status: ${calendarFeedStatusLabel(source)}`,
   ]
     .filter((line): line is string => line !== null)
     .join('\n');
