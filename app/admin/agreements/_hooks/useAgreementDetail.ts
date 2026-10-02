@@ -62,7 +62,12 @@ export function useAgreementDetail({
     html: string;
     canSend: boolean;
     sendBlockedReason?: string;
+    alreadySent?: boolean;
+    dryRun?: boolean;
+    review?: { subject: string; html: string } | null;
   } | null>(null);
+  /** Bumped after a send so the follow-ups panel reloads its status lines. */
+  const [followupsVersion, setFollowupsVersion] = useState(0);
   const [loadingGalleryReadyPreview, setLoadingGalleryReadyPreview] = useState(false);
   const [nextAction, setNextAction] = useState('');
   const [selectedBackdropLinkId, setSelectedBackdropLinkId] = useState('');
@@ -479,7 +484,8 @@ export function useAgreementDetail({
     }
   };
 
-  const handleSendGalleryReadyEmail = async (): Promise<boolean> => {
+  /** Send now (first send) or Resend. Resend doesn't change the sent date or the review clock. */
+  const handleSendGalleryReadyEmail = async (resend = false): Promise<boolean> => {
     const validLinks = galleryLinks.filter((link) => link.url.trim());
     if (!detail || validLinks.length === 0) return false;
     try {
@@ -494,14 +500,21 @@ export function useAgreementDetail({
       const response = await adminFetch('/api/agreements/send-gallery-ready-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agreementId: detail.id }),
+        body: JSON.stringify({ agreementId: detail.id, resend }),
       });
       const data = await response.json();
       if (response.ok) {
-        showToast(`Gallery ready email sent to ${detail.client.email}!`);
-        const sentAt = new Date();
-        setGalleryEmailSentAt(sentAt);
-        applyServerAgreement({ ...detail, galleryEmailSentAt: sentAt.toISOString() });
+        setFollowupsVersion((version) => version + 1);
+        if (data.dryRun) {
+          showToast(data.message || 'Dry run: nothing was sent.', 'info');
+          return true;
+        }
+        showToast(resend ? `Gallery email sent again to ${detail.client.email}` : `Gallery ready email sent to ${detail.client.email}!`);
+        if (!resend) {
+          const sentAt = data.galleryEmailSentAt ? new Date(data.galleryEmailSentAt) : new Date();
+          setGalleryEmailSentAt(sentAt);
+          applyServerAgreement({ ...detail, galleryEmailSentAt: sentAt.toISOString() });
+        }
         return true;
       }
       showToast(`Error: ${data.error || 'Failed to send gallery ready email'}`, 'error');
@@ -537,6 +550,9 @@ export function useAgreementDetail({
         html: data.html ?? '',
         canSend: data.canSend !== false,
         sendBlockedReason: data.sendBlockedReason,
+        alreadySent: Boolean(data.alreadySent),
+        dryRun: Boolean(data.dryRun),
+        review: data.review ?? null,
       });
       setShowGalleryReadyPreview(true);
     } catch (error) {
@@ -548,7 +564,7 @@ export function useAgreementDetail({
   };
 
   const handleSendGalleryReadyEmailFromPreview = async () => {
-    const sent = await handleSendGalleryReadyEmail();
+    const sent = await handleSendGalleryReadyEmail(Boolean(galleryReadyPreview?.alreadySent));
     if (sent) closeGalleryReadyPreview();
   };
 
@@ -584,6 +600,7 @@ export function useAgreementDetail({
     galleryLinks,
     setGalleryLinks,
     galleryEmailSentAt,
+    followupsVersion,
     sendingGalleryEmail,
     showGalleryReadyPreview,
     galleryReadyPreview,

@@ -9,10 +9,14 @@ import { findBalanceDigestAgreements } from '@/lib/balanceDigestQuery';
 import { verifyCronSecret } from '@/lib/cronAuth';
 import { sendEmail } from '@/lib/email/send';
 import { reportServerError } from '@/lib/errorAlert';
+import { buildFollowupDigestSections, hasFollowupDigestItems } from '@/lib/followups/digest';
+import { followupsLaunchDateKey } from '@/lib/followups/rules';
+import { loadFollowupCandidates } from '@/lib/followups/run';
 
 // Vercel cron invokes this endpoint with GET (user agent: vercel-cron/1.0).
 // Manual triggers can use POST. Both require the CRON_SECRET bearer token.
 // The digest is sent only to ADMIN_EMAIL. Clients are never emailed from here.
+// It runs before the 10am follow-up run, so "going out today" lists what that run will send.
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -34,7 +38,13 @@ async function handler(request: NextRequest) {
 
   try {
     const rows = await findBalanceDigestAgreements(now);
-    if (rows.length === 0) {
+    const followups = buildFollowupDigestSections(
+      await loadFollowupCandidates(),
+      now,
+      followupsLaunchDateKey(),
+      appBaseUrl(request),
+    );
+    if (rows.length === 0 && !hasFollowupDigestItems(followups)) {
       return NextResponse.json({
         ok: true,
         sent: false,
@@ -80,7 +90,7 @@ async function handler(request: NextRequest) {
       );
     }
 
-    const email = renderBalanceDigestEmail(blocks);
+    const email = renderBalanceDigestEmail(blocks, followups);
     await sendEmail({
       to: adminEmail,
       subject: email.subject,
@@ -88,11 +98,17 @@ async function handler(request: NextRequest) {
       text: email.text,
     });
 
-    console.log('[balance-digest] sent', { count: rows.length });
+    console.log('[balance-digest] sent', {
+      count: rows.length,
+      followupsGoingOut: followups.goingOut.length,
+      galleriesHeld: followups.held.length,
+    });
     return NextResponse.json({
       ok: true,
       sent: true,
       count: rows.length,
+      followupsGoingOut: followups.goingOut.length,
+      galleriesHeld: followups.held.length,
       ranAt: now.toISOString(),
     });
   } catch (error) {

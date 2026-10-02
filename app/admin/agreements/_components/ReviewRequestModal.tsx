@@ -32,7 +32,10 @@ export function ReviewRequestModal({
           <UIcon name="x" className="text-xl" />
         </button>
       </div>
-      <p className="mb-3 mt-0 text-sm leading-relaxed text-admin-text">This will send an email to the client asking them to leave a Google review.</p>
+      <p className="mb-3 mt-0 text-sm leading-relaxed text-admin-text">
+        This sends the &ldquo;A quick favour&rdquo; email asking the client for a Google review. Only one review request is
+        ever sent, so the automatic one won&rsquo;t go out after this.
+      </p>
       <div className={`mb-5 ${raisedPanelClass}`}>
         <p className="mb-1.5 mt-0 text-[13px] text-admin-text"><strong>Client:</strong> {agreement.client.firstName} {agreement.client.lastName}</p>
         <p className="m-0 text-[13px] text-admin-text"><strong>Email:</strong> {agreement.client.email || 'Not set'}</p>

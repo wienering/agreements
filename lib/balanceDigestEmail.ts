@@ -5,6 +5,7 @@ import type { BalanceDigestRow } from '@/lib/balanceDigestQuery';
 import { formatDateToronto, formatEventDateToronto } from '@/lib/dates';
 import { renderCtaButtonPair, renderEmailLayout } from '@/lib/email/layout';
 import { escapeHtml } from '@/lib/htmlEscape';
+import type { FollowupDigestItem, FollowupDigestSections } from '@/lib/followups/digest';
 
 export type BalanceDigestLinks = {
   markPaidUrl: string;
@@ -107,29 +108,74 @@ function plainBlock(block: BalanceDigestEmailBlock): string {
   return lines.join('\n');
 }
 
-export function renderBalanceDigestEmail(blocks: BalanceDigestEmailBlock[]): {
+const EMPTY_FOLLOWUPS: FollowupDigestSections = { goingOut: [], held: [] };
+
+function sectionHeading(text: string): string {
+  return `<p style="margin:28px 0 10px 0;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5E5E58;">${escapeHtml(text)}</p>`;
+}
+
+function renderFollowupItems(items: FollowupDigestItem[]): string {
+  return items
+    .map(
+      (item) =>
+        `<p style="margin:0 0 10px 0;"><a href="${escapeHtml(item.adminUrl)}" style="color:#1E3B31;font-weight:600;text-decoration:underline;">${escapeHtml(item.clientName)}</a><br><span style="color:#5E5E58;font-size:14px;">${escapeHtml(item.label)}</span></p>`,
+    )
+    .join('');
+}
+
+function plainFollowupItems(heading: string, items: FollowupDigestItem[]): string {
+  return [heading, ...items.map((item) => `${item.clientName}: ${item.label}\n${item.adminUrl}`)].join('\n');
+}
+
+function followupSubject(followups: FollowupDigestSections): string {
+  const parts = [];
+  if (followups.goingOut.length > 0) parts.push(`${followups.goingOut.length} going out today`);
+  if (followups.held.length > 0) parts.push(`${followups.held.length} held`);
+  return `Follow-ups: ${parts.join(', ')}`;
+}
+
+export function renderBalanceDigestEmail(
+  blocks: BalanceDigestEmailBlock[],
+  followups: FollowupDigestSections = EMPTY_FOLLOWUPS,
+): {
   subject: string;
   html: string;
   text: string;
 } {
   const count = blocks.length;
+  const hasFollowups = followups.goingOut.length > 0 || followups.held.length > 0;
   const subject =
-    count === 1
-      ? 'Balance due: 1 event in the next 10 days'
-      : `Balance due: ${count} events in the next 10 days`;
+    count === 0 && hasFollowups
+      ? followupSubject(followups)
+      : count === 1
+        ? 'Balance due: 1 event in the next 10 days'
+        : `Balance due: ${count} events in the next 10 days`;
 
   const intro =
     'Signed events in the next 10 days whose balance is not marked paid. Each link opens a confirmation page. Nothing changes until you confirm.';
 
-  const bodyHtml = `<p style="margin:0 0 20px 0;">${escapeHtml(intro)}</p>${blocks.map(renderBlock).join('')}`;
+  const htmlParts: string[] = [];
+  const textParts: string[] = [];
+  if (count > 0) {
+    htmlParts.push(`<p style="margin:0 0 20px 0;">${escapeHtml(intro)}</p>${blocks.map(renderBlock).join('')}`);
+    textParts.push([intro, '', ...blocks.map(plainBlock)].join('\n\n'));
+  }
+  if (followups.goingOut.length > 0) {
+    htmlParts.push(`${sectionHeading('Follow-ups going out today')}${renderFollowupItems(followups.goingOut)}`);
+    textParts.push(plainFollowupItems('Follow-ups going out today', followups.goingOut));
+  }
+  if (followups.held.length > 0) {
+    htmlParts.push(`${sectionHeading('Galleries held (balance owing)')}${renderFollowupItems(followups.held)}`);
+    textParts.push(plainFollowupItems('Galleries held (balance owing)', followups.held));
+  }
 
   return {
     subject,
     html: renderEmailLayout({
       title: subject,
-      preheader: intro,
-      bodyHtml,
+      preheader: count > 0 ? intro : subject,
+      bodyHtml: htmlParts.join(''),
     }),
-    text: [intro, '', ...blocks.map(plainBlock)].join('\n\n'),
+    text: textParts.join('\n\n'),
   };
 }

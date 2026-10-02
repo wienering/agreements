@@ -165,6 +165,13 @@ model Agreement {
   balanceDigestSnoozedUntil DateTime?
   balanceReminderSentAt DateTime?
 
+  // Post-event follow-ups (gallery email, then review request)
+  followUpsPaused       Boolean   @default(false)
+  /// "Already reviewed": the automatic review request is skipped.
+  reviewReceived        Boolean   @default(false)
+  /// When the one-time "gallery held, balance owing" Telegram alert went out.
+  galleryHeldAlertAt    DateTime?
+
   @@index([clientId])
   @@index([templateId])
   @@index([eventId])
@@ -382,6 +389,13 @@ enum AgreementActivityType {
   BACKDROP_SELECTED
   PAYMENT_MARKED_PAID
   BALANCE_REMINDER_SENT
+  GALLERY_EMAIL_SENT
+  GALLERY_EMAIL_HELD
+  REVIEW_REQUEST_SENT
+  REVIEW_REQUEST_SKIPPED
+  FOLLOWUPS_PAUSED
+  FOLLOWUPS_RESUMED
+  FOLLOWUP_EMAIL_FAILED
 }
 
 enum LeadStage {

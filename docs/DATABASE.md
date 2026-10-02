@@ -475,6 +475,20 @@ const agreements = await prisma.agreement.findMany({
 });
 ```
 
+## Post-event follow-ups
+
+Fields on `Agreement` used by the automatic gallery email and review request (`lib/followups/`):
+
+| Field | Meaning |
+|-------|---------|
+| galleryEmailSentAt | When the gallery email first went out, by the cron or "Send now". Starts the 3-day review clock. Claimed atomically before sending and cleared again if the send fails. "Resend" doesn't change it |
+| reviewRequestSentAt | When the one and only review request went out, automatic or manual. Claimed the same way |
+| followUpsPaused | Pauses both emails. Anything that came due while paused goes out on the next 10am run after unpausing |
+| reviewReceived | "Already reviewed": the review request is skipped |
+| galleryHeldAlertAt | When the one-time "held, balance owing" Telegram alert went out |
+
+The cron (`/api/cron/post-event-followups`) runs at 14:00 and 15:00 UTC and only acts in the 10am Toronto hour. Agreements with an event before `FOLLOWUPS_LAUNCH_DATE` (default in `lib/followups/rules.ts`) are never emailed automatically. Outside production (`VERCEL_ENV` not `production`), every send is a dry run.
+
 ## Migrations
 
 `prisma/migrations/0_baseline` holds the whole schema as of 2026-10-02. Production has it recorded as applied. The 26 migrations before it are kept for reference in `prisma/migrations_archive/` (with a backup of their `_prisma_migrations` rows) and are no longer used.

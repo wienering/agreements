@@ -120,6 +120,24 @@ export function getActivityTimelineLabel(
       return 'Marked paid from the balance digest';
     case 'BALANCE_REMINDER_SENT':
       return 'Balance reminder sent to client';
+    case 'GALLERY_EMAIL_SENT': {
+      const how = m?.trigger === 'auto' ? 'automatically' : 'manually';
+      return m?.resend === true ? `Gallery email sent again (${how})` : `Gallery email sent (${how})`;
+    }
+    case 'GALLERY_EMAIL_HELD':
+      return 'Gallery email held: balance owing';
+    case 'REVIEW_REQUEST_SENT': {
+      const how = m?.trigger === 'auto' ? 'automatically' : 'manually';
+      return m?.market === 'calgary' ? `Review request sent (${how}, Calgary link)` : `Review request sent (${how})`;
+    }
+    case 'REVIEW_REQUEST_SKIPPED':
+      return 'Review request skipped: already reviewed';
+    case 'FOLLOWUPS_PAUSED':
+      return 'Follow-ups paused';
+    case 'FOLLOWUPS_RESUMED':
+      return 'Follow-ups resumed';
+    case 'FOLLOWUP_EMAIL_FAILED':
+      return m?.email === 'review' ? 'Review request failed to send' : 'Gallery email failed to send';
     default:
       return type;
   }

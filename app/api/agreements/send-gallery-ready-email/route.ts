@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
-import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { handleApiError } from '@/lib/handleApiError';
-import { sendEmail } from '@/lib/email/send';
+import { buildReviewRequestEmail } from '@/lib/followups/reviewRequestEmail';
+import { followupsDryRun, GOOGLE_REVIEW_URL_ONTARIO } from '@/lib/followups/rules';
+import { sendGalleryEmail } from '@/lib/followups/send';
 import {
   buildGalleryReadyEmail,
   resolveGalleryLinks,
@@ -12,6 +13,8 @@ import {
 
 const sendGalleryReadyEmailSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
+  /** Send again after the first send. Doesn't change the sent date or the review clock. */
+  resend: z.boolean().optional(),
 });
 
 const NO_GALLERY_LINKS_MESSAGE =
@@ -41,10 +44,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
+    const review = buildReviewRequestEmail(agreement.client, GOOGLE_REVIEW_URL_ONTARIO);
+    const reviewPreview = { subject: review.subject, html: review.html };
+
     if (resolveGalleryLinks(agreement).length === 0) {
       return NextResponse.json({
         canSend: false,
         sendBlockedReason: NO_GALLERY_LINKS_MESSAGE,
+        alreadySent: Boolean(agreement.galleryEmailSentAt),
+        dryRun: followupsDryRun(),
+        review: reviewPreview,
       });
     }
 
@@ -54,6 +63,9 @@ export async function GET(request: NextRequest) {
       canSend: true,
       subject,
       html,
+      alreadySent: Boolean(agreement.galleryEmailSentAt),
+      dryRun: followupsDryRun(),
+      review: reviewPreview,
     });
   } catch (error) {
     return handleApiError(error, 'agreements/send-gallery-ready-email', request.method);
@@ -63,30 +75,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin(request);
-    const body = await request.json();
-    const validatedData = sendGalleryReadyEmailSchema.parse(body);
+    const { agreementId, resend } = sendGalleryReadyEmailSchema.parse(await request.json());
 
-    const agreement = await loadGalleryReadyAgreement(validatedData.agreementId);
-
-    if (!agreement) {
-      return NextResponse.json(
-        {
-          error: 'Agreement not found',
-        },
-        { status: 404 },
-      );
-    }
-
-    if (resolveGalleryLinks(agreement).length === 0) {
-      return NextResponse.json(
-        {
-          error: NO_GALLERY_LINKS_MESSAGE,
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    const dryRun = followupsDryRun();
+    if (!dryRun && (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS)) {
       return NextResponse.json(
         {
           error: 'Email service is not configured. Please contact support to set up email functionality.',
@@ -95,53 +87,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { subject, html } = buildGalleryReadyEmail(agreement);
+    const result = await sendGalleryEmail(agreementId, { trigger: 'manual', dryRun, resend });
 
-    try {
-      const info = await sendEmail({
-        to: agreement.client.email,
-        subject,
-        html,
-      });
-
-      devLog('Gallery ready email sent successfully:', info);
-
-      await prisma.agreement.update({
-        where: { id: agreement.id },
-        data: { galleryEmailSentAt: new Date() },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'Gallery ready email sent successfully',
-        recipientEmail: agreement.client.email,
-        agreementId: agreement.id,
-      });
-    } catch (emailError: any) {
-      console.error('Email sending failed:', emailError);
-
-      if (emailError.message && emailError.message.includes('timeout')) {
+    switch (result.status) {
+      case 'sent': {
+        const updated = await prisma.agreement.findUnique({
+          where: { id: agreementId },
+          select: { galleryEmailSentAt: true },
+        });
+        return NextResponse.json({
+          success: true,
+          message: resend ? 'Gallery email sent again' : 'Gallery ready email sent successfully',
+          recipientEmail: result.to,
+          agreementId,
+          galleryEmailSentAt: updated?.galleryEmailSentAt?.toISOString() ?? null,
+        });
+      }
+      case 'dry_run':
+        return NextResponse.json({
+          success: true,
+          dryRun: true,
+          message: `Dry run: nothing was sent. On production this would email ${result.to}.`,
+          recipientEmail: result.to,
+          agreementId,
+        });
+      case 'refused':
         return NextResponse.json(
-          {
-            error: 'Email service is currently unavailable. Please try again later.',
-          },
+          { error: result.reason },
+          { status: result.reason === 'Agreement not found' ? 404 : 409 },
+        );
+      case 'failed':
+        return NextResponse.json(
+          { error: 'Failed to send email. Nothing was recorded as sent. Please try again later.' },
           { status: 503 },
         );
-      }
-      if (emailError.message && emailError.message.includes('authentication')) {
-        return NextResponse.json(
-          {
-            error: 'Email authentication failed. Please contact support.',
-          },
-          { status: 503 },
-        );
-      }
-      return NextResponse.json(
-        {
-          error: 'Failed to send email. Please try again later.',
-        },
-        { status: 500 },
-      );
     }
   } catch (error) {
     return handleApiError(error, 'agreements/send-gallery-ready-email', request.method);
