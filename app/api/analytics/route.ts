@@ -13,6 +13,7 @@ import {
   torontoMonthKey,
   torontoStartOfTodayUtc,
 } from '@/lib/dates';
+import { canonicalStatus, SENT_STATUSES } from '@/lib/agreementStatus';
 
 /** Non-archived agreements bucketed by effective event date in Eastern Time. */
 async function fetchAgreementEventDatesForChart(): Promise<Date[]> {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       totalClients,
       totalTemplates,
       draftAgreements,
-      liveAgreements,
+      sentAgreements,
       signedAgreements,
       completedAgreements
     ] = await Promise.all([
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       prisma.client.count(),
       prisma.template.count(),
       prisma.agreement.count({ where: { status: 'DRAFT' } }),
-      prisma.agreement.count({ where: { status: 'LIVE' } }),
+      prisma.agreement.count({ where: { status: { in: [...SENT_STATUSES] } } }),
       prisma.agreement.count({ where: { status: 'SIGNED' } }),
       prisma.agreement.count({ where: { status: 'COMPLETED' } })
     ]);
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
     // Get status distribution
     const statusDistribution = [
       { status: 'DRAFT', count: draftAgreements, color: '#9E2B2B' },
-      { status: 'LIVE', count: liveAgreements, color: '#2F6A4C' },
+      { status: 'SENT', count: sentAgreements, color: '#2F6A4C' },
       { status: 'SIGNED', count: signedAgreements, color: '#2F6A4C' },
       { status: 'COMPLETED', count: completedAgreements, color: '#2C5878' }
     ];
@@ -284,7 +285,7 @@ export async function GET(request: NextRequest) {
     const upcomingAgreements = await prisma.agreement.findMany({
       where: {
         status: {
-          in: ['DRAFT', 'LIVE', 'SIGNED']
+          in: ['DRAFT', ...SENT_STATUSES, 'SIGNED']
         },
         archived: false,
         OR: [
@@ -391,16 +392,18 @@ export async function GET(request: NextRequest) {
       const ALL_STATUSES = [
         'DRAFT',
         'SENT',
-        'LIVE',
         'SIGNED',
         'COMPLETED',
         'CANCELLED',
         'VOID'
       ] as const;
 
-      const countByStatus = Object.fromEntries(
-        activeStatusGroups.map((g) => [g.status, g._count.id])
-      );
+      // LIVE rows count as SENT.
+      const countByStatus: Record<string, number> = {};
+      for (const g of activeStatusGroups) {
+        const status = canonicalStatus(g.status);
+        countByStatus[status] = (countByStatus[status] ?? 0) + g._count.id;
+      }
 
       const byStatus = ALL_STATUSES.map((status) => ({
         status,
@@ -416,7 +419,7 @@ export async function GET(request: NextRequest) {
           totalTemplates,
           signedAgreements,
           draftAgreements,
-          sentAgreements: liveAgreements, // Live agreements are "sent"
+          sentAgreements,
           conversionRate,
           trends: {
             agreements: agreementsTrend,

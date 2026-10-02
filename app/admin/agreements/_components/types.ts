@@ -1,6 +1,7 @@
 export type { AttendantConflict } from '@/lib/attendants/conflicts';
 
-export type AgreementStatus = 'DRAFT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
+/** LIVE is the old name for SENT; rows still holding it are shown and filtered as SENT. */
+export type AgreementStatus = 'DRAFT' | 'SENT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
 
 export interface AttendantSummary {
   id: string;
@@ -149,7 +150,6 @@ export const ITEMS_PER_PAGE = 25;
 export const STATUS_FILTERS = [
   'ALL',
   'DRAFT',
-  'LIVE',
   'SENT',
   'SIGNED',
   'COMPLETED',

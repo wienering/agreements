@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isSent, isSigned, SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
               where: {
                 archived: false,
                 OR: [
-                  { status: 'SIGNED' }, // Signed agreements bypass expiration
+                  { status: { in: [...SIGNED_STATUSES] } }, // Signed/completed agreements bypass expiration
                   { expiresAt: null },
                   { expiresAt: { gte: new Date() } }
                 ]
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     const expiringAgreements = sessionClient.agreements.filter(agreement => 
       agreement.expiresAt && 
       agreement.expiresAt <= sevenDaysFromNow &&
-      agreement.status !== 'SIGNED' &&
+      !isSigned(agreement.status) &&
       agreement.status !== 'CANCELLED'
     );
 
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
 
     // Check for unsigned agreements
     const unsignedAgreements = sessionClient.agreements.filter(agreement => 
-      agreement.status === 'DRAFT' || agreement.status === 'SENT'
+      agreement.status === 'DRAFT' || isSent(agreement.status)
     );
 
     if (unsignedAgreements.length > 0) {

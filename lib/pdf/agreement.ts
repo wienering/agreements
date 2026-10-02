@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
+import { isSigned } from '@/lib/agreementStatus';
 
 /** US Letter width. jsPDF format "letter" is 215.9mm, not A4 210mm. */
 const LETTER_WIDTH_MM = 215.9;
@@ -42,11 +43,11 @@ function resolveAgreementPdfHtml(agreement: AgreementPdfSource): string {
   // Priority: mergedHtml > customHtmlContent > template.htmlContent.
   // Signed agreements use the saved snapshot. Unsigned agreements are processed live.
   const htmlToProcess =
-    agreement.status === 'SIGNED' && agreement.mergedHtml
+    isSigned(agreement.status) && agreement.mergedHtml
       ? agreement.mergedHtml
       : agreement.customHtmlContent || agreement.template.htmlContent;
 
-  if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+  if (isSigned(agreement.status) && agreement.mergedHtml) {
     return agreement.mergedHtml;
   }
 
@@ -93,7 +94,7 @@ function convertHtmlToText(html: string): string {
 
 function renderDocumentPdf(htmlContent: string, agreement: AgreementPdfSource): Buffer {
   const formattedText = convertHtmlToText(htmlContent);
-  const isSigned = agreement.status === 'SIGNED';
+  const signed = isSigned(agreement.status);
   const doc = new jsPDF('p', 'mm', 'letter');
 
   const pageWidth = LETTER_WIDTH_MM;
@@ -142,7 +143,7 @@ function renderDocumentPdf(htmlContent: string, agreement: AgreementPdfSource): 
   addText('Photobooth Guys - Service Agreement', 14, true, 'center');
   yPosition += 10;
 
-  if (!isSigned) {
+  if (!signed) {
     addText('UNSIGNED DRAFT VERSION', 14, true, 'center');
     yPosition += 3;
     addText('This document is an unsigned draft and is NOT legally binding.', 10, false, 'center');
@@ -179,7 +180,7 @@ function renderDocumentPdf(htmlContent: string, agreement: AgreementPdfSource): 
   });
   yPosition += 10;
 
-  if (isSigned) {
+  if (signed) {
     addText('DIGITAL SIGNATURE:', 12, true);
     yPosition += 3;
 
@@ -223,7 +224,7 @@ function renderDocumentPdf(htmlContent: string, agreement: AgreementPdfSource): 
     yPosition += 8;
   }
 
-  if (isSigned) {
+  if (signed) {
     addText('This document is legally binding and represents the complete agreement between the parties.', 8, false, 'center');
   } else {
     addText('This is an unsigned draft version and is NOT legally binding.', 8, false, 'center');

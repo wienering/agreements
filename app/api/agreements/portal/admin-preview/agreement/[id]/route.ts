@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
+import { canonicalStatus, isSigned } from '@/lib/agreementStatus';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 
 export async function GET(
   request: NextRequest,
@@ -82,11 +84,11 @@ export async function GET(
     // Determine which HTML content to use (priority: mergedHtml > customHtmlContent > template.htmlContent)
     // Process HTML content
     let processedHtml;
-    const htmlToProcess = agreement.status === 'SIGNED' && agreement.mergedHtml
+    const htmlToProcess = isSigned(agreement.status) && agreement.mergedHtml
       ? agreement.mergedHtml
       : (agreement.customHtmlContent || agreement.template.htmlContent);
-    
-    if (agreement.status === 'SIGNED' && agreement.mergedHtml) {
+
+    if (isSigned(agreement.status) && agreement.mergedHtml) {
       processedHtml = agreement.mergedHtml;
     } else {
       processedHtml = processHtmlContent(
@@ -111,7 +113,7 @@ export async function GET(
       agreement: {
         id: agreement.id,
         uniqueToken: agreement.uniqueToken,
-        status: agreement.status,
+        status: canonicalStatus(agreement.status),
         expiresAt: agreement.expiresAt?.toISOString() || null,
         createdAt: agreement.createdAt.toISOString(),
         signedAt: agreement.signedAt?.toISOString() || null,
@@ -121,7 +123,7 @@ export async function GET(
         viewCount: agreement.viewCount,
         templateName: publicTemplate.title,
         mergedHtml: processedHtml,
-        paymentStatus: agreement.paymentStatus,
+        paymentStatus: displayPaymentStatus(agreement.paymentStatus),
         stripePaymentLink: agreement.stripePaymentLink,
         stripeReceiptLink: agreement.stripeReceiptLink,
         galleryLink: agreement.galleryLink,

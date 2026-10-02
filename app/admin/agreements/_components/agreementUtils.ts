@@ -3,6 +3,8 @@ import {
   toTorontoDateTimeLocalInput,
   torontoCalendarDaysBetween,
 } from '@/lib/dates';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
+import { canonicalStatus } from '@/lib/agreementStatus';
 import type { Agreement, BackdropLinkOption, GalleryLink } from './types';
 import { DOUBLE_BOOKED_FILTER, NO_ATTENDANT_FILTER } from './types';
 
@@ -45,15 +47,9 @@ export function agreementMissingAttendant(agreement: Agreement): boolean {
   return agreement.status !== 'CANCELLED' && !getAgreementAttendantName(agreement);
 }
 
-export function normalizePaymentStatus(value?: string | null) {
-  if (!value) return '';
-  const v = value.trim().toLowerCase();
-  if (v === 'fully paid' || v === 'paid in full' || v === 'paid' || v === 'balance paid') return 'Fully paid';
-  if (v === 'balance due') return 'Balance due';
-  if (v === 'deposit paid' || v === 'deposit') return 'Deposit paid';
-  if (v === 'not paid' || v === 'unpaid') return 'Not paid';
-  if (v === 'invoice issued') return 'Invoice issued';
-  return value;
+/** The dropdown value for a stored payment status; '' when blank. */
+export function paymentStatusSelectValue(value?: string | null) {
+  return displayPaymentStatus(value) ?? '';
 }
 
 export function getDefaultExpirationDate() {
@@ -108,7 +104,7 @@ export function agreementMatchesSearch(agreement: Agreement, searchLower: string
   }
   const attendantName = getAgreementAttendantName(agreement);
   if (attendantName && attendantName.toLowerCase().includes(searchLower)) return true;
-  if (agreement.status.toLowerCase().includes(searchLower)) return true;
+  if (canonicalStatus(agreement.status).toLowerCase().includes(searchLower)) return true;
   return false;
 }
 
@@ -121,7 +117,7 @@ export function filterAgreements(
 ): Agreement[] {
   let filtered = agreements;
   if (statusFilter !== 'ALL') {
-    filtered = filtered.filter((agreement) => agreement.status === statusFilter);
+    filtered = filtered.filter((agreement) => canonicalStatus(agreement.status) === statusFilter);
   }
   if (attendantFilter === NO_ATTENDANT_FILTER) {
     filtered = filtered.filter((agreement) => !getAgreementAttendantName(agreement));

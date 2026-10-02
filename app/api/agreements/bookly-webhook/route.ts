@@ -6,6 +6,7 @@ import { formatZodDetails } from '@/lib/handleApiError';
 import { randomBytes } from 'crypto';
 import { createHmac } from 'crypto';
 import { hasUnlimitedPrintsExtra, mapBooklyToClient } from '@/lib/bookly/mapping';
+import { DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 
 // Flexible schema to handle various Bookly payload formats
 const booklyWebhookSchema = z.object({
@@ -303,6 +304,7 @@ export async function POST(request: NextRequest) {
               templateId: templateId,
               uniqueToken,
               status: 'DRAFT',
+              paymentStatus: DEFAULT_PAYMENT_STATUS,
               expiresAt: null,
               customHtmlContent: template.htmlContent, // Copy template content to agreement
             },

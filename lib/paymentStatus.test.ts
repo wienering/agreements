@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_PAYMENT_STATUS,
+  displayPaymentStatus,
   isDepositPaid,
   isFullyPaid,
+  normalizePaymentStatus,
+  PAYMENT_STATUSES,
+  paymentStatusAfterInvoiceIssued,
   paymentStatusAfterStripeInvoice,
   stripeInvoiceTypeFor,
 } from '@/lib/paymentStatus';
@@ -20,6 +25,68 @@ describe('isFullyPaid', () => {
       expect(isFullyPaid(status)).toBe(false);
     },
   );
+});
+
+describe('normalizePaymentStatus', () => {
+  it.each([
+    ['Fully paid', 'Fully paid'],
+    ['Fully Paid', 'Fully paid'],
+    [' FULLY  PAID ', 'Fully paid'],
+    ['Paid', 'Fully paid'],
+    ['Balance Paid', 'Fully paid'],
+    ['Not paid', 'Not paid'],
+    ['Not Paid', 'Not paid'],
+    ['Deposit Paid', 'Deposit paid'],
+    ['deposit paid', 'Deposit paid'],
+    ['Invoice issued', 'Invoice issued'],
+    ['balance due', 'Balance due'],
+  ])('maps %j to %j', (input, expected) => {
+    expect(normalizePaymentStatus(input)).toBe(expected);
+  });
+
+  it.each([null, undefined, '', '  ', 'Unpaid', 'Partially paid', 'Deposit'])('has no list value for %j', (input) => {
+    expect(normalizePaymentStatus(input)).toBeNull();
+  });
+
+  it('lists exactly the five dropdown values, defaulting to Not paid', () => {
+    expect([...PAYMENT_STATUSES]).toEqual(['Not paid', 'Invoice issued', 'Deposit paid', 'Balance due', 'Fully paid']);
+    expect(DEFAULT_PAYMENT_STATUS).toBe('Not paid');
+  });
+});
+
+describe('displayPaymentStatus', () => {
+  it('shows the list value, keeps unknown text, and is null when blank', () => {
+    expect(displayPaymentStatus('Fully Paid')).toBe('Fully paid');
+    expect(displayPaymentStatus(' Partially paid ')).toBe('Partially paid');
+    expect(displayPaymentStatus('  ')).toBeNull();
+    expect(displayPaymentStatus(null)).toBeNull();
+  });
+});
+
+describe('paymentStatusAfterInvoiceIssued', () => {
+  it('moves Not paid or blank to Invoice issued', () => {
+    expect(paymentStatusAfterInvoiceIssued(null)).toBe('Invoice issued');
+    expect(paymentStatusAfterInvoiceIssued('')).toBe('Invoice issued');
+    expect(paymentStatusAfterInvoiceIssued('Not paid')).toBe('Invoice issued');
+    expect(paymentStatusAfterInvoiceIssued('Not Paid')).toBe('Invoice issued');
+  });
+
+  it('keeps a recorded deposit, balance or payment, so the webhook can still see the deposit', () => {
+    expect(paymentStatusAfterInvoiceIssued('Deposit paid')).toBeNull();
+    expect(paymentStatusAfterInvoiceIssued('Balance due')).toBeNull();
+    expect(paymentStatusAfterInvoiceIssued('Fully paid')).toBeNull();
+    expect(paymentStatusAfterInvoiceIssued('Invoice issued')).toBeNull();
+  });
+
+  it('tidies the spelling of a kept value', () => {
+    expect(paymentStatusAfterInvoiceIssued('Deposit Paid')).toBe('Deposit paid');
+    expect(paymentStatusAfterInvoiceIssued('Fully Paid')).toBe('Fully paid');
+  });
+
+  it('then lets a paid minus-deposit invoice mark the agreement fully paid', () => {
+    const afterInvoice = paymentStatusAfterInvoiceIssued('Deposit paid') ?? 'Deposit paid';
+    expect(paymentStatusAfterStripeInvoice('minus-deposit', afterInvoice)).toBe('Fully paid');
+  });
 });
 
 describe('isDepositPaid', () => {

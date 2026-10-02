@@ -2,6 +2,7 @@
 
 import { CSSProperties, ReactNode } from 'react';
 import { adminTheme } from '../lib/adminTheme';
+import { normalizePaymentStatus, PAYMENT_STATUS_NOT_PAID } from '@/lib/paymentStatus';
 
 export type StatusBadgeVariant = 'accent' | 'neutral' | 'warning' | 'danger';
 
@@ -15,6 +16,7 @@ interface StatusBadgeProps {
 
 export function agreementStatusToBadgeVariant(status: string): StatusBadgeVariant {
   switch (status.toUpperCase()) {
+    case 'SENT':
     case 'LIVE':
     case 'COMPLETED':
       return 'accent';
@@ -26,9 +28,7 @@ export function agreementStatusToBadgeVariant(status: string): StatusBadgeVarian
 }
 
 export function paymentStatusToBadgeVariant(paymentStatus: string): StatusBadgeVariant {
-  const lower = paymentStatus.toLowerCase();
-  if (lower.includes('not paid') || lower.includes('unpaid')) return 'warning';
-  return 'neutral';
+  return normalizePaymentStatus(paymentStatus) === PAYMENT_STATUS_NOT_PAID ? 'warning' : 'neutral';
 }
 
 const theme = adminTheme.admin;

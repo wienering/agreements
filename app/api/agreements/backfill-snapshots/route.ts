@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { processHtmlContent } from '../portal/shared/agreement-utils';
+import { SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,10 +15,10 @@ export async function POST(request: NextRequest) {
     devLog('🔍 Starting snapshot backfill...');
     devLog(`Options: regenerateAll=${regenerateAll}, onlyWithEvents=${onlyWithEvents}`);
 
-    // Find all signed agreements
+    // Find all signed (or completed) agreements
     const signedAgreements = await prisma.agreement.findMany({
       where: {
-        status: 'SIGNED'
+        status: { in: [...SIGNED_STATUSES] }
       },
       include: {
         client: true,

@@ -10,6 +10,7 @@ import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { formatDateTimeToronto } from '@/lib/dates';
+import { syncEventArchive } from '@/lib/agreements/archiveSync';
 
 const cancelAgreementSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -46,22 +47,24 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Update agreement status to CANCELLED
+    // Update agreement status to CANCELLED and archive it (and its Event, once all its agreements are archived)
+    const now = new Date();
     const updatedAgreement = await prisma.agreement.update({
       where: { id: agreement.id },
       data: {
         status: 'CANCELLED',
-        cancelledAt: new Date(),
+        cancelledAt: now,
         cancelledBy: validatedData.adminName,
         cancellationReason: validatedData.cancellationReason,
         archived: true,
-        archivedAt: new Date()
+        archivedAt: now
       },
       include: {
         client: true,
         template: true
       }
     });
+    await syncEventArchive(updatedAgreement.eventId, true, now);
 
     // Send cancellation email to client
     try {

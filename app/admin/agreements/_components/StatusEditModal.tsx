@@ -1,13 +1,14 @@
+import { canonicalStatus } from '@/lib/agreementStatus';
 import { AdminButton } from '../../../components/AdminButton';
 import { ModalFrame, ModalTitle } from './ModalFrame';
 import { fieldClass, labelClass, modalActionsClass } from './uiClasses';
 
 const OPTIONS = [
   ['DRAFT', 'Draft - Use while creating the agreement'],
-  ['LIVE', 'Live - Use after the agreement has been sent'],
+  ['SENT', 'Sent - Use after the agreement has been sent'],
   ['SIGNED', 'Signed - Use after the agreement has been signed'],
   ['COMPLETED', 'Completed - Use once the event is over'],
-  ['CANCELLED', 'Cancelled - Agreement has been cancelled (Admin only)'],
+  ['CANCELLED', 'Cancelled - Only for signed or completed agreements. Sends nothing.'],
 ] as const;
 
 export function StatusEditModal({
@@ -30,7 +31,7 @@ export function StatusEditModal({
     <ModalFrame maxWidthClass="max-w-[400px]">
       <ModalTitle>Edit Agreement Status</ModalTitle>
       <label className={labelClass}>New Status</label>
-      <select value={status} onChange={(event) => onStatusChange(event.target.value)} className={`${fieldClass} mb-4`}>
+      <select value={canonicalStatus(status)} onChange={(event) => onStatusChange(event.target.value)} className={`${fieldClass} mb-4`}>
         {OPTIONS.map(([value, label]) => (
           <option key={value} value={value}>
             {label}

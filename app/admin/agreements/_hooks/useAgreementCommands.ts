@@ -5,7 +5,8 @@ import { devLog } from '@/lib/logger';
 import { fromTorontoDateTimeLocalInput, toTorontoDateTimeLocalInput } from '@/lib/dates';
 import { useState } from 'react';
 import type { Agreement, InvoiceResult, InvoiceType } from '../_components/types';
-import { normalizePaymentStatus } from '../_components/agreementUtils';
+import { paymentStatusSelectValue } from '../_components/agreementUtils';
+import { isDepositPaid, isFullyPaid, paymentStatusAfterInvoiceIssued } from '@/lib/paymentStatus';
 import { getDefaultExpirationDate } from '../_components/agreementUtils';
 import { patchAgreement } from './patchAgreement';
 
@@ -245,7 +246,7 @@ export function useAgreementCommands({
     }
     if (newStatus === 'COMPLETED') {
       const agreement = agreements.find((item) => item.id === agreementId);
-      if (agreement && agreement.paymentStatus?.toLowerCase() !== 'fully paid') {
+      if (agreement && !isFullyPaid(agreement.paymentStatus)) {
         setCompletingAgreement(agreement);
         setPendingStatusChange({ agreementId, status: newStatus });
         setShowPaymentWarningModal(true);
@@ -492,8 +493,7 @@ export function useAgreementCommands({
     setShowInvoiceModal(true);
     setInvoiceResult(null);
     setInvoiceError(null);
-    const normalizedStatus = normalizePaymentStatus(agreement.paymentStatus);
-    setInvoiceType(normalizedStatus?.toLowerCase().includes('deposit') ? 'total-minus-deposit' : 'default');
+    setInvoiceType(isDepositPaid(agreement.paymentStatus) ? 'total-minus-deposit' : 'default');
     setCustomInvoiceAmount('');
     setDisableOnlinePayment(false);
   };
@@ -542,15 +542,16 @@ export function useAgreementCommands({
         const paymentLink = data.invoices?.[0]?.invoiceUrl || '';
         const current = agreements.find((item) => item.id === invoiceAgreement.id);
         if (current) {
+          const nextPaymentStatus = paymentStatusAfterInvoiceIssued(current.paymentStatus) ?? current.paymentStatus ?? null;
           const next = {
             ...current,
-            paymentStatus: 'Invoice issued',
+            paymentStatus: nextPaymentStatus,
             ...(paymentLink ? { stripePaymentLink: paymentLink } : {}),
           };
           replaceAgreement(next);
           if (openDetailId === invoiceAgreement.id) {
             applyServerAgreement(next);
-            setPaymentStatus('Invoice issued');
+            setPaymentStatus(paymentStatusSelectValue(nextPaymentStatus));
             if (paymentLink) setStripePaymentLink(paymentLink);
           }
         }

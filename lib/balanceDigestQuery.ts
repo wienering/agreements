@@ -80,30 +80,39 @@ function toRow(record: DigestRecord): BalanceDigestRow | null {
   };
 }
 
+/** Event date (the Event's, else the client's) in the range. `gte` is optional. */
+function eventDateIn(range: { gte?: Date; lt: Date }): Prisma.AgreementWhereInput {
+  return {
+    OR: [
+      { event: { eventDate: range } },
+      {
+        AND: [
+          { OR: [{ eventId: null }, { event: { is: { eventDate: null } } }] },
+          { client: { eventDate: range } },
+        ],
+      },
+    ],
+  };
+}
+
 export async function findBalanceDigestAgreements(now = new Date()): Promise<BalanceDigestRow[]> {
   const windowStart = addTorontoCalendarDaysFrom(now, -1);
   const windowEnd = addTorontoCalendarDaysFrom(now, BALANCE_DIGEST_LOOKAHEAD_DAYS + 2);
 
+  // Coarse filter only: exact day boundaries and other spellings of fully paid are
+  // settled by isIncludedInBalanceDigest, which uses isFullyPaid().
   const records = await prisma.agreement.findMany({
     where: {
-      status: 'SIGNED',
       archived: false,
       cancelledAt: null,
       AND: [
         {
-          // Coarse filter only: other spellings of fully paid get through here and are
-          // dropped by isIncludedInBalanceDigest, which uses isFullyPaid().
           OR: [{ paymentStatus: null }, { paymentStatus: { not: FULLY_PAID_STATUS } }],
         },
         {
           OR: [
-            { event: { eventDate: { gte: windowStart, lt: windowEnd } } },
-            {
-              AND: [
-                { OR: [{ eventId: null }, { event: { is: { eventDate: null } } }] },
-                { client: { eventDate: { gte: windowStart, lt: windowEnd } } },
-              ],
-            },
+            { AND: [{ status: 'SIGNED' }, eventDateIn({ gte: windowStart, lt: windowEnd })] },
+            { AND: [{ status: 'COMPLETED' }, eventDateIn({ lt: windowEnd })] },
           ],
         },
       ],

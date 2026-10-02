@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   balanceDigestSnoozeUntil,
+  formatDaysUntilEvent,
   isIncludedInBalanceDigest,
   type BalanceDigestCandidate,
 } from '@/lib/balanceDigest';
@@ -125,5 +126,31 @@ describe('isIncludedInBalanceDigest', () => {
 
   it('snoozes until three Toronto days from now', () => {
     expect(torontoDateKey(balanceDigestSnoozeUntil(NOW))).toBe('2026-10-05');
+  });
+
+  it('includes a completed agreement that is not fully paid, however long ago the event was', () => {
+    const past = { event: { eventDate: new Date('2025-11-15T16:00:00.000Z') } };
+    expect(isIncludedInBalanceDigest(candidate({ status: 'COMPLETED', paymentStatus: 'Not paid', ...past }), NOW)).toBe(true);
+    expect(isIncludedInBalanceDigest(candidate({ status: 'COMPLETED', paymentStatus: null, ...past }), NOW)).toBe(true);
+    expect(isIncludedInBalanceDigest(candidate({ status: 'COMPLETED' }), NOW)).toBe(true);
+  });
+
+  it('applies the same exclusions to completed agreements', () => {
+    const completed = { status: 'COMPLETED', event: { eventDate: new Date('2026-09-10T16:00:00.000Z') } };
+    expect(isIncludedInBalanceDigest(candidate({ ...completed, paymentStatus: 'Fully Paid' }), NOW)).toBe(false);
+    expect(isIncludedInBalanceDigest(candidate({ ...completed, archived: true }), NOW)).toBe(false);
+    expect(
+      isIncludedInBalanceDigest(candidate({ ...completed, balanceDigestSnoozedUntil: new Date('2026-10-04T16:00:00.000Z') }), NOW),
+    ).toBe(false);
+    expect(
+      isIncludedInBalanceDigest(candidate({ ...completed, event: { eventDate: new Date('2026-10-20T16:00:00.000Z') } }), NOW),
+    ).toBe(false);
+  });
+
+  it('labels past events as days ago', () => {
+    expect(formatDaysUntilEvent(new Date('2026-10-01T16:00:00.000Z'), NOW)).toBe('1 day ago');
+    expect(formatDaysUntilEvent(new Date('2026-09-22T16:00:00.000Z'), NOW)).toBe('10 days ago');
+    expect(formatDaysUntilEvent(new Date('2026-10-02T20:00:00.000Z'), NOW)).toBe('Today');
+    expect(formatDaysUntilEvent(new Date('2026-10-05T16:00:00.000Z'), NOW)).toBe('3 days');
   });
 });

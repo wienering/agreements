@@ -4,6 +4,7 @@ import {
   torontoCalendarDaysBetween,
   torontoDateKey,
 } from '@/lib/dates';
+import { isSigned } from '@/lib/agreementStatus';
 import { isFullyPaid, PAYMENT_STATUS_FULLY_PAID } from '@/lib/paymentStatus';
 
 /** The value written when marking paid. Use isFullyPaid() to check, not an exact match. */
@@ -49,11 +50,23 @@ export function isEventWithinBalanceWindow(eventDate: Date, now = new Date()): b
   return eventKey >= todayKey && eventKey <= lastKey;
 }
 
+/** A completed event can be in the past: any event up to the end of the window counts. */
+export function isEventOnOrBeforeBalanceWindowEnd(eventDate: Date, now = new Date()): boolean {
+  const eventKey = torontoDateKey(eventDate);
+  if (!eventKey) return false;
+  const lastKey = torontoDateKey(addTorontoCalendarDaysFrom(now, BALANCE_DIGEST_LOOKAHEAD_DAYS));
+  return eventKey <= lastKey;
+}
+
+/**
+ * Signed agreements with an event in the next 10 days, and completed agreements (whose event has
+ * usually passed), that are not fully paid, archived, cancelled or snoozed.
+ */
 export function isIncludedInBalanceDigest(
   agreement: BalanceDigestCandidate,
   now = new Date(),
 ): boolean {
-  if (agreement.status !== 'SIGNED') return false;
+  if (!isSigned(agreement.status)) return false;
   if (agreement.archived) return false;
   if (agreement.cancelledAt) return false;
   if (isFullyPaid(agreement.paymentStatus)) return false;
@@ -61,7 +74,9 @@ export function isIncludedInBalanceDigest(
 
   const eventDate = resolveAgreementEventDate(agreement);
   if (!eventDate) return false;
-  return isEventWithinBalanceWindow(eventDate, now);
+  return agreement.status === 'COMPLETED'
+    ? isEventOnOrBeforeBalanceWindowEnd(eventDate, now)
+    : isEventWithinBalanceWindow(eventDate, now);
 }
 
 export function balanceDigestSnoozeUntil(now = new Date()): Date {
@@ -74,7 +89,9 @@ export function daysUntilEvent(eventDate: Date, now = new Date()): number {
 
 export function formatDaysUntilEvent(eventDate: Date, now = new Date()): string {
   const days = daysUntilEvent(eventDate, now);
-  if (days <= 0) return 'Today';
+  if (days === -1) return '1 day ago';
+  if (days < 0) return `${-days} days ago`;
+  if (days === 0) return 'Today';
   if (days === 1) return '1 day';
   return `${days} days`;
 }

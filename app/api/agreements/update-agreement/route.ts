@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
+import { isSigned } from '@/lib/agreementStatus';
 
 const agreementUpdateSchema = z.object({
   id: z.string().min(1, 'Agreement ID is required'),
@@ -43,8 +44,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
     }
 
-    // Prevent modifications to signed agreements
-    if (agreement.status === 'SIGNED') {
+    // Prevent modifications to signed (or completed) agreements
+    if (isSigned(agreement.status)) {
       console.error('Attempted to modify signed agreement:', id);
       return NextResponse.json({ 
         error: 'Cannot modify signed agreements. Once an agreement is signed, it becomes legally binding and immutable.' 

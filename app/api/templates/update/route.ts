@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
+import { SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 const templateUpdateSchema = z.object({
   id: z.string().min(1, 'Template ID is required'),
@@ -27,7 +28,7 @@ export async function PUT(request: NextRequest) {
     const signedAgreements = await prisma.agreement.findMany({
       where: {
         templateId: validatedData.id,
-        status: 'SIGNED'
+        status: { in: [...SIGNED_STATUSES] }
       },
       select: { id: true, uniqueToken: true, client: { select: { firstName: true, lastName: true } } }
     });

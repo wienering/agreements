@@ -62,7 +62,7 @@ interface DashboardStats {
 const AGREEMENT_STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Draft',
   SENT: 'Sent',
-  LIVE: 'Live',
+  LIVE: 'Sent',
   SIGNED: 'Signed',
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
@@ -249,10 +249,10 @@ export default function AdminHome() {
                   {activeTotal}
                 </div>
                 {(() => {
-                  const SEGMENT_ORDER = ['COMPLETED', 'LIVE', 'SIGNED', 'DRAFT'] as const;
+                  const SEGMENT_ORDER = ['COMPLETED', 'SENT', 'SIGNED', 'DRAFT'] as const;
                   const segmentColor: Record<string, string> = {
                     COMPLETED: statusTokens.strong,
-                    LIVE: statusTokens.waitLight,
+                    SENT: statusTokens.waitLight,
                     SIGNED: statusTokens.good,
                     DRAFT: statusTokens.idle,
                   };

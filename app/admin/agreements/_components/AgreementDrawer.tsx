@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { formatActivityAbsoluteTime, formatRelativeTime, getActivityTimelineLabel } from '@/lib/agreementTrackingUi';
 import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
+import { PAYMENT_STATUSES } from '@/lib/paymentStatus';
 import RichTextEditor, { RichTextPreview } from '../../../components/RichTextEditor';
 import { AdminButton } from '../../../components/AdminButton';
 import { UIcon } from '../../../components/UIcon';
@@ -254,12 +255,16 @@ export function AgreementDrawer({
             >
               <label className={smallLabelClass}>Payment Status</label>
               <select value={paymentStatus} onChange={(event) => setPaymentStatus(event.target.value)} className={`${fieldClass} mb-3`}>
-                <option value="">Not Set</option>
-                <option value="Not paid">Not paid</option>
-                <option value="Invoice issued">Invoice issued</option>
-                <option value="Deposit paid">Deposit paid</option>
-                <option value="Balance due">Balance due</option>
-                <option value="Fully paid">Fully paid</option>
+                {!paymentStatus && (
+                  <option value="" disabled>
+                    Choose a payment status
+                  </option>
+                )}
+                {PAYMENT_STATUSES.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
               </select>
               {detail.balanceReminderSentAt && (
                 <p className="mb-1 text-xs text-admin-muted">

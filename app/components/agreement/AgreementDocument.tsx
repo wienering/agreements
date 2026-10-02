@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'rea
 import { UIcon } from '@/app/components/UIcon';
 import { sanitizeAgreementHtml } from '@/lib/sanitizeHtml';
 import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
+import { isSigned } from '@/lib/agreementStatus';
 import { EmailCopyModal } from './EmailCopyModal';
 import { renderedAgreementHtml, type AgreementRecord } from './types';
 import type { useAgreementDelivery } from './useAgreementDelivery';
@@ -133,7 +134,7 @@ export function AgreementDocument(props: AgreementDocumentProps) {
               </InfoCard>
             )}
 
-            {agreement.status === 'SIGNED' && (
+            {isSigned(agreement.status) && (
               <div className="flex items-center gap-2 rounded border border-hairline bg-panel px-4 py-2">
                 <UIcon name="check" className="text-base text-success" />
                 <span className="text-sm font-semibold text-success">SIGNED</span>
@@ -152,7 +153,7 @@ export function AgreementDocument(props: AgreementDocumentProps) {
           Service Agreement for {agreement.client.firstName} {agreement.client.lastName}
         </p>
 
-        {agreement.status === 'SIGNED' && (
+        {isSigned(agreement.status) && (
           <div className="mt-6 inline-block rounded border border-hairline bg-panel p-5">
             <div className="mb-2 flex items-center justify-center gap-3">
               <UIcon name="check" className="text-xl text-success" />
@@ -163,7 +164,7 @@ export function AgreementDocument(props: AgreementDocumentProps) {
         )}
 
         {mode === 'sign' &&
-          agreement.status !== 'SIGNED' &&
+          !isSigned(agreement.status) &&
           agreement.requireBothSignatures &&
           (agreement.signatures?.length ?? 0) > 0 && (
             <PartialSignatureBanner agreement={agreement} />
@@ -317,7 +318,7 @@ function otherSigner(agreement: AgreementRecord): { name: string; email: string 
 }
 
 function SignSignatureDetails({ agreement }: { agreement: AgreementRecord }) {
-  if (!(agreement.status === 'SIGNED' || (agreement.signatures?.length ?? 0) > 0)) return null;
+  if (!(isSigned(agreement.status) || (agreement.signatures?.length ?? 0) > 0)) return null;
 
   const rows =
     agreement.signatures && agreement.signatures.length > 0
@@ -362,7 +363,7 @@ function SignSignatureDetails({ agreement }: { agreement: AgreementRecord }) {
 }
 
 function AdminSignatureDetails({ agreement }: { agreement: AgreementRecord }) {
-  if (agreement.status !== 'SIGNED') return null;
+  if (!isSigned(agreement.status)) return null;
 
   return (
     <section className="mb-8 rounded border border-hairline bg-panel p-8">
@@ -406,7 +407,7 @@ function SignActions({
 
   return (
     <div className="mb-6 flex flex-wrap justify-center gap-3 px-4 md:mb-10 md:gap-5 md:px-0">
-      {agreement.status === 'SIGNED' ? (
+      {isSigned(agreement.status) ? (
         <>
           <FillButton onClick={delivery.handleDownloadPDF} disabled={delivery.isDownloading}>
             <ActionIcon busy={delivery.isDownloading} name="file-pdf" />{' '}

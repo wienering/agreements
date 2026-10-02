@@ -176,22 +176,35 @@ Core agreement records. Links clients, templates, and optional events.
 
 ```prisma
 enum AgreementStatus {
-  DRAFT      // Initial state, being prepared
-  SENT       // Sent to client (deprecated, use LIVE)
-  SIGNED     // Digitally signed by client
-  VOID       // Voided/invalid
-  LIVE       // Active and sent to client
-  COMPLETED  // Event completed
-  CANCELLED  // Cancelled by admin or client
+  DRAFT      // Being prepared. Never moved to SENT automatically.
+  SENT       // Emailed to the client, not fully signed yet
+  SIGNED     // Fully signed (every required signer)
+  VOID       // Old value, unused. Removed in the status cleanup.
+  LIVE       // Old name for SENT. Read as SENT, never written. Removed in the status cleanup.
+  COMPLETED  // Signed, and the event is over
+  CANCELLED  // Cancelled by admin
 }
 ```
 
 **Status Flow**:
 ```
-DRAFT → LIVE → SIGNED → COMPLETED
-  ↓       ↓
-VOID   CANCELLED
+DRAFT → SENT → SIGNED → COMPLETED
+                  ↓         ↓
+              CANCELLED  CANCELLED
 ```
+
+- Emailing a DRAFT makes it SENT. A two-signer agreement with one signature keeps its status.
+- `isSigned()` (`lib/agreementStatus.ts`) is true for SIGNED and COMPLETED; use it wherever "signed" matters.
+- By hand, SIGNED and COMPLETED never go back to DRAFT or SENT. COMPLETED can go to SIGNED or CANCELLED.
+- The daily balance-digest cron moves SIGNED to COMPLETED on the Toronto day after the event
+  (production only). Status only: it logs `AUTO_COMPLETED` and sends nothing.
+
+**Payment status** is one of `PAYMENT_STATUSES` in `lib/paymentStatus.ts`: Not paid, Invoice issued,
+Deposit paid, Balance due, Fully paid. New agreements start as Not paid. Every writer stores the list
+value; `normalizePaymentStatus()` maps other capitalisations, and the old "Paid" / "Balance Paid", to it.
+
+**Archiving**: `archived` is separate from status. Archiving an agreement archives its Event once every
+agreement on that Event is archived; unarchiving an agreement unarchives its Event (`lib/agreements/archiveSync.ts`).
 
 ---
 

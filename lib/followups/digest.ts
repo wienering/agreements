@@ -1,6 +1,7 @@
 import { adminAgreementPath } from '@/lib/balanceActionToken';
 import { formatEventDateToronto, resolveAgreementEventDate } from '@/lib/dates';
 import { planFollowups, type FollowupAgreement } from '@/lib/followups/rules';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 
 type DigestAgreement = FollowupAgreement & { client: { firstName: string; lastName: string } };
 
@@ -55,7 +56,7 @@ export function buildFollowupDigestSections(
       const a = agreement as DigestAgreement;
       return {
         clientName: name(a),
-        label: `Payment: ${a.paymentStatus?.trim() || 'Not set'} · event ${eventLabel(a)}`,
+        label: `Payment: ${displayPaymentStatus(a.paymentStatus) ?? 'Not set'} · event ${eventLabel(a)}`,
         adminUrl: url(a.id),
       };
     })

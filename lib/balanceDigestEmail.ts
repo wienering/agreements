@@ -5,6 +5,7 @@ import type { BalanceDigestRow } from '@/lib/balanceDigestQuery';
 import { formatDateToronto, formatEventDateToronto } from '@/lib/dates';
 import { renderCtaButtonPair, renderEmailLayout } from '@/lib/email/layout';
 import { escapeHtml } from '@/lib/htmlEscape';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 import type { FollowupDigestItem, FollowupDigestSections } from '@/lib/followups/digest';
 
 export type BalanceDigestLinks = {
@@ -53,7 +54,7 @@ export function digestBlockFromRow(
     eventDateLabel: formatEventDateToronto(row.eventDate),
     daysUntilLabel: formatDaysUntilEvent(row.eventDate, now),
     packageLine: packageLineFor(row),
-    paymentStatus: row.paymentStatus?.trim() || 'Not set',
+    paymentStatus: displayPaymentStatus(row.paymentStatus) ?? 'Not set',
     reminderSentLabel,
     ...links,
   };
@@ -148,11 +149,11 @@ export function renderBalanceDigestEmail(
     count === 0 && hasFollowups
       ? followupSubject(followups)
       : count === 1
-        ? 'Balance due: 1 event in the next 10 days'
-        : `Balance due: ${count} events in the next 10 days`;
+        ? 'Balance due: 1 event'
+        : `Balance due: ${count} events`;
 
   const intro =
-    'Signed events in the next 10 days whose balance is not marked paid. Each link opens a confirmation page. Nothing changes until you confirm.';
+    'Signed events in the next 10 days, and completed events, whose balance is not marked paid. Each link opens a confirmation page. Nothing changes until you confirm.';
 
   const htmlParts: string[] = [];
   const textParts: string[] = [];

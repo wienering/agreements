@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { agreementListSlimSelect } from '@/lib/agreements/listSelect';
+import { DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -165,6 +166,7 @@ export async function POST(request: NextRequest) {
         uniqueToken,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         status: 'DRAFT',
+        paymentStatus: DEFAULT_PAYMENT_STATUS,
         customHtmlContent: template.htmlContent, // Copy template content to agreement
         secondSignerEnabled: enableSecondSigner,
         secondSignerFirstName: enableSecondSigner ? (secondSignerFirstName || null) : null,

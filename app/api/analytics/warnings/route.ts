@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { SENT_STATUSES } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
           lte: threeDaysAgo
         },
         status: {
-          in: ['LIVE']
+          in: [...SENT_STATUSES]
         },
         archived: false
       },
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
           lte: fiveDaysAgo
         },
         status: {
-          in: ['LIVE']
+          in: [...SENT_STATUSES]
         },
         archived: false
       },
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
           gte: now
         },
         status: {
-          in: ['DRAFT', 'LIVE']
+          in: ['DRAFT', ...SENT_STATUSES]
         },
         archived: false
       },
