@@ -5,11 +5,13 @@ export function ModalFrame({
   onBackdropClick,
   maxWidthClass = 'max-w-[400px]',
   paddingClass = 'p-6',
+  labelledBy,
 }: {
   children: ReactNode;
   onBackdropClick?: () => void;
   maxWidthClass?: string;
   paddingClass?: string;
+  labelledBy?: string;
 }) {
   return (
     <div
@@ -19,6 +21,7 @@ export function ModalFrame({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby={labelledBy}
         onClick={(event) => event.stopPropagation()}
         className={`box-border w-full ${maxWidthClass} max-h-[min(90vh,100%)] overflow-y-auto rounded border border-admin-hairline bg-admin-surface ${paddingClass}`}
       >
