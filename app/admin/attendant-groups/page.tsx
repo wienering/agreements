@@ -32,6 +32,7 @@ export default function AttendantGroupsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const router = useRouter();
 
   const mainBg = 'var(--admin-bg)';
@@ -75,8 +76,8 @@ export default function AttendantGroupsPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.slug) {
-      alert('Name and slug are required');
+    if (!formData.name.trim() || (editingGroup && !formData.slug.trim())) {
+      alert(editingGroup ? 'Name and slug are required' : 'Name is required');
       return;
     }
 
@@ -98,7 +99,7 @@ export default function AttendantGroupsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          slug: formData.slug,
+          ...(editingGroup ? { slug: formData.slug } : {}),
           attendantIds: attendantIdsArray
         })
       });
@@ -141,6 +142,33 @@ export default function AttendantGroupsPage() {
     }
   };
 
+  const handleRegenerate = async (group: AttendantGroup) => {
+    if (!confirm(`Regenerate the hub link for ${group.name}? The current link will stop working, and you will need to send the new one.`)) {
+      return;
+    }
+
+    setRegeneratingId(group.id);
+    try {
+      const response = await adminFetch(`/api/admin/attendant-groups/${group.id}/regenerate`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGroups((prev) => prev.map((item) => (item.id === group.id ? data.group : item)));
+        setCopiedId(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to regenerate hub link');
+      }
+    } catch (error) {
+      console.error('Error regenerating attendant group link:', error);
+      alert('Failed to regenerate hub link');
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
   const copyHubLink = async (slug: string, id: string) => {
     const hubLink = `${window.location.origin}/attendants/${slug}/hub`;
     try {
@@ -153,18 +181,10 @@ export default function AttendantGroupsPage() {
     }
   };
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
-
   const handleNameChange = (name: string) => {
     setFormData(prev => ({
       ...prev,
       name,
-      slug: editingGroup ? prev.slug : generateSlug(name)
     }));
   };
 
@@ -270,6 +290,14 @@ export default function AttendantGroupsPage() {
 
   const renderGroupActions = (group: AttendantGroup) => (
     <>
+      <AdminButton
+        variant="ghost"
+        size="compact"
+        onClick={() => handleRegenerate(group)}
+        disabled={regeneratingId === group.id}
+      >
+        {regeneratingId === group.id ? 'Regenerating...' : 'Regenerate link'}
+      </AdminButton>
       <AdminButton variant="ghost" size="compact" onClick={() => handleEdit(group)}>
         Edit
       </AdminButton>
@@ -497,30 +525,30 @@ export default function AttendantGroupsPage() {
                   fontWeight: '600',
                   color: textColor
                 }}>
-                  Slug *
+                  {editingGroup ? 'Slug *' : 'Hub link'}
                 </label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                  placeholder="e.g., husband-wife-team"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '2px',
-                    border: `1px solid ${borderColor}`,
-                    backgroundColor: 'var(--admin-bg)',
-                    color: textColor,
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-                <p style={{
-                  margin: '4px 0 0 0',
-                  fontSize: '12px',
-                  color: mutedText
-                }}>
-                  URL-friendly identifier (auto-generated from name)
+                {editingGroup ? (
+                  <input
+                    type="text"
+                    value={formData.slug}
+                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                    placeholder="e.g., husband-wife-team"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '2px',
+                      border: `1px solid ${borderColor}`,
+                      backgroundColor: 'var(--admin-bg)',
+                      color: textColor,
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                ) : null}
+                <p className="m-0 mt-1 text-xs text-admin-muted">
+                  {editingGroup
+                    ? 'Changing this replaces the current hub link. Use Regenerate link to assign a new random suffix.'
+                    : 'The hub link is created from the name plus a random suffix, for example toronto-team-k3j9x2m7qa.'}
                 </p>
               </div>
 
