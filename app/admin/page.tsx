@@ -134,55 +134,37 @@ export default function AdminHome() {
   const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'year'>('month');
   const router = useRouter();
 
-  const fetchStats = useCallback(async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
-      const periodParam = timePeriod === 'week' ? 'week' : timePeriod === 'month' ? 'month' : 'year';
-      const response = await adminFetch(`/api/analytics?days=7&period=${periodParam}`);
+      setLoadingForecast(true);
+      const response = await adminFetch(`/api/analytics/dashboard?period=${timePeriod}`);
       if (response.ok) {
         const data = await response.json();
         setStats(data.overview);
         setUpcomingEvents(data.upcomingEvents || []);
+        setWarnings({
+          warnings: data.warnings || [],
+          summary: data.summary || {
+            totalWarnings: 0,
+            yellowWarnings: 0,
+            redWarnings: 0,
+            expirationWarnings: 0,
+          },
+        });
+        setLoadForecast(data.forecast || []);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error fetching dashboard:', error);
     } finally {
       setLoading(false);
+      setLoadingForecast(false);
     }
   }, [timePeriod]);
 
   useEffect(() => {
-    fetchStats();
-    fetchWarnings();
-    fetchLoadForecast();
-  }, [fetchStats]);
-
-  const fetchLoadForecast = async () => {
-    try {
-      setLoadingForecast(true);
-      const response = await adminFetch('/api/analytics/load-forecast?weeks=12');
-      if (response.ok) {
-        const data = await response.json();
-        setLoadForecast(data.forecast || []);
-      }
-    } catch (error) {
-      console.error('Error fetching load forecast:', error);
-    } finally {
-      setLoadingForecast(false);
-    }
-  };
-
-  const fetchWarnings = async () => {
-    try {
-      const response = await adminFetch('/api/analytics/warnings');
-      if (response.ok) {
-        const data = await response.json();
-        setWarnings(data);
-      }
-    } catch (error) {
-      console.error('Error fetching warnings:', error);
-    }
-  };
+    fetchDashboard();
+  }, [fetchDashboard]);
 
   const mainBg = 'var(--admin-bg)';
   const cardBg = 'var(--admin-surface)';
