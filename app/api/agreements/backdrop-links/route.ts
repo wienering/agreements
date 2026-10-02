@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/backdrop-links');
+    return handleApiError(error, 'agreements/backdrop-links', request.method);
   }
 }
 

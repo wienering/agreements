@@ -9,6 +9,7 @@ import {
   type ChaseAgreement,
 } from '@/lib/chaseUnsignedAgreement';
 import { verifyCronSecret } from '@/lib/cronAuth';
+import { reportServerError } from '@/lib/errorAlert';
 import { sendChaseReminderEmail } from '@/lib/email/chaseReminderEmail';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram';
@@ -155,6 +156,11 @@ async function handler(request: NextRequest) {
     });
   } catch (error) {
     console.error('[chase-unsigned] failed', error);
+    await reportServerError({
+      route: '/api/cron/chase-unsigned',
+      method: request.method,
+      error,
+    });
     return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
   }
 }

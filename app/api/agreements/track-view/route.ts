@@ -106,6 +106,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/track-view');
+    return handleApiError(error, 'agreements/track-view', request.method);
   }
 }

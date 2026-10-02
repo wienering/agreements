@@ -150,6 +150,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    return handleApiError(error, 'agreements/email');
+    return handleApiError(error, 'agreements/email', request.method);
   }
 }

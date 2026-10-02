@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { reportServerError } from '@/lib/errorAlert';
 import { adminAuthResponse } from '@/lib/requireAdmin';
 
 export function formatZodDetails(error: z.ZodError) {
@@ -9,7 +10,11 @@ export function formatZodDetails(error: z.ZodError) {
   }));
 }
 
-export function handleApiError(error: unknown, routeLabel?: string): NextResponse {
+export async function handleApiError(
+  error: unknown,
+  routeLabel?: string,
+  method?: string,
+): Promise<NextResponse> {
   const label = routeLabel ? `[${routeLabel}] ` : '';
 
   const authResponse = adminAuthResponse(error);
@@ -30,6 +35,12 @@ export function handleApiError(error: unknown, routeLabel?: string): NextRespons
   if (error instanceof Error && error.stack) {
     console.error(error.stack);
   }
+
+  await reportServerError({
+    route: routeLabel || 'unknown',
+    method,
+    error,
+  });
 
   return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 }

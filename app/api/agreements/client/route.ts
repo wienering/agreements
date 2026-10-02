@@ -37,6 +37,6 @@ export async function GET(request: NextRequest) {
     // Full agreement data is only returned after email verification via POST /api/agreements/verify-email
     return NextResponse.json({ exists: true, requiresVerification: true });
   } catch (error) {
-    return handleApiError(error, 'agreements/client');
+    return handleApiError(error, 'agreements/client', request.method);
   }
 }

@@ -106,6 +106,6 @@ export async function GET(
 
     return NextResponse.json({ files });
   } catch (error) {
-    return handleApiError(error, 'files/agreement/[agreementId]');
+    return handleApiError(error, 'files/agreement/[agreementId]', request.method);
   }
 }

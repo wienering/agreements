@@ -50,6 +50,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/pdf');
+    return handleApiError(error, 'agreements/pdf', request.method);
   }
 }

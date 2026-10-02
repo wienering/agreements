@@ -153,6 +153,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/portal/verify-access');
+    return handleApiError(error, 'agreements/portal/verify-access', request.method);
   }
 }

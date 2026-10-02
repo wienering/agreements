@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       agreement: updatedAgreement
     });
   } catch (error) {
-    return handleApiError(error, 'agreements/archive');
+    return handleApiError(error, 'agreements/archive', request.method);
   }
 }
 
@@ -68,6 +68,6 @@ export async function DELETE(request: NextRequest) {
       agreement: updatedAgreement
     });
   } catch (error) {
-    return handleApiError(error, 'agreements/archive');
+    return handleApiError(error, 'agreements/archive', request.method);
   }
 }

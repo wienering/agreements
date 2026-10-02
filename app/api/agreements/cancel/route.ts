@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       agreement: updatedAgreement
     });
   } catch (error) {
-    return handleApiError(error, 'agreements/cancel');
+    return handleApiError(error, 'agreements/cancel', request.method);
   }
 }
 

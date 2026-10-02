@@ -11,6 +11,7 @@ import { AttendantModal } from './AttendantModal';
 import { CancelModal } from './CancelModal';
 import { CopyLinkModal } from './CopyLinkModal';
 import { CreateAgreementModal } from './CreateAgreementModal';
+import { ExportCsvModal } from './ExportCsvModal';
 import { EmailPreviewModal } from './EmailPreviewModal';
 import { ExpirationEditModal } from './ExpirationEditModal';
 import { GalleryReadyPreviewModal } from './GalleryReadyPreviewModal';
@@ -47,6 +48,7 @@ export default function AgreementsAdminPage() {
   });
 
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [createInitial, setCreateInitial] = useState({ clientId: '', eventId: '', templateId: '' });
 
   useEffect(() => {
@@ -129,6 +131,8 @@ export default function AgreementsAdminPage() {
       } else if (commands.resendExpirationPrompt) {
         commands.setResendExpirationPrompt(null);
         commands.setNewExpirationDate('');
+      } else if (showExport) {
+        setShowExport(false);
       } else if (showCreateForm) {
         setShowCreateForm(false);
       } else if (detail.agreementId) {
@@ -141,6 +145,7 @@ export default function AgreementsAdminPage() {
 
   const overlayOpen =
     showCreateForm ||
+    showExport ||
     commands.editingStatus ||
     commands.editingExpiration ||
     Boolean(commands.resendExpirationPrompt) ||
@@ -206,9 +211,14 @@ export default function AgreementsAdminPage() {
               Archived
             </AdminButton>
           </div>
-          <AdminButton variant="primary" fullWidth className="md:!w-auto" onClick={() => setShowCreateForm(true)} title="Create a new agreement">
-            + New Agreement
-          </AdminButton>
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
+            <AdminButton variant="ghost" fullWidth className="md:!w-auto" onClick={() => setShowExport(true)} title="Download agreements as a CSV">
+              Export CSV
+            </AdminButton>
+            <AdminButton variant="primary" fullWidth className="md:!w-auto" onClick={() => setShowCreateForm(true)} title="Create a new agreement">
+              + New Agreement
+            </AdminButton>
+          </div>
         </div>
 
         <AgreementsList
@@ -241,6 +251,7 @@ export default function AgreementsAdminPage() {
         />
       </div>
 
+      <ExportCsvModal open={showExport} onClose={() => setShowExport(false)} showToast={showToast} />
       <CreateAgreementModal
         open={showCreateForm}
         onClose={() => setShowCreateForm(false)}

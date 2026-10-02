@@ -35,6 +35,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const authResponse = adminAuthResponse(error);
     if (authResponse) return authResponse;
-    return handleApiError(error, 'agreements/client-notes');
+    return handleApiError(error, 'agreements/client-notes', request.method);
   }
 }

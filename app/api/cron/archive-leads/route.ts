@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronSecret } from '@/lib/cronAuth';
+import { reportServerError } from '@/lib/errorAlert';
 import { getAutoArchiveReason, type ArchiveReason } from '@/lib/leads/archive';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram';
@@ -102,6 +103,11 @@ async function handler(request: NextRequest) {
     });
   } catch (error) {
     console.error('[archive-leads] failed', error);
+    await reportServerError({
+      route: '/api/cron/archive-leads',
+      method: request.method,
+      error,
+    });
     return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 });
   }
 }

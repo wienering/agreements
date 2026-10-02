@@ -41,7 +41,7 @@ export async function GET(
 
     return NextResponse.json({ files });
   } catch (error) {
-    return handleApiError(error, 'files/event/[eventId]');
+    return handleApiError(error, 'files/event/[eventId]', request.method);
   }
 }
 

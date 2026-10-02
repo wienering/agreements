@@ -276,6 +276,6 @@ export async function POST(request: NextRequest) {
       updatedAgreementIds,
     });
   } catch (error) {
-    return handleApiError(error, 'agreements/update-backdrop-selection');
+    return handleApiError(error, 'agreements/update-backdrop-selection', request.method);
   }
 }

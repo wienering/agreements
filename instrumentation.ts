@@ -9,3 +9,26 @@ export async function register() {
     await prisma.$connect();
   }
 }
+
+type RequestErrorContext = {
+  routerKind: 'Pages Router' | 'App Router';
+  routePath: string;
+  routeType: 'render' | 'route' | 'action' | 'proxy';
+};
+
+export async function onRequestError(
+  error: unknown,
+  request: { path: string; method: string },
+  context: RequestErrorContext,
+): Promise<void> {
+  if (process.env.NEXT_RUNTIME !== 'nodejs') {
+    return;
+  }
+
+  const { reportServerError } = await import('./lib/errorAlert');
+  await reportServerError({
+    route: context.routePath || request.path,
+    method: request.method,
+    error,
+  });
+}

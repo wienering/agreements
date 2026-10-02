@@ -123,6 +123,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return handleApiError(error, 'agreements/portal/update-client-info');
+    return handleApiError(error, 'agreements/portal/update-client-info', request.method);
   }
 }

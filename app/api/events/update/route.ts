@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedEvent);
   } catch (error) {
-    return handleApiError(error, 'events/update');
+    return handleApiError(error, 'events/update', request.method);
   }
 }
 

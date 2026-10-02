@@ -43,7 +43,7 @@ export async function GET(
 
     return NextResponse.json({ files });
   } catch (error) {
-    return handleApiError(error, 'files/client/[clientId]');
+    return handleApiError(error, 'files/client/[clientId]', request.method);
   }
 }
 

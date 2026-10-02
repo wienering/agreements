@@ -22,7 +22,7 @@ export async function GET(
   } catch (error) {
     const authResponse = adminAuthResponse(error);
     if (authResponse) return authResponse;
-    return handleApiError(error, 'agreements/[id]');
+    return handleApiError(error, 'agreements/[id]', request.method);
   }
 }
 
@@ -48,6 +48,6 @@ export async function PATCH(
         { status: 400 },
       );
     }
-    return handleApiError(error, 'agreements/[id]');
+    return handleApiError(error, 'agreements/[id]', request.method);
   }
 }

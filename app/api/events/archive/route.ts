@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       event: updatedEvent
     });
   } catch (error) {
-    return handleApiError(error, 'events/archive');
+    return handleApiError(error, 'events/archive', request.method);
   }
 }
 
@@ -68,7 +68,7 @@ export async function DELETE(request: NextRequest) {
       event: updatedEvent
     });
   } catch (error) {
-    return handleApiError(error, 'events/archive');
+    return handleApiError(error, 'events/archive', request.method);
   }
 }
 
