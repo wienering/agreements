@@ -24,10 +24,12 @@ export interface WeeklyLoadForecast {
   clientNames: string[];
 }
 
-const cardBg = 'var(--admin-surface)';
-const textColor = 'var(--admin-text)';
-const mutedText = 'var(--admin-muted)';
-const borderColor = 'var(--admin-hairline)';
+const tooltipStyle = {
+  backgroundColor: 'var(--admin-surface)',
+  border: '1px solid var(--admin-hairline)',
+  borderRadius: '2px',
+  color: 'var(--admin-text)',
+};
 
 export function WeeklyLoadChart({ data }: { data: WeeklyLoadForecast[] }) {
   const neutralBar = chartTokens.neutral;
@@ -70,43 +72,19 @@ export function WeeklyLoadChart({ data }: { data: WeeklyLoadForecast[] }) {
             const clientNames = point?.clientNames || [];
 
             return (
-              <div style={{
-                backgroundColor: cardBg,
-                border: `1px solid ${borderColor}`,
-                borderRadius: '2px',
-                padding: '12px',
-              }}>
-                <div style={{
-                  color: textColor,
-                  fontWeight: '600',
-                  marginBottom: '8px',
-                  fontSize: '14px'
-                }}>
+              <div className="rounded-sm border border-admin-hairline bg-admin-surface p-3">
+                <div className="mb-2 text-sm font-semibold text-admin-text">
                   {label}
                 </div>
-                <div style={{
-                  color: textColor,
-                  marginBottom: '4px',
-                  fontSize: '13px'
-                }}>
+                <div className="mb-1 text-[13px] text-admin-text">
                   <strong>{eventCount}</strong> Event{eventCount !== 1 ? 's' : ''}
                 </div>
-                <div style={{
-                  color: textColor,
-                  marginBottom: clientNames.length > 0 ? '8px' : '0',
-                  fontSize: '13px'
-                }}>
+                <div className={`text-[13px] text-admin-text ${clientNames.length > 0 ? 'mb-2' : 'mb-0'}`}>
                   <strong>{totalHours}</strong> Hours
                 </div>
                 {clientNames.length > 0 && (
-                  <div style={{
-                    fontSize: '12px',
-                    color: mutedText,
-                    marginTop: '8px',
-                    paddingTop: '8px',
-                    borderTop: `1px solid ${borderColor}`
-                  }}>
-                    <div style={{ fontWeight: '600', marginBottom: '4px', color: textColor }}>Clients:</div>
+                  <div className="mt-2 border-t border-admin-hairline pt-2 text-xs text-admin-muted">
+                    <div className="mb-1 font-semibold text-admin-text">Clients:</div>
                     <div>{clientNames.join(', ')}</div>
                   </div>
                 )}
@@ -162,14 +140,7 @@ export function AgreementsBarChart({
           tickMargin={4}
         />
         <YAxis stroke={chartTokens.axis} fontSize={11} width={32} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: cardBg,
-            border: `1px solid ${borderColor}`,
-            borderRadius: '2px',
-            color: textColor
-          }}
-        />
+        <Tooltip contentStyle={tooltipStyle} />
         <Bar dataKey="count" radius={[1, 1, 0, 0]}>
           {data.map((entry, index) => (
             <Cell

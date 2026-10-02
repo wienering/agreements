@@ -10,27 +10,28 @@ import { AdminButton } from '../components/AdminButton';
 import { formatDateToronto } from '@/lib/dates';
 import type { WeeklyLoadForecast } from '@/lib/analytics/DashboardCharts';
 
-const chartPlaceholder = (height: number, label: string) => (
-  <div style={{
-    height: `${height}px`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--admin-muted)',
-    fontSize: '14px',
-  }}>
-    {label}
-  </div>
-);
-
 const WeeklyLoadChart = dynamic(
   () => import('@/lib/analytics/DashboardCharts').then((mod) => mod.WeeklyLoadChart),
-  { ssr: false, loading: () => chartPlaceholder(240, 'Loading forecast…') },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[240px] items-center justify-center text-sm text-admin-muted">
+        Loading forecast…
+      </div>
+    ),
+  },
 );
 
 const AgreementsBarChart = dynamic(
   () => import('@/lib/analytics/DashboardCharts').then((mod) => mod.AgreementsBarChart),
-  { ssr: false, loading: () => chartPlaceholder(168, 'Loading chart…') },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[168px] items-center justify-center text-sm text-admin-muted">
+        Loading chart…
+      </div>
+    ),
+  },
 );
 
 interface DashboardStats {
@@ -135,8 +136,9 @@ interface UpcomingEvent {
   daysUntil: number;
 }
 
+const cardClass = 'min-w-0 rounded-sm border border-admin-border bg-admin-surface p-[clamp(18px,4vw,26px)] shadow-none';
+
 export default function AdminHome() {
-  // Set page title
   useEffect(() => {
     document.title = 'Admin Dashboard | Photobooth Guys';
   }, []);
@@ -181,19 +183,6 @@ export default function AdminHome() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const mainBg = 'var(--admin-bg)';
-  const textColor = 'var(--admin-text)';
-  const mutedText = 'var(--admin-muted)';
-  const borderColor = 'var(--admin-hairline)';
-
-  // Cards are white on the app background, separated by a hairline and nothing
-  // else. cardPad uses clamp so the roomier desktop padding tightens on narrow
-  // phones, avoiding horizontal overflow at 375px.
-  const cardSurface = 'var(--admin-surface)';
-  const cardBorderStrong = 'var(--admin-hairline)';
-  const cardShadow = 'none';
-  const cardPad = 'clamp(18px, 4vw, 26px)';
-
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
   const chartNote = getAgreementsChartNote(chartData, timePeriod);
@@ -201,37 +190,23 @@ export default function AdminHome() {
   const activeTotal = stats?.activeAgreements?.total ?? 0;
   const activeByStatus = stats?.activeAgreements?.byStatus ?? [];
 
+  const attentionTone = warnings && (warnings.summary.expirationWarnings > 0 || warnings.summary.redWarnings > 0)
+    ? 'bg-alert'
+    : 'bg-warn';
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: mainBg
-    }}
-    className="admin-page-root"
-    >
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '16px'
-          }}>
-            <div style={{ flex: '1', minWidth: '200px' }}>
-              {/* Title only. The sidebar already says whose product this is. */}
-              <h1 className="admin-page-title" style={{
-                margin: 0,
-                fontSize: '21px',
-                color: textColor,
-                lineHeight: 1.2
-              }}>
+    <div className="min-h-screen bg-admin-bg p-6 max-[768px]:p-4">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-[200px] flex-1">
+              <h1 className="m-0 font-display text-[21px] font-semibold leading-[1.2] tracking-[-0.01em] text-admin-text">
                 Overview
               </h1>
-              <div className="admin-title-rule" aria-hidden="true" />
+              <div className="mt-3 h-px w-full bg-rule-strong" aria-hidden="true" />
             </div>
 
-            <div className="admin-overview-header-actions">
+            <div className="flex flex-wrap items-center gap-2">
               <AdminButton variant="ghost" onClick={() => router.push('/admin/clients')}>
                 Clients
               </AdminButton>
@@ -249,69 +224,30 @@ export default function AdminHome() {
           </div>
         </div>
 
-        {/* Active agreements + upcoming events (14 days) */}
-        <div className="admin-overview-top">
+        <div className="mb-7 grid grid-cols-1 gap-7 min-[1025px]:grid-cols-2">
           {loading ? (
             <>
-              <div style={{
-                backgroundColor: cardSurface,
-                borderRadius: '2px',
-                padding: cardPad,
-                border: `1px solid ${cardBorderStrong}`,
-                boxShadow: cardShadow,
-                minHeight: '220px'
-              }}>
-                <div style={{ color: mutedText }}>Loading...</div>
+              <div className={`${cardClass} min-h-[220px]`}>
+                <div className="text-admin-muted">Loading...</div>
               </div>
-              <div style={{
-                backgroundColor: cardSurface,
-                borderRadius: '2px',
-                padding: cardPad,
-                border: `1px solid ${cardBorderStrong}`,
-                boxShadow: cardShadow,
-                minHeight: '220px'
-              }}>
-                <div style={{ color: mutedText }}>Loading...</div>
+              <div className={`${cardClass} min-h-[220px]`}>
+                <div className="text-admin-muted">Loading...</div>
               </div>
             </>
           ) : stats ? (
             <>
-              <div style={{
-                backgroundColor: cardSurface,
-                borderRadius: '2px',
-                padding: cardPad,
-                border: `1px solid ${cardBorderStrong}`,
-                boxShadow: cardShadow,
-                minWidth: 0
-              }}>
-                <h3 style={{
-                  margin: '0 0 4px 0',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  color: textColor
-                }}>
+              <div className={cardClass}>
+                <h3 className="m-0 mb-1 text-base font-bold text-admin-text">
                   Active client agreements
                 </h3>
-                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: mutedText }}>
+                <p className="m-0 mb-4 text-[13px] text-admin-muted">
                   Non-archived · all statuses
                 </p>
-                <div style={{
-                  fontSize: 'clamp(28px, 6vw, 40px)',
-                  fontWeight: '700',
-                  color: textColor,
-                  marginBottom: '8px'
-                }}>
+                <div className="mb-2 text-[clamp(28px,6vw,40px)] font-bold text-admin-text">
                   {activeTotal}
                 </div>
                 {(() => {
-                  // Render the breakdown as a single segmented bar + legend.
-                  // Order is fixed left→right so the eye can track proportion
-                  // over time even as counts shift: Completed → Live → Signed
-                  // → Draft → anything else (e.g. Sent, Cancelled) folded into
-                  // the neutral tail.
                   const SEGMENT_ORDER = ['COMPLETED', 'LIVE', 'SIGNED', 'DRAFT'] as const;
-                  // Same palette as the status badges, so a segment here and a
-                  // badge in a table say the same thing in the same colour.
                   const segmentColor: Record<string, string> = {
                     COMPLETED: statusTokens.strong,
                     LIVE: statusTokens.waitLight,
@@ -326,24 +262,17 @@ export default function AdminHome() {
                   ];
                   const denom = activeTotal > 0 ? activeTotal : 1;
                   return (
-                    <div style={{ marginBottom: '4px' }}>
+                    <div className="mb-1">
                       <div
                         role="img"
                         aria-label={`Status breakdown out of ${activeTotal}`}
-                        style={{
-                          display: 'flex',
-                          width: '100%',
-                          height: '10px',
-                          borderRadius: '2px',
-                          overflow: 'hidden',
-                          backgroundColor: 'var(--admin-surface-raised)',
-                          marginBottom: '14px',
-                        }}
+                        className="mb-3.5 flex h-2.5 w-full overflow-hidden rounded-sm bg-admin-surface-raised"
                       >
                         {ordered.filter((s) => s.count > 0).map((s) => (
                           <div
                             key={s.status}
                             title={`${AGREEMENT_STATUS_LABELS[s.status] ?? s.status}: ${s.count}`}
+                            className="h-full"
                             style={{
                               width: `${(s.count / denom) * 100}%`,
                               backgroundColor: s.color,
@@ -351,38 +280,21 @@ export default function AdminHome() {
                           />
                         ))}
                       </div>
-                      <div className="admin-overview-status-grid">
+                      <div className="grid grid-cols-2 gap-x-7 max-[640px]:grid-cols-1">
                         {ordered.filter((s) => s.count > 0).map((s) => (
                           <div
                             key={s.status}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '10px',
-                              padding: '6px 0',
-                            }}
+                            className="flex items-center gap-2.5 py-1.5"
                           >
                             <span
                               aria-hidden
-                              style={{
-                                width: '10px',
-                                height: '10px',
-                                borderRadius: '2px',
-                                backgroundColor: s.color,
-                                flexShrink: 0,
-                              }}
+                              className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                              style={{ backgroundColor: s.color }}
                             />
-                            <span style={{ flex: 1, fontSize: '13px', color: mutedText, minWidth: 0 }}>
+                            <span className="min-w-0 flex-1 text-[13px] text-admin-muted">
                               {AGREEMENT_STATUS_LABELS[s.status] ?? s.status}
                             </span>
-                            <span
-                              style={{
-                                fontSize: '13px',
-                                fontWeight: 400,
-                                color: textColor,
-                                fontVariantNumeric: 'tabular-nums',
-                              }}
-                            >
+                            <span className="text-[13px] font-normal tabular-nums text-admin-text">
                               {s.count}
                             </span>
                           </div>
@@ -392,97 +304,48 @@ export default function AdminHome() {
                   );
                 })()}
 
-                <div style={{
-                  marginTop: '4px',
-                  paddingTop: '20px',
-                  borderTop: `1px solid ${borderColor}`
-                }}>
-                  <h3 style={{
-                    margin: '0 0 6px 0',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: textColor
-                  }}>
+                <div className="mt-1 border-t border-admin-hairline pt-5">
+                  <h3 className="m-0 mb-1.5 text-base font-bold text-admin-text">
                     Weekly load forecast
                   </h3>
-                  <p style={{
-                    margin: '0 0 14px 0',
-                    fontSize: '13px',
-                    color: mutedText,
-                    lineHeight: 1.45
-                  }}>
+                  <p className="m-0 mb-3.5 text-[13px] leading-[1.45] text-admin-muted">
                     Track upcoming events and booth hours by week to spot capacity constraints early.
                   </p>
 
                   {loadingForecast ? (
-                    <div style={{
-                      height: '240px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: mutedText,
-                      fontSize: '14px'
-                    }}>
+                    <div className="flex h-[240px] items-center justify-center text-sm text-admin-muted">
                       Loading forecast…
                     </div>
                   ) : loadForecast && loadForecast.length > 0 ? (
                     <WeeklyLoadChart data={loadForecast} />
                   ) : (
-                    <div style={{
-                      height: '240px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: mutedText,
-                      fontSize: '14px'
-                    }}>
+                    <div className="flex h-[240px] items-center justify-center text-sm text-admin-muted">
                       No forecast data available
                     </div>
                   )}
                 </div>
               </div>
 
-              <div style={{
-                backgroundColor: cardSurface,
-                borderRadius: '2px',
-                padding: cardPad,
-                border: `1px solid ${cardBorderStrong}`,
-                boxShadow: cardShadow,
-                minWidth: 0
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  marginBottom: '12px',
-                  gap: '12px'
-                }}>
+              <div className={cardClass}>
+                <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
-                    <h3 style={{
-                      margin: '0 0 6px 0',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: textColor
-                    }}>
+                    <h3 className="m-0 mb-1.5 text-lg font-bold text-admin-text">
                       Upcoming events
                     </h3>
-                    <p style={{ margin: 0, fontSize: '13px', color: mutedText }}>
+                    <p className="m-0 text-[13px] text-admin-muted">
                       Next 14 days (including today)
                     </p>
                   </div>
-                  <svg style={{ width: '18px', height: '18px', color: mutedText, flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-[18px] w-[18px] shrink-0 text-admin-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col">
                   {upcomingEvents.length > 0 ? (
                     upcomingEvents.map((event, idx) => {
-                      const eventDate = new Date(event.eventDate);
                       const monthLabel = formatDateToronto(event.eventDate, { month: 'short' });
                       const dayLabel = formatDateToronto(event.eventDate, { day: 'numeric' });
-                      // Split out the "c/o ..." suffix so the lead-in name reads
-                      // as the primary subject and the care-of contact recedes.
                       const coMatch = event.clientName.match(/^(.*?)(\s+c\/o\s+.*)$/i);
                       const primaryName = coMatch ? coMatch[1] : event.clientName;
                       const coSuffix = coMatch ? coMatch[2].trim() : '';
@@ -492,8 +355,6 @@ export default function AdminHome() {
                         : event.daysUntil === 1
                           ? 'tomorrow'
                           : `in ${event.daysUntil} days`;
-                      // Only the next-up event gets accent treatment on its
-                      // time; the rest stay in standard text color.
                       const isSoonest = idx === 0;
                       return (
                         <div
@@ -507,93 +368,42 @@ export default function AdminHome() {
                               router.push(`/attendant/${event.id}`);
                             }
                           }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '14px',
-                            padding: '12px 4px',
-                            borderTop: idx === 0 ? 'none' : `1px solid ${borderColor}`,
-                            cursor: 'pointer',
-                            transition: 'background-color 0.15s',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }}
+                          className={`flex cursor-pointer items-start gap-3.5 px-1 py-3 transition-colors duration-150 hover:bg-admin-surface-raised ${
+                            idx === 0 ? 'border-t-0' : 'border-t border-admin-hairline'
+                          }`}
                         >
-                          {/* Date block */}
-                          <div style={{
-                            flexShrink: 0,
-                            width: '40px',
-                            textAlign: 'center',
-                            paddingTop: '2px',
-                          }}>
-                            <div style={{
-                              fontSize: '10px',
-                              fontWeight: 500,
-                              letterSpacing: '0.08em',
-                              textTransform: 'uppercase',
-                              color: mutedText,
-                              lineHeight: 1,
-                            }}>
+                          <div className="w-10 shrink-0 pt-0.5 text-center">
+                            <div className="text-[10px] font-medium uppercase leading-none tracking-[0.08em] text-admin-muted">
                               {monthLabel}
                             </div>
-                            <div style={{
-                              fontSize: '20px',
-                              fontWeight: 500,
-                              color: textColor,
-                              lineHeight: 1.1,
-                              marginTop: '4px',
-                              fontVariantNumeric: 'tabular-nums',
-                            }}>
+                            <div className="mt-1 text-[20px] font-medium leading-[1.1] tabular-nums text-admin-text">
                               {dayLabel}
                             </div>
                           </div>
 
-                          {/* Middle: client + secondary line */}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: '14px', color: textColor, lineHeight: 1.3 }}>
-                              <span style={{ fontWeight: 500 }}>{primaryName}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm leading-[1.3] text-admin-text">
+                              <span className="font-medium">{primaryName}</span>
                               {coSuffix && (
-                                <span style={{ color: mutedText, fontWeight: 400 }}> {coSuffix}</span>
+                                <span className="font-normal text-admin-muted"> {coSuffix}</span>
                               )}
                             </div>
                             {secondaryLine && (
-                              <div style={{
-                                fontSize: '12px',
-                                color: mutedText,
-                                marginTop: '4px',
-                                lineHeight: 1.3,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}>
+                              <div className="mt-1 truncate text-xs leading-[1.3] text-admin-muted">
                                 {secondaryLine}
                               </div>
                             )}
                           </div>
 
-                          {/* Right: time + relative */}
-                          <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                          <div className="shrink-0 text-right">
                             {event.eventStartTime && (
-                              <div style={{
-                                fontSize: '14px',
-                                fontWeight: 500,
-                                color: isSoonest ? 'var(--accent)' : textColor,
-                                lineHeight: 1.2,
-                                fontVariantNumeric: 'tabular-nums',
-                              }}>
+                              <div className={`text-sm font-medium leading-[1.2] tabular-nums ${
+                                isSoonest ? 'text-accent' : 'text-admin-text'
+                              }`}>
                                 {event.eventStartTime}
                               </div>
                             )}
-                            <div style={{
-                              fontSize: '11px',
-                              color: mutedText,
-                              marginTop: '4px',
-                              lineHeight: 1.2,
-                            }}>
+                            <div className="mt-1 text-[11px] leading-[1.2] text-admin-muted">
                               {relativeLabel}
                             </div>
                           </div>
@@ -601,7 +411,7 @@ export default function AdminHome() {
                       );
                     })
                   ) : (
-                    <div style={{ color: mutedText, fontSize: '14px', textAlign: 'center', padding: '20px' }}>
+                    <div className="p-5 text-center text-sm text-admin-muted">
                       No events in the next 14 days
                     </div>
                   )}
@@ -611,59 +421,31 @@ export default function AdminHome() {
           ) : null}
         </div>
 
-        {/* Agreements over time — compact */}
-        <div style={{
-          backgroundColor: cardSurface,
-          borderRadius: '2px',
-          padding: cardPad,
-          border: `1px solid ${cardBorderStrong}`,
-          boxShadow: cardShadow,
-          marginBottom: '28px'
-        }}>
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: '12px',
-            marginBottom: '16px'
-          }}>
-            <div style={{ minWidth: 'min(100%, 200px)' }}>
-              <h2 style={{
-                margin: '0 0 4px 0',
-                fontSize: '18px',
-                fontWeight: '700',
-                color: textColor
-              }}>
+        <div className={`${cardClass} mb-7`}>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-[min(100%,200px)]">
+              <h2 className="m-0 mb-1 text-lg font-bold text-admin-text">
                 Agreements
               </h2>
-              <div style={{ fontSize: '22px', fontWeight: '700', color: textColor, marginBottom: '4px' }}>
+              <div className="mb-1 text-[22px] font-bold text-admin-text">
                 {totalAgreementsDisplay}
               </div>
-              <div style={{ fontSize: '12px', color: mutedText, lineHeight: 1.4 }}>
+              <div className="text-xs leading-[1.4] text-admin-muted">
                 {chartNote}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <div className="flex flex-wrap gap-1.5">
               {(['week', 'month', 'year'] as const).map((period) => (
                 <button
                   key={period}
                   type="button"
                   onClick={() => setTimePeriod(period)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '2px',
-                    border: 'none',
-                    backgroundColor: timePeriod === period
-                      ? 'var(--accent)'
-                      : 'transparent',
-                    color: timePeriod === period ? 'var(--accent-on)' : mutedText,
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    textTransform: 'capitalize'
-                  }}
+                  className={`cursor-pointer rounded-sm border-0 px-3 py-1.5 text-[13px] font-medium capitalize ${
+                    timePeriod === period
+                      ? 'bg-accent text-accent-on'
+                      : 'bg-transparent text-admin-muted'
+                  }`}
                 >
                   {period}
                 </button>
@@ -674,121 +456,72 @@ export default function AdminHome() {
           {chartData && chartData.length > 0 ? (
             <AgreementsBarChart data={chartData} />
           ) : (
-            <div style={{
-              height: '168px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: mutedText,
-              fontSize: '14px'
-            }}>
+            <div className="flex h-[168px] items-center justify-center text-sm text-admin-muted">
               No data available
             </div>
           )}
         </div>
 
         {warnings && warnings.summary.totalWarnings > 0 && (
-          <div style={{ marginBottom: '28px' }}>
-            <div style={{
-              backgroundColor: cardSurface,
-              borderRadius: '2px',
-              padding: cardPad,
-              border: `1px solid ${cardBorderStrong}`,
-              boxShadow: cardShadow
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '16px'
-              }}>
-                <h3 style={{
-                  margin: '0',
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  color: textColor
-                }}>
+          <div className="mb-7">
+            <div className={cardClass}>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="m-0 text-lg font-bold text-admin-text">
                   Attention required
                 </h3>
-                <div style={{
-                  padding: '4px 12px',
-                  backgroundColor: warnings.summary.expirationWarnings > 0 ? 'var(--alert)' :
-                    warnings.summary.redWarnings > 0 ? 'var(--alert)' : 'var(--warn)',
-                  color: 'var(--accent-on)',
-                  borderRadius: '2px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
+                <div className={`rounded-sm px-3 py-1 text-xs font-semibold text-accent-on ${attentionTone}`}>
                   {warnings.summary.totalWarnings}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {warnings.warnings.slice(0, 5).map((warning) => (
-                  <div
-                    key={warning.id}
-                    onClick={() => router.push('/admin/agreements')}
-                    style={{
-                      padding: '12px',
-                      borderRadius: '2px',
-                      border: `1px solid ${borderColor}`,
-                      backgroundColor: 'var(--admin-bg)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--admin-surface-raised)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--admin-bg)';
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '4px',
-                      flexWrap: 'wrap'
-                    }}>
-                      <span style={{ fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}>
-                        {warning.warningType === 'expiration' ? (
-                          <UIcon name="clock" style={{ color: 'var(--warn)' }} />
-                        ) : warning.warningType === 'critical' ? (
-                          <UIcon name="siren" style={{ color: 'var(--alert)' }} />
-                        ) : (
-                          <UIcon name="circle-exclamation" style={{ color: 'var(--warn)' }} />
-                        )}
-                      </span>
-                      <span style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: textColor
-                      }}>
-                        {warning.client.firstName} {warning.client.lastName}
-                      </span>
-                      <span style={{
-                        padding: '2px 6px',
-                        backgroundColor: warning.warningType === 'expiration' ? 'var(--alert)' :
-                          warning.warningType === 'critical' ? 'var(--alert)' : 'var(--warn)',
-                        color: 'var(--accent-on)',
-                        borderRadius: '2px',
-                        fontSize: '10px',
-                        fontWeight: '600'
-                      }}>
-                        {warning.warningType === 'expiration' ? 'EXPIRING' :
-                          warning.warningType === 'critical' ? 'CRITICAL' : 'WARNING'}
-                      </span>
+              <div className="flex flex-col gap-3">
+                {warnings.warnings.slice(0, 5).map((warning) => {
+                  const severe = warning.warningType === 'expiration' || warning.warningType === 'critical';
+                  return (
+                    <div
+                      key={warning.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => router.push('/admin/agreements')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          router.push('/admin/agreements');
+                        }
+                      }}
+                      className="cursor-pointer rounded-sm border border-admin-hairline bg-admin-bg p-3 transition-colors duration-200 hover:bg-admin-surface-raised"
+                    >
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center text-sm">
+                          {warning.warningType === 'expiration' ? (
+                            <UIcon name="clock" className="text-warn" />
+                          ) : warning.warningType === 'critical' ? (
+                            <UIcon name="siren" className="text-alert" />
+                          ) : (
+                            <UIcon name="circle-exclamation" className="text-warn" />
+                          )}
+                        </span>
+                        <span className="text-sm font-semibold text-admin-text">
+                          {warning.client.firstName} {warning.client.lastName}
+                        </span>
+                        <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-semibold text-accent-on ${
+                          severe ? 'bg-alert' : 'bg-warn'
+                        }`}>
+                          {warning.warningType === 'expiration' ? 'EXPIRING' :
+                            warning.warningType === 'critical' ? 'CRITICAL' : 'WARNING'}
+                        </span>
+                      </div>
+                      <div className="mb-1 text-xs text-admin-muted">
+                        {warning.template.title}
+                      </div>
+                      <div className="text-[11px] text-admin-muted">
+                        {warning.warningType === 'expiration'
+                          ? `Expires in ${warning.hoursUntilExpiry}h`
+                          : `Sent ${warning.daysSinceSent}d ago`}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '12px', color: mutedText, marginBottom: '4px' }}>
-                      {warning.template.title}
-                    </div>
-                    <div style={{ fontSize: '11px', color: mutedText }}>
-                      {warning.warningType === 'expiration'
-                        ? `Expires in ${warning.hoursUntilExpiry}h`
-                        : `Sent ${warning.daysSinceSent}d ago`}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
