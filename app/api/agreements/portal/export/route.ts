@@ -356,7 +356,7 @@ async function generatePDFResponse(data: any[], client: any): Promise<NextRespon
   // Get PDF as buffer
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
 
-  return new NextResponse(pdfBuffer as any, {
+  return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="agreements-export-${new Date().toISOString().split('T')[0]}.pdf"`

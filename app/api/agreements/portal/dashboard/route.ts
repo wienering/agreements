@@ -193,8 +193,8 @@ export async function GET(request: NextRequest) {
           ...publicTemplate,
           htmlContent: processedHtml
         },
-        signature: (agreement as any).signatures?.[0] ?? null,
-        signatures: (agreement as any).signatures ?? [],
+        signature: agreement.signatures[0] ?? null,
+        signatures: agreement.signatures,
         summary: {
           templateTitle: publicTemplate.title,
           status: agreement.status,

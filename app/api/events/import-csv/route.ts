@@ -504,7 +504,7 @@ export async function POST(request: NextRequest) {
                 eventPackage: existingEvent.eventPackage,
                 packagePrice: existingEvent.packagePrice?.toString(),
                 notes: existingEvent.notes,
-                eventName: (existingEvent as any).eventName || null,
+                eventName: existingEvent.eventName || null,
                 client: {
                   id: existingEvent.client.id,
                   email: existingEvent.client.email,

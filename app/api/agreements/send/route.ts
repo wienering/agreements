@@ -147,8 +147,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email with timeout and error handling — CC second signer when enabled
-    const secondSignerEnabled = Boolean((agreement as any).secondSignerEnabled);
-    const secondSignerEmail = (agreement as any).secondSignerEmail as string | null | undefined;
+    const secondSignerEnabled = Boolean(agreement.secondSignerEnabled);
+    const secondSignerEmail = agreement.secondSignerEmail;
     const ccList: string[] = [];
     if (
       secondSignerEnabled &&
