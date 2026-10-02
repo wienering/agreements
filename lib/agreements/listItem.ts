@@ -9,6 +9,8 @@ export const agreementListInclude = {
     select: {
       id: true,
       name: true,
+      attendantId: true,
+      attendant: { select: { id: true, name: true, active: true } },
     },
   },
 } as const;

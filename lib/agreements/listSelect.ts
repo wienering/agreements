@@ -92,6 +92,8 @@ export const agreementListSlimSelect = {
     select: {
       id: true,
       name: true,
+      attendantId: true,
+      attendant: { select: { id: true, name: true, active: true } },
     },
   },
 } satisfies Prisma.AgreementSelect;
