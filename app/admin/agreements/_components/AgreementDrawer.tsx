@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { formatActivityAbsoluteTime, formatRelativeTime, getActivityTimelineLabel } from '@/lib/agreementTrackingUi';
-import { formatDateTimeToronto } from '@/lib/dates';
+import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
 import RichTextEditor, { RichTextPreview } from '../../../components/RichTextEditor';
 import { AdminButton } from '../../../components/AdminButton';
 import { UIcon } from '../../../components/UIcon';
@@ -257,6 +257,26 @@ export function AgreementDrawer({
                 <option value="Balance due">Balance due</option>
                 <option value="Fully paid">Fully paid</option>
               </select>
+              {detail.balanceReminderSentAt && (
+                <p className="mb-1 text-xs text-admin-muted">
+                  Balance reminder sent{' '}
+                  {formatDateToronto(detail.balanceReminderSentAt, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
+              )}
+              {detail.balanceDigestSnoozedUntil && (
+                <p className="mb-3 text-xs text-admin-muted">
+                  Digest snoozed until{' '}
+                  {formatDateToronto(detail.balanceDigestSnoozedUntil, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
+              )}
               <label className={smallLabelClass}>Stripe Payment Link</label>
               <input type="url" value={stripePaymentLink} onChange={(event) => setStripePaymentLink(event.target.value)} className={`${fieldClass} mb-3`} placeholder="https://buy.stripe.com/..." />
               <label className={smallLabelClass}>Stripe Receipt Link</label>

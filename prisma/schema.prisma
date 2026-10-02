@@ -162,6 +162,8 @@ model Agreement {
   chaserPaused       Boolean               @default(false)
   reminderCount      Int                   @default(0)
   lastReminderAt     DateTime?
+  balanceDigestSnoozedUntil DateTime?
+  balanceReminderSentAt DateTime?
 
   @@index([clientId])
   @@index([templateId])
@@ -358,6 +360,8 @@ enum AgreementActivityType {
   CANCELLED
   NOTE_ADDED
   BACKDROP_SELECTED
+  PAYMENT_MARKED_PAID
+  BALANCE_REMINDER_SENT
 }
 
 enum LeadStage {
