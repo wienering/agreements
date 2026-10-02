@@ -87,13 +87,12 @@ describe('isIncludedInCalendarFeed', () => {
     expect(isIncludedInCalendarFeed(eventOn('2026-09-02T03:30:00.000Z'), NOW)).toBe(false);
   });
 
-  it.each(['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED'])('includes %s agreements', (status) => {
+  it.each(['DRAFT', 'SENT', 'SIGNED', 'COMPLETED'])('includes %s agreements', (status) => {
     expect(isIncludedInCalendarFeed(source({ status }), NOW)).toBe(true);
   });
 
-  it('excludes cancelled, void and archived agreements', () => {
+  it('excludes cancelled and archived agreements', () => {
     expect(isIncludedInCalendarFeed(source({ status: 'CANCELLED' }), NOW)).toBe(false);
-    expect(isIncludedInCalendarFeed(source({ status: 'VOID' }), NOW)).toBe(false);
     expect(isIncludedInCalendarFeed(source({ archived: true }), NOW)).toBe(false);
     expect(isIncludedInCalendarFeed(source({ status: 'DRAFT', archived: true }), NOW)).toBe(false);
     expect(isIncludedInCalendarFeed(source({ cancelledAt: new Date() }), NOW)).toBe(false);
@@ -282,7 +281,6 @@ describe('calendarFeedStatusLabel', () => {
   it.each([
     ['DRAFT', 'Draft (not sent)'],
     ['SENT', 'Sent, not signed'],
-    ['LIVE', 'Sent, not signed'],
     ['SIGNED', 'Signed'],
     ['COMPLETED', 'Completed'],
   ])('labels %s as %s', (status, label) => {
@@ -292,7 +290,7 @@ describe('calendarFeedStatusLabel', () => {
   it('labels a two-signer agreement with one signature as signed by one of two', () => {
     expect(
       calendarFeedStatusLabel(
-        source({ ...twoSigners, status: 'LIVE', signatures: [{ signerEmail: 'jane@example.com' }] }),
+        source({ ...twoSigners, status: 'SENT', signatures: [{ signerEmail: 'jane@example.com' }] }),
       ),
     ).toBe('Signed by one of two');
     expect(
@@ -303,7 +301,7 @@ describe('calendarFeedStatusLabel', () => {
   });
 
   it('keeps "Sent, not signed" when nobody has signed or only one signature is needed', () => {
-    expect(calendarFeedStatusLabel(source({ ...twoSigners, status: 'LIVE', signatures: [] }))).toBe(
+    expect(calendarFeedStatusLabel(source({ ...twoSigners, status: 'SENT', signatures: [] }))).toBe(
       'Sent, not signed',
     );
     expect(
@@ -311,7 +309,7 @@ describe('calendarFeedStatusLabel', () => {
         source({
           ...twoSigners,
           requireBothSignatures: false,
-          status: 'LIVE',
+          status: 'SENT',
           signatures: [{ signerEmail: 'jane@example.com' }],
         }),
       ),
@@ -352,7 +350,7 @@ describe('selectOneAgreementPerEvent', () => {
   it('treats completed as signed', () => {
     const chosen = selectOneAgreementPerEvent([
       source({ id: 'done', eventId: 'evt_1', status: 'COMPLETED', createdAt: day(1) }),
-      source({ id: 'live', eventId: 'evt_1', status: 'LIVE', createdAt: day(5) }),
+      source({ id: 'sent', eventId: 'evt_1', status: 'SENT', createdAt: day(5) }),
     ]);
     expect(ids(chosen)).toEqual(['done']);
   });
@@ -378,7 +376,7 @@ describe('selectOneAgreementPerEvent', () => {
       source({
         id: 'half_signed',
         eventId: 'evt_1',
-        status: 'LIVE',
+        status: 'SENT',
         createdAt: day(1),
         secondSignerEnabled: true,
         requireBothSignatures: true,
@@ -420,7 +418,7 @@ describe('buildCalendarFeed', () => {
   it('ignores excluded agreements when choosing the entry for an event', () => {
     const feed = buildCalendarFeed(
       [
-        source({ id: 'agr_void', eventId: 'evt_1', status: 'VOID', createdAt: new Date('2026-09-20') }),
+        source({ id: 'agr_cancelled', eventId: 'evt_1', status: 'CANCELLED', createdAt: new Date('2026-09-20') }),
         source({ id: 'agr_sent', eventId: 'evt_1', status: 'SENT', createdAt: new Date('2026-09-01') }),
       ],
       NOW,
@@ -434,7 +432,7 @@ describe('buildCalendarFeed', () => {
       [
         source(),
         source({ id: 'agr_old' }, { eventDate: new Date('2026-08-01T12:00:00.000Z') }),
-        source({ id: 'agr_void', status: 'VOID' }),
+        source({ id: 'agr_cancelled', status: 'CANCELLED' }),
       ],
       NOW,
     );
@@ -442,7 +440,7 @@ describe('buildCalendarFeed', () => {
 
     expect(unfolded).toContain('UID:agr_123@agreements.photoboothguys.ca');
     expect(unfolded).not.toContain('agr_old@');
-    expect(unfolded).not.toContain('agr_void@');
+    expect(unfolded).not.toContain('agr_cancelled@');
     expect(unfolded).toContain('LOCATION:Royal York\\, Toronto');
     expect(unfolded).toContain('DESCRIPTION:Phone: 416-555-0100\\nPackage: 3 hr Photo Booth');
     feed.split('\r\n').forEach((line) => {

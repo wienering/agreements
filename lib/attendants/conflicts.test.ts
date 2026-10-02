@@ -103,15 +103,14 @@ describe('findAttendantConflicts', () => {
     expect(conflicts([job('a'), job('b', { attendantId: null })]).size).toBe(0);
   });
 
-  it('counts drafts, sent, live, signed and completed agreements', () => {
-    for (const status of ['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED']) {
+  it('counts drafts, sent, signed and completed agreements', () => {
+    for (const status of ['DRAFT', 'SENT', 'SIGNED', 'COMPLETED']) {
       expect(conflicts([job('a'), job('b', { status })]).size).toBe(2);
     }
   });
 
-  it('ignores cancelled, void and archived agreements', () => {
+  it('ignores cancelled and archived agreements', () => {
     expect(conflicts([job('a'), job('b', { status: 'CANCELLED' })]).size).toBe(0);
-    expect(conflicts([job('a'), job('b', { status: 'VOID' })]).size).toBe(0);
     expect(conflicts([job('a'), job('b', { archived: true })]).size).toBe(0);
     expect(conflicts([job('a'), job('b', { cancelledAt: new Date() })]).size).toBe(0);
   });

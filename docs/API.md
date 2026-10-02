@@ -64,7 +64,7 @@ Get all non-archived agreements.
     "clientId": "string",
     "templateId": "string",
     "eventId": "string | null",
-    "status": "DRAFT | LIVE | SIGNED | COMPLETED | CANCELLED",
+    "status": "DRAFT | SENT | SIGNED | COMPLETED | CANCELLED",
     "uniqueToken": "string",
     "expiresAt": "string | null",
     "signedAt": "string | null",
@@ -132,7 +132,7 @@ Send an agreement to a client via email.
   "message": "Agreement sent successfully",
   "recipientEmail": "string",
   "agreementId": "string",
-  "status": "LIVE"
+  "status": "SENT"
 }
 ```
 
@@ -279,7 +279,7 @@ Update one or more admin fields on an agreement. Every field is optional. Unknow
   "chaserPaused": "boolean (optional)",
   "backdropLinkId": "string | null (optional)",
   "markNotesViewed": "boolean (optional, sets notesLastViewedAt)",
-  "status": "DRAFT | LIVE | SIGNED | COMPLETED (optional)"
+  "status": "DRAFT | SENT | SIGNED | COMPLETED | CANCELLED (optional; signed/completed never go back to DRAFT or SENT)"
 }
 ```
 
@@ -448,7 +448,7 @@ The agreement record, including `client`, `template`, and `event`. `template.int
 ```json
 {
   "id": "string",
-  "status": "DRAFT | LIVE | SIGNED | COMPLETED | CANCELLED",
+  "status": "DRAFT | SENT | SIGNED | COMPLETED | CANCELLED",
   "mergedHtml": "string | null",
   "customHtmlContent": "string | null",
   "renderedHtml": "string",

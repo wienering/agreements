@@ -1,5 +1,4 @@
 import { escapeHtml } from '@/lib/htmlEscape';
-import { canonicalStatus, isSent } from '@/lib/agreementStatus';
 import { formatDateToronto, torontoCalendarDaysBetween } from '@/lib/dates';
 import type { Agreement } from './types';
 
@@ -17,8 +16,8 @@ function buildEngagementTooltipHtml(agreement: Agreement): string {
     : null;
   const viewCount = agreement.viewCount || 0;
   const lastViewed = agreement.lastViewedAt ? formatDateToronto(agreement.lastViewedAt) : null;
-  const status = canonicalStatus(agreement.status);
-  const needsFollowUp = isSent(agreement.status) && daysSinceEmailed && daysSinceEmailed >= 3;
+  const status = agreement.status;
+  const needsFollowUp = status === 'SENT' && daysSinceEmailed && daysSinceEmailed >= 3;
   const notViewed = viewCount === 0;
   const statusClass = STATUS_BADGE[status] ?? 'bg-admin-muted';
 

@@ -37,7 +37,7 @@ describe('isDueForAutoComplete', () => {
   });
 
   it('never touches anything but SIGNED', () => {
-    for (const status of ['DRAFT', 'SENT', 'LIVE', 'COMPLETED', 'CANCELLED', 'VOID']) {
+    for (const status of ['DRAFT', 'SENT', 'COMPLETED', 'CANCELLED']) {
       expect(isDueForAutoComplete(agreement({ status }), NOW)).toBe(false);
     }
   });

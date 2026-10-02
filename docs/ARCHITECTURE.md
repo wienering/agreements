@@ -137,7 +137,7 @@ agreements/
            └─> Processes HTML template (smart field replacement)
                └─> Generates client link
                    └─> Sends email via SMTP
-                       └─> Updates status to LIVE
+                       └─> Updates status to SENT
                            └─> Tracks email send count
 ```
 

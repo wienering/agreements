@@ -99,7 +99,7 @@ return 201, agreement;
 2. Clicks "Send" on agreement
 3. System processes template
 4. System sends email
-5. Status updates to `LIVE`
+5. Status updates to `SENT`
 
 **API Call**:
 ```http
@@ -147,7 +147,7 @@ await transporter.sendMail({
 await prisma.agreement.update({
   where: { id: agreement.id },
   data: {
-    status: agreement.status === 'DRAFT' ? 'LIVE' : agreement.status,
+    status: agreement.status === 'DRAFT' ? 'SENT' : agreement.status,
     lastEmailedAt: new Date(),
     emailSendCount: { increment: 1 }
   }
@@ -159,7 +159,7 @@ await prisma.agreement.update({
 - **Second send**: "Reminder: Service Agreement Pending"
 - **Third+ sends**: "Final Notice: Service Agreement Signature Required"
 
-**Result**: Email sent, status `LIVE`, send count incremented
+**Result**: Email sent, status `SENT`, send count incremented
 
 ---
 
@@ -877,15 +877,12 @@ return 200, {
 ### Agreement Status Transitions
 
 ```
-DRAFT → LIVE (when sent)
-DRAFT → VOID (admin action)
-LIVE → SIGNED (client signs)
-LIVE → CANCELLED (admin/client)
-SIGNED → COMPLETED (admin, auto-archives)
+DRAFT → SENT (when emailed; never automatically otherwise)
+SENT → SIGNED (every required signer has signed)
+SIGNED → COMPLETED (daily cron, the day after the event; or admin)
 SIGNED → CANCELLED (admin only)
-COMPLETED → (terminal state)
-CANCELLED → (terminal state)
-VOID → (terminal state)
+COMPLETED → SIGNED or CANCELLED (admin only)
+SIGNED / COMPLETED never go back to DRAFT or SENT
 ```
 
 **Restrictions**:

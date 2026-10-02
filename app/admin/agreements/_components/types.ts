@@ -1,7 +1,6 @@
 export type { AttendantConflict } from '@/lib/attendants/conflicts';
 
-/** LIVE is the old name for SENT; rows still holding it are shown and filtered as SENT. */
-export type AgreementStatus = 'DRAFT' | 'SENT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
+export type AgreementStatus = 'DRAFT' | 'SENT' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
 
 export interface AttendantSummary {
   id: string;

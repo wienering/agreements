@@ -4,7 +4,6 @@ import {
   torontoCalendarDaysBetween,
 } from '@/lib/dates';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
-import { canonicalStatus } from '@/lib/agreementStatus';
 import type { Agreement, BackdropLinkOption, GalleryLink } from './types';
 import { DOUBLE_BOOKED_FILTER, NO_ATTENDANT_FILTER } from './types';
 
@@ -104,7 +103,7 @@ export function agreementMatchesSearch(agreement: Agreement, searchLower: string
   }
   const attendantName = getAgreementAttendantName(agreement);
   if (attendantName && attendantName.toLowerCase().includes(searchLower)) return true;
-  if (canonicalStatus(agreement.status).toLowerCase().includes(searchLower)) return true;
+  if (agreement.status.toLowerCase().includes(searchLower)) return true;
   return false;
 }
 
@@ -117,7 +116,7 @@ export function filterAgreements(
 ): Agreement[] {
   let filtered = agreements;
   if (statusFilter !== 'ALL') {
-    filtered = filtered.filter((agreement) => canonicalStatus(agreement.status) === statusFilter);
+    filtered = filtered.filter((agreement) => agreement.status === statusFilter);
   }
   if (attendantFilter === NO_ATTENDANT_FILTER) {
     filtered = filtered.filter((agreement) => !getAgreementAttendantName(agreement));

@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { findAgreementListItem } from '@/lib/agreements/listItem';
-import { manualStatusChangeError, type ManualStatus } from '@/lib/agreementStatus';
+import { MANUAL_STATUSES, manualStatusChangeError } from '@/lib/agreementStatus';
 import { normalizePaymentStatus, PAYMENT_STATUSES } from '@/lib/paymentStatus';
 
 const galleryEntrySchema = z
@@ -28,12 +28,9 @@ const paymentStatusInputSchema = z
     return normalized;
   });
 
-/** LIVE is the old name for SENT; a page loaded before the rename may still send it. */
-const statusInputSchema = z
-  .enum(['DRAFT', 'SENT', 'LIVE', 'SIGNED', 'COMPLETED', 'CANCELLED'], {
-    errorMap: () => ({ message: 'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED' }),
-  })
-  .transform((value): ManualStatus => (value === 'LIVE' ? 'SENT' : value));
+const statusInputSchema = z.enum(MANUAL_STATUSES, {
+  errorMap: () => ({ message: 'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED' }),
+});
 
 /**
  * Every field is optional. Unknown keys are rejected.

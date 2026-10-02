@@ -17,7 +17,6 @@ interface StatusBadgeProps {
 export function agreementStatusToBadgeVariant(status: string): StatusBadgeVariant {
   switch (status.toUpperCase()) {
     case 'SENT':
-    case 'LIVE':
     case 'COMPLETED':
       return 'accent';
     case 'CANCELLED':

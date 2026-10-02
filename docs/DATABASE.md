@@ -475,7 +475,7 @@ const client = await prisma.client.findUnique({
 ```typescript
 const agreements = await prisma.agreement.findMany({
   where: {
-    status: 'LIVE',
+    status: 'SENT',
     archived: false,
     expiresAt: {
       gte: new Date()

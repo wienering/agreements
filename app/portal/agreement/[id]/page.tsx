@@ -10,7 +10,7 @@ import { formatDateTimeToronto } from '@/lib/dates';
 interface Agreement {
   id: string;
   uniqueToken: string;
-  status: 'DRAFT' | 'SENT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED' | 'VOID';
+  status: 'DRAFT' | 'SENT' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
   expiresAt: string | null;
   createdAt: string;
   signedAt: string | null;
@@ -220,12 +220,10 @@ function AgreementDetailContent() {
       case 'COMPLETED':
         return 'bg-panel text-success border border-hairline';
       case 'SENT':
-      case 'LIVE':
         return 'bg-panel text-ink border border-hairline';
       case 'DRAFT':
         return 'bg-panel text-warn border border-hairline';
       case 'CANCELLED':
-      case 'VOID':
         return 'bg-panel text-alert border border-hairline';
       default:
         return 'bg-panel text-muted border border-hairline';

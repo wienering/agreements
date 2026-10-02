@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { addTorontoCalendarDaysFrom } from '@/lib/dates';
-import { isSent, isSigned, SENT_STATUSES, SIGNED_STATUSES } from '@/lib/agreementStatus';
+import { isSigned, SIGNED_STATUSES } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
           gte: startDate
         },
         archived: false,
-        status: { in: [...SIGNED_STATUSES, ...SENT_STATUSES] }
+        status: { in: [...SIGNED_STATUSES, 'SENT'] }
       },
       select: {
         id: true,
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       }, 0);
 
     const pendingRevenue = revenueData
-      .filter(a => isSent(a.status))
+      .filter(a => a.status === 'SENT')
       .reduce((sum, agreement) => {
         const price = agreement.client.packagePrice ? parseFloat(agreement.client.packagePrice.toString()) : 0;
         return sum + price;

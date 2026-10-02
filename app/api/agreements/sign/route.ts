@@ -12,7 +12,7 @@ import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/ema
 import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
-import { isCancelledOrVoid, isOpenForSigning } from '@/lib/agreements/signable';
+import { isCancelled, isOpenForSigning } from '@/lib/agreements/signable';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    if (isCancelledOrVoid(agreement.status)) {
+    if (isCancelled(agreement.status)) {
       return NextResponse.json({
         error: 'This agreement has been cancelled'
       }, { status: 410 });
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
 
       await logAgreementActivity(agreement.id, 'SIGNED', signerMeta);
     } else {
-      // Partial signature — agreement stays LIVE; record signedAt only if not yet set,
+      // Partial signature — agreement keeps its status; record signedAt only if not yet set,
       // because mergedHtml will be finalized on the second signature.
       updatedAgreement = await prisma.agreement.update({
         where: { id: agreement.id },

@@ -31,7 +31,7 @@ export type FollowupRecord = Prisma.AgreementGetPayload<{ select: typeof followu
 export async function loadFollowupCandidates(): Promise<FollowupRecord[]> {
   return prisma.agreement.findMany({
     where: {
-      status: { notIn: ['CANCELLED', 'VOID'] },
+      status: { not: 'CANCELLED' },
       archived: false,
       cancelledAt: null,
       OR: [{ galleryEmailSentAt: null }, { reviewRequestSentAt: null }],

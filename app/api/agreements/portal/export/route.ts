@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement-utils';
 import { formatDateTimeToronto, formatDateToronto } from '@/lib/dates';
-import { canonicalStatus, isSigned } from '@/lib/agreementStatus';
+import { isSigned } from '@/lib/agreementStatus';
 
 export async function GET(request: NextRequest) {
   try {
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     const exportData = agreements.map(agreement => {
       const baseData = {
         id: agreement.id,
-        status: canonicalStatus(agreement.status),
+        status: agreement.status,
         createdAt: agreement.createdAt,
         updatedAt: agreement.updatedAt,
         signedAt: agreement.signedAt,

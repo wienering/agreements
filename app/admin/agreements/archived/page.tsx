@@ -16,7 +16,7 @@ import {
 interface Agreement {
   id: string;
   uniqueToken: string;
-  status: 'DRAFT' | 'SENT' | 'LIVE' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'SENT' | 'SIGNED' | 'COMPLETED' | 'CANCELLED';
   expiresAt: string;
   createdAt: string;
   archivedAt: string;
