@@ -93,7 +93,7 @@ export default function AdminLogin() {
     return (
       <main className="min-h-screen bg-admin-bg flex items-center justify-center text-admin-text">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gold border-t-transparent mx-auto mb-4" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent mx-auto mb-4" />
           <p className="text-admin-muted">Loading...</p>
         </div>
       </main>
@@ -104,7 +104,7 @@ export default function AdminLogin() {
     return (
       <main className="min-h-screen bg-admin-bg flex items-center justify-center text-admin-text">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gold border-t-transparent mx-auto mb-4" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent mx-auto mb-4" />
           <p className="text-admin-muted">Redirecting...</p>
         </div>
       </main>

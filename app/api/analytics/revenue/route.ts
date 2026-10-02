@@ -77,7 +77,13 @@ export async function GET(request: NextRequest) {
     };
 
     // Get top revenue clients
-    const clientRevenue = revenueData.reduce((acc, agreement) => {
+    type ClientRevenueBucket = {
+      client: (typeof revenueData)[number]['client'];
+      totalRevenue: number;
+      agreementCount: number;
+    };
+
+    const clientRevenue = revenueData.reduce<Record<string, ClientRevenueBucket>>((acc, agreement) => {
       const clientKey = agreement.client.email;
       if (!acc[clientKey]) {
         acc[clientKey] = {
@@ -90,10 +96,10 @@ export async function GET(request: NextRequest) {
       acc[clientKey].totalRevenue += price;
       acc[clientKey].agreementCount += 1;
       return acc;
-    }, {} as any);
+    }, {});
 
     const topClients = Object.values(clientRevenue)
-      .sort((a: any, b: any) => b.totalRevenue - a.totalRevenue)
+      .sort((a, b) => b.totalRevenue - a.totalRevenue)
       .slice(0, 5);
 
     return NextResponse.json({

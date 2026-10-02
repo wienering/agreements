@@ -44,7 +44,7 @@ export async function GET(
     const pdfBuffer = await generateAgreementPdf(agreement, 'portal');
 
     // Return PDF as response
-    return new NextResponse(pdfBuffer as any, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
