@@ -33,6 +33,9 @@ const SMART_FIELDS = [
   { field: '{{agreement.id}}', label: 'Agreement ID' },
 ];
 
+const footerButtonClass =
+  '!max-w-full !min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none';
+
 function Accordion({
   title,
   open,
@@ -49,12 +52,12 @@ function Accordion({
   className?: string;
 }) {
   return (
-    <div className={`${className} overflow-hidden rounded border border-admin-hairline bg-admin-surface`}>
+    <div className={`${className} w-full min-w-0 max-w-full shrink-0 overflow-hidden rounded border border-admin-hairline bg-admin-surface`}>
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="admin-section-title flex w-full items-center justify-between bg-transparent px-4 py-3 text-left text-[15px] font-semibold text-admin-text"
+        className="admin-section-title flex w-full min-w-0 items-center justify-between bg-transparent px-4 py-3 text-left text-[15px] font-semibold text-admin-text"
       >
         <span className="inline-flex items-center gap-2">
           {title}
@@ -64,9 +67,11 @@ function Accordion({
           ▶
         </span>
       </button>
-      <div className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-        <div className="overflow-hidden">
-          <div className="px-4 pb-3">{children}</div>
+      <div className={`grid w-full min-w-0 motion-safe:transition-[grid-template-rows] motion-safe:duration-200 ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="min-h-0 min-w-0 overflow-hidden">
+          <div className="min-w-0 max-w-full px-4 pb-3 [&_input]:max-w-full [&_select]:max-w-full [&_textarea]:box-border [&_textarea]:min-w-0 [&_textarea]:max-w-full">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -151,16 +156,21 @@ export function AgreementDrawer({
   if (!agreementId) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000]">
+    <div className="fixed inset-0 z-[1000] overflow-hidden">
       <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[800px] flex-col overflow-y-auto bg-admin-surface p-4 md:p-6">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="m-0 text-xl text-admin-text">Edit Agreement</h2>
-          <CloseIconButton onClick={closeAgreement} />
+      <aside
+        className="absolute inset-y-0 right-0 box-border flex min-w-0 max-w-full flex-col overflow-x-hidden overflow-y-auto bg-admin-surface p-4 md:p-6"
+        style={{ width: 'min(800px, 100%)' }}
+      >
+        <div className="mb-5 flex w-full min-w-0 shrink-0 items-center justify-between gap-3">
+          <h2 className="m-0 min-w-0 text-xl text-admin-text">Edit Agreement</h2>
+          <span className="shrink-0">
+            <CloseIconButton onClick={closeAgreement} />
+          </span>
         </div>
 
         {loadingDetail && !detail ? (
-          <p className="m-0 text-sm italic text-admin-muted">Loading agreement...</p>
+          <p className="m-0 shrink-0 text-sm italic text-admin-muted">Loading agreement...</p>
         ) : detail ? (
           <>
             <Accordion
@@ -508,14 +518,14 @@ export function AgreementDrawer({
               )}
             </Accordion>
 
-            <div className="mt-4 flex flex-wrap justify-center gap-2 border-t border-admin-hairline px-1 pt-4 lg:gap-2.5">
-              <AdminButton variant="primary" onClick={handleSaveAgreement} disabled={saving} title="Save changes to this agreement" className="!min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none">
+            <div className="mt-4 flex w-full min-w-0 max-w-full shrink-0 flex-wrap justify-center gap-2 border-t border-admin-hairline px-1 pt-4 lg:gap-2.5">
+              <AdminButton variant="primary" onClick={handleSaveAgreement} disabled={saving} title="Save changes to this agreement" className={footerButtonClass}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </AdminButton>
               <AdminButton
                 variant="ghost"
                 title="Open client view in new tab"
-                className="!min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none"
+                className={footerButtonClass}
                 onClick={() => window.open(`${window.location.origin}/agreement/${detail.uniqueToken}`, '_blank')}
               >
                 <span className="lg:hidden">Preview</span>
@@ -524,7 +534,7 @@ export function AgreementDrawer({
               <AdminButton
                 variant="ghost"
                 title="View attendant page (event details for staff)"
-                className="!min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none"
+                className={footerButtonClass}
                 onClick={() => onOpenAttendant(detail)}
               >
                 <span className="inline-flex items-center justify-center gap-1.5">
@@ -537,7 +547,7 @@ export function AgreementDrawer({
                 variant="ghost"
                 title="View client portal (admin preview)"
                 disabled={!detail.client?.email}
-                className="!min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none"
+                className={footerButtonClass}
                 onClick={() => {
                   if (detail.client?.email) {
                     window.open(`${window.location.origin}/portal/admin-preview?email=${encodeURIComponent(detail.client.email)}`, '_blank');
@@ -555,7 +565,7 @@ export function AgreementDrawer({
               <AdminButton
                 variant="ghost"
                 title="Preview the email that will be sent to the client"
-                className="!min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none"
+                className={footerButtonClass}
                 onClick={() => onPreviewEmail(detail)}
               >
                 <span className="inline-flex items-center justify-center gap-1.5">
@@ -568,7 +578,7 @@ export function AgreementDrawer({
                 variant="ghost"
                 title="Send this agreement to the client"
                 disabled={sending}
-                className="!min-w-0 !flex-[1_1_calc(50%-4px)] lg:!min-w-[140px] lg:!flex-none"
+                className={footerButtonClass}
                 onClick={() => onSend(detail)}
               >
                 {sending ? 'Sending...' : (
