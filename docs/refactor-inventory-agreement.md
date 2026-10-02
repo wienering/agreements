@@ -183,3 +183,36 @@ Same dashboard, with these differences. Wrapped in `Suspense`.
 ## Shared between the two portal dashboards
 
 `app/portal/dashboard/page.tsx` and `app/portal/admin-preview/page.tsx` duplicate the overview, filters, search, agreement cards, and quick actions. Auth, copy, link targets, the whitelabel badge, payment emphasis, and pagination differ as listed above.
+
+## Where each behaviour lives now
+
+Confirmed against the code after the extraction. Phone visibility and the virtual green screen override are still only on the attendant page and the admin agreements page. They were not part of these screens before, and they were not added.
+
+| Behaviour | Still works as | File |
+| --- | --- | --- |
+| Email gate, verify-email, cancel, Enter to submit, server-side view tracking | Unchanged | `app/agreement/[token]/page.tsx`, `app/components/agreement/EmailVerification.tsx` |
+| Existence check, 404 “not found or expired”, other load errors, loading `devLog` | Unchanged | `app/agreement/[token]/page.tsx`, `app/components/agreement/AgreementStatusScreen.tsx` |
+| Document title | Unchanged | `app/agreement/[token]/page.tsx` |
+| Smart fields after verify and after sign | Unchanged | `app/components/agreement/processSmartFields.ts` |
+| Header, title, signed badge, signed banner, footer | Unchanged | `app/components/agreement/AgreementDocument.tsx` (`sign` and `adminPreview`) |
+| Event fields prefer the event relation | Sign mode only | `AgreementDocument.tsx` |
+| Event fields read from the client only | Admin preview only | `AgreementDocument.tsx` |
+| Body HTML: merged snapshot, else custom, else template | Sign mode | `app/components/agreement/types.ts` (`renderedAgreementHtml`) |
+| Body HTML: template HTML only | Admin preview | `renderedAgreementHtml` |
+| Partial-signature banner, require-both-signatures, other signer | Sign mode | `AgreementDocument.tsx` |
+| Multi-signer rows, legacy IP row | Sign mode | `AgreementDocument.tsx` |
+| Single signature grid with IP or “N/A” | Admin preview | `AgreementDocument.tsx` |
+| Sign modal, terms checkbox, focus return, already-signed button | Unchanged | `app/components/agreement/SigningModal.tsx`, `app/agreement/[token]/page.tsx` (`viewerHasSigned` in `types.ts`) |
+| Success overlay, 3s thank-you redirect, sessionStorage signer email | Unchanged | `SignSuccessOverlay.tsx`, `app/agreement/[token]/page.tsx` |
+| Partial signature stays on the page for 3.5s | Unchanged | `app/agreement/[token]/page.tsx` |
+| PDF download, `#download`, email copy, “Sent!” toast | Unchanged, including the admin text-file fallback | `app/components/agreement/useAgreementDelivery.ts`, `EmailCopyModal.tsx`, `AgreementDocument.tsx` |
+| Client portal link when signed | Sign mode | `AgreementDocument.tsx` |
+| Admin preview banner, 401/403/404 copy | Unchanged | `AdminPreviewBanner` in `AgreementDocument.tsx`, `app/admin/preview/[token]/page.tsx` |
+| Portal session, admin-preview query, session refresh | Unchanged | `app/portal/agreement/[id]/page.tsx` |
+| Portal notes, export, gallery, payment, receipt, backdrop link, resources, timeline, cancelled and expiry dates | Unchanged | `app/portal/agreement/[id]/page.tsx` |
+| Collapsible agreement body | Unchanged | `AgreementDocument.tsx` mode `readonly` |
+| Portal dashboard auth, filters, search, `/` to focus, whitelabel badge, balance pill, pagination buttons with no handlers | Unchanged | `app/components/portal/PortalDashboard.tsx`, wrapper `app/portal/dashboard/page.tsx` |
+| Portal admin preview auth, banner, link targets, plain payment pills, no pagination, no whitelabel badge | Unchanged | `PortalDashboard.tsx` mode `adminPreview`, wrapper `app/portal/admin-preview/page.tsx` |
+
+`htmlToPlainText` on the signing page was unused and was not carried over.
+
