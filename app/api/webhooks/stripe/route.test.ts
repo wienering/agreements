@@ -110,6 +110,36 @@ describe('Stripe webhook payment status', () => {
     expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"blank"');
   });
 
+  it('keeps the status and alerts when a custom amount is paid', async () => {
+    for (const current of [null, 'Invoice issued', 'Deposit paid']) {
+      vi.clearAllMocks();
+      await deliver('custom', current);
+      expect(mocks.prisma.agreement.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
+      expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
+      expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"custom"');
+      expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('/admin/agreements?agreement=agr_1');
+    }
+  });
+
+  it('writes "Fully paid" for a minus-deposit invoice once the deposit is recorded, without an alert', async () => {
+    for (const current of ['Deposit paid', 'Deposit Paid']) {
+      vi.clearAllMocks();
+      await deliver('minus-deposit', current);
+      expect(writtenPaymentStatus()).toBe('Fully paid');
+      expect(mocks.sendTelegramMessage).not.toHaveBeenCalled();
+    }
+  });
+
+  it('keeps the status and alerts for a minus-deposit invoice with no deposit recorded', async () => {
+    for (const current of [null, 'Invoice issued', 'Not paid']) {
+      vi.clearAllMocks();
+      await deliver('minus-deposit', current);
+      expect(mocks.prisma.agreement.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
+      expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
+      expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"minus-deposit"');
+    }
+  });
+
   it('does not alert when the agreement is already fully paid', async () => {
     await deliver('deposit', 'Fully paid');
     await deliver('remaining', 'Fully paid');
@@ -123,7 +153,7 @@ describe('Stripe webhook payment status', () => {
   });
 
   it('never writes "Balance Paid" or "Paid"', async () => {
-    for (const type of ['deposit', 'remaining', 'full', undefined]) {
+    for (const type of ['deposit', 'remaining', 'full', 'minus-deposit', 'custom', undefined]) {
       for (const current of [null, 'Not paid', 'Invoice issued', 'Deposit paid', 'Balance due', 'Fully Paid']) {
         vi.clearAllMocks();
         await deliver(type, current);

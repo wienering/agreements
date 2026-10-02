@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isDepositPaid, isFullyPaid, paymentStatusAfterStripeInvoice } from '@/lib/paymentStatus';
+import {
+  isDepositPaid,
+  isFullyPaid,
+  paymentStatusAfterStripeInvoice,
+  stripeInvoiceTypeFor,
+} from '@/lib/paymentStatus';
 
 describe('isFullyPaid', () => {
   it.each(['Fully paid', 'Fully Paid', 'FULLY PAID', '  fully   paid ', 'Paid', 'paid', 'Balance Paid', 'balance paid'])(
@@ -24,6 +29,16 @@ describe('isDepositPaid', () => {
     expect(isDepositPaid(' deposit  PAID ')).toBe(true);
     expect(isDepositPaid('Fully paid')).toBe(false);
     expect(isDepositPaid(null)).toBe(false);
+  });
+});
+
+describe('stripeInvoiceTypeFor', () => {
+  it('labels each invoice option', () => {
+    expect(stripeInvoiceTypeFor('default', true)).toBe('remaining');
+    expect(stripeInvoiceTypeFor('default', false)).toBe('full');
+    expect(stripeInvoiceTypeFor('total-only', false)).toBe('full');
+    expect(stripeInvoiceTypeFor('total-minus-deposit', false)).toBe('minus-deposit');
+    expect(stripeInvoiceTypeFor('custom-amount', false)).toBe('custom');
   });
 });
 
@@ -59,8 +74,21 @@ describe('paymentStatusAfterStripeInvoice', () => {
     expect(paymentStatusAfterStripeInvoice('remaining', 'Balance Paid')).toBe('Fully paid');
   });
 
+  it('leaves custom amounts alone: they may be part payments', () => {
+    for (const current of [null, 'Invoice issued', 'Deposit paid', 'Balance due', 'Not paid']) {
+      expect(paymentStatusAfterStripeInvoice('custom', current)).toBeNull();
+    }
+  });
+
+  it('treats a minus-deposit invoice like a remaining balance', () => {
+    expect(paymentStatusAfterStripeInvoice('minus-deposit', 'Deposit paid')).toBe('Fully paid');
+    expect(paymentStatusAfterStripeInvoice('minus-deposit', 'Deposit Paid')).toBe('Fully paid');
+    expect(paymentStatusAfterStripeInvoice('minus-deposit', null)).toBeNull();
+    expect(paymentStatusAfterStripeInvoice('minus-deposit', 'Invoice issued')).toBeNull();
+  });
+
   it('never returns "Balance Paid" or "Paid"', () => {
-    const types = ['deposit', 'remaining', 'full', undefined, 'other'];
+    const types = ['deposit', 'remaining', 'full', 'minus-deposit', 'custom', undefined, 'other'];
     const currents = [null, '', 'Not paid', 'Invoice issued', 'Deposit paid', 'Deposit Paid', 'Balance due', 'Fully paid', 'Fully Paid', 'Paid', 'Balance Paid'];
     for (const type of types) {
       for (const current of currents) {
