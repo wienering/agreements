@@ -51,6 +51,8 @@ export interface Agreement {
   chaserPaused?: boolean;
   selectedBackdropName?: string | null;
   paymentStatus?: string | null;
+  balanceDigestSnoozedUntil?: string | null;
+  balanceReminderSentAt?: string | null;
   reviewRequestSentAt?: string | null;
   showPhoneNumberAlways?: boolean;
   forceVirtualGreenScreen?: boolean;
