@@ -29,7 +29,7 @@ function fileIconName(fileType: string): string {
 
 export function FilesSection({ files, error = null }: FilesSectionProps) {
   return (
-    <section className="attendant-card mb-6 border border-admin-hairline bg-admin-surface p-8">
+    <section className="mb-6 w-full max-w-full border border-admin-hairline bg-admin-surface p-5 min-[769px]:p-6 min-[1025px]:p-8">
       <h2 className="mb-6 border-b border-admin-hairline pb-4 text-xl font-bold text-admin-text">
         Event Files
       </h2>
