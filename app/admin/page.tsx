@@ -3,11 +3,35 @@
 import { adminFetch } from '@/lib/adminFetch';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, Cell } from 'recharts';
+import dynamic from 'next/dynamic';
 import { UIcon } from '../components/UIcon';
 import { chartTokens, statusTokens } from '../lib/adminTheme';
 import { AdminButton } from '../components/AdminButton';
 import { formatDateToronto } from '@/lib/dates';
+import type { WeeklyLoadForecast } from '@/lib/analytics/DashboardCharts';
+
+const chartPlaceholder = (height: number, label: string) => (
+  <div style={{
+    height: `${height}px`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--admin-muted)',
+    fontSize: '14px',
+  }}>
+    {label}
+  </div>
+);
+
+const WeeklyLoadChart = dynamic(
+  () => import('@/lib/analytics/DashboardCharts').then((mod) => mod.WeeklyLoadChart),
+  { ssr: false, loading: () => chartPlaceholder(240, 'Loading forecast…') },
+);
+
+const AgreementsBarChart = dynamic(
+  () => import('@/lib/analytics/DashboardCharts').then((mod) => mod.AgreementsBarChart),
+  { ssr: false, loading: () => chartPlaceholder(168, 'Loading chart…') },
+);
 
 interface DashboardStats {
   totalClients: number;
@@ -111,15 +135,6 @@ interface UpcomingEvent {
   daysUntil: number;
 }
 
-interface WeeklyLoadForecast {
-  weekStart: string;
-  weekEnd: string;
-  weekLabel: string;
-  eventCount: number;
-  totalHours: number;
-  clientNames: string[];
-}
-
 export default function AdminHome() {
   // Set page title
   useEffect(() => {
@@ -167,13 +182,9 @@ export default function AdminHome() {
   }, [fetchDashboard]);
 
   const mainBg = 'var(--admin-bg)';
-  const cardBg = 'var(--admin-surface)';
   const textColor = 'var(--admin-text)';
   const mutedText = 'var(--admin-muted)';
   const borderColor = 'var(--admin-hairline)';
-  // Recharts passes colour props straight through to SVG fill/stroke, which do
-  // not resolve CSS vars, so charts read literals from adminTheme.
-  const accentGreen = chartTokens.accent;
 
   // Cards are white on the app background, separated by a hairline and nothing
   // else. cardPad uses clamp so the roomier desktop padding tightens on narrow
@@ -182,9 +193,6 @@ export default function AdminHome() {
   const cardBorderStrong = 'var(--admin-hairline)';
   const cardShadow = 'none';
   const cardPad = 'clamp(18px, 4vw, 26px)';
-  // Prior-month and secondary chart series. Quiet enough that the accent-filled
-  // current month is the first thing the eye lands on.
-  const neutralBar = chartTokens.neutral;
 
   const chartData = stats?.monthlyStats || [];
   const totalAgreementsDisplay = chartData.reduce((sum, item) => sum + item.count, 0);
@@ -418,112 +426,7 @@ export default function AdminHome() {
                       Loading forecast…
                     </div>
                   ) : loadForecast && loadForecast.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={240}>
-                      <ComposedChart data={loadForecast}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={chartTokens.grid} />
-                        <XAxis
-                          dataKey="weekLabel"
-                          stroke={chartTokens.axis}
-                          fontSize={10}
-                          angle={-40}
-                          textAnchor="end"
-                          height={72}
-                        />
-                        <YAxis
-                          yAxisId="left"
-                          stroke={chartTokens.axis}
-                          fontSize={11}
-                          width={36}
-                          label={{ value: 'Events', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: chartTokens.axis, fontSize: 10 } }}
-                        />
-                        <YAxis
-                          yAxisId="right"
-                          orientation="right"
-                          stroke={chartTokens.axis}
-                          fontSize={11}
-                          width={36}
-                          label={{ value: 'Hours', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: chartTokens.axis, fontSize: 10 } }}
-                        />
-                        <Tooltip
-                          content={({ active, payload, label }) => {
-                            if (!active || !payload || payload.length === 0) return null;
-
-                            const data = payload[0]?.payload as WeeklyLoadForecast;
-                            const eventCount = data?.eventCount || 0;
-                            const totalHours = data?.totalHours || 0;
-                            const clientNames = data?.clientNames || [];
-
-                            return (
-                              <div style={{
-                                backgroundColor: cardBg,
-                                border: `1px solid ${borderColor}`,
-                                borderRadius: '2px',
-                                padding: '12px',
-                              }}>
-                                <div style={{
-                                  color: textColor,
-                                  fontWeight: '600',
-                                  marginBottom: '8px',
-                                  fontSize: '14px'
-                                }}>
-                                  {label}
-                                </div>
-                                <div style={{
-                                  color: textColor,
-                                  marginBottom: '4px',
-                                  fontSize: '13px'
-                                }}>
-                                  <strong>{eventCount}</strong> Event{eventCount !== 1 ? 's' : ''}
-                                </div>
-                                <div style={{
-                                  color: textColor,
-                                  marginBottom: clientNames.length > 0 ? '8px' : '0',
-                                  fontSize: '13px'
-                                }}>
-                                  <strong>{totalHours}</strong> Hours
-                                </div>
-                                {clientNames.length > 0 && (
-                                  <div style={{
-                                    fontSize: '12px',
-                                    color: mutedText,
-                                    marginTop: '8px',
-                                    paddingTop: '8px',
-                                    borderTop: `1px solid ${borderColor}`
-                                  }}>
-                                    <div style={{ fontWeight: '600', marginBottom: '4px', color: textColor }}>Clients:</div>
-                                    <div>{clientNames.join(', ')}</div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          }}
-                        />
-                        <Legend
-                          wrapperStyle={{ paddingTop: '12px' }}
-                          formatter={(value) => {
-                            if (value === 'eventCount') return 'Events';
-                            if (value === 'totalHours') return 'Hours';
-                            return value;
-                          }}
-                        />
-                        <Bar
-                          yAxisId="left"
-                          dataKey="eventCount"
-                          fill={neutralBar}
-                          radius={[1, 1, 0, 0]}
-                          name="eventCount"
-                        />
-                        <Line
-                          yAxisId="right"
-                          type="monotone"
-                          dataKey="totalHours"
-                          stroke={accentGreen}
-                          strokeWidth={2}
-                          dot={{ fill: neutralBar, r: 3 }}
-                          name="totalHours"
-                        />
-                      </ComposedChart>
-                    </ResponsiveContainer>
+                    <WeeklyLoadChart data={loadForecast} />
                   ) : (
                     <div style={{
                       height: '240px',
@@ -769,34 +672,7 @@ export default function AdminHome() {
           </div>
 
           {chartData && chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={168}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartTokens.grid} />
-                <XAxis
-                  dataKey="month"
-                  stroke={chartTokens.axis}
-                  fontSize={11}
-                  tickMargin={4}
-                />
-                <YAxis stroke={chartTokens.axis} fontSize={11} width={32} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: cardBg,
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '2px',
-                    color: textColor
-                  }}
-                />
-                <Bar dataKey="count" radius={[1, 1, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={entry.month ?? index}
-                      fill={index === chartData.length - 1 ? accentGreen : neutralBar}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <AgreementsBarChart data={chartData} />
           ) : (
             <div style={{
               height: '168px',
