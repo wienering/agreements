@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   constructEvent: vi.fn(),
   prisma: { agreement: { findUnique: vi.fn(), update: vi.fn() } },
+  sendTelegramMessage: vi.fn(),
 }));
 
 vi.mock('stripe', () => ({
@@ -12,6 +13,7 @@ vi.mock('stripe', () => ({
   },
 }));
 vi.mock('@/lib/prisma', () => ({ prisma: mocks.prisma }));
+vi.mock('@/lib/telegram', () => ({ sendTelegramMessage: mocks.sendTelegramMessage }));
 
 import { POST } from '@/app/api/webhooks/stripe/route';
 
@@ -23,6 +25,7 @@ function paidInvoiceEvent(invoiceType?: string) {
         id: 'in_1',
         metadata: { agreementId: 'agr_1', ...(invoiceType ? { invoiceType } : {}) },
         hosted_invoice_url: 'https://stripe.example/receipt',
+        amount_paid: 95000,
       },
     },
   };
@@ -33,7 +36,7 @@ async function deliver(invoiceType: string | undefined, currentPaymentStatus: st
   mocks.prisma.agreement.findUnique.mockResolvedValue({
     id: 'agr_1',
     paymentStatus: currentPaymentStatus,
-    client: { email: 'jane@example.com' },
+    client: { email: 'jane@example.com', firstName: 'Jane', lastName: 'Smith' },
   });
   const request = new NextRequest('http://localhost/api/webhooks/stripe', {
     method: 'POST',
@@ -77,16 +80,46 @@ describe('Stripe webhook payment status', () => {
     expect(writtenPaymentStatus()).toBe('Fully paid');
   });
 
-  it('keeps the status but saves the receipt when a balance is paid without a recorded deposit', async () => {
+  it('writes "Fully paid" for a full invoice with no deposit ever recorded, without an alert', async () => {
+    for (const current of [null, '', 'Invoice issued', 'Not paid']) {
+      vi.clearAllMocks();
+      await deliver('full', current);
+      expect(writtenPaymentStatus()).toBe('Fully paid');
+      expect(mocks.sendTelegramMessage).not.toHaveBeenCalled();
+    }
+  });
+
+  it('keeps the status, saves the receipt and alerts when a balance is paid without a recorded deposit', async () => {
     const response = await deliver('remaining', 'Invoice issued');
     const data = mocks.prisma.agreement.update.mock.calls[0][0].data;
     expect(data).toEqual({ stripeReceiptLink: 'https://stripe.example/receipt' });
     expect((await response.json()).paymentStatus).toBe('Invoice issued');
+
+    expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
+    const message = mocks.sendTelegramMessage.mock.calls[0][0] as string;
+    expect(message).toContain('Jane Smith ($950.00)');
+    expect(message).toContain('"remaining"');
+    expect(message).toContain('"Invoice issued"');
+    expect(message).toContain('https://agreements.photoboothguys.ca/admin/agreements?agreement=agr_1');
   });
 
-  it('keeps the status for an unknown invoice type', async () => {
-    await deliver(undefined, 'Invoice issued');
+  it('keeps the status and alerts for an unknown invoice type', async () => {
+    await deliver(undefined, null);
     expect(mocks.prisma.agreement.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
+    expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
+    expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"blank"');
+  });
+
+  it('does not alert when the agreement is already fully paid', async () => {
+    await deliver('deposit', 'Fully paid');
+    await deliver('remaining', 'Fully paid');
+    expect(mocks.sendTelegramMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not alert for the normal deposit-then-balance path', async () => {
+    await deliver('deposit', 'Invoice issued');
+    await deliver('remaining', 'Deposit paid');
+    expect(mocks.sendTelegramMessage).not.toHaveBeenCalled();
   });
 
   it('never writes "Balance Paid" or "Paid"', async () => {

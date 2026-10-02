@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
 import { devLog } from '@/lib/logger';
 import { isFullyPaid, paymentStatusAfterStripeInvoice } from '@/lib/paymentStatus';
+import { adminAgreementUrl } from '@/lib/calendarFeed';
+import { sendTelegramMessage } from '@/lib/telegram';
 
 export async function POST(request: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -101,8 +103,16 @@ export async function POST(request: NextRequest) {
       // New payment status, in the same values the admin dropdown uses; null leaves it unchanged
       const newPaymentStatus = paymentStatusAfterStripeInvoice(invoiceType, agreement.paymentStatus);
       if (newPaymentStatus === null && !isFullyPaid(agreement.paymentStatus)) {
+        const currentLabel = agreement.paymentStatus?.trim() || 'blank';
+        const clientName = `${agreement.client.firstName} ${agreement.client.lastName}`.trim();
+        const amount =
+          typeof invoice.amount_paid === 'number' ? ` ($${(invoice.amount_paid / 100).toFixed(2)})` : '';
         console.warn(
-          `Stripe invoice paid for agreement ${agreementId} (type: ${invoiceType ?? 'none'}) but payment status left as "${agreement.paymentStatus ?? ''}". Set it by hand.`,
+          `Stripe invoice paid for agreement ${agreementId} (type: ${invoiceType ?? 'none'}) but payment status left as "${currentLabel}". Set it by hand.`,
+        );
+        await sendTelegramMessage(
+          `Stripe payment received for ${clientName}${amount}, but the payment status wasn't changed: invoice type "${invoiceType ?? 'none'}", current status "${currentLabel}". Please set it by hand.\n${adminAgreementUrl(agreementId)}`,
+          { disableWebPagePreview: true },
         );
       }
 
