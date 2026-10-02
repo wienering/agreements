@@ -339,11 +339,38 @@ Backdrop selection options for agreements.
 | createdAt | DateTime | Creation timestamp |
 | updatedAt | DateTime | Last update timestamp |
 
+| attendantId | String? | Foreign key to Attendant |
+
 **Relationships**:
 - `agreements`: One-to-many with Agreement
+- `attendant`: Many-to-one with Attendant (optional, onDelete: SetNull)
 
 **Indexes**:
 - `displayOrder` - For ordered display
+- `attendantId` - For attendant lookups
+
+---
+
+### Attendant
+
+A person who runs events. An agreement's attendant is the attendant behind its backdrop link.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | String (CUID) | Primary key |
+| name | String | Display name |
+| email | String? | Admin-only contact email |
+| phone | String? | Admin-only contact phone |
+| active | Boolean | Inactive attendants keep their history but are flagged in pickers |
+| externalId | String (unique) | The attendant's ID in the backdrop selection tool. Hub, job-page and backdrop links use it, so it never changes |
+| notes | String? | Admin notes |
+| createdAt | DateTime | Creation timestamp |
+| updatedAt | DateTime | Last update timestamp |
+
+**Relationships**:
+- `backdropLinks`: One-to-many with BackdropLink
+
+Created from existing backdrop links by `scripts/backfill-attendants.ts` (dry run by default, `--apply` to write; safe to re-run). Double-booking buffers live in `Settings` under `attendantConflictBuffers`.
 
 ---
 
