@@ -6,14 +6,9 @@ import {
 } from '@/lib/attendantIdentity';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { UIcon } from '../../../components/UIcon';
-import {
-  formatEventDateToronto,
-  formatEventDateTorontoShort,
-  formatDateToronto,
-  torontoDateKey,
-} from '@/lib/dates';
+import { JobCard } from '../../../components/attendant/JobCard';
+import { formatDateToronto, torontoDateKey } from '@/lib/dates';
 
 interface AttendantHubPageProps {
   params: Promise<{ id: string }>;
@@ -242,42 +237,6 @@ async function fetchAttendantJobs(
   return { jobs: result.jobs, metrics: result.metrics };
 }
 
-function getEventTypeColor(eventType: string | null): string {
-  if (!eventType) return 'var(--admin-muted)';
-  const type = eventType.toLowerCase();
-  if (type.includes('sport')) return 'var(--warn)';
-  if (
-    type.includes('wedding') ||
-    type.includes('corporate') ||
-    type.includes('business') ||
-    type.includes('birthday') ||
-    type.includes('party') ||
-    type.includes('music') ||
-    type.includes('concert')
-  ) {
-    return 'var(--accent)';
-  }
-  return 'var(--admin-muted)';
-}
-
-function getEventTypeBgColor(eventType: string | null): string {
-  if (!eventType) return 'var(--admin-surface)';
-  const type = eventType.toLowerCase();
-  if (type.includes('sport')) return 'color-mix(in srgb, var(--warn) 20%, transparent)';
-  if (
-    type.includes('wedding') ||
-    type.includes('corporate') ||
-    type.includes('business') ||
-    type.includes('birthday') ||
-    type.includes('party') ||
-    type.includes('music') ||
-    type.includes('concert')
-  ) {
-    return 'color-mix(in srgb, var(--accent) 20%, transparent)';
-  }
-  return 'var(--admin-surface)';
-}
-
 interface CalendarDay {
   date: Date;
   day: number;
@@ -384,9 +343,6 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             .hub-main {
               padding: 20px 12px !important;
             }
-            .job-card {
-              padding: 20px !important;
-            }
             .calendar-card {
               width: 100% !important;
               max-width: 260px !important;
@@ -398,24 +354,12 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
               font-size: 11px !important;
             }
           }
-          .job-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-          }
-          .job-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            border-color: var(--accent) !important;
-          }
           .metric-card {
             transition: all 0.2s ease;
           }
           .metric-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          }
-          .view-details-button:hover {
-            background-color: var(--accent) !important;
           }
         `}} />
         <div
@@ -707,122 +651,12 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
             <div className="featured-section" style={{ display: 'flex', gap: '24px', marginBottom: '48px', flexWrap: 'wrap' }}>
               {/* Featured Upcoming Event Card */}
               {nextUpcomingJob && (
-                <div
-                  style={{
-                    flex: '1',
-                    minWidth: '400px',
-                    backgroundColor: 'var(--admin-surface)',
-                    borderRadius: '2px',
-                    border: '1px solid var(--admin-hairline)',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {/* Visual Header */}
-                  <div
-                    style={{
-                      height: '200px',
-                      background: `linear-gradient(135deg, ${getEventTypeBgColor(nextUpcomingJob.eventType)} 0%, var(--admin-surface) 100%)`,
-                      position: 'relative',
-                      padding: '24px',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    {nextUpcomingJob.eventType && (
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '6px 12px',
-                          borderRadius: '2px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          backgroundColor: getEventTypeColor(nextUpcomingJob.eventType),
-                          color: 'var(--accent-on)',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                        }}
-                      >
-                        {nextUpcomingJob.eventType}
-                      </span>
-                    )}
-                    {nextUpcomingJob.backdropSelected && (
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '6px 12px',
-                          borderRadius: '2px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          backgroundColor: 'var(--accent)',
-                          color: 'var(--accent-on)',
-                        }}
-                      >
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <UIcon name="check" style={{ fontSize: '12px' }} />
-                          Backdrop Selected
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div style={{ padding: '24px' }}>
-                    <h2
-                      style={{
-                        margin: '0 0 12px 0',
-                        fontSize: '24px',
-                        fontWeight: '700',
-                        color: 'var(--admin-text)',
-                        lineHeight: '1.3',
-                      }}
-                    >
-                      {nextUpcomingJob.clientName}
-                    </h2>
-                    
-                    {nextUpcomingJob.eventLocation && (
-                      <p style={{ margin: '0 0 8px 0', color: 'var(--admin-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <UIcon name="marker" style={{ fontSize: '14px' }} />
-                        <span>{nextUpcomingJob.eventLocation}</span>
-                      </p>
-                    )}
-                    
-                    {nextUpcomingJob.eventDate && (
-                      <p style={{ margin: '0 0 16px 0', color: 'var(--admin-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <UIcon name="calendar" style={{ fontSize: '14px' }} />
-                        <span>{formatEventDateToronto(nextUpcomingJob.eventDate)}</span>
-                        {nextUpcomingJob.eventStartTime && <span style={{ marginLeft: '8px' }}>• {nextUpcomingJob.eventStartTime}</span>}
-                      </p>
-                    )}
-                    
-                    {nextUpcomingJob.backdropName && (
-                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--admin-hairline)' }}>
-                        <p style={{ margin: '0', color: 'var(--accent)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <UIcon name="camera" style={{ fontSize: '14px' }} />
-                          <span>{nextUpcomingJob.backdropName}</span>
-                        </p>
-                      </div>
-                    )}
-                    
-                    <Link
-                      href={`/attendant/${nextUpcomingJob.id}${groupName ? `?fromGroup=${attendantIdOrSlug}` : ''}`}
-                      className="view-details-button"
-                      style={{
-                        display: 'inline-block',
-                        marginTop: '20px',
-                        padding: '12px 24px',
-                        backgroundColor: 'var(--accent)',
-                        color: 'var(--accent-on)',
-                        borderRadius: '2px',
-                        textDecoration: 'none',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      View Details →
-                    </Link>
-                  </div>
+                <div className="min-w-[400px] flex-1">
+                  <JobCard
+                    job={nextUpcomingJob}
+                    href={`/attendant/${nextUpcomingJob.id}${groupName ? `?fromGroup=${attendantIdOrSlug}` : ''}`}
+                    variant="featured"
+                  />
                 </div>
               )}
 
@@ -983,137 +817,12 @@ export default async function AttendantHubPage({ params }: AttendantHubPageProps
                   }}
                 >
                   {jobs.map((job) => (
-                    <Link
+                    <JobCard
                       key={job.id}
+                      job={job}
                       href={`/attendant/${job.id}${groupName ? `?fromGroup=${attendantIdOrSlug}` : ''}`}
-                      prefetch={true}
-                      style={{ 
-                        textDecoration: 'none',
-                        display: 'block',
-                        width: '100%',
-                        color: 'inherit',
-                      }}
-                    >
-                      <div
-                        className="job-card"
-                        style={{
-                          backgroundColor: 'var(--admin-surface)',
-                          borderRadius: '2px',
-                          border: '1px solid var(--admin-hairline)',
-                          overflow: 'hidden',
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                        }}
-                      >
-                        {/* Visual Header */}
-                        <div
-                          style={{
-                            height: '120px',
-                            background: `linear-gradient(135deg, ${getEventTypeBgColor(job.eventType)} 0%, var(--admin-surface) 100%)`,
-                            position: 'relative',
-                            padding: '16px',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          {job.eventType && (
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                padding: '4px 10px',
-                                borderRadius: '2px',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                backgroundColor: getEventTypeColor(job.eventType),
-                                color: 'var(--accent-on)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                              }}
-                            >
-                              {job.eventType}
-                            </span>
-                          )}
-                          {job.backdropSelected && (
-                            <span
-                              style={{
-                                display: 'inline-block',
-                                padding: '4px 8px',
-                                borderRadius: '2px',
-                                fontSize: '10px',
-                                fontWeight: '600',
-                                backgroundColor: 'var(--accent)',
-                                color: 'var(--accent-on)',
-                              }}
-                            >
-                              <UIcon name="check" style={{ fontSize: '10px', color: 'var(--accent-on)' }} />
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                          <h3
-                            style={{
-                              margin: '0 0 12px 0',
-                              fontSize: '18px',
-                              fontWeight: '700',
-                              color: 'var(--admin-text)',
-                              lineHeight: '1.3',
-                            }}
-                          >
-                            {job.clientName}
-                          </h3>
-
-                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                            {job.eventLocation && (
-                              <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <UIcon name="marker" style={{ color: 'var(--admin-muted)', fontSize: '14px', flexShrink: 0 }} />
-                                <span style={{ color: 'var(--admin-text)', fontSize: '13px', lineHeight: '1.4' }}>
-                                  {job.eventLocation}
-                                </span>
-                              </div>
-                            )}
-
-                            {job.eventDate && (
-                              <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
-                                <UIcon name="calendar" style={{ color: 'var(--admin-muted)', fontSize: '14px', flexShrink: 0 }} />
-                                <span style={{ color: 'var(--admin-text)', fontSize: '13px', fontWeight: '500' }}>
-                                  {formatEventDateTorontoShort(job.eventDate)}
-                                  {job.eventStartTime && <span style={{ marginLeft: '6px', color: 'var(--admin-muted)' }}>• {job.eventStartTime}</span>}
-                                </span>
-                              </div>
-                            )}
-
-                            {job.backdropName && (
-                              <div style={{ display: 'flex', alignItems: 'start', gap: '8px', marginTop: '4px' }}>
-                                <UIcon name="camera" style={{ color: 'var(--admin-muted)', fontSize: '14px', flexShrink: 0 }} />
-                                <span style={{ color: 'var(--accent)', fontSize: '13px', fontWeight: '500' }}>
-                                  {job.backdropName}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* View Details Link */}
-                          <div style={{ paddingTop: '12px', borderTop: '1px solid var(--admin-hairline)' }}>
-                            <span
-                              style={{
-                                color: 'var(--accent)',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                              }}
-                            >
-                              View Details →
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
+                      variant="compact"
+                    />
                   ))}
                 </div>
               )}
