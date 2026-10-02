@@ -239,3 +239,34 @@ Both are removed with `history.replaceState` to `/admin/agreements`.
 - `GET /api/analytics/warnings`
 
 Routes that do more than change one field, and stay as their own calls: create (`POST /api/agreements`), send, resend, review request, gallery email, cancel, archive, delete, invoice, backdrop selection (`POST /api/agreements/update-backdrop-selection`), agreement content save (`PUT /api/agreements/update-agreement`), activity, client notes.
+
+## Where it lives after the split
+
+`app/admin/agreements/page.tsx` only mounts the client page. The list loads `GET /api/agreements?slim=1`. Opening Edit or Edit Details sets `?agreement=<id>` and the drawer loads `GET /api/agreements/[id]`. Single-field saves (expiry, gallery links, next action, payment info, phone visibility, green screen, chaser paused, backdrop link, notes viewed, status) use `PATCH /api/agreements/[id]` and replace that row. The browser Back button closes the drawer because opening it pushes a history entry.
+
+| Feature | File |
+|---|---|
+| Page shell, title, Archived, New Agreement, slash-to-search, Escape order, scroll lock | `_components/AgreementsAdminPage.tsx` |
+| Search, attendant filter, status chips, empty states, active section, completed section, both pagers | `_components/AgreementsList.tsx` |
+| Active row columns, expand, warning border, follow-up banner, status/payment badges, row actions | `_components/AgreementRow.tsx` |
+| Completed card | `_components/CompletedAgreementCard.tsx` |
+| Unread notes badge | `_components/UnreadNotesBadge.tsx` |
+| No attendant hint | `_components/NoAttendantHint.tsx` |
+| Engagement tooltip | `_components/engagementTooltip.ts` |
+| Detail drawer (content, smart fields, preview, second signer, portal, attendant/backdrop, tracking, notes, footer) | `_components/AgreementDrawer.tsx` |
+| Create agreement | `_components/CreateAgreementModal.tsx` |
+| Status edit | `_components/StatusEditModal.tsx` |
+| Expiration edit | `_components/ExpirationEditModal.tsx` |
+| Expired-resend prompt | `_components/ResendExpirationModal.tsx` |
+| Cancel | `_components/CancelModal.tsx` |
+| Copy link / view agreement | `_components/CopyLinkModal.tsx` |
+| Invoice | `_components/InvoiceModal.tsx` |
+| Payment warning | `_components/PaymentWarningModal.tsx` |
+| Review request | `_components/ReviewRequestModal.tsx` |
+| Agreement email preview | `_components/EmailPreviewModal.tsx` |
+| Gallery-ready email preview | `_components/GalleryReadyPreviewModal.tsx` |
+| Attendant view | `_components/AttendantModal.tsx` |
+| Slim list, filters, sort, paging | `_hooks/useAgreementsList.ts` |
+| Drawer URL, detail fetch, form, portal/backdrop/tracking/notes | `_hooks/useAgreementDetail.ts` |
+| Send, resend, delete, archive, cancel, review, invoice, status, expiry, phone, green screen | `_hooks/useAgreementCommands.ts` |
+| PATCH helper | `_hooks/patchAgreement.ts` |
