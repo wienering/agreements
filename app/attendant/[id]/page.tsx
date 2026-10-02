@@ -40,6 +40,7 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
     if (!agreement) {
       return {
         title: 'Event Details Not Found',
+        robots: { index: false, follow: false },
       };
     }
 
@@ -61,11 +62,13 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
 
     return {
       title,
+      robots: { index: false, follow: false },
     };
   } catch (error) {
     console.error('Error generating metadata:', error);
     return {
       title: 'Event Details',
+      robots: { index: false, follow: false },
     };
   }
 }

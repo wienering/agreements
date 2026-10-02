@@ -32,6 +32,7 @@ export async function generateMetadata({ params }: AttendantHubPageProps): Promi
 
   return {
     title: group ? `Attendant Hub - ${group.name}` : 'Attendant Hub',
+    robots: { index: false, follow: false },
   };
 }
 

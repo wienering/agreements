@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
+import { uniqueAttendantGroupSlug } from './uniqueSlug';
 
 // GET - Fetch all attendant groups
 export async function GET(request: NextRequest) {
@@ -34,30 +35,20 @@ export async function POST(request: NextRequest) {
 
     await requireAdmin(request);
     const body = await request.json();
-    const { name, slug, attendantIds } = body;
+    const { name, attendantIds } = body;
 
-    if (!name || !slug || !Array.isArray(attendantIds)) {
+    if (!name || typeof name !== 'string' || !name.trim() || !Array.isArray(attendantIds)) {
       return NextResponse.json(
-        { error: 'Name, slug, and attendantIds array are required' },
+        { error: 'Name and attendantIds array are required' },
         { status: 400 }
       );
     }
 
-    // Check if slug already exists
-    const existingGroup = await prisma.attendantGroup.findUnique({
-      where: { slug },
-    });
-
-    if (existingGroup) {
-      return NextResponse.json(
-        { error: 'A group with this slug already exists' },
-        { status: 400 }
-      );
-    }
+    const slug = await uniqueAttendantGroupSlug(name);
 
     const group = await prisma.attendantGroup.create({
       data: {
-        name,
+        name: name.trim(),
         slug,
         attendantIds,
       },
