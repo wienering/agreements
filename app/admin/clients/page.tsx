@@ -12,6 +12,7 @@ import {
   fromTorontoDateTimeLocalInput,
   toTorontoDateTimeLocalInput,
 } from '@/lib/dates';
+import { filterClientsBySearch } from '@/lib/clients/search';
 
 /** Stored UTC ISO → datetime-local value in Toronto wall time. */
 function eventDateLocalFromStored(iso: string | undefined | null): string {
@@ -193,34 +194,10 @@ export default function ClientsPage() {
   }, [debouncedSearchTerm]);
 
   // Filter clients — runs only when clients or debounced search term change
-  const filteredClients = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) return clients;
-    const searchLower = debouncedSearchTerm.toLowerCase();
-    return clients.filter(client => {
-      if (
-        client.firstName.toLowerCase().includes(searchLower) ||
-        client.lastName.toLowerCase().includes(searchLower) ||
-        client.email.toLowerCase().includes(searchLower) ||
-        (client.phone && client.phone.toLowerCase().includes(searchLower)) ||
-        (client.notes && client.notes.toLowerCase().includes(searchLower))
-      ) {
-        return true;
-      }
-      if (client.events && client.events.length > 0) {
-        return client.events.some(event =>
-          (event.eventType && event.eventType.toLowerCase().includes(searchLower)) ||
-          (event.eventLocation && event.eventLocation.toLowerCase().includes(searchLower)) ||
-          (event.eventPackage && event.eventPackage.toLowerCase().includes(searchLower)) ||
-          (event.notes && event.notes.toLowerCase().includes(searchLower))
-        );
-      }
-      return (
-        (client.eventType && client.eventType.toLowerCase().includes(searchLower)) ||
-        (client.eventLocation && client.eventLocation.toLowerCase().includes(searchLower)) ||
-        (client.eventPackage && client.eventPackage.toLowerCase().includes(searchLower))
-      );
-    });
-  }, [clients, debouncedSearchTerm]);
+  const filteredClients = useMemo(
+    () => filterClientsBySearch(clients, debouncedSearchTerm),
+    [clients, debouncedSearchTerm]
+  );
 
   const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
   const paginatedClients = filteredClients.slice(
