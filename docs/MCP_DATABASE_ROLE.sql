@@ -6,8 +6,8 @@
 --
 -- Phase 1 reads (four tools + Connected apps when MCP_DATABASE_URL is set):
 --   search_clients / get_client  -> Client, Event
---   search_agreements            -> Agreement, Client, Event
---   get_agreement                -> Agreement, Client, Event, Template
+--   search_agreements            -> Agreement, Client, Event, BackdropLink, Attendant
+--   get_agreement                -> Agreement, Client, Event, Template, BackdropLink, Attendant
 --   Connected apps list/revoke   -> McpOAuthGrant (+ token tables on revoke)
 -- Phase 2 writes also need:
 --   Client, Event, Agreement, ClientNote, AgreementActivity, AuditLog, Settings (conflict buffers)
@@ -31,6 +31,7 @@ GRANT SELECT ON TABLE
   "AuditLog",
   "Settings",
   "BackdropLink",
+  "Attendant",
   "McpOAuthGrant",
   "McpAuthCode",
   "McpAccessToken",
