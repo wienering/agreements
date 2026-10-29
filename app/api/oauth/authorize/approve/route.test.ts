@@ -123,4 +123,45 @@ describe('POST /api/oauth/authorize/approve', () => {
     expect(body.redirectTo).toContain('state=state-xyz');
     expect(sendTelegramMessage).toHaveBeenCalled();
   });
+
+  describe('write consent checkbox', () => {
+    const baseBody = {
+      client_id: 'claude-client',
+      redirect_uri: 'https://claude.ai/api/mcp/auth_callback',
+      state: 'state-xyz',
+      code_challenge: 'a'.repeat(43),
+      code_challenge_method: 'S256',
+    };
+
+    beforeEach(() => {
+      getServerSession.mockResolvedValue({ user: { email: 'admin@example.com' } });
+      createAuthorizationCode.mockResolvedValue({ code: 'the-code', grantId: 'grant_1' });
+    });
+
+    it('grants read+write when checked, even if the client only requested read', async () => {
+      const response = await POST(approveRequest({ ...baseBody, scope: 'read', allow_write: true }));
+      expect(response.status).toBe(200);
+      expect(createAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({ scopes: ['read', 'write'] }),
+      );
+    });
+
+    it('grants read only when unchecked, even if the client requested write', async () => {
+      const response = await POST(
+        approveRequest({ ...baseBody, scope: 'read write', allow_write: false }),
+      );
+      expect(response.status).toBe(200);
+      expect(createAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({ scopes: ['read'] }),
+      );
+    });
+
+    it('grants read only when the checkbox value is missing', async () => {
+      const response = await POST(approveRequest({ ...baseBody, scope: 'read write' }));
+      expect(response.status).toBe(200);
+      expect(createAuthorizationCode).toHaveBeenCalledWith(
+        expect.objectContaining({ scopes: ['read'] }),
+      );
+    });
+  });
 });

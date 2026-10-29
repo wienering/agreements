@@ -11,6 +11,7 @@ function AuthorizeInner() {
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
+  const [allowWrite, setAllowWrite] = useState(true);
 
   const query = useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -36,7 +37,7 @@ function AuthorizeInner() {
     }
   }, [status, router, searchParams]);
 
-  const scopes = (query.scope || 'read').split(/[\s+]+/).filter(Boolean);
+  const grantedScopes = allowWrite ? ['read', 'write'] : ['read'];
 
   async function onApprove() {
     setApproving(true);
@@ -52,6 +53,7 @@ function AuthorizeInner() {
           code_challenge: query.code_challenge,
           code_challenge_method: query.code_challenge_method,
           scope: query.scope,
+          allow_write: allowWrite,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -90,13 +92,24 @@ function AuthorizeInner() {
         <div>
           <dt className="font-medium text-admin-text">Scopes</dt>
           <dd className="text-admin-muted">
-            {scopes.length ? scopes.join(', ') : 'read'}
-            {scopes.includes('write')
+            {grantedScopes.join(', ')}
+            {allowWrite
               ? ' — write lets Claude create/update clients, notes, drafts, and payment status'
               : ''}
           </dd>
         </div>
       </dl>
+
+      <label className="mt-6 flex items-start gap-2 text-sm text-admin-text">
+        <input
+          type="checkbox"
+          checked={allowWrite}
+          onChange={(event) => setAllowWrite(event.target.checked)}
+          disabled={approving}
+          className="mt-0.5"
+        />
+        <span>Allow Claude to make changes (create/edit clients and draft agreements)</span>
+      </label>
 
       {error ? (
         <p className="mt-4 rounded border border-alert/40 bg-alert/10 px-3 py-2 text-sm text-alert">

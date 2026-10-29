@@ -8,6 +8,7 @@ import {
   isMcpAllowedEmail,
   isMcpEnabled,
   mcpDisabledResponse,
+  type McpScope,
 } from '@/lib/mcp/config';
 import { parseAuthorizeQuery } from '@/lib/mcp/authorizeParams';
 import { createAuthorizationCode } from '@/lib/mcp/tokens';
@@ -22,6 +23,8 @@ const bodySchema = z.strictObject({
   code_challenge: z.string().min(43),
   code_challenge_method: z.literal('S256'),
   scope: z.string().optional(),
+  // Consent checkbox on /oauth/authorize. Decides read vs read+write; the scope param alone never grants write.
+  allow_write: z.boolean().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -63,10 +66,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error }, { status: parsed.status });
     }
 
+    const scopes: McpScope[] = body.allow_write ? ['read', 'write'] : ['read'];
+
     const { code, grantId } = await createAuthorizationCode({
       clientId: parsed.value.clientId,
       userEmail: email!,
-      scopes: parsed.value.scopes,
+      scopes,
       redirectUri: parsed.value.redirectUri,
       codeChallenge: parsed.value.codeChallenge,
       codeChallengeMethod: 'S256',
@@ -74,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     await recordMcpAttempt({ ip, kind: 'authorize', success: true });
     await sendTelegramMessage(
-      `MCP connected app approved for ${email} (grant ${grantId}, scopes: ${parsed.value.scopes.join(' ')}).`,
+      `MCP connected app approved for ${email} (grant ${grantId}, scopes: ${scopes.join(' ')}).`,
     );
 
     const redirect = new URL(parsed.value.redirectUri);

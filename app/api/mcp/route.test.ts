@@ -44,7 +44,7 @@ vi.mock('mcp-handler', () => ({
           status: 401,
           headers: {
             'WWW-Authenticate':
-              'Bearer error="invalid_token", resource_metadata="https://example.com/.well-known/oauth-protected-resource"',
+              'Bearer error="invalid_token", scope="read", resource_metadata="https://example.com/.well-known/oauth-protected-resource"',
           },
         });
       }
@@ -79,6 +79,8 @@ describe('GET /api/mcp', () => {
     const response = await GET(new Request('https://example.com/api/mcp'));
     expect(response.status).toBe(401);
     expect(response.headers.get('WWW-Authenticate')).toMatch(/resource_metadata/);
+    expect(response.headers.get('WWW-Authenticate')).toContain('scope="read write"');
+    expect(response.headers.get('WWW-Authenticate')).not.toContain('scope="read",');
     expect(recordMcpAttempt).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'mcp', success: false }),
     );
