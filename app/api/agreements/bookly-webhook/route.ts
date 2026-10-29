@@ -43,7 +43,7 @@ const booklyWebhookSchema = z.object({
   // Notes and additional info
   notes: z.string().optional(),
   customerNotes: z.string().optional(),
-  customFields: z.record(z.any()).optional(),
+  customFields: z.record(z.string(), z.any()).optional(),
   
   // Nested structures (in case Bookly sends structured data)
   customer: z.object({
@@ -77,7 +77,7 @@ const booklyWebhookSchema = z.object({
   // Bookly service extras. May arrive as a raw JSON string (e.g. '{"2":1}')
   // or as an already-parsed object. Keys are extra IDs, values are quantities.
   extras: z
-    .union([z.string(), z.record(z.union([z.string(), z.number()]))])
+    .union([z.string(), z.record(z.string(), z.union([z.string(), z.number()]))])
     .optional()
     .nullable(),
 

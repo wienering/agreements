@@ -29,7 +29,7 @@ const paymentStatusInputSchema = z
   });
 
 const statusInputSchema = z.enum(MANUAL_STATUSES, {
-  errorMap: () => ({ message: 'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED' }),
+  error: () => 'Status must be DRAFT, SENT, SIGNED, COMPLETED, or CANCELLED',
 });
 
 /**

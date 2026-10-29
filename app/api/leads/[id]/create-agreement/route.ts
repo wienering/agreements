@@ -91,7 +91,7 @@ export async function POST(
     const authResponse = adminAuthResponse(error);
     if (authResponse) return authResponse;
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 });
     }
     console.error('Error creating agreement from lead:', error);
     return NextResponse.json({ error: 'Failed to create agreement' }, { status: 500 });

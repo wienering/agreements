@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const splitTextToSize = vi.hoisted(() => vi.fn((text: string) => String(text).split('\n')));
+const splitTextToSize = vi.hoisted(() =>
+  vi.fn((text: string, _width?: number) => String(text).split('\n')),
+);
 
 const jsPdfMock = vi.hoisted(() =>
   vi.fn(function JsPdfMock(this: Record<string, unknown>) {

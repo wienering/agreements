@@ -100,7 +100,7 @@ export async function PATCH(
     const authResponse = adminAuthResponse(error);
     if (authResponse) return authResponse;
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 });
     }
     console.error('Error updating lead:', error);
     return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 });
