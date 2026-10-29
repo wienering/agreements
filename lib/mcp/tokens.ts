@@ -92,30 +92,43 @@ export async function exchangeAuthorizationCode(options: {
   const accessToken = generateToken(32);
   const refreshToken = generateToken(32);
 
-  await prisma.$transaction([
-    prisma.mcpAuthCode.update({
-      where: { id: authCode.id },
-      data: { usedAt: now },
-    }),
-    prisma.mcpAccessToken.create({
-      data: {
-        grantId: authCode.grantId,
-        tokenHash: sha256Hex(accessToken),
-        expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_MS),
-      },
-    }),
-    prisma.mcpRefreshToken.create({
-      data: {
-        grantId: authCode.grantId,
-        tokenHash: sha256Hex(refreshToken),
-        expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_MS),
-      },
-    }),
-    prisma.mcpOAuthGrant.update({
-      where: { id: authCode.grantId },
-      data: { lastUsedAt: now },
-    }),
-  ]);
+  try {
+    await prisma.$transaction(async (tx) => {
+      const claimed = await tx.mcpAuthCode.updateMany({
+        where: { id: authCode.id, usedAt: null },
+        data: { usedAt: now },
+      });
+
+      if (claimed.count !== 1) {
+        throw new Error('AUTH_CODE_CLAIM_FAILED');
+      }
+
+      await tx.mcpAccessToken.create({
+        data: {
+          grantId: authCode.grantId,
+          tokenHash: sha256Hex(accessToken),
+          expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_MS),
+        },
+      });
+      await tx.mcpRefreshToken.create({
+        data: {
+          grantId: authCode.grantId,
+          tokenHash: sha256Hex(refreshToken),
+          expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_MS),
+        },
+      });
+      await tx.mcpOAuthGrant.update({
+        where: { id: authCode.grantId },
+        data: { lastUsedAt: now },
+      });
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'AUTH_CODE_CLAIM_FAILED') {
+      await revokeGrant(authCode.grantId);
+      return { error: 'invalid_grant' };
+    }
+    throw error;
+  }
 
   return {
     accessToken,
@@ -160,31 +173,57 @@ export async function rotateRefreshToken(options: {
   const refreshToken = generateToken(32);
   const newRefreshHash = sha256Hex(refreshToken);
 
-  const created = await prisma.mcpRefreshToken.create({
-    data: {
-      grantId: existing.grantId,
-      tokenHash: newRefreshHash,
-      expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_MS),
-    },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const claimed = await tx.mcpRefreshToken.updateMany({
+        where: {
+          id: existing.id,
+          revokedAt: null,
+          replacedById: null,
+        },
+        data: {
+          revokedAt: now,
+          lastUsedAt: now,
+        },
+      });
 
-  await prisma.$transaction([
-    prisma.mcpRefreshToken.update({
-      where: { id: existing.id },
-      data: { revokedAt: now, replacedById: created.id, lastUsedAt: now },
-    }),
-    prisma.mcpAccessToken.create({
-      data: {
-        grantId: existing.grantId,
-        tokenHash: sha256Hex(accessToken),
-        expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_MS),
-      },
-    }),
-    prisma.mcpOAuthGrant.update({
-      where: { id: existing.grantId },
-      data: { lastUsedAt: now },
-    }),
-  ]);
+      if (claimed.count !== 1) {
+        throw new Error('REFRESH_TOKEN_CLAIM_FAILED');
+      }
+
+      const created = await tx.mcpRefreshToken.create({
+        data: {
+          grantId: existing.grantId,
+          tokenHash: newRefreshHash,
+          expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_MS),
+        },
+      });
+
+      await tx.mcpRefreshToken.update({
+        where: { id: existing.id },
+        data: { replacedById: created.id },
+      });
+
+      await tx.mcpAccessToken.create({
+        data: {
+          grantId: existing.grantId,
+          tokenHash: sha256Hex(accessToken),
+          expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_MS),
+        },
+      });
+
+      await tx.mcpOAuthGrant.update({
+        where: { id: existing.grantId },
+        data: { lastUsedAt: now },
+      });
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'REFRESH_TOKEN_CLAIM_FAILED') {
+      await revokeGrant(existing.grantId);
+      return { error: 'invalid_grant' };
+    }
+    throw error;
+  }
 
   return {
     accessToken,

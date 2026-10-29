@@ -437,13 +437,16 @@ model OtpRequestLog {
 
 /// OAuth grant issued when an allowlisted admin approves Claude (MCP) access.
 model McpOAuthGrant {
-  id         String    @id @default(cuid())
-  clientId   String
-  userEmail  String
-  scopes     String[]
-  createdAt  DateTime  @default(now())
-  revokedAt  DateTime?
-  lastUsedAt DateTime?
+  id                   String    @id @default(cuid())
+  clientId             String
+  userEmail            String
+  scopes               String[]
+  createdAt            DateTime  @default(now())
+  revokedAt            DateTime?
+  lastUsedAt           DateTime?
+  /// Sliding window for authenticated MCP request rate limits (not attempt logs).
+  rateLimitCount       Int       @default(0)
+  rateLimitWindowStart DateTime?
 
   authCodes     McpAuthCode[]
   accessTokens  McpAccessToken[]

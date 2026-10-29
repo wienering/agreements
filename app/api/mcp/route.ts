@@ -8,7 +8,12 @@ import {
 } from '@/lib/mcp/config';
 import { verifyAccessToken } from '@/lib/mcp/tokens';
 import { getRequestIp } from '@/lib/mcp/requestIp';
-import { isIpRateLimited, rateLimitResponse, recordMcpAttempt } from '@/lib/mcp/rateLimit';
+import {
+  consumeGrantRateLimit,
+  isMcpUnauthIpRateLimited,
+  rateLimitResponse,
+  recordMcpAttempt,
+} from '@/lib/mcp/rateLimit';
 import { searchClients, getClient } from '@/lib/mcp/tools/clients';
 import { searchAgreements, getAgreement } from '@/lib/mcp/tools/agreements';
 import { handleApiError } from '@/lib/handleApiError';
@@ -45,6 +50,13 @@ function toolError(message: string) {
     content: [{ type: 'text' as const, text: JSON.stringify({ error: message }) }],
     isError: true as const,
   };
+}
+
+function extractBearer(request: Request): string | undefined {
+  const header = request.headers.get('authorization');
+  if (!header?.startsWith('Bearer ')) return undefined;
+  const token = header.slice(7).trim();
+  return token || undefined;
 }
 
 const mcpHandler = createMcpHandler(
@@ -159,14 +171,24 @@ async function handle(request: Request): Promise<Response> {
 
   try {
     const ip = getRequestIp(request);
-    if (await isIpRateLimited(ip, 'mcp')) {
+    const bearer = extractBearer(request);
+    const verified = bearer ? await verifyAccessToken(bearer) : null;
+    const authenticated = Boolean(verified?.scopes.includes('read'));
+
+    if (!authenticated) {
+      if (await isMcpUnauthIpRateLimited(ip)) {
+        return rateLimitResponse();
+      }
+      await recordMcpAttempt({ ip, kind: 'mcp', success: false });
+      return authHandler(request);
+    }
+
+    if (!(await consumeGrantRateLimit(verified!.grantId))) {
       return rateLimitResponse();
     }
 
-    const response = await authHandler(request);
-    const ok = response.status < 400;
-    await recordMcpAttempt({ ip, kind: 'mcp', success: ok });
-    return response;
+    // Do not log successful authenticated MCP calls (shared Anthropic IPs + volume).
+    return authHandler(request);
   } catch (error) {
     console.error('[mcp] handler error');
     await handleApiError(error, 'api/mcp', request.method);

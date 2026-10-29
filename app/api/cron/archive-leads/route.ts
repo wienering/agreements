@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronSecret } from '@/lib/cronAuth';
 import { reportServerError } from '@/lib/errorAlert';
 import { getAutoArchiveReason, type ArchiveReason } from '@/lib/leads/archive';
+import { deleteOldMcpAuthAttemptLogs } from '@/lib/mcp/rateLimit';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram';
 
@@ -85,7 +86,9 @@ async function runArchiveLeads() {
     );
   }
 
-  return { archived, byReason };
+  const mcpAttemptLogsDeleted = await deleteOldMcpAuthAttemptLogs(7);
+
+  return { archived, byReason, mcpAttemptLogsDeleted };
 }
 
 async function handler(request: NextRequest) {

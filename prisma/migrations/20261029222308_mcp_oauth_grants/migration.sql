@@ -7,6 +7,8 @@ CREATE TABLE "McpOAuthGrant" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "revokedAt" TIMESTAMP(3),
     "lastUsedAt" TIMESTAMP(3),
+    "rateLimitCount" INTEGER NOT NULL DEFAULT 0,
+    "rateLimitWindowStart" TIMESTAMP(3),
 
     CONSTRAINT "McpOAuthGrant_pkey" PRIMARY KEY ("id")
 );

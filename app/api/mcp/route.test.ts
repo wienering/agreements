@@ -17,7 +17,8 @@ describe('mcp tool schemas', () => {
 });
 
 const verifyAccessToken = vi.hoisted(() => vi.fn());
-const isIpRateLimited = vi.hoisted(() => vi.fn());
+const isMcpUnauthIpRateLimited = vi.hoisted(() => vi.fn());
+const consumeGrantRateLimit = vi.hoisted(() => vi.fn());
 const recordMcpAttempt = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/mcp/tokens', () => ({
@@ -25,7 +26,8 @@ vi.mock('@/lib/mcp/tokens', () => ({
 }));
 
 vi.mock('@/lib/mcp/rateLimit', () => ({
-  isIpRateLimited,
+  isMcpUnauthIpRateLimited,
+  consumeGrantRateLimit,
   recordMcpAttempt,
   rateLimitResponse: () => Response.json({ error: 'too_many_requests' }, { status: 429 }),
 }));
@@ -61,7 +63,8 @@ describe('GET /api/mcp', () => {
     process.env.MCP_ENABLED = 'true';
     process.env.NEXT_PUBLIC_BASE_URL = 'https://example.com';
     vi.clearAllMocks();
-    isIpRateLimited.mockResolvedValue(false);
+    isMcpUnauthIpRateLimited.mockResolvedValue(false);
+    consumeGrantRateLimit.mockResolvedValue(true);
     recordMcpAttempt.mockResolvedValue(undefined);
   });
 
@@ -76,5 +79,48 @@ describe('GET /api/mcp', () => {
     const response = await GET(new Request('https://example.com/api/mcp'));
     expect(response.status).toBe(401);
     expect(response.headers.get('WWW-Authenticate')).toMatch(/resource_metadata/);
+    expect(recordMcpAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'mcp', success: false }),
+    );
+  });
+
+  it('does not write attempt logs for successful authenticated calls', async () => {
+    verifyAccessToken.mockResolvedValue({
+      grantId: 'grant_1',
+      tokenId: 'tok_1',
+      clientId: 'claude',
+      userEmail: 'a@b.c',
+      scopes: ['read'],
+    });
+
+    const response = await GET(
+      new Request('https://example.com/api/mcp', {
+        headers: { authorization: 'Bearer good-token' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(consumeGrantRateLimit).toHaveBeenCalledWith('grant_1');
+    expect(recordMcpAttempt).not.toHaveBeenCalled();
+  });
+
+  it('returns 429 when the per-grant limit is exceeded', async () => {
+    verifyAccessToken.mockResolvedValue({
+      grantId: 'grant_1',
+      tokenId: 'tok_1',
+      clientId: 'claude',
+      userEmail: 'a@b.c',
+      scopes: ['read'],
+    });
+    consumeGrantRateLimit.mockResolvedValue(false);
+
+    const response = await GET(
+      new Request('https://example.com/api/mcp', {
+        headers: { authorization: 'Bearer good-token' },
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(recordMcpAttempt).not.toHaveBeenCalled();
   });
 });
