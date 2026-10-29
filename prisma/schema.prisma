@@ -435,6 +435,82 @@ model OtpRequestLog {
   @@index([ip, createdAt])
 }
 
+/// OAuth grant issued when an allowlisted admin approves Claude (MCP) access.
+model McpOAuthGrant {
+  id         String    @id @default(cuid())
+  clientId   String
+  userEmail  String
+  scopes     String[]
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+
+  authCodes     McpAuthCode[]
+  accessTokens  McpAccessToken[]
+  refreshTokens McpRefreshToken[]
+
+  @@index([userEmail])
+  @@index([clientId])
+  @@index([revokedAt])
+}
+
+model McpAuthCode {
+  id                  String    @id @default(cuid())
+  grantId             String
+  codeHash            String    @unique
+  redirectUri         String
+  codeChallenge       String
+  codeChallengeMethod String
+  expiresAt           DateTime
+  usedAt              DateTime?
+  createdAt           DateTime  @default(now())
+  grant               McpOAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+model McpAccessToken {
+  id         String    @id @default(cuid())
+  grantId    String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  grant      McpOAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+model McpRefreshToken {
+  id           String    @id @default(cuid())
+  grantId      String
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  lastUsedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  grant        McpOAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+/// Rate-limit / abuse log for MCP OAuth and tool endpoints.
+model McpAuthAttemptLog {
+  id        String   @id @default(cuid())
+  ip        String
+  kind      String
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+  @@index([kind, createdAt])
+}
+
 model Lead {
   id               String     @id @default(cuid())
   source           LeadSource @default(QUOTE)

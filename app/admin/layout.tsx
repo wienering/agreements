@@ -40,6 +40,7 @@ const navGroups = [
       { id: 'backdrop-links', label: 'Backdrop Links', iconName: 'picture', href: '/admin/backdrop-links', tooltip: 'Manage backdrop selection URLs for the client portal' },
       { id: 'attendant-groups', label: 'Attendant Hubs', iconName: 'users-alt', href: '/admin/attendant-groups', tooltip: 'Manage groups of attendants and their hub links' },
       { id: 'import-events', label: 'Import Events', iconName: 'file-import', href: '/admin/events/import', tooltip: 'Import events from Bookly CSV export' },
+      { id: 'connected-apps', label: 'Connected apps', iconName: 'link', href: '/admin/connected-apps', tooltip: 'Claude MCP connector grants' },
     ],
   },
 ];
