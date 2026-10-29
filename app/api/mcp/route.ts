@@ -299,6 +299,26 @@ const authHandler = withMcpAuth(mcpHandler, verifyToken, {
   resourceUrl: getMcpResourceUrl(),
 });
 
+// requiredScopes stays ['read'] so read-only grants still work, but a 401 advertises both
+// scopes so clients that honor the challenge request write too.
+const CHALLENGE_SCOPE = 'scope="read write"';
+
+function withChallengeScope(response: Response): Response {
+  if (response.status !== 401) return response;
+  const challenge = response.headers.get('WWW-Authenticate');
+  if (!challenge) return response;
+  const updated = /scope="[^"]*"/.test(challenge)
+    ? challenge.replace(/scope="[^"]*"/, CHALLENGE_SCOPE)
+    : `${challenge}, ${CHALLENGE_SCOPE}`;
+  const headers = new Headers(response.headers);
+  headers.set('WWW-Authenticate', updated);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 async function handle(request: Request): Promise<Response> {
   if (!isMcpEnabled()) {
     return mcpDisabledResponse();
@@ -315,7 +335,7 @@ async function handle(request: Request): Promise<Response> {
         return rateLimitResponse();
       }
       await recordMcpAttempt({ ip, kind: 'mcp', success: false });
-      return authHandler(request);
+      return withChallengeScope(await authHandler(request));
     }
 
     if (!(await consumeGrantRateLimit(verified!.grantId))) {
