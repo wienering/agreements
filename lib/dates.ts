@@ -303,6 +303,49 @@ export function torontoStartOfTodayUtc(now = new Date()): Date {
   return torontoMidnightUtc(year, month, day);
 }
 
+/**
+ * Instant as America/Toronto local time with numeric offset, e.g. 2026-11-23T08:30:00-05:00.
+ * Returns null for null/undefined/invalid input.
+ */
+export function formatTorontoOffsetIso(
+  input: Date | string | number | null | undefined,
+): string | null {
+  if (input === null || input === undefined || input === '') {
+    return null;
+  }
+  const d = coerceDate(input);
+  if (!isValidDate(d)) {
+    console.error('[dates] formatTorontoOffsetIso: invalid date input', input);
+    return null;
+  }
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TORONTO_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'longOffset',
+  }).formatToParts(d);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '';
+
+  let hour = get('hour');
+  if (hour === '24') hour = '00';
+
+  const rawOffset = get('timeZoneName'); // e.g. "GMT-05:00" or "GMT-5"
+  const match = rawOffset.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/i);
+  const offset = match
+    ? `${match[1]}${match[2].padStart(2, '0')}:${(match[3] || '00').padStart(2, '0')}`
+    : '-00:00';
+
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}:${get('second')}${offset}`;
+}
+
 /** datetime-local input value (YYYY-MM-DDTHH:mm) representing Toronto wall clock. */
 export function toTorontoDateTimeLocalInput(date: Date | string | number): string {
   const d = coerceDate(date);

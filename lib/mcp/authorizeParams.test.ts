@@ -62,7 +62,7 @@ describe('parseAuthorizeQuery', () => {
     expect(result.ok).toBe(false);
   });
 
-  it('issues read-only scopes in phase 1 even if write is requested', () => {
+  it('issues read and write when write is requested', () => {
     process.env.MCP_CLIENT_ID = 'claude-client';
     const result = parseAuthorizeQuery(
       new URLSearchParams({
@@ -77,7 +77,7 @@ describe('parseAuthorizeQuery', () => {
     );
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.scopes).toEqual(['read']);
+      expect(result.value.scopes).toEqual(['read', 'write']);
     }
   });
 });

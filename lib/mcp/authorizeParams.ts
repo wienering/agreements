@@ -3,7 +3,7 @@ import {
   isAllowedRedirectUri,
   type McpScope,
 } from '@/lib/mcp/config';
-import { phase1ScopesOnly } from '@/lib/mcp/tokens';
+import { resolveGrantedScopes } from '@/lib/mcp/tokens';
 
 export type AuthorizeQuery = {
   clientId: string;
@@ -58,7 +58,7 @@ export function parseAuthorizeQuery(
     return { ok: false, error: 'state is required', status: 400 };
   }
 
-  const scopes = phase1ScopesOnly(scopeRaw.split(/[\s+]+/));
+  const scopes = resolveGrantedScopes(scopeRaw.split(/[\s+]+/));
   if (scopes.length === 0) {
     return { ok: false, error: 'No supported scopes requested', status: 400 };
   }

@@ -3,7 +3,13 @@ const DEFAULT_REDIRECT_URIS = ['https://claude.ai/api/mcp/auth_callback'] as con
 export const MCP_SCOPES = ['read', 'write'] as const;
 export type McpScope = (typeof MCP_SCOPES)[number];
 
+/** Scopes advertised in OAuth metadata and issuable to connectors. */
+export const MCP_SUPPORTED_SCOPES: McpScope[] = ['read', 'write'];
+
+/** @deprecated Use MCP_SUPPORTED_SCOPES. Kept for older imports. */
 export const MCP_PHASE1_SCOPES: McpScope[] = ['read'];
+
+export const MCP_ACTOR = 'Claude (MCP)';
 
 export const AUTH_CODE_TTL_MS = 60_000;
 export const ACCESS_TOKEN_TTL_MS = 60 * 60_000;

@@ -39,6 +39,7 @@ describe('mcp client tools', () => {
       name: 'Samreen Khan',
       greetingName: 'Sam',
       company: null,
+      upcomingEventDate: '2026-11-30',
     });
     assertNoForbiddenFields(results);
   });

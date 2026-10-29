@@ -34,7 +34,12 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/mcp/tokens', () => ({
   createAuthorizationCode,
-  phase1ScopesOnly: (scopes: string[]) => (scopes.includes('read') || scopes.includes('write') ? ['read'] : []),
+  resolveGrantedScopes: (scopes: string[]) => {
+    const out: string[] = [];
+    if (scopes.includes('read') || scopes.includes('write')) out.push('read');
+    if (scopes.includes('write')) out.push('write');
+    return out;
+  },
 }));
 
 vi.mock('@/lib/telegram', () => ({

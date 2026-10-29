@@ -1,6 +1,7 @@
 import type { AgreementStatus, Prisma } from '@prisma/client';
 import { getMcpPrisma } from '@/lib/mcp/db';
 import { assertNoForbiddenFields, labelClientProvidedText } from '@/lib/mcp/tools/sanitize';
+import { mcpCalendarDate, mcpDateTime } from '@/lib/mcp/tools/datetime';
 
 const MAX_RESULTS = 10;
 
@@ -22,8 +23,28 @@ function eventDateOf(agreement: {
   event: { eventDate: Date | null } | null;
   client: { eventDate: Date | null };
 }): string | null {
-  const date = agreement.event?.eventDate ?? agreement.client.eventDate;
-  return date ? date.toISOString() : null;
+  return mcpCalendarDate(agreement.event?.eventDate ?? agreement.client.eventDate);
+}
+
+function startTimeOf(agreement: {
+  event: { eventStartTime: string | null } | null;
+  client: { eventStartTime: string | null };
+}): string | null {
+  return agreement.event?.eventStartTime ?? agreement.client.eventStartTime ?? null;
+}
+
+function durationOf(agreement: {
+  event: { eventDuration: string | null } | null;
+  client: { eventDuration: string | null };
+}): string | null {
+  return agreement.event?.eventDuration ?? agreement.client.eventDuration ?? null;
+}
+
+function attendantNamesOf(agreement: {
+  backdropLink: { attendant: { name: string } | null } | null;
+}): string[] {
+  const name = agreement.backdropLink?.attendant?.name?.trim();
+  return name ? [name] : [];
 }
 
 export async function searchAgreements(input: SearchAgreementsInput) {
@@ -71,6 +92,8 @@ export async function searchAgreements(input: SearchAgreementsInput) {
           email: true,
           eventDate: true,
           eventLocation: true,
+          eventStartTime: true,
+          eventDuration: true,
         },
       },
       event: {
@@ -78,6 +101,13 @@ export async function searchAgreements(input: SearchAgreementsInput) {
           eventDate: true,
           eventLocation: true,
           eventName: true,
+          eventStartTime: true,
+          eventDuration: true,
+        },
+      },
+      backdropLink: {
+        select: {
+          attendant: { select: { name: true } },
         },
       },
     },
@@ -106,9 +136,12 @@ export async function searchAgreements(input: SearchAgreementsInput) {
     id: row.id,
     clientName: `${row.client.firstName} ${row.client.lastName}`.trim(),
     eventDate: eventDateOf(row),
+    startTime: startTimeOf(row),
+    duration: durationOf(row),
     venue: venueOf(row),
     status: row.status,
     paymentStatus: row.paymentStatus,
+    attendants: attendantNamesOf(row),
   }));
 
   assertNoForbiddenFields(results);
@@ -137,6 +170,8 @@ export async function getAgreement(id: string) {
           phone: true,
           eventDate: true,
           eventLocation: true,
+          eventStartTime: true,
+          eventDuration: true,
           notes: true,
         },
       },
@@ -159,6 +194,11 @@ export async function getAgreement(id: string) {
           internalTitle: true,
         },
       },
+      backdropLink: {
+        select: {
+          attendant: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -168,11 +208,12 @@ export async function getAgreement(id: string) {
     id: agreement.id,
     status: agreement.status,
     paymentStatus: agreement.paymentStatus,
-    expiresAt: agreement.expiresAt?.toISOString() ?? null,
-    signedAt: agreement.signedAt?.toISOString() ?? null,
+    expiresAt: mcpDateTime(agreement.expiresAt),
+    signedAt: mcpDateTime(agreement.signedAt),
     nextAction: agreement.nextAction,
     archived: agreement.archived,
     selectedBackdropName: agreement.selectedBackdropName,
+    attendants: attendantNamesOf(agreement),
     client: {
       id: agreement.client.id,
       name: `${agreement.client.firstName} ${agreement.client.lastName}`.trim(),
@@ -183,7 +224,7 @@ export async function getAgreement(id: string) {
     event: agreement.event
       ? {
           id: agreement.event.id,
-          eventDate: agreement.event.eventDate?.toISOString() ?? null,
+          eventDate: mcpCalendarDate(agreement.event.eventDate),
           venue: agreement.event.eventLocation,
           startTime: agreement.event.eventStartTime,
           duration: agreement.event.eventDuration,
@@ -192,8 +233,10 @@ export async function getAgreement(id: string) {
           ...(labelClientProvidedText(agreement.event.notes) ?? {}),
         }
       : {
-          eventDate: agreement.client.eventDate?.toISOString() ?? null,
+          eventDate: mcpCalendarDate(agreement.client.eventDate),
           venue: agreement.client.eventLocation,
+          startTime: agreement.client.eventStartTime,
+          duration: agreement.client.eventDuration,
         },
     template: {
       id: agreement.template.id,

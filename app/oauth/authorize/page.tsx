@@ -88,9 +88,12 @@ function AuthorizeInner() {
           <dd className="break-all text-admin-muted">{query.redirect_uri || '(missing)'}</dd>
         </div>
         <div>
-          <dt className="font-medium text-admin-text">Scopes (Phase 1)</dt>
+          <dt className="font-medium text-admin-text">Scopes</dt>
           <dd className="text-admin-muted">
-            {scopes.length ? scopes.join(', ') : 'read'} — write is not issued in Phase 1
+            {scopes.length ? scopes.join(', ') : 'read'}
+            {scopes.includes('write')
+              ? ' — write lets Claude create/update clients, notes, drafts, and payment status'
+              : ''}
           </dd>
         </div>
       </dl>
