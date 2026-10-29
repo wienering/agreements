@@ -1,7 +1,6 @@
 import {
   ACCESS_TOKEN_TTL_MS,
   AUTH_CODE_TTL_MS,
-  MCP_PHASE1_SCOPES,
   REFRESH_TOKEN_TTL_MS,
   type McpScope,
 } from '@/lib/mcp/config';
@@ -299,13 +298,30 @@ export async function revokeAllGrants(): Promise<number> {
   return active.length;
 }
 
-export function phase1ScopesOnly(requested: string[]): McpScope[] {
+/**
+ * Map requested OAuth scopes to grants we issue.
+ * Always includes `read` when any supported scope is requested; adds `write` when asked.
+ */
+export function resolveGrantedScopes(requested: string[]): McpScope[] {
   const normalized = requested.map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (normalized.length === 0) {
-    return [...MCP_PHASE1_SCOPES];
+    return ['read'];
   }
-  // Phase 1: issue read only, even if write was requested.
-  return normalized.includes('read') || normalized.includes('write')
-    ? ['read']
-    : [];
+
+  const wantsRead = normalized.includes('read');
+  const wantsWrite = normalized.includes('write');
+  if (!wantsRead && !wantsWrite) {
+    return [];
+  }
+
+  const scopes: McpScope[] = ['read'];
+  if (wantsWrite) {
+    scopes.push('write');
+  }
+  return scopes;
+}
+
+/** @deprecated Use resolveGrantedScopes. */
+export function phase1ScopesOnly(requested: string[]): McpScope[] {
+  return resolveGrantedScopes(requested).filter((scope) => scope === 'read');
 }

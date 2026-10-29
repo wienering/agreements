@@ -2,6 +2,7 @@ import { clientMatchesSearch } from '@/lib/clients/search';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { getMcpPrisma } from '@/lib/mcp/db';
 import { assertNoForbiddenFields, labelClientProvidedText } from '@/lib/mcp/tools/sanitize';
+import { mcpDateTime } from '@/lib/mcp/tools/datetime';
 
 const MAX_RESULTS = 10;
 
@@ -12,9 +13,9 @@ function upcomingEventDate(
   const now = Date.now();
   const future = events
     .filter((event) => !event.archived && event.eventDate && event.eventDate.getTime() >= now)
-    .sort((a, b) => (a.eventDate!.getTime() - b.eventDate!.getTime()));
+    .sort((a, b) => a.eventDate!.getTime() - b.eventDate!.getTime());
   const pick = future[0]?.eventDate ?? fallback;
-  return pick ? pick.toISOString() : null;
+  return mcpDateTime(pick);
 }
 
 export async function searchClients(query: string) {
@@ -106,7 +107,7 @@ export async function getClient(id: string) {
     ),
     events: client.events.map((event) => ({
       id: event.id,
-      eventDate: event.eventDate?.toISOString() ?? null,
+      eventDate: mcpDateTime(event.eventDate),
       eventType: event.eventType,
       venue: event.eventLocation,
       startTime: event.eventStartTime,

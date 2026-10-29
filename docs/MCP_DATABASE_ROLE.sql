@@ -1,14 +1,16 @@
--- Optional separate Postgres role for MCP traffic (Phase 1 read-only tools + OAuth).
+-- Optional separate Postgres role for MCP traffic.
 -- Review before applying. Do not run until approved.
 --
 -- Replace YOUR_PASSWORD and reconnect MCP_DATABASE_URL as:
 --   postgresql://mcp_claude:YOUR_PASSWORD@HOST/neondb?sslmode=require&...
 --
--- Covered reads (four tools + Connected apps when MCP_DATABASE_URL is set):
+-- Phase 1 reads (four tools + Connected apps when MCP_DATABASE_URL is set):
 --   search_clients / get_client  -> Client, Event
 --   search_agreements            -> Agreement, Client, Event
 --   get_agreement                -> Agreement, Client, Event, Template
 --   Connected apps list/revoke   -> McpOAuthGrant (+ token tables on revoke)
+-- Phase 2 writes also need:
+--   Client, Event, Agreement, ClientNote, AgreementActivity, AuditLog, Settings (conflict buffers)
 -- OAuth authorize/token/MCP auth -> Mcp* tables
 -- Cron attempt-log cleanup uses the app DATABASE_URL role, not mcp_claude.
 
@@ -24,6 +26,11 @@ GRANT SELECT ON TABLE
   "Event",
   "Agreement",
   "Template",
+  "ClientNote",
+  "AgreementActivity",
+  "AuditLog",
+  "Settings",
+  "BackdropLink",
   "McpOAuthGrant",
   "McpAuthCode",
   "McpAccessToken",
@@ -38,6 +45,16 @@ GRANT INSERT, UPDATE ON TABLE
   "McpAccessToken",
   "McpRefreshToken",
   "McpAuthAttemptLog"
+TO mcp_claude;
+
+-- Phase 2 write tools (one record per call; no DELETE).
+GRANT INSERT, UPDATE ON TABLE
+  "Client",
+  "Event",
+  "Agreement",
+  "ClientNote",
+  "AgreementActivity",
+  "AuditLog"
 TO mcp_claude;
 
 COMMIT;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addTorontoCalendarDays,
   formatDateToronto,
+  formatTorontoOffsetIso,
   fromTorontoDateTimeLocalInput,
   getTorontoDateParts,
   isTorontoDateAfter,
@@ -25,6 +26,27 @@ describe('torontoDateKey', () => {
 
   it('returns empty string for invalid dates', () => {
     expect(torontoDateKey(new Date('invalid'))).toBe('');
+  });
+});
+
+describe('formatTorontoOffsetIso', () => {
+  it('returns America/Toronto local time with a numeric offset', () => {
+    // 13:30 UTC on a winter day = 08:30 EST (UTC-5)
+    expect(formatTorontoOffsetIso(new Date('2026-11-23T13:30:00Z'))).toBe(
+      '2026-11-23T08:30:00-05:00',
+    );
+  });
+
+  it('uses daylight offset in summer', () => {
+    // 12:30 UTC in July = 08:30 EDT (UTC-4)
+    expect(formatTorontoOffsetIso(new Date('2026-07-23T12:30:00Z'))).toBe(
+      '2026-07-23T08:30:00-04:00',
+    );
+  });
+
+  it('returns null for empty input', () => {
+    expect(formatTorontoOffsetIso(null)).toBeNull();
+    expect(formatTorontoOffsetIso(undefined)).toBeNull();
   });
 });
 

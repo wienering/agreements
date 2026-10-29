@@ -1,6 +1,7 @@
 import type { AgreementStatus, Prisma } from '@prisma/client';
 import { getMcpPrisma } from '@/lib/mcp/db';
 import { assertNoForbiddenFields, labelClientProvidedText } from '@/lib/mcp/tools/sanitize';
+import { mcpDateTime } from '@/lib/mcp/tools/datetime';
 
 const MAX_RESULTS = 10;
 
@@ -22,8 +23,7 @@ function eventDateOf(agreement: {
   event: { eventDate: Date | null } | null;
   client: { eventDate: Date | null };
 }): string | null {
-  const date = agreement.event?.eventDate ?? agreement.client.eventDate;
-  return date ? date.toISOString() : null;
+  return mcpDateTime(agreement.event?.eventDate ?? agreement.client.eventDate);
 }
 
 export async function searchAgreements(input: SearchAgreementsInput) {
@@ -168,8 +168,8 @@ export async function getAgreement(id: string) {
     id: agreement.id,
     status: agreement.status,
     paymentStatus: agreement.paymentStatus,
-    expiresAt: agreement.expiresAt?.toISOString() ?? null,
-    signedAt: agreement.signedAt?.toISOString() ?? null,
+    expiresAt: mcpDateTime(agreement.expiresAt),
+    signedAt: mcpDateTime(agreement.signedAt),
     nextAction: agreement.nextAction,
     archived: agreement.archived,
     selectedBackdropName: agreement.selectedBackdropName,
@@ -183,7 +183,7 @@ export async function getAgreement(id: string) {
     event: agreement.event
       ? {
           id: agreement.event.id,
-          eventDate: agreement.event.eventDate?.toISOString() ?? null,
+          eventDate: mcpDateTime(agreement.event.eventDate),
           venue: agreement.event.eventLocation,
           startTime: agreement.event.eventStartTime,
           duration: agreement.event.eventDuration,
@@ -192,7 +192,7 @@ export async function getAgreement(id: string) {
           ...(labelClientProvidedText(agreement.event.notes) ?? {}),
         }
       : {
-          eventDate: agreement.client.eventDate?.toISOString() ?? null,
+          eventDate: mcpDateTime(agreement.client.eventDate),
           venue: agreement.client.eventLocation,
         },
     template: {
