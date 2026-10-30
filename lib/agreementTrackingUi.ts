@@ -140,6 +140,10 @@ export function getActivityTimelineLabel(
       return m?.email === 'review' ? 'Review request failed to send' : 'Gallery email failed to send';
     case 'AUTO_COMPLETED':
       return 'Marked completed automatically (day after the event)';
+    case 'UPLOAD_AUTO_DELETED':
+      return typeof m?.fileName === 'string' && m.fileName
+        ? `Uploaded file moved to Drive trash: ${m.fileName}`
+        : 'Uploaded file moved to Drive trash';
     default:
       return type;
   }

@@ -239,6 +239,24 @@ export async function getFileLink(fileId: string): Promise<string> {
 }
 
 /**
+ * Move a file to Google Drive trash. Drive keeps it for 30 days, so it can be restored.
+ */
+export async function trashFileInDrive(fileId: string): Promise<void> {
+  const drive = getGoogleDriveClient();
+
+  try {
+    await drive.files.update({
+      fileId: fileId,
+      requestBody: { trashed: true },
+      supportsAllDrives: true,
+    });
+  } catch (error) {
+    console.error('Error moving file to Google Drive trash:', error);
+    throw new Error(`Failed to trash file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
  * Delete a file from Google Drive
  */
 export async function deleteFileFromDrive(fileId: string): Promise<void> {

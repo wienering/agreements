@@ -291,15 +291,11 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
 
     let files: AttendantFile[] = [];
     let filesError: string | null = null;
-    if (attendantId) {
+    // Only this event's uploads; unassigned files and other events' files are not shown.
+    if (attendantId && agreement.eventId) {
       try {
         files = await prisma.clientFile.findMany({
-          where: {
-            clientId: agreement.clientId,
-            ...(agreement.eventId
-              ? { OR: [{ eventId: agreement.eventId }, { eventId: null }] }
-              : {}),
-          },
+          where: { eventId: agreement.eventId },
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,

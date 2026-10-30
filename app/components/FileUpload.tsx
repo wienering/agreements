@@ -6,7 +6,9 @@ import { UIcon } from './UIcon';
 
 interface FileUploadProps {
   clientId: string;
-  eventId?: string | null;
+  eventId: string;
+  /** Change to re-fetch the event's files, e.g. after a file is assigned to this event elsewhere. */
+  refreshKey?: number;
   onUploadSuccess?: () => void;
   onUploadError?: (error: string) => void;
 }
@@ -20,7 +22,7 @@ interface UploadedFile {
   createdAt: string;
 }
 
-export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploadError }: FileUploadProps) {
+export default function FileUpload({ clientId, eventId, refreshKey, onUploadSuccess, onUploadError }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -78,9 +80,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
       const formData = new FormData();
       formData.append('file', file);
       formData.append('clientId', clientId);
-      if (eventId) {
-        formData.append('eventId', eventId);
-      }
+      formData.append('eventId', eventId);
 
       const response = await adminFetch('/api/files/upload', {
         method: 'POST',
@@ -227,11 +227,11 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
     }
   };
 
-  // Fetch existing files on mount
+  // Fetch the event's existing files
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await adminFetch(`/api/files/client/${clientId}`);
+        const response = await adminFetch(`/api/files/event/${eventId}`);
         if (response.ok) {
           const data = await response.json();
           setUploadedFiles(data.files || []);
@@ -243,7 +243,7 @@ export default function FileUpload({ clientId, eventId, onUploadSuccess, onUploa
     };
 
     fetchFiles();
-  }, [clientId]);
+  }, [eventId, refreshKey]);
 
   return (
     <div style={{ width: '100%' }}>
