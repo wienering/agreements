@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Prisma } from '@prisma/client';
 
 const prismaMock = vi.hoisted(() => ({
   client: {
@@ -184,5 +185,66 @@ describe('mcp write tools', () => {
 
     expect(result).toMatchObject({ error: expect.stringMatching(/draft/i) });
     expect(prismaMock.event.update).not.toHaveBeenCalled();
+  });
+
+  it('returns packagePrice and endTime in update_agreement_draft before/after', async () => {
+    const summaryRow = (price: string, duration: string) => ({
+      id: 'a1',
+      status: 'DRAFT',
+      paymentStatus: 'Not paid',
+      expiresAt: null,
+      signedAt: null,
+      nextAction: null,
+      archived: false,
+      selectedBackdropName: null,
+      client: {
+        id: 'c1',
+        firstName: 'A',
+        lastName: 'B',
+        email: 'a@example.com',
+        phone: null,
+        eventDate: null,
+        eventLocation: null,
+        eventStartTime: null,
+        eventDuration: null,
+        packagePrice: null,
+        notes: null,
+      },
+      event: {
+        id: 'e1',
+        eventDate: null,
+        eventLocation: null,
+        eventStartTime: '6:00 pm',
+        eventDuration: duration,
+        eventPackage: 'Gold',
+        packagePrice: new Prisma.Decimal(price),
+        eventName: null,
+        notes: null,
+      },
+      template: { id: 't1', title: 'Standard', internalTitle: 'std' },
+      backdropLink: null,
+    });
+
+    prismaMock.agreement.findUnique
+      .mockResolvedValueOnce({
+        id: 'a1',
+        status: 'DRAFT',
+        clientId: 'c1',
+        eventId: 'e1',
+        event: { eventStartTime: '6:00 pm', eventDuration: '3 hours', eventName: null, eventLocation: null },
+        client: { id: 'c1', firstName: 'A', lastName: 'B' },
+      })
+      .mockResolvedValueOnce(summaryRow('1200.00', '3 hours'))
+      .mockResolvedValueOnce(summaryRow('1450.50', '4 hours'));
+    prismaMock.event.update.mockResolvedValue({});
+
+    const result = await runWithMcpAuth(writeAuth, () =>
+      updateAgreementDraft('a1', { price: 1450.5, duration: '4 hours' }),
+    );
+
+    expect(result).toMatchObject({
+      before: { event: { packagePrice: 1200, endTime: '9:00 pm' } },
+      after: { event: { packagePrice: 1450.5, endTime: '10:00 pm' } },
+    });
   });
 });
