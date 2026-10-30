@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Prisma } from '@prisma/client';
 import { assertNoForbiddenFields } from '@/lib/mcp/tools/sanitize';
+import { mcpEndTime } from '@/lib/mcp/tools/datetime';
 
 const prismaMock = vi.hoisted(() => ({
   agreement: {
@@ -33,6 +35,7 @@ describe('mcp agreement tools', () => {
           eventLocation: 'Legacy hall',
           eventStartTime: '9:00 am',
           eventDuration: '2 hours',
+          packagePrice: new Prisma.Decimal('900.00'),
         },
         event: {
           eventDate: new Date('2026-12-01T05:00:00.000Z'),
@@ -40,6 +43,7 @@ describe('mcp agreement tools', () => {
           eventName: 'Wedding',
           eventStartTime: '8:30 pm',
           eventDuration: '4 hours',
+          packagePrice: new Prisma.Decimal('1500.00'),
         },
         backdropLink: {
           attendant: { name: 'Alex Rivera' },
@@ -55,6 +59,8 @@ describe('mcp agreement tools', () => {
         eventDate: '2026-12-01',
         startTime: '8:30 pm',
         duration: '4 hours',
+        endTime: '12:30 am',
+        packagePrice: 1500,
         venue: 'The Conservatory',
         status: 'SENT',
         paymentStatus: 'Not paid',
@@ -93,6 +99,7 @@ describe('mcp agreement tools', () => {
         eventStartTime: '8:30 pm',
         eventDuration: '4 hours',
         eventPackage: 'Gold',
+        packagePrice: new Prisma.Decimal('1500.00'),
         eventName: 'Wedding',
         notes: null,
       },
@@ -111,6 +118,8 @@ describe('mcp agreement tools', () => {
       eventDate: '2026-12-01',
       startTime: '8:30 pm',
       duration: '4 hours',
+      endTime: '12:30 am',
+      packagePrice: 1500,
     });
     expect(agreement?.attendants).toEqual(['Jordan Lee']);
     expect(agreement?.expiresAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
@@ -147,6 +156,7 @@ describe('mcp agreement tools', () => {
         eventLocation: 'Hall',
         eventStartTime: '10:00 am',
         eventDuration: '3 hours',
+        packagePrice: null,
         notes: null,
       },
       event: null,
@@ -161,6 +171,26 @@ describe('mcp agreement tools', () => {
       venue: 'Hall',
       startTime: '10:00 am',
       duration: '3 hours',
+      endTime: '1:00 pm',
+      packagePrice: null,
     });
+  });
+});
+
+describe('mcpEndTime', () => {
+  it.each([
+    ['4:00 PM', '3 hours', '7:00 pm'],
+    ['16:00', '2.5 hrs', '6:30 pm'],
+    ['11:30 am', '90 minutes', '1:00 pm'],
+    ['8:30 pm', '4 hours', '12:30 am'],
+    ['6pm', '1 hour 30 min', '7:30 pm'],
+  ])('%s + %s -> %s', (start, duration, expected) => {
+    expect(mcpEndTime(start, duration)).toBe(expected);
+  });
+
+  it('returns null when start or duration cannot be parsed', () => {
+    expect(mcpEndTime(null, '3 hours')).toBeNull();
+    expect(mcpEndTime('evening', '3 hours')).toBeNull();
+    expect(mcpEndTime('4:00 pm', 'all night')).toBeNull();
   });
 });

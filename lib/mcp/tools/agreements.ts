@@ -1,7 +1,7 @@
 import type { AgreementStatus, Prisma } from '@prisma/client';
 import { getMcpPrisma } from '@/lib/mcp/db';
 import { assertNoForbiddenFields, labelClientProvidedText } from '@/lib/mcp/tools/sanitize';
-import { mcpCalendarDate, mcpDateTime } from '@/lib/mcp/tools/datetime';
+import { mcpCalendarDate, mcpDateTime, mcpEndTime, mcpPrice } from '@/lib/mcp/tools/datetime';
 
 const MAX_RESULTS = 10;
 
@@ -38,6 +38,15 @@ function durationOf(agreement: {
   client: { eventDuration: string | null };
 }): string | null {
   return agreement.event?.eventDuration ?? agreement.client.eventDuration ?? null;
+}
+
+type PriceValue = { toString(): string } | number | null;
+
+function packagePriceOf(agreement: {
+  event: { packagePrice: PriceValue } | null;
+  client: { packagePrice: PriceValue };
+}): number | null {
+  return mcpPrice(agreement.event?.packagePrice ?? agreement.client.packagePrice);
 }
 
 function attendantNamesOf(agreement: {
@@ -94,6 +103,7 @@ export async function searchAgreements(input: SearchAgreementsInput) {
           eventLocation: true,
           eventStartTime: true,
           eventDuration: true,
+          packagePrice: true,
         },
       },
       event: {
@@ -103,6 +113,7 @@ export async function searchAgreements(input: SearchAgreementsInput) {
           eventName: true,
           eventStartTime: true,
           eventDuration: true,
+          packagePrice: true,
         },
       },
       backdropLink: {
@@ -138,6 +149,8 @@ export async function searchAgreements(input: SearchAgreementsInput) {
     eventDate: eventDateOf(row),
     startTime: startTimeOf(row),
     duration: durationOf(row),
+    endTime: mcpEndTime(startTimeOf(row), durationOf(row)),
+    packagePrice: packagePriceOf(row),
     venue: venueOf(row),
     status: row.status,
     paymentStatus: row.paymentStatus,
@@ -172,6 +185,7 @@ export async function getAgreement(id: string) {
           eventLocation: true,
           eventStartTime: true,
           eventDuration: true,
+          packagePrice: true,
           notes: true,
         },
       },
@@ -183,6 +197,7 @@ export async function getAgreement(id: string) {
           eventStartTime: true,
           eventDuration: true,
           eventPackage: true,
+          packagePrice: true,
           eventName: true,
           notes: true,
         },
@@ -228,7 +243,9 @@ export async function getAgreement(id: string) {
           venue: agreement.event.eventLocation,
           startTime: agreement.event.eventStartTime,
           duration: agreement.event.eventDuration,
+          endTime: mcpEndTime(agreement.event.eventStartTime, agreement.event.eventDuration),
           package: agreement.event.eventPackage,
+          packagePrice: mcpPrice(agreement.event.packagePrice),
           eventName: agreement.event.eventName,
           ...(labelClientProvidedText(agreement.event.notes) ?? {}),
         }
@@ -237,6 +254,8 @@ export async function getAgreement(id: string) {
           venue: agreement.client.eventLocation,
           startTime: agreement.client.eventStartTime,
           duration: agreement.client.eventDuration,
+          endTime: mcpEndTime(agreement.client.eventStartTime, agreement.client.eventDuration),
+          packagePrice: mcpPrice(agreement.client.packagePrice),
         },
     template: {
       id: agreement.template.id,
