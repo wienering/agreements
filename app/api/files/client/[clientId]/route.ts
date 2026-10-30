@@ -26,9 +26,10 @@ export async function GET(
       );
     }
 
-    // Get all files for this client
+    // All files for this client, or with ?unassigned=true only those not on an event yet
+    const unassignedOnly = request.nextUrl.searchParams.get('unassigned') === 'true';
     const files = await prisma.clientFile.findMany({
-      where: { clientId },
+      where: { clientId, ...(unassignedOnly ? { eventId: null } : {}) },
       orderBy: { createdAt: 'desc' },
       include: {
         event: {

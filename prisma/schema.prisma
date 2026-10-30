@@ -398,6 +398,8 @@ enum AgreementActivityType {
   FOLLOWUP_EMAIL_FAILED
   /// The daily cron moved a SIGNED agreement to COMPLETED the day after its event. Nothing is sent.
   AUTO_COMPLETED
+  /// The daily cron moved an event's uploaded file to Google Drive trash after the grace period.
+  UPLOAD_AUTO_DELETED
 }
 
 enum LeadStage {

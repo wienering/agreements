@@ -52,6 +52,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Uploads belong to an event, so repeat clients don't see old events' templates
+    if (!eventId) {
+      return NextResponse.json(
+        { error: 'Event ID is required' },
+        { status: 400 }
+      );
+    }
+
     // Validate file type
     if (!isValidFileType(file.name, file.type)) {
       return NextResponse.json(
@@ -81,26 +89,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify event exists if eventId is provided
-    if (eventId) {
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: { id: true, clientId: true },
-      });
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, clientId: true },
+    });
 
-      if (!event) {
-        return NextResponse.json(
-          { error: 'Event not found' },
-          { status: 404 }
-        );
-      }
+    if (!event) {
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      );
+    }
 
-      if (event.clientId !== clientId) {
-        return NextResponse.json(
-          { error: 'Event does not belong to the specified client' },
-          { status: 400 }
-        );
-      }
+    if (event.clientId !== clientId) {
+      return NextResponse.json(
+        { error: 'Event does not belong to the specified client' },
+        { status: 400 }
+      );
     }
 
     // Convert file to buffer
@@ -123,7 +128,7 @@ export async function POST(request: NextRequest) {
     const clientFile = await prisma.clientFile.create({
       data: {
         clientId: clientId,
-        eventId: eventId || null,
+        eventId,
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,

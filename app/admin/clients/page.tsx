@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '../../components/Toast';
 import { UIcon } from '../../components/UIcon';
 import FileUpload from '../../components/FileUpload';
+import UnassignedFiles from '../../components/UnassignedFiles';
 import { AdminButton } from '../../components/AdminButton';
 import {
   formatDateToronto,
@@ -99,7 +100,9 @@ export default function ClientsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [addingEventToClient, setAddingEventToClient] = useState<Client | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  // Keyed by event id: uploads belong to an event
   const [showFileUpload, setShowFileUpload] = useState<Record<string, boolean>>({});
+  const [fileRefreshKeys, setFileRefreshKeys] = useState<Record<string, number>>({});
   const [newClient, setNewClient] = useState({
     firstName: '',
     lastName: '',
@@ -1610,6 +1613,14 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                                 Edit Event
                               </AdminButton>
                               <AdminButton
+                                variant="ghost"
+                                size="compact"
+                                onClick={() => setShowFileUpload(prev => ({ ...prev, [event.id]: !prev[event.id] }))}
+                                title="Upload and view this event's files in Google Drive"
+                              >
+                                {showFileUpload[event.id] ? 'Hide Files' : 'Files'}
+                              </AdminButton>
+                              <AdminButton
                                 variant="danger"
                                 size="compact"
                                 onClick={() => handleArchiveEvent(event.id)}
@@ -1618,11 +1629,35 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                                 Archive Event
                               </AdminButton>
                             </div>
+                            {showFileUpload[event.id] && (
+                              <div style={{ marginTop: '12px' }}>
+                                <FileUpload
+                                  clientId={client.id}
+                                  eventId={event.id}
+                                  refreshKey={fileRefreshKeys[event.id] ?? 0}
+                                  onUploadSuccess={() => {
+                                    showToast('File uploaded successfully!');
+                                  }}
+                                  onUploadError={(error) => {
+                                    showToast(error, 'error');
+                                  }}
+                                />
+                              </div>
+                            )}
                           </div>
                           );
                           })}
                         </>
                       )}
+                      <UnassignedFiles
+                        clientId={client.id}
+                        events={client.events ?? []}
+                        onAssigned={(eventId) => {
+                          setFileRefreshKeys(prev => ({ ...prev, [eventId]: (prev[eventId] ?? 0) + 1 }));
+                          showToast('File assigned to event');
+                        }}
+                        onError={(error) => showToast(error, 'error')}
+                      />
                     </div>
                     {/* Fallback: show deprecated client event fields if no events exist */}
                     {(!client.events || client.events.length === 0) && client.eventDate && (
@@ -1695,38 +1730,7 @@ setNewEvent({ eventDate: '', eventType: '', eventLocation: '', eventStartTime: '
                   >
                     {loading ? 'Deleting...' : 'Delete'}
                   </AdminButton>
-                  <AdminButton
-                    variant="ghost"
-                    onClick={() => setShowFileUpload(prev => ({ ...prev, [client.id]: !prev[client.id] }))}
-                    title="Upload files to Google Drive"
-                  >
-                    {showFileUpload[client.id] ? 'Hide Upload' : 'Upload Files'}
-                  </AdminButton>
                 </div>
-                {/* File Upload Section */}
-                {showFileUpload[client.id] && (
-                  <div style={{
-                    marginTop: '16px',
-                    padding: '16px',
-                    backgroundColor: 'var(--admin-surface)',
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: '2px'
-                  }}>
-                    <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: textColor }}>
-                      Upload Files to Google Drive
-                    </h4>
-                    <FileUpload
-                      clientId={client.id}
-                      eventId={null}
-                      onUploadSuccess={() => {
-                        showToast('File uploaded successfully!');
-                      }}
-                      onUploadError={(error) => {
-                        showToast(error, 'error');
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             ))}
           </div>

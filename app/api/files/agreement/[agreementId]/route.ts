@@ -83,16 +83,13 @@ export async function GET(
       }
     }
 
+    // Uploads belong to an event. Unassigned files and other events' files never show here.
+    if (!agreement.eventId) {
+      return NextResponse.json({ files: [] });
+    }
+
     const files = await prisma.clientFile.findMany({
-      where: {
-        clientId: agreement.clientId,
-        OR: agreement.eventId
-          ? [
-              { eventId: agreement.eventId },
-              { eventId: null },
-            ]
-          : undefined,
-      },
+      where: { eventId: agreement.eventId },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,

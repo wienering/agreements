@@ -489,6 +489,24 @@ const agreements = await prisma.agreement.findMany({
 });
 ```
 
+## Event uploads (ClientFile)
+
+Uploaded templates live in Google Drive (one folder per client); `ClientFile` holds the metadata.
+Each upload belongs to an **event** (`eventId`). `clientId` is kept for the Drive folder and cascade delete.
+
+- New uploads require an event (`POST /api/files/upload`). The admin Clients page uploads from each event's **Files** button.
+- Attendant job pages and `GET /api/files/agreement/[id]` show only the agreement's event's files.
+- `eventId` is nullable. Unassigned files (older uploads that couldn't be matched to one event, or files whose
+  event was deleted) show only on the client card under **Unassigned files**, with an event picker
+  (`PATCH /api/files/[fileId]`). They aren't shown to attendants and are never auto-deleted.
+- Older uploads were matched to events by `scripts/backfill-file-events.ts` (the client's next event on or after the upload day).
+
+**Auto-delete**: the daily cron `/api/cron/expire-uploads` (13:30 UTC) finds files whose event's Toronto day is more
+than `UPLOAD_GRACE_DAYS` (14, in `lib/files/autoDelete.ts`) in the past. It moves each one to Drive trash (restorable
+for 30 days), then deletes the record and logs `UPLOAD_AUTO_DELETED` on each of the event's agreements. If Drive
+fails, the record is kept (retried next day) and a Telegram error alert goes out. Unless
+`UPLOAD_AUTODELETE_ENABLED=true` on production, it only sends a Telegram summary of what it would delete.
+
 ## Post-event follow-ups
 
 Fields on `Agreement` used by the automatic gallery email and review request (`lib/followups/`):
