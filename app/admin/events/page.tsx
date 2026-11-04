@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { adminFetch } from '@/lib/adminFetch';
 import {
   formatEventDateTorontoShort,
@@ -22,7 +23,9 @@ import { StatusBadge, type StatusBadgeVariant } from '../../components/StatusBad
 import { useToast } from '../../components/Toast';
 import { CreateAgreementModal } from '../agreements/_components/CreateAgreementModal';
 import { ModalFrame } from '../agreements/_components/ModalFrame';
-import type { Agreement, ClientOption, TemplateOption } from '../agreements/_components/types';
+import type { Agreement, BackdropLinkOption, ClientOption, TemplateOption } from '../agreements/_components/types';
+import { EventDrawer, type EventDetail } from './_components/EventDrawer';
+import { displayPaymentStatus } from '@/lib/paymentStatus';
 import { fieldClass, smallLabelClass } from '../agreements/_components/uiClasses';
 
 type EventForm = {
@@ -93,7 +96,24 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
 }
 
 export default function EventsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-admin-bg" />}>
+      <EventsAdminPage />
+    </Suspense>
+  );
+}
+
+function EventsAdminPage() {
   const { showToast, ToastContainer } = useToast();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const openEventId = searchParams.get('event');
+  const [backdropLinks, setBackdropLinks] = useState<BackdropLinkOption[]>([]);
+  const openEvent = useCallback(
+    (id: string | null) => router.replace(id ? `${pathname}?event=${encodeURIComponent(id)}` : pathname, { scroll: false }),
+    [router, pathname],
+  );
   const [events, setEvents] = useState<EventListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<ClientOption[]>([]);
@@ -104,7 +124,7 @@ export default function EventsPage() {
   const [editing, setEditing] = useState<EventListItem | null>(null);
   const [form, setForm] = useState<EventForm>(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [agreementFor, setAgreementFor] = useState<EventListItem | null>(null);
+  const [agreementFor, setAgreementFor] = useState<{ id: string; clientId: string } | null>(null);
 
   useEffect(() => {
     document.title = 'Events | CRM | Photobooth Guys';
@@ -129,6 +149,10 @@ export default function EventsPage() {
       .then((response) => (response.ok ? response.json() : []))
       .then((data: ClientOption[]) => setClients(Array.isArray(data) ? data : []))
       .catch((error) => console.error('Error loading clients:', error));
+    adminFetch('/api/agreements/backdrop-links')
+      .then((response) => (response.ok ? response.json() : {}))
+      .then((data: { backdropLinks?: BackdropLinkOption[] }) => setBackdropLinks(data.backdropLinks || []))
+      .catch((error) => console.error('Error loading attendants:', error));
     adminFetch('/api/templates')
       .then((response) => (response.ok ? response.json() : []))
       .then((data: TemplateOption[]) => setTemplates(Array.isArray(data) ? data : []))
@@ -206,9 +230,21 @@ export default function EventsPage() {
   };
 
   const onAgreementCreated = (agreement: Agreement) => {
+    const forEventId = agreementFor?.id;
     setAgreementFor(null);
-    showToast('Agreement created as a draft');
-    window.location.href = `/admin/agreements?agreement=${encodeURIComponent(agreement.id)}`;
+    showToast('Agreement created as a draft. Open it from the event to send it.');
+    void agreement;
+    loadEvents();
+    if (forEventId) {
+      // Reopen the drawer so it shows the new agreement.
+      openEvent(null);
+      window.setTimeout(() => openEvent(forEventId), 0);
+    }
+  };
+
+  const editFromDrawer = (detail: EventDetail) => {
+    const match = events.find((e) => e.id === detail.id);
+    if (match) openEdit(match);
   };
 
   const set = <K extends keyof EventForm>(key: K, value: EventForm[K]) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -278,7 +314,11 @@ export default function EventsPage() {
                     </div>
                     {event.eventType && <div className="text-xs text-admin-muted">{event.eventType}</div>}
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => openEvent(event.id)}
+                    className="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left"
+                  >
                     <div className="text-sm font-semibold text-admin-text">
                       {event.client.firstName} {event.client.lastName}
                       {event.eventName ? <span className="font-normal text-admin-muted"> · {event.eventName}</span> : null}
@@ -286,7 +326,13 @@ export default function EventsPage() {
                     <div className="truncate text-xs text-admin-muted">
                       {[event.eventLocation, details].filter(Boolean).join(' · ') || 'No details yet'}
                     </div>
-                  </div>
+                    <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-admin-muted">
+                      {event.status && event.status !== 'UPCOMING' && <span className="font-semibold">{event.status === 'COMPLETED' ? 'Completed' : 'Cancelled'}</span>}
+                      <span>Payment: {displayPaymentStatus(event.paymentStatus) ?? 'Not paid'}</span>
+                      <span>Attendant: {event.backdropLink?.attendant?.name || event.backdropLink?.name || 'none'}</span>
+                      {event.nextAction && <span>Next: {event.nextAction}</span>}
+                    </div>
+                  </button>
                   <div className="flex flex-wrap items-center gap-2 md:justify-end">
                     {event.agreements.map((agreement) => {
                       const unsent = isUnsentDraft(agreement);
@@ -308,8 +354,8 @@ export default function EventsPage() {
                         + Add agreement
                       </AdminButton>
                     )}
-                    <AdminButton size="compact" variant="ghost" onClick={() => openEdit(event)}>
-                      Edit
+                    <AdminButton size="compact" variant="ghost" onClick={() => openEvent(event.id)}>
+                      Manage
                     </AdminButton>
                   </div>
                 </div>
@@ -321,6 +367,7 @@ export default function EventsPage() {
 
       {formOpen && (
         <ModalFrame onBackdropClick={closeForm} maxWidthClass="max-w-[640px]" labelledBy="event-form-title">
+          {/* Sits above the event drawer when opened from it. */}
           <h2 id="event-form-title" className="m-0 mb-4 text-lg text-admin-text">
             {editing ? `Edit event · ${editing.client.firstName} ${editing.client.lastName}` : 'New event'}
           </h2>
@@ -392,6 +439,19 @@ export default function EventsPage() {
             </div>
           </form>
         </ModalFrame>
+      )}
+
+      {openEventId && (
+        <EventDrawer
+          key={openEventId}
+          eventId={openEventId}
+          backdropLinks={backdropLinks}
+          onClose={() => openEvent(null)}
+          onChanged={loadEvents}
+          onAddAgreement={(detail) => setAgreementFor({ id: detail.id, clientId: detail.clientId })}
+          onEditDetails={editFromDrawer}
+          showToast={showToast}
+        />
       )}
 
       {agreementFor && (

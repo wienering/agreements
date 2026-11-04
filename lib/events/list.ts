@@ -26,6 +26,11 @@ export interface EventListItem {
   notes?: string | null;
   unlimitedPrints?: boolean;
   createdAt?: string;
+  status?: 'UPCOMING' | 'COMPLETED' | 'CANCELLED';
+  paymentStatus?: string | null;
+  nextAction?: string | null;
+  galleryEmailSentAt?: string | null;
+  backdropLink?: { id: string; name: string; attendant?: { name: string } | null } | null;
   client: { id: string; firstName: string; lastName: string; email: string };
   agreements: EventListAgreement[];
 }
@@ -60,8 +65,8 @@ export function liveAgreements(event: EventListItem): EventListAgreement[] {
 }
 
 /**
- * Upcoming: today or later, plus undated events. Past: before today, newest first.
- * No agreement: upcoming or undated events with no live agreement.
+ * Upcoming: today or later, plus undated events, not cancelled. Past: before today, newest first.
+ * No agreement: upcoming or undated events with no live agreement. All: everything, cancelled too.
  */
 export function filterEvents(
   events: EventListItem[],
@@ -74,9 +79,10 @@ export function filterEvents(
     if (term && !matchesSearch(event, term)) return false;
     const day = eventDayKey(event);
     const isPast = day !== '' && day < todayKey;
-    if (view === 'upcoming') return !isPast;
+    const cancelled = event.status === 'CANCELLED';
+    if (view === 'upcoming') return !isPast && !cancelled;
     if (view === 'past') return isPast;
-    if (view === 'no-agreement') return !isPast && liveAgreements(event).length === 0;
+    if (view === 'no-agreement') return !isPast && !cancelled && liveAgreements(event).length === 0;
     return true;
   });
 
