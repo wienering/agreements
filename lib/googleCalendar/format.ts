@@ -31,6 +31,7 @@ export type GoogleCalendarEventBody = {
   end: { dateTime: string; timeZone: string } | { date: string };
   reminders: { useDefault: false; overrides: { method: 'popup'; minutes: number }[] };
   extendedProperties: { private: { crmEventId: string } };
+  source: { title: string; url: string };
 };
 
 const REMINDER_MINUTES = 90;
@@ -95,7 +96,9 @@ export function buildGoogleCalendarEvent(source: CalendarSyncSource): GoogleCale
     `Package Price: ${e(priceText(source.packagePrice) ?? '')}`,
     `Agreement: ${agreementStatus ? AGREEMENT_LABELS[agreementStatus] : 'None'}`,
     '',
-    `<a href="${adminEventUrl(source.id)}">Open in CRM</a>`,
+    // Google shows a "Redirect Notice" when a link's text differs from its address, so the
+    // address itself is the link text.
+    `Open in CRM: <a href="${adminEventUrl(source.id)}">${adminEventUrl(source.id)}</a>`,
   ];
 
   const timed = schedule.start && schedule.end;
@@ -109,5 +112,6 @@ export function buildGoogleCalendarEvent(source: CalendarSyncSource): GoogleCale
     end: timed ? { dateTime: (schedule.end as Date).toISOString(), timeZone: TORONTO_TZ } : { date: nextDay(schedule.dateKey) },
     reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: REMINDER_MINUTES }] },
     extendedProperties: { private: { crmEventId: source.id } },
+    source: { title: 'Open in CRM', url: adminEventUrl(source.id) },
   };
 }
