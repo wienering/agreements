@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
       if (Object.keys(updateData).length > 0) {
         if (eventId) {
           await prisma.event.update({ where: { id: eventId }, data: updateData });
+          queueCalendarSync(eventId);
         } else {
           await prisma.agreement.update({ where: { id: agreementId }, data: updateData });
         }

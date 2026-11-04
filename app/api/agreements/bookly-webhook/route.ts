@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
@@ -276,6 +277,7 @@ export async function POST(request: NextRequest) {
           archived: false,
         },
       });
+      queueCalendarSync(event.id);
       devLog(`✅ Event ${event.id} created for client ${client.email}`);
     }
 

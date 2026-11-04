@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logEventActivity } from '@/lib/events/booking';
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
         data: { paymentStatus: FULLY_PAID_STATUS },
       });
       await logEventActivity(agreement.id, 'PAYMENT_MARKED_PAID');
+      queueCalendarSync(agreement.id);
       return NextResponse.json({
         ok: true,
         action: payload.action,

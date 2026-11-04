@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { randomBytes } from 'crypto';
 import { requireMcpWriteScope } from '@/lib/mcp/authContext';
 import { MCP_ACTOR } from '@/lib/mcp/config';
@@ -249,6 +250,7 @@ export async function setPaymentStatus(agreementId: string, status: string) {
     if (!event) return { error: 'Event not found' };
     const before = { paymentStatus: event.paymentStatus };
     await prisma.event.update({ where: { id: eventId }, data: { paymentStatus: normalized } });
+    queueCalendarSync(eventId);
     const after = { paymentStatus: normalized };
     await logEventActivity(eventId, normalized === 'Fully paid' ? 'PAYMENT_MARKED_PAID' : 'NOTE_ADDED', {
       actor: MCP_ACTOR,
@@ -402,6 +404,7 @@ export async function createAgreementDraft(clientId: string, fields: AgreementDr
     },
   });
 
+  queueCalendarSync(event.id);
   const agreement = await prisma.agreement.create({
     data: {
       clientId,
@@ -511,6 +514,7 @@ export async function updateAgreementDraft(id: string, fields: AgreementDraftFie
   if (Object.keys(eventData).length > 0) {
     if (existing.eventId) {
       await prisma.event.update({ where: { id: existing.eventId }, data: eventData });
+      queueCalendarSync(existing.eventId);
     } else {
       const event = await prisma.event.create({
         data: { clientId: existing.clientId, ...eventData },

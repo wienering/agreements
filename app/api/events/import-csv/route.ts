@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { normalizeEventDateToNoonUtc } from '@/lib/dates';
@@ -544,6 +545,7 @@ export async function POST(request: NextRequest) {
             data: createData,
           });
         }
+        if (event) queueCalendarSync(event.id);
         
         results.push({
           row: rowNumber,

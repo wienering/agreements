@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -26,5 +27,6 @@ export async function setEventArchived(eventId: string, archived: boolean): Prom
         : []),
     ]);
   }
+  queueCalendarSync(eventId);
   return true;
 }

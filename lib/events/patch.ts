@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
@@ -96,4 +97,5 @@ export async function patchEventBooking(id: string, body: unknown, now = new Dat
   if (input.status) {
     await setEventStatus(id, input.status, { now, reason: input.cancellationReason ?? null });
   }
+  queueCalendarSync(id);
 }

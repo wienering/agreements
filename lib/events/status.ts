@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { logEventActivity, type EventStatusValue } from '@/lib/events/booking';
 import { prisma } from '@/lib/prisma';
@@ -71,6 +72,7 @@ export async function setEventStatus(
   });
 
   if (!changed) return null;
+  queueCalendarSync(eventId);
 
   await logEventActivity(eventId, options.activityType ?? 'EVENT_STATUS_CHANGED', { from, to });
   for (const change of agreementChanges) {

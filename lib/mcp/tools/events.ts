@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { randomBytes } from 'crypto';
 import type { Prisma } from '@prisma/client';
 import { requireMcpWriteScope } from '@/lib/mcp/authContext';
@@ -271,6 +272,7 @@ export async function createEvent(clientId: string, fields: EventFields) {
     select: { id: true },
   });
   await logEventActivity(event.id, 'NOTE_ADDED', { actor: MCP_ACTOR, tool: 'create_event' });
+  queueCalendarSync(event.id);
   if (fields.status && fields.status !== 'UPCOMING') {
     await setEventStatus(event.id, fields.status, { reason: fields.cancellationReason ?? null, by: MCP_ACTOR });
   }
@@ -299,6 +301,7 @@ export async function updateEvent(id: string, fields: EventFields) {
   if (fields.archived !== undefined) {
     await setEventArchived(eventId, fields.archived);
   }
+  queueCalendarSync(eventId);
   const after = await getEvent(eventId);
   await logEventActivity(eventId, 'NOTE_ADDED', {
     actor: MCP_ACTOR,
