@@ -101,7 +101,8 @@ describe('GET /api/mcp', () => {
       }),
     );
 
-    expect(response.status).toBe(200);
+    // Authenticated GET: no idle stream, just 405 (tool calls use POST).
+    expect(response.status).toBe(405);
     expect(consumeGrantRateLimit).toHaveBeenCalledWith('grant_1');
     expect(recordMcpAttempt).not.toHaveBeenCalled();
   });
