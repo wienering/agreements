@@ -1,4 +1,4 @@
-import type { LeadStage, Prisma } from '@prisma/client';
+import type { LeadStage, LeadStatus, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export type LeadTab = 'active' | 'archived' | 'all';
@@ -26,9 +26,22 @@ function applyStageFilter(
   return { ...where, stage: stage as LeadStage };
 }
 
+const LEAD_STATUS_VALUES = new Set(['NEW', 'FOLLOWING_UP', 'BOOKED', 'LOST', 'PAUSED']);
+
+function applyStatusFilter(
+  where: Prisma.LeadWhereInput,
+  status: string | null | undefined,
+): Prisma.LeadWhereInput {
+  if (!status || !LEAD_STATUS_VALUES.has(status)) {
+    return where;
+  }
+  return { ...where, status: status as LeadStatus };
+}
+
 export function buildLeadTabWhere(
   tab: LeadTab,
   stage?: string | null,
+  status?: string | null,
 ): Prisma.LeadWhereInput {
   let where: Prisma.LeadWhereInput = {};
 
@@ -38,7 +51,7 @@ export function buildLeadTabWhere(
     where.archivedAt = { not: null };
   }
 
-  return applyStageFilter(where, stage);
+  return applyStatusFilter(applyStageFilter(where, stage), status);
 }
 
 export const leadTabCountsWhere = {
@@ -66,12 +79,14 @@ export type LeadListResult = {
 export async function fetchLeadList(params: {
   tab: LeadTab;
   stage?: string | null;
+  status?: string | null;
 }): Promise<LeadListResult> {
   const stage = params.stage || null;
+  const status = params.status || null;
 
   const [leads, active, archived, all] = await Promise.all([
     prisma.lead.findMany({
-      where: buildLeadTabWhere(params.tab, stage),
+      where: buildLeadTabWhere(params.tab, stage, status),
       include: leadListInclude,
       orderBy: getLeadListOrderBy(params.tab),
     }),

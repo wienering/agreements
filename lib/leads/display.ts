@@ -106,51 +106,55 @@ export function getAgreementViewUrl(agreementId: string): string {
   return `/admin/agreements?highlight=${agreementId}`;
 }
 
+/** Admin page for one event (the Events page with its drawer open). Same path as lib/events/booking. */
+export function adminEventHref(eventId: string): string {
+  return `/admin/events?event=${encodeURIComponent(eventId)}`;
+}
+
+const OPEN_STATUSES = new Set(['NEW', 'FOLLOWING_UP', 'PAUSED']);
+
+export function isOpenLeadStatus(status: string): boolean {
+  return OPEN_STATUSES.has(status);
+}
+
+/** The lead replied after our last touch and is still open: answer them first. */
+export function needsReply(lead: {
+  status: string;
+  lastReplyAt?: Date | string | null;
+  lastContactedAt?: Date | string | null;
+  archivedAt?: Date | string | null;
+}): boolean {
+  if (!lead.lastReplyAt || lead.archivedAt || !isOpenLeadStatus(lead.status)) return false;
+  if (!lead.lastContactedAt) return true;
+  return new Date(lead.lastReplyAt).getTime() > new Date(lead.lastContactedAt).getTime();
+}
+
+/** "3 touches · next Nov 6" for the row, or null when there's nothing to say. */
+export function formatFollowUpLine(lead: {
+  status: string;
+  contactCount: number;
+  nextFollowUpAt?: Date | string | null;
+}): string | null {
+  const parts: string[] = [];
+  if (lead.contactCount > 0) parts.push(lead.contactCount === 1 ? '1 touch' : `${lead.contactCount} touches`);
+  if (lead.nextFollowUpAt && lead.status === 'FOLLOWING_UP') {
+    parts.push(`next ${formatEventDateTorontoShort(lead.nextFollowUpAt)}`);
+  }
+  return parts.length ? parts.join(' · ') : null;
+}
+
 export type PrimaryLeadAction =
-  | { kind: 'create_quote'; href: string; label: 'Create quote' }
-  | { kind: 'create_agreement'; label: 'Create agreement' }
-  | { kind: 'view_agreement'; href: string; label: 'View agreement' }
-  | { kind: 'view'; href: string; label: 'View' };
+  | { kind: 'mark_booked'; label: 'Mark booked' }
+  | { kind: 'view_event'; href: string; label: 'View event' };
 
 export function getPrimaryLeadAction(lead: {
-  stage: string;
+  status: string;
   archivedAt?: Date | string | null;
-  agreement?: { id: string } | null;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string | null;
-  eventDate?: Date | string | null;
+  eventId?: string | null;
 }): PrimaryLeadAction | null {
-  const isArchived = Boolean(lead.archivedAt);
-  const closedStage = ['SIGNED', 'COMPLETED', 'LOST'].includes(lead.stage);
-
-  if (isArchived || closedStage) {
-    if (lead.agreement) {
-      return {
-        kind: 'view',
-        href: getAgreementViewUrl(lead.agreement.id),
-        label: 'View',
-      };
-    }
-    return null;
+  if (lead.status === 'BOOKED') {
+    return lead.eventId ? { kind: 'view_event', href: adminEventHref(lead.eventId), label: 'View event' } : null;
   }
-
-  switch (lead.stage) {
-    case 'QUOTE_REQUESTED':
-      return { kind: 'create_quote', href: getQuoteUrl(lead), label: 'Create quote' };
-    case 'QUOTE_SENT':
-      return { kind: 'create_agreement', label: 'Create agreement' };
-    case 'AGREEMENT_SENT':
-      if (lead.agreement) {
-        return {
-          kind: 'view_agreement',
-          href: getAgreementViewUrl(lead.agreement.id),
-          label: 'View agreement',
-        };
-      }
-      return null;
-    default:
-      return null;
-  }
+  if (lead.archivedAt || !isOpenLeadStatus(lead.status)) return null;
+  return { kind: 'mark_booked', label: 'Mark booked' };
 }

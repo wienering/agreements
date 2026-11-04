@@ -2,18 +2,32 @@
 
 import { useEffect, useId, useState } from 'react';
 import { AdminButton, AdminLink } from '../../components/AdminButton';
-import { StatusBadge } from '../../components/StatusBadge';
+import { StatusBadge, type StatusBadgeVariant } from '../../components/StatusBadge';
 import {
   ARCHIVE_REASON_LABELS,
+  formatFollowUpLine,
   formatLeadDateBadge,
   getPrimaryLeadAction,
-  STAGE_LABELS,
+  needsReply,
 } from '@/lib/leads/display';
+import { LEAD_STATUS_LABELS } from '@/lib/leads/status';
 import { LeadOverflowMenu } from './LeadOverflowMenu';
-import type { FoldedLeadRecord, LeadRecord, ManualArchiveReason } from './types';
+import type { FoldedLeadRecord, LeadRecord, LeadStatusValue } from './types';
 import { formatGroupedNumber } from '@/lib/dates';
 
-type LeadRowProps = {
+export type LeadRowHandlers = {
+  onOpen: (lead: LeadRecord) => void;
+  onMarkBooked: (lead: LeadRecord) => void;
+  onEdit: (lead: LeadRecord) => void;
+  onCreateQuote: (lead: LeadRecord) => void;
+  onSetStatus: (lead: LeadRecord, status: LeadStatusValue, lostReason?: string) => void;
+  onRetrySync: (lead: LeadRecord) => void;
+  onArchive: (lead: LeadRecord) => void;
+  onRestore: (lead: LeadRecord) => void;
+  onDelete: (lead: LeadRecord) => void;
+};
+
+type LeadRowProps = LeadRowHandlers & {
   folded: FoldedLeadRecord;
   forceExpanded?: boolean;
   tab: 'active' | 'archived' | 'all';
@@ -21,18 +35,6 @@ type LeadRowProps = {
   cardBg: string;
   textColor: string;
   mutedText: string;
-  markingContactLeadId: string | null;
-  nextFollowUp: string;
-  onNextFollowUpChange: (value: string) => void;
-  onSaveMarkContacted: (lead: LeadRecord) => void;
-  onCancelMarkContacted: () => void;
-  onCreateAgreement: (lead: LeadRecord) => void;
-  onView: (lead: LeadRecord) => void;
-  onMarkContacted: (lead: LeadRecord) => void;
-  onEdit: (lead: LeadRecord) => void;
-  onArchive: (lead: LeadRecord, reason: ManualArchiveReason) => void;
-  onRestore: (lead: LeadRecord) => void;
-  onDelete: (lead: LeadRecord) => void;
 };
 
 function getDateBadgeVariant(group: ReturnType<typeof formatLeadDateBadge>['group']) {
@@ -41,21 +43,37 @@ function getDateBadgeVariant(group: ReturnType<typeof formatLeadDateBadge>['grou
   return 'neutral' as const;
 }
 
-type LeadRowActionsProps = {
-  lead: LeadRecord;
-  tab: LeadRowProps['tab'];
-  borderColor: string;
-  cardBg: string;
-  mutedText: string;
-  onCreateAgreement: (lead: LeadRecord) => void;
-  onView: (lead: LeadRecord) => void;
-  onMarkContacted: (lead: LeadRecord) => void;
-  onEdit: (lead: LeadRecord) => void;
-  onArchive: (lead: LeadRecord, reason: ManualArchiveReason) => void;
-  onRestore: (lead: LeadRecord) => void;
-  onDelete: (lead: LeadRecord) => void;
-  showPrimaryAction?: boolean;
-};
+export function statusBadgeVariant(status: string): StatusBadgeVariant {
+  if (status === 'BOOKED') return 'accent';
+  if (status === 'LOST') return 'danger';
+  return 'neutral';
+}
+
+function statusText(lead: LeadRecord): string {
+  const label = LEAD_STATUS_LABELS[lead.status] ?? lead.status;
+  return lead.status === 'LOST' && lead.lostReason ? `${label} · ${lead.lostReason}` : label;
+}
+
+function sourceText(lead: LeadRecord): string | null {
+  if (lead.source === 'QUOTE') return 'Quote tool';
+  if (lead.source === 'BOOKING_FORM') return 'Booking form';
+  return null;
+}
+
+function LeadBadges({ lead, showArchiveReason }: { lead: LeadRecord; showArchiveReason: boolean }) {
+  return (
+    <>
+      <StatusBadge variant={statusBadgeVariant(lead.status)}>{statusText(lead)}</StatusBadge>
+      {needsReply(lead) && <StatusBadge variant="warning">Replied</StatusBadge>}
+      {lead.sheetSyncError && <StatusBadge variant="danger">Sheet not updated</StatusBadge>}
+      {showArchiveReason && lead.archivedAt && lead.archiveReason && (
+        <StatusBadge variant="neutral">
+          Archived: {ARCHIVE_REASON_LABELS[lead.archiveReason] ?? lead.archiveReason}
+        </StatusBadge>
+      )}
+    </>
+  );
+}
 
 function LeadRowActions({
   lead,
@@ -63,110 +81,47 @@ function LeadRowActions({
   borderColor,
   cardBg,
   mutedText,
-  onCreateAgreement,
-  onView,
-  onMarkContacted,
-  onEdit,
-  onArchive,
-  onRestore,
-  onDelete,
+  handlers,
   showPrimaryAction = true,
-}: LeadRowActionsProps) {
-  const isArchived = Boolean(lead.archivedAt);
+}: {
+  lead: LeadRecord;
+  tab: LeadRowProps['tab'];
+  borderColor: string;
+  cardBg: string;
+  mutedText: string;
+  handlers: LeadRowHandlers;
+  showPrimaryAction?: boolean;
+}) {
   const primaryAction = getPrimaryLeadAction(lead);
 
   return (
     <div className="lead-worklist-actions">
-      {showPrimaryAction && primaryAction?.kind === 'create_quote' && (
+      {showPrimaryAction && primaryAction?.kind === 'mark_booked' && (
+        <AdminButton variant="primary" size="compact" onClick={() => handlers.onMarkBooked(lead)}>
+          {primaryAction.label}
+        </AdminButton>
+      )}
+      {showPrimaryAction && primaryAction?.kind === 'view_event' && (
         <AdminLink href={primaryAction.href} variant="primary" size="compact">
           {primaryAction.label}
         </AdminLink>
       )}
-      {showPrimaryAction && primaryAction?.kind === 'create_agreement' && (
-        <AdminButton variant="primary" size="compact" onClick={() => onCreateAgreement(lead)}>
-          {primaryAction.label}
-        </AdminButton>
-      )}
-      {showPrimaryAction &&
-        (primaryAction?.kind === 'view_agreement' || primaryAction?.kind === 'view') && (
-          <AdminLink href={primaryAction.href} variant="primary" size="compact">
-            {primaryAction.label}
-          </AdminLink>
-        )}
 
       <LeadOverflowMenu
         lead={lead}
-        isArchived={isArchived || tab === 'archived'}
+        isArchived={Boolean(lead.archivedAt) || tab === 'archived'}
         borderColor={borderColor}
         cardBg={cardBg}
         mutedText={mutedText}
-        onView={onView}
-        onMarkContacted={onMarkContacted}
-        onEdit={onEdit}
-        onArchive={onArchive}
-        onRestore={onRestore}
-        onDelete={onDelete}
+        onOpen={handlers.onOpen}
+        onEdit={handlers.onEdit}
+        onCreateQuote={handlers.onCreateQuote}
+        onSetStatus={handlers.onSetStatus}
+        onRetrySync={handlers.onRetrySync}
+        onArchive={handlers.onArchive}
+        onRestore={handlers.onRestore}
+        onDelete={handlers.onDelete}
       />
-    </div>
-  );
-}
-
-type LeadMarkContactedFormProps = {
-  lead: LeadRecord;
-  borderColor: string;
-  cardBg: string;
-  textColor: string;
-  mutedText: string;
-  nextFollowUp: string;
-  onNextFollowUpChange: (value: string) => void;
-  onSaveMarkContacted: (lead: LeadRecord) => void;
-  onCancelMarkContacted: () => void;
-};
-
-function LeadMarkContactedForm({
-  lead,
-  borderColor,
-  cardBg,
-  textColor,
-  mutedText,
-  nextFollowUp,
-  onNextFollowUpChange,
-  onSaveMarkContacted,
-  onCancelMarkContacted,
-}: LeadMarkContactedFormProps) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        gap: '8px',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        marginTop: '10px',
-      }}
-    >
-      <label style={{ fontSize: '12px', color: mutedText }}>
-        Next follow-up
-        <input
-          type="date"
-          value={nextFollowUp}
-          onChange={(event) => onNextFollowUpChange(event.target.value)}
-          style={{
-            display: 'block',
-            marginTop: '4px',
-            padding: '6px 8px',
-            borderRadius: '2px',
-            border: `1px solid ${borderColor}`,
-            backgroundColor: cardBg,
-            color: textColor,
-          }}
-        />
-      </label>
-      <AdminButton variant="primary" size="compact" onClick={() => onSaveMarkContacted(lead)}>
-        Save
-      </AdminButton>
-      <AdminButton variant="ghost" size="compact" onClick={onCancelMarkContacted}>
-        Cancel
-      </AdminButton>
     </div>
   );
 }
@@ -178,22 +133,18 @@ function LeadInquirySubRow({
   cardBg,
   textColor,
   mutedText,
-  markingContactLeadId,
-  nextFollowUp,
-  onNextFollowUpChange,
-  onSaveMarkContacted,
-  onCancelMarkContacted,
-  onCreateAgreement,
-  onView,
-  onMarkContacted,
-  onEdit,
-  onArchive,
-  onRestore,
-  onDelete,
-}: LeadRowProps & { lead: LeadRecord }) {
+  handlers,
+}: {
+  lead: LeadRecord;
+  tab: LeadRowProps['tab'];
+  borderColor: string;
+  cardBg: string;
+  textColor: string;
+  mutedText: string;
+  handlers: LeadRowHandlers;
+}) {
   const dateBadge = formatLeadDateBadge(lead.eventDate);
-  const quoteTotal =
-    lead.quoteTotal != null ? `$${formatGroupedNumber(Number(lead.quoteTotal), 'en-CA')}` : null;
+  const followUp = formatFollowUpLine(lead);
 
   return (
     <div
@@ -217,27 +168,9 @@ function LeadInquirySubRow({
 
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          <StatusBadge variant="neutral">{STAGE_LABELS[lead.stage] ?? lead.stage}</StatusBadge>
-          {!lead.lastContactedAt && !lead.archivedAt && (
-            <StatusBadge variant="warning">Never contacted</StatusBadge>
-          )}
+          <LeadBadges lead={lead} showArchiveReason />
         </div>
-        {quoteTotal && (
-          <div style={{ fontSize: '13px', color: textColor, marginTop: '4px' }}>{quoteTotal}</div>
-        )}
-        {markingContactLeadId === lead.id && (
-          <LeadMarkContactedForm
-            lead={lead}
-            borderColor={borderColor}
-            cardBg={cardBg}
-            textColor={textColor}
-            mutedText={mutedText}
-            nextFollowUp={nextFollowUp}
-            onNextFollowUpChange={onNextFollowUpChange}
-            onSaveMarkContacted={onSaveMarkContacted}
-            onCancelMarkContacted={onCancelMarkContacted}
-          />
-        )}
+        {followUp && <div style={{ fontSize: '12px', color: textColor, marginTop: '4px' }}>{followUp}</div>}
       </div>
 
       <LeadRowActions
@@ -246,13 +179,7 @@ function LeadInquirySubRow({
         borderColor={borderColor}
         cardBg={cardBg}
         mutedText={mutedText}
-        onCreateAgreement={onCreateAgreement}
-        onView={onView}
-        onMarkContacted={onMarkContacted}
-        onEdit={onEdit}
-        onArchive={onArchive}
-        onRestore={onRestore}
-        onDelete={onDelete}
+        handlers={handlers}
         showPrimaryAction={false}
       />
     </div>
@@ -267,18 +194,7 @@ export function LeadRow({
   cardBg,
   textColor,
   mutedText,
-  markingContactLeadId,
-  nextFollowUp,
-  onNextFollowUpChange,
-  onSaveMarkContacted,
-  onCancelMarkContacted,
-  onCreateAgreement,
-  onView,
-  onMarkContacted,
-  onEdit,
-  onArchive,
-  onRestore,
-  onDelete,
+  ...handlers
 }: LeadRowProps) {
   const lead = folded.primary;
   const isFolded = folded.others.length > 0;
@@ -287,35 +203,22 @@ export function LeadRow({
   const subRowsId = useId();
 
   useEffect(() => {
-    if (forceExpanded) {
-      setExpanded(true);
-    } else {
-      setExpanded(false);
-    }
+    setExpanded(forceExpanded);
   }, [forceExpanded]);
 
-  const isArchived = Boolean(lead.archivedAt);
   const dateBadge = formatLeadDateBadge(lead.eventDate);
   const quoteTotal =
     lead.quoteTotal != null ? `$${formatGroupedNumber(Number(lead.quoteTotal), 'en-CA')}` : null;
+  const followUp = formatFollowUpLine(lead);
+  const source = sourceText(lead);
+  const detail = [source, quoteTotal, followUp].filter(Boolean).join(' · ');
 
   return (
     <div style={{ borderBottom: `1px solid ${borderColor}` }}>
-      <div
-        className="lead-worklist-row"
-        style={{
-          padding: '14px 16px',
-          borderBottom: 'none',
-        }}
-      >
+      <div className="lead-worklist-row" style={{ padding: '14px 16px', borderBottom: 'none' }}>
         <div
           aria-label={`Event date: ${dateBadge.primary}, ${dateBadge.secondary}`}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            alignItems: 'flex-start',
-          }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}
         >
           <StatusBadge variant={getDateBadgeVariant(dateBadge.group)} style={{ borderRadius: '2px' }}>
             {dateBadge.primary}
@@ -338,39 +241,31 @@ export function LeadRow({
                 {expanded ? '▾' : '▸'}
               </AdminButton>
             )}
-            <span style={{ fontWeight: 600, color: textColor }}>
+            <button
+              type="button"
+              onClick={() => handlers.onOpen(lead)}
+              style={{
+                fontWeight: 600,
+                color: textColor,
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: 'inherit',
+              }}
+              title="Open timeline and notes"
+            >
               {lead.firstName} {lead.lastName}
-            </span>
-            {isFolded && (
-              <StatusBadge variant="accent">{inquiryCount} inquiries</StatusBadge>
-            )}
-            <StatusBadge variant="neutral">{STAGE_LABELS[lead.stage] ?? lead.stage}</StatusBadge>
-            {isArchived && lead.archiveReason && (
-              <StatusBadge variant="neutral">
-                {ARCHIVE_REASON_LABELS[lead.archiveReason] ?? lead.archiveReason}
-              </StatusBadge>
-            )}
-            {!lead.lastContactedAt && !isArchived && (
-              <StatusBadge variant="warning">Never contacted</StatusBadge>
-            )}
+            </button>
+            {isFolded && <StatusBadge variant="accent">{inquiryCount} inquiries</StatusBadge>}
+            <LeadBadges lead={lead} showArchiveReason={Boolean(lead.archivedAt)} />
           </div>
-          <div style={{ fontSize: '13px', color: mutedText, marginTop: '4px' }}>{lead.email}</div>
-          {quoteTotal && (
-            <div style={{ fontSize: '13px', color: textColor, marginTop: '4px' }}>{quoteTotal}</div>
-          )}
-          {markingContactLeadId === lead.id && (
-            <LeadMarkContactedForm
-              lead={lead}
-              borderColor={borderColor}
-              cardBg={cardBg}
-              textColor={textColor}
-              mutedText={mutedText}
-              nextFollowUp={nextFollowUp}
-              onNextFollowUpChange={onNextFollowUpChange}
-              onSaveMarkContacted={onSaveMarkContacted}
-              onCancelMarkContacted={onCancelMarkContacted}
-            />
-          )}
+          <div style={{ fontSize: '13px', color: mutedText, marginTop: '4px' }}>
+            {lead.email}
+            {lead.phone ? ` · ${lead.phone}` : ''}
+          </div>
+          {detail && <div style={{ fontSize: '12px', color: textColor, marginTop: '4px' }}>{detail}</div>}
         </div>
 
         <LeadRowActions
@@ -379,13 +274,7 @@ export function LeadRow({
           borderColor={borderColor}
           cardBg={cardBg}
           mutedText={mutedText}
-          onCreateAgreement={onCreateAgreement}
-          onView={onView}
-          onMarkContacted={onMarkContacted}
-          onEdit={onEdit}
-          onArchive={onArchive}
-          onRestore={onRestore}
-          onDelete={onDelete}
+          handlers={handlers}
         />
       </div>
 
@@ -395,24 +284,12 @@ export function LeadRow({
             <LeadInquirySubRow
               key={otherLead.id}
               lead={otherLead}
-              folded={folded}
               tab={tab}
               borderColor={borderColor}
               cardBg={cardBg}
               textColor={textColor}
               mutedText={mutedText}
-              markingContactLeadId={markingContactLeadId}
-              nextFollowUp={nextFollowUp}
-              onNextFollowUpChange={onNextFollowUpChange}
-              onSaveMarkContacted={onSaveMarkContacted}
-              onCancelMarkContacted={onCancelMarkContacted}
-              onCreateAgreement={onCreateAgreement}
-              onView={onView}
-              onMarkContacted={onMarkContacted}
-              onEdit={onEdit}
-              onArchive={onArchive}
-              onRestore={onRestore}
-              onDelete={onDelete}
+              handlers={handlers}
             />
           ))}
         </div>

@@ -9,4 +9,6 @@ export type LeadCounts = LeadListResult['counts'];
 
 export type ManualArchiveReason = 'booked' | 'lost' | 'manual';
 
+export type LeadStatusValue = 'NEW' | 'FOLLOWING_UP' | 'BOOKED' | 'LOST' | 'PAUSED';
+
 export type FoldedLeadRecord = FoldedLead<LeadRecord>;

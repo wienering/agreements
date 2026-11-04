@@ -713,3 +713,29 @@ See `docs/FEATURES.md` for detailed implementation.
 5. **Communication**: Twilio SMS, Slack notifications
 6. **Analytics**: Google Analytics, Mixpanel
 
+
+## Lead nurturing (n8n + "Pre-Booking Leads Not Booked" Sheet)
+
+The CRM owns each lead (status, notes, timeline). The Sheet stays as n8n's working copy: WF1
+("Pre-Booking Leads") adds rows, WF2 ("Follow Up Trigger") follows up rows whose `new status` is `active`.
+
+**n8n → CRM** (header `Authorization: Bearer <N8N_API_SECRET>`):
+
+- `POST /api/n8n/leads`: WF1 intake, right after the Sheet row is added. Body: `sheetLeadId`, `email`,
+  `firstName`, `lastName`, `fullName`, `phone`, `eventDate` (as typed), `city`, `hours`, `utmSource`, `pageUrl`.
+  Never creates a Client. Repeats of the same `sheetLeadId` return the existing lead.
+- `POST /api/n8n/leads/activity`: one call per touch. Body: `type` (`email` | `sms` | `reply` | `delay` |
+  `reset` | `status`), `sheetLeadId` (or `crmLeadId` / `email`), `touchNumber`, `subject`, `summary`,
+  `status` (the Sheet value, for `type: status`), `nextFollowUp` (M/d/yyyy or ISO), `occurredAt`,
+  `externalKey` (makes retries safe). Returns 404 when no lead matches.
+
+**CRM → Sheet**: changing a lead to Booked, Lost or Paused writes `booked`, the lost reason, or `paused` to
+its row's `new status` (and clears `next follow-up date` for Booked/Lost). Resuming a paused lead writes
+`active` and sets the next follow-up to tomorrow if it's empty or past. Rows are matched by `lead_id`, then
+email. Only the live site writes (set `GOOGLE_SHEETS_SYNC_ANYWHERE=true` to test locally). Failures alert on
+Telegram and show "Sheet not updated" on the lead, with "Retry Sheet sync" in its menu.
+
+Env: `N8N_API_SECRET`, `GOOGLE_SHEETS_REFRESH_TOKEN` (`npx tsx scripts/google-calendar-auth.ts --sheets`,
+Google Sheets API enabled), `LEADS_SHEET_ID`, optional `LEADS_SHEET_TAB` (default `Sheet1`).
+
+One-time link of existing rows: `npx tsx scripts/link-leads-to-sheet.ts` (report), then `--apply`.

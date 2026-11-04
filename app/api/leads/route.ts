@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const stage = searchParams.get('stage');
+    const status = searchParams.get('status');
     const source = searchParams.get('source');
     const tab = parseLeadTab(searchParams.get('tab'));
 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(leads);
     }
 
-    const result = await fetchLeadList({ tab, stage });
+    const result = await fetchLeadList({ tab, stage, status });
     return NextResponse.json(result);
   } catch (error) {
     const authResponse = adminAuthResponse(error);

@@ -2,7 +2,7 @@
 
 import { adminFetch } from '@/lib/adminFetch';
 import { formatDateToronto } from '@/lib/dates';
-import { getAgreementViewUrl, getQuoteUrl } from '@/lib/leads/display';
+import { getQuoteUrl, needsReply } from '@/lib/leads/display';
 import { foldLeadsByEmail } from '@/lib/leads/dedup';
 import {
   getLeadGroup,
@@ -22,15 +22,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AdminButton } from '../../components/AdminButton';
 import { getStatusBadgeStyles } from '../../components/StatusBadge';
-import { LeadRow } from './LeadRow';
-import type { FoldedLeadRecord, LeadCounts, LeadRecord, LeadTab, ManualArchiveReason } from './types';
+import { LeadRow, type LeadRowHandlers } from './LeadRow';
+import { LeadPanel } from './LeadPanel';
+import { MarkBookedDialog } from './MarkBookedDialog';
+import type { FoldedLeadRecord, LeadCounts, LeadRecord, LeadStatusValue, LeadTab } from './types';
 
-const STAGES: { key: string; label: string }[] = [
-  { key: 'QUOTE_REQUESTED', label: 'Quote Requested' },
-  { key: 'QUOTE_SENT', label: 'Quote Sent' },
-  { key: 'AGREEMENT_SENT', label: 'Agreement Sent' },
-  { key: 'SIGNED', label: 'Signed' },
-  { key: 'COMPLETED', label: 'Completed' },
+const STATUSES: { key: LeadStatusValue; label: string }[] = [
+  { key: 'NEW', label: 'New' },
+  { key: 'FOLLOWING_UP', label: 'Following up' },
+  { key: 'PAUSED', label: 'Paused' },
+  { key: 'BOOKED', label: 'Booked' },
   { key: 'LOST', label: 'Lost' },
 ];
 
@@ -48,17 +49,15 @@ export default function LeadsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = parseLeadTab(searchParams.get('tab'));
-  const filterStage = searchParams.get('stage') || '';
+  const filterStatus = searchParams.get('status') || '';
 
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [counts, setCounts] = useState<LeadCounts>({ active: 0, archived: 0, all: 0 });
-  const [templates, setTemplates] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [markingContactLeadId, setMarkingContactLeadId] = useState<string | null>(null);
-  const [nextFollowUp, setNextFollowUp] = useState('');
-  const [createAgreementLead, setCreateAgreementLead] = useState<LeadRecord | null>(null);
+  const [panelLeadId, setPanelLeadId] = useState<string | null>(null);
+  const [bookingLead, setBookingLead] = useState<LeadRecord | null>(null);
   const [showAddLead, setShowAddLead] = useState(false);
   const [addLeadError, setAddLeadError] = useState('');
   const [addLeadSaving, setAddLeadSaving] = useState(false);
@@ -111,7 +110,7 @@ export default function LeadsPage() {
     try {
       const params = new URLSearchParams();
       params.set('tab', tab);
-      if (filterStage) params.set('stage', filterStage);
+      if (filterStatus) params.set('status', filterStatus);
       const res = await adminFetch(`/api/leads?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
@@ -123,13 +122,10 @@ export default function LeadsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterStage, tab]);
+  }, [filterStatus, tab]);
 
   useEffect(() => {
     fetchLeads();
-    adminFetch('/api/templates')
-      .then((response) => (response.ok ? response.json() : []))
-      .then((templateList) => setTemplates(templateList));
   }, [fetchLeads]);
 
   // Handle "/" key to focus search bar
@@ -195,14 +191,22 @@ export default function LeadsPage() {
       later: [],
       no_date: [],
     };
+    const replied: FilteredFoldedLead<LeadRecord>[] = [];
 
     for (const item of filteredFoldedLeads) {
-      buckets[getLeadGroup(item.folded.primary)].push(item);
+      const lead = item.folded.primary;
+      if (needsReply(lead)) {
+        replied.push(item);
+      } else {
+        buckets[getLeadGroup(lead)].push(item);
+      }
     }
 
-    return LEAD_GROUP_ORDER
-      .map((group) => ({ group, label: LEAD_GROUP_LABELS[group], rows: buckets[group] }))
-      .filter((section) => section.rows.length > 0);
+    const sections: { group: string; label: string; rows: FilteredFoldedLead<LeadRecord>[] }[] = [
+      { group: 'replied', label: 'Replied, waiting on you', rows: replied },
+      ...LEAD_GROUP_ORDER.map((group) => ({ group, label: LEAD_GROUP_LABELS[group], rows: buckets[group] })),
+    ];
+    return sections.filter((section) => section.rows.length > 0);
   }, [filteredFoldedLeads]);
 
   const activeSearchQuery = normalizeSearchQuery(searchQuery);
@@ -226,36 +230,50 @@ export default function LeadsPage() {
     });
   };
 
-  const setFilterStage = (stage: string) => {
+  const setFilterStatus = (status: string) => {
     updateSearchParams((params) => {
-      if (stage) params.set('stage', stage);
-      else params.delete('stage');
+      params.delete('stage');
+      if (status) params.set('status', status);
+      else params.delete('status');
     });
   };
 
-  const handleMarkContacted = async (lead: LeadRecord) => {
+  const handleSetStatus = async (lead: LeadRecord, status: LeadStatusValue, lostReason?: string) => {
     try {
-      const res = await adminFetch(`/api/leads/${lead.id}/contacted`, {
-        method: 'POST',
+      const res = await adminFetch(`/api/leads/${lead.id}/status`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextFollowUp ? { nextFollowUpAt: nextFollowUp } : {}),
+        body: JSON.stringify({ status, lostReason: lostReason ?? null }),
       });
       if (res.ok) {
-        setNextFollowUp('');
-        setMarkingContactLeadId(null);
         fetchLeads();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Could not change the status');
       }
+    } catch (error) {
+      console.error(error);
+      alert('Could not change the status');
+    }
+  };
+
+  const handleRetrySync = async (lead: LeadRecord) => {
+    try {
+      const res = await adminFetch(`/api/leads/${lead.id}/sync-sheet`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) alert('The Sheet still could not be updated. Check the Telegram alert for the reason.');
+      fetchLeads();
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleArchive = async (lead: LeadRecord, reason: ManualArchiveReason) => {
+  const handleArchive = async (lead: LeadRecord) => {
     try {
       const res = await adminFetch(`/api/leads/${lead.id}/archive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: 'manual' }),
       });
       if (res.ok) fetchLeads();
     } catch (error) {
@@ -288,31 +306,6 @@ export default function LeadsPage() {
       console.error(error);
       alert('Failed to delete lead');
     }
-  };
-
-  const handleCreateAgreement = async (lead: LeadRecord, templateId: string) => {
-    try {
-      const res = await adminFetch(`/api/leads/${lead.id}/create-agreement`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateId }),
-      });
-      if (res.ok) {
-        const agreement = await res.json();
-        setCreateAgreementLead(null);
-        router.push(`/admin/agreements?highlight=${agreement.id}`);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleViewLead = (lead: LeadRecord) => {
-    if (lead.agreement) {
-      router.push(getAgreementViewUrl(lead.agreement.id));
-      return;
-    }
-    router.push(getQuoteUrl(lead));
   };
 
   const openEditLead = (lead: LeadRecord) => {
@@ -438,6 +431,20 @@ export default function LeadsPage() {
 
   const toDateOnly = (value: Date | string) => formatDateToronto(value);
 
+  const rowHandlers: LeadRowHandlers = {
+    onOpen: (lead) => setPanelLeadId(lead.id),
+    onMarkBooked: setBookingLead,
+    onEdit: openEditLead,
+    onCreateQuote: (lead) => router.push(getQuoteUrl(lead)),
+    onSetStatus: handleSetStatus,
+    onRetrySync: handleRetrySync,
+    onArchive: handleArchive,
+    onRestore: handleRestore,
+    onDelete: handleDeleteLead,
+  };
+
+  const panelLead = panelLeadId ? leads.find((lead) => lead.id === panelLeadId) ?? null : null;
+
   const renderLeadList = (rows: FilteredFoldedLead<LeadRecord>[]) =>
     rows.map(({ folded, forceExpanded }) => (
       <LeadRow
@@ -449,24 +456,7 @@ export default function LeadsPage() {
         cardBg={cardBg}
         textColor={textColor}
         mutedText={mutedText}
-        markingContactLeadId={markingContactLeadId}
-        nextFollowUp={nextFollowUp}
-        onNextFollowUpChange={setNextFollowUp}
-        onSaveMarkContacted={handleMarkContacted}
-        onCancelMarkContacted={() => {
-          setMarkingContactLeadId(null);
-          setNextFollowUp('');
-        }}
-        onCreateAgreement={setCreateAgreementLead}
-        onView={handleViewLead}
-        onMarkContacted={(leadRecord) => {
-          setMarkingContactLeadId(leadRecord.id);
-          setNextFollowUp('');
-        }}
-        onEdit={openEditLead}
-        onArchive={handleArchive}
-        onRestore={handleRestore}
-        onDelete={handleDeleteLead}
+        {...rowHandlers}
       />
     ));
 
@@ -480,24 +470,7 @@ export default function LeadsPage() {
         cardBg={cardBg}
         textColor={textColor}
         mutedText={mutedText}
-        markingContactLeadId={markingContactLeadId}
-        nextFollowUp={nextFollowUp}
-        onNextFollowUpChange={setNextFollowUp}
-        onSaveMarkContacted={handleMarkContacted}
-        onCancelMarkContacted={() => {
-          setMarkingContactLeadId(null);
-          setNextFollowUp('');
-        }}
-        onCreateAgreement={setCreateAgreementLead}
-        onView={handleViewLead}
-        onMarkContacted={(leadRecord) => {
-          setMarkingContactLeadId(leadRecord.id);
-          setNextFollowUp('');
-        }}
-        onEdit={openEditLead}
-        onArchive={handleArchive}
-        onRestore={handleRestore}
-        onDelete={handleDeleteLead}
+        {...rowHandlers}
       />
     ));
 
@@ -516,11 +489,11 @@ export default function LeadsPage() {
         >
           <div>
             <h1 className="admin-page-title" style={{ margin: '0', fontSize: '28px', fontWeight: '700', color: textColor }}>
-              Lead Pipeline
+              Leads
             </h1>
             <div className="admin-title-rule" aria-hidden="true" />
             <p style={{ margin: '8px 0 0 0', color: mutedText, fontSize: '14px' }}>
-              Track and nurture quote inquiries through to signed agreements
+              Work leads here. n8n sends the follow-ups; booked, lost and paused leads drop out of the sequence.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -528,8 +501,8 @@ export default function LeadsPage() {
               + Add Lead
             </AdminButton>
             <select
-              value={filterStage}
-              onChange={(event) => setFilterStage(event.target.value)}
+              value={filterStatus}
+              onChange={(event) => setFilterStatus(event.target.value)}
               style={{
                 padding: '8px 12px',
                 borderRadius: '2px',
@@ -539,10 +512,10 @@ export default function LeadsPage() {
                 fontSize: '14px',
               }}
             >
-              <option value="">All stages</option>
-              {STAGES.map((stage) => (
-                <option key={stage.key} value={stage.key}>
-                  {stage.label}
+              <option value="">All statuses</option>
+              {STATUSES.map((status) => (
+                <option key={status.key} value={status.key}>
+                  {status.label}
                 </option>
               ))}
             </select>
@@ -689,59 +662,21 @@ export default function LeadsPage() {
           </div>
         )}
 
-        {createAgreementLead && (
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
+        {panelLead && (
+          <LeadPanel
+            lead={panelLead}
+            onClose={() => setPanelLeadId(null)}
+            onChanged={fetchLeads}
+            onMarkBooked={(lead) => {
+              setPanelLeadId(null);
+              setBookingLead(lead);
             }}
-            onClick={() => setCreateAgreementLead(null)}
-          >
-            <div
-              style={{
-                backgroundColor: cardBg,
-                padding: '24px',
-                borderRadius: '2px',
-                border: `1px solid ${borderColor}`,
-                minWidth: '320px',
-              }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <h3 style={{ margin: '0 0 16px 0', color: textColor }}>
-                Create agreement for {createAgreementLead.firstName} {createAgreementLead.lastName}
-              </h3>
-              <select
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  marginBottom: '16px',
-                  borderRadius: '2px',
-                  border: `1px solid ${borderColor}`,
-                  backgroundColor: mainBg,
-                  color: textColor,
-                }}
-                onChange={(event) => {
-                  const templateId = event.target.value;
-                  if (templateId) handleCreateAgreement(createAgreementLead, templateId);
-                }}
-              >
-                <option value="">Select template...</option>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.title}
-                  </option>
-                ))}
-              </select>
-              <AdminButton variant="ghost" onClick={() => setCreateAgreementLead(null)}>
-                Cancel
-              </AdminButton>
-            </div>
-          </div>
+            onSetStatus={handleSetStatus}
+          />
+        )}
+
+        {bookingLead && (
+          <MarkBookedDialog lead={bookingLead} onClose={() => setBookingLead(null)} onBooked={fetchLeads} />
         )}
 
         {showAddLead && (

@@ -2,7 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { AdminButton } from '../../components/AdminButton';
-import type { LeadRecord, ManualArchiveReason } from './types';
+import { LOST_REASONS } from '@/lib/leads/status';
+import { isOpenLeadStatus } from '@/lib/leads/display';
+import type { LeadRecord, LeadStatusValue } from './types';
 
 type LeadOverflowMenuProps = {
   lead: LeadRecord;
@@ -10,10 +12,12 @@ type LeadOverflowMenuProps = {
   borderColor: string;
   cardBg: string;
   mutedText: string;
-  onView: (lead: LeadRecord) => void;
-  onMarkContacted: (lead: LeadRecord) => void;
+  onOpen: (lead: LeadRecord) => void;
   onEdit: (lead: LeadRecord) => void;
-  onArchive: (lead: LeadRecord, reason: ManualArchiveReason) => void;
+  onCreateQuote: (lead: LeadRecord) => void;
+  onSetStatus: (lead: LeadRecord, status: LeadStatusValue, lostReason?: string) => void;
+  onRetrySync: (lead: LeadRecord) => void;
+  onArchive: (lead: LeadRecord) => void;
   onRestore: (lead: LeadRecord) => void;
   onDelete: (lead: LeadRecord) => void;
 };
@@ -24,21 +28,23 @@ export function LeadOverflowMenu({
   borderColor,
   cardBg,
   mutedText,
-  onView,
-  onMarkContacted,
+  onOpen,
   onEdit,
+  onCreateQuote,
+  onSetStatus,
+  onRetrySync,
   onArchive,
   onRestore,
   onDelete,
 }: LeadOverflowMenuProps) {
   const [open, setOpen] = useState(false);
-  const [showArchiveReasons, setShowArchiveReasons] = useState(false);
+  const [showLostReasons, setShowLostReasons] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
   useEffect(() => {
     if (!open) {
-      setShowArchiveReasons(false);
+      setShowLostReasons(false);
       return;
     }
 
@@ -71,8 +77,16 @@ export function LeadOverflowMenu({
   const run = (action: () => void) => {
     action();
     setOpen(false);
-    setShowArchiveReasons(false);
+    setShowLostReasons(false);
   };
+
+  const isOpenStatus = isOpenLeadStatus(lead.status);
+
+  const item = (label: string, action: () => void, variant: 'ghost' | 'danger' = 'ghost') => (
+    <AdminButton role="menuitem" variant={variant} size="compact" style={menuItemStyle} onClick={() => run(action)}>
+      {label}
+    </AdminButton>
+  );
 
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
@@ -98,7 +112,7 @@ export function LeadOverflowMenu({
             position: 'absolute',
             top: 'calc(100% + 4px)',
             right: 0,
-            minWidth: '180px',
+            minWidth: '190px',
             padding: '6px',
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
@@ -109,89 +123,55 @@ export function LeadOverflowMenu({
             gap: '4px',
           }}
         >
-          <AdminButton
-            role="menuitem"
-            variant="ghost"
-            size="compact"
-            style={menuItemStyle}
-            onClick={() => run(() => onView(lead))}
-          >
-            View
-          </AdminButton>
-
-          {!isArchived && (
-            <AdminButton
-              role="menuitem"
-              variant="ghost"
-              size="compact"
-              style={menuItemStyle}
-              onClick={() => run(() => onMarkContacted(lead))}
-            >
-              Mark contacted
-            </AdminButton>
-          )}
-
-          <AdminButton
-            role="menuitem"
-            variant="ghost"
-            size="compact"
-            style={menuItemStyle}
-            onClick={() => run(() => onEdit(lead))}
-          >
-            Edit
-          </AdminButton>
-
-          {!isArchived ? (
-            showArchiveReasons ? (
-              <>
-                <div style={{ fontSize: '11px', color: mutedText, padding: '4px 8px 0' }}>
-                  Archive reason
-                </div>
-                {(['booked', 'lost', 'manual'] as ManualArchiveReason[]).map((reason) => (
-                  <AdminButton
-                    key={reason}
-                    role="menuitem"
-                    variant="ghost"
-                    size="compact"
-                    style={menuItemStyle}
-                    onClick={() => run(() => onArchive(lead, reason))}
-                  >
-                    {reason === 'booked' ? 'Booked' : reason === 'lost' ? 'Lost' : 'Manual'}
-                  </AdminButton>
-                ))}
-              </>
-            ) : (
-              <AdminButton
-                role="menuitem"
-                variant="ghost"
-                size="compact"
-                style={menuItemStyle}
-                onClick={() => setShowArchiveReasons(true)}
-              >
-                Archive…
-              </AdminButton>
-            )
+          {showLostReasons ? (
+            <>
+              <div style={{ fontSize: '11px', color: mutedText, padding: '4px 8px 0' }}>Why was it lost?</div>
+              {LOST_REASONS.map((reason) => (
+                <AdminButton
+                  key={reason}
+                  role="menuitem"
+                  variant="ghost"
+                  size="compact"
+                  style={menuItemStyle}
+                  onClick={() => run(() => onSetStatus(lead, 'LOST', reason))}
+                >
+                  {reason.charAt(0).toUpperCase() + reason.slice(1)}
+                </AdminButton>
+              ))}
+            </>
           ) : (
-            <AdminButton
-              role="menuitem"
-              variant="ghost"
-              size="compact"
-              style={menuItemStyle}
-              onClick={() => run(() => onRestore(lead))}
-            >
-              Restore
-            </AdminButton>
-          )}
+            <>
+              {item('Open (timeline & notes)', () => onOpen(lead))}
+              {item('Edit details', () => onEdit(lead))}
+              {isOpenStatus && item('Create quote', () => onCreateQuote(lead))}
 
-          <AdminButton
-            role="menuitem"
-            variant="danger"
-            size="compact"
-            style={menuItemStyle}
-            onClick={() => run(() => onDelete(lead))}
-          >
-            Delete
-          </AdminButton>
+              {lead.status === 'PAUSED'
+                ? item('Resume follow-ups', () => onSetStatus(lead, 'FOLLOWING_UP'))
+                : isOpenStatus && item('Pause follow-ups', () => onSetStatus(lead, 'PAUSED'))}
+
+              {isOpenStatus && (
+                <AdminButton
+                  role="menuitem"
+                  variant="ghost"
+                  size="compact"
+                  style={menuItemStyle}
+                  onClick={() => setShowLostReasons(true)}
+                >
+                  Mark lost…
+                </AdminButton>
+              )}
+
+              {(lead.status === 'LOST' || lead.status === 'BOOKED') &&
+                !lead.eventId &&
+                item('Reopen', () => onSetStatus(lead, 'FOLLOWING_UP'))}
+
+              {lead.sheetSyncError && item('Retry Sheet sync', () => onRetrySync(lead))}
+
+              {!isArchived ? item('Archive', () => onArchive(lead)) : item('Restore', () => onRestore(lead))}
+
+              {item('Delete', () => onDelete(lead), 'danger')}
+            </>
+          )}
         </div>
       )}
     </div>
