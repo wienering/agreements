@@ -245,7 +245,7 @@ export function AgreementRow({
                   title="Click to edit expiration date"
                   className="cursor-pointer"
                 >
-                  Expires {formatDateToronto(agreement.expiresAt)}
+                  {agreement.expiresAt ? `Expires ${formatDateToronto(agreement.expiresAt)}` : 'No expiry'}
                 </span>
               )}
               {attendantName ? (
