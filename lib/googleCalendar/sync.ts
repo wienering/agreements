@@ -178,32 +178,3 @@ async function findEntryToAdopt(
   );
   return pickEntryToAdopt(entries.filter((entry) => !claimed.has(storeCalendarId(key, entry.id))), event.client);
 }
-
-/** Queue a sync for every event of a client (their name, phone or email changed). */
-export async function queueCalendarSyncForClient(clientId: string): Promise<void> {
-  if (!isGoogleCalendarConfigured()) return;
-  const events = await prisma.event.findMany({
-    where: { clientId, googleCalendarEventId: { not: null } },
-    select: { id: true },
-  });
-  for (const event of events) queueCalendarSync(event.id);
-}
-
-/** The one entry on the event's day that another tool (Bookly) made for this client, if any. */
-async function findEntryToAdopt(
-  event: { client: { firstName: string; lastName: string; email: string } },
-  eventDate: Date,
-): Promise<string | null> {
-  const { start, end } = torontoDayBoundsUtc(eventDate);
-  const entries = await listCalendarEvents(start, end);
-  const candidateIds = entries.map((entry) => entry.id);
-  const claimed = new Set(
-    (
-      await prisma.event.findMany({
-        where: { googleCalendarEventId: { in: candidateIds } },
-        select: { googleCalendarEventId: true },
-      })
-    ).map((row) => row.googleCalendarEventId),
-  );
-  return pickEntryToAdopt(entries.filter((entry) => !claimed.has(entry.id)), event.client);
-}
