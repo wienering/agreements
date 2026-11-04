@@ -14,19 +14,22 @@ import {
   torontoStartOfTodayUtc,
 } from '@/lib/dates';
 
-/** Non-archived agreements bucketed by effective event date in Eastern Time. */
+/** Booked events (not archived or cancelled), plus older agreements with no event, by event date. */
 async function fetchAgreementEventDatesForChart(): Promise<Date[]> {
-  const rows = await prisma.agreement.findMany({
-    where: { archived: false },
-    select: {
-      event: { select: { eventDate: true } },
-      client: { select: { eventDate: true } },
-    },
-  });
-
-  return rows
-    .map((row) => resolveAgreementEventDate(row))
-    .filter((date): date is Date => date !== null);
+  const [events, legacy] = await Promise.all([
+    prisma.event.findMany({
+      where: { archived: false, status: { not: 'CANCELLED' }, eventDate: { not: null } },
+      select: { eventDate: true },
+    }),
+    prisma.agreement.findMany({
+      where: { archived: false, eventId: null },
+      select: { client: { select: { eventDate: true } } },
+    }),
+  ]);
+  return [
+    ...events.map((row) => row.eventDate as Date),
+    ...legacy.map((row) => resolveAgreementEventDate({ client: row.client })).filter((date): date is Date => date !== null),
+  ];
 }
 
 export async function GET(request: NextRequest) {
@@ -280,105 +283,37 @@ export async function GET(request: NextRequest) {
       lt: endOfRangeEnd,
     };
 
-    // We check both event.eventDate and client.eventDate to capture all possible events
-    const upcomingAgreements = await prisma.agreement.findMany({
-      where: {
-        status: {
-          in: ['DRAFT', 'SENT', 'SIGNED']
-        },
-        archived: false,
-        OR: [
-          {
-            event: {
-              eventDate: eventDateInWindow
-            }
-          },
-          {
-            event: null,
-            client: {
-              eventDate: eventDateInWindow
-            }
-          },
-          {
-            event: {
-              eventDate: null
-            },
-            client: {
-              eventDate: eventDateInWindow
-            }
-          }
-        ]
+    // Every upcoming booked event in the window, with or without an agreement.
+    const upcomingEventRows = await prisma.event.findMany({
+      where: { archived: false, status: 'UPCOMING', eventDate: eventDateInWindow },
+      select: {
+        id: true,
+        eventDate: true,
+        eventStartTime: true,
+        eventType: true,
+        eventLocation: true,
+        client: { select: { firstName: true, lastName: true } },
       },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            eventDate: true,
-            eventStartTime: true,
-            eventType: true,
-            eventLocation: true
-          }
-        },
-        event: {
-          select: {
-            id: true,
-            eventDate: true,
-            eventStartTime: true,
-            eventType: true,
-            eventLocation: true
-          }
-        }
-      },
-      take: 100 // Get more agreements to ensure we capture all events
+      orderBy: { eventDate: 'asc' },
+      take: 100,
     });
-
-    // Map to upcoming events format, using event.eventDate if available, otherwise client.eventDate
-    const upcomingEvents = upcomingAgreements
-      .map(agreement => {
-        // Use event date if available, otherwise fall back to client event date
-        const eventDate = agreement.event?.eventDate 
-          ? new Date(agreement.event.eventDate)
-          : agreement.client.eventDate 
-            ? new Date(agreement.client.eventDate)
-            : null;
-        
-        // Filter out past events and events without dates
-        if (!eventDate) {
-          return null;
-        }
-
-        const eventKey = torontoDateKey(eventDate);
-        const todayKey = torontoDateKey(startOfToday);
-        const endKey = torontoDateKey(endOfRange);
-        if (eventKey < todayKey || eventKey > endKey) {
-          return null;
-        }
-
-        const daysUntil = torontoCalendarDaysBetween(startOfToday, eventDate);
-        
-        // Use event data if available, otherwise fall back to client data
-        const eventStartTime = agreement.event?.eventStartTime || agreement.client.eventStartTime;
-        const eventType = agreement.event?.eventType || agreement.client.eventType;
-        const eventLocation = agreement.event?.eventLocation || agreement.client.eventLocation;
-        
-        return {
-          id: agreement.id,
-          clientName: `${agreement.client.firstName} ${agreement.client.lastName}`,
-          eventDate: eventDate.toISOString(),
-          eventStartTime,
-          eventType,
-          eventLocation,
-          daysUntil
-        };
+    const todayKey = torontoDateKey(startOfToday);
+    const endKey = torontoDateKey(endOfRange);
+    const upcomingEvents = upcomingEventRows
+      .filter((event) => {
+        if (!event.eventDate) return false;
+        const key = torontoDateKey(event.eventDate);
+        return key >= todayKey && key <= endKey;
       })
-      .filter((event): event is NonNullable<typeof event> => event !== null)
-      .sort((a, b) => {
-        // Sort by event date ascending (closest first)
-        return new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime();
-      });
+      .map((event) => ({
+        id: event.id,
+        clientName: `${event.client.firstName} ${event.client.lastName}`,
+        eventDate: (event.eventDate as Date).toISOString(),
+        eventStartTime: event.eventStartTime,
+        eventType: event.eventType,
+        eventLocation: event.eventLocation,
+        daysUntil: torontoCalendarDaysBetween(startOfToday, event.eventDate as Date),
+      }));
 
     // If days parameter is provided, return simplified overview for admin page with trends
     if (days) {

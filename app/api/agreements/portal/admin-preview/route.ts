@@ -7,6 +7,8 @@ import { processHtmlContent } from '@/app/api/agreements/portal/shared/agreement
 import { isSigned as isSignedStatus } from '@/lib/agreementStatus';
 import { isSignableStatus } from '@/lib/agreements/signable';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
+import { UNSENT_DRAFT_WHERE } from '@/lib/portal/events';
+import { eventWithBookingInclude, withEventBooking } from '@/lib/agreements/eventBooking';
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,7 +67,9 @@ export async function GET(request: NextRequest) {
       client: {
         email: client.email.toLowerCase(),
       },
-      archived: false
+      archived: false,
+      // Preview shows what the client sees: never an agreement they haven't been sent.
+      NOT: UNSENT_DRAFT_WHERE,
     };
 
     // Add status filter
@@ -117,7 +121,7 @@ export async function GET(request: NextRequest) {
         template: true,
         signatures: { orderBy: { signedAt: 'asc' } },
         backdropLink: true,
-        event: true
+        event: eventWithBookingInclude
       },
       orderBy,
       skip: offset,
@@ -125,7 +129,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Process agreements with HTML content
-    const processedAgreements = agreements.map(agreement => {
+    const processedAgreements = agreements.map(withEventBooking).map(agreement => {
       let processedHtml;
 
       // Use customHtmlContent if available, otherwise fall back to template.htmlContent
@@ -212,7 +216,8 @@ export async function GET(request: NextRequest) {
         client: {
           email: client.email.toLowerCase(),
         },
-        archived: false
+        archived: false,
+        NOT: UNSENT_DRAFT_WHERE,
       },
       _count: {
         status: true

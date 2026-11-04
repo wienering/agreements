@@ -28,15 +28,28 @@ export function eventTitle(event: Pick<PortalEventSummary, 'eventName' | 'eventT
   return event.eventName || event.eventType || 'Your event';
 }
 
-export function PortalEventsList() {
+export type PortalPreview = { email?: string | null; clientId?: string | null };
+
+/** Query string for an admin preview link or request. */
+export function previewQuery(preview: PortalPreview): string {
+  const params = new URLSearchParams();
+  if (preview.email) params.set('email', preview.email);
+  else if (preview.clientId) params.set('clientId', preview.clientId);
+  return params.toString();
+}
+
+/** The client's events. With `preview`, the admin sees exactly what that client sees. */
+export function PortalEventsList({ preview }: { preview?: PortalPreview } = {}) {
   const router = useRouter();
   const [events, setEvents] = useState<PortalEventSummary[] | null>(null);
   const [error, setError] = useState('');
+  const previewKey = preview ? previewQuery(preview) : null;
 
   useEffect(() => {
-    const token = localStorage.getItem('portal_session_token');
-    if (!token) return;
-    fetch('/api/agreements/portal/events', { headers: { Authorization: `Bearer ${token}` } })
+    const token = previewKey === null ? localStorage.getItem('portal_session_token') : null;
+    if (previewKey === null && !token) return;
+    const url = previewKey === null ? '/api/agreements/portal/events' : `/api/agreements/portal/admin-preview/events?${previewKey}`;
+    fetch(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
       .then(async (response) => {
         if (response.status === 401) {
           localStorage.removeItem('portal_session_token');
@@ -48,7 +61,7 @@ export function PortalEventsList() {
         setEvents(data.events);
       })
       .catch((err: Error) => setError(err.message));
-  }, [router]);
+  }, [router, previewKey]);
 
   if (error) {
     return <div className="mb-8 rounded-lg border border-alert bg-panel p-6 text-alert">{error}</div>;
@@ -69,7 +82,7 @@ export function PortalEventsList() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {upcoming.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.id} event={event} previewKey={previewKey} />
           ))}
         </div>
       )}
@@ -78,7 +91,7 @@ export function PortalEventsList() {
           <summary className="cursor-pointer text-sm font-semibold text-ink">Past events ({past.length})</summary>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {past.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} previewKey={previewKey} />
             ))}
           </div>
         </details>
@@ -87,12 +100,12 @@ export function PortalEventsList() {
   );
 }
 
-function EventCard({ event }: { event: PortalEventSummary }) {
+function EventCard({ event, previewKey }: { event: PortalEventSummary; previewKey: string | null }) {
   const needsBackdrop = event.backdrop.canChoose && !event.backdrop.selectedName;
   const unsigned = event.agreements.some((a) => a.canSign);
   return (
     <Link
-      href={`/portal/event/${event.id}`}
+      href={previewKey === null ? `/portal/event/${event.id}` : `/portal/admin-preview/event/${event.id}?${previewKey}`}
       className="group block rounded-lg border border-hairline bg-panel p-5 no-underline transition-colors hover:border-accent"
     >
       <div className="flex items-start justify-between gap-3">

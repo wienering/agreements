@@ -4,6 +4,7 @@ import {
   agreementsExportFilename,
   buildAgreementsCsv,
   selectAgreementsForExport,
+  type AgreementExportSource,
 } from '@/lib/agreements/exportCsv';
 import { parseTorontoCalendarDateKey } from '@/lib/dates';
 import { prisma } from '@/lib/prisma';
@@ -66,12 +67,63 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const agreements = await prisma.agreement.findMany({
-      where: includeArchived ? {} : { archived: false },
-      select: agreementExportSelect,
+    // One row per booked event (payment and attendant from the event), plus older agreements
+    // that have no event. An event's agreement status is its signed or newest agreement's.
+    const [events, legacyAgreements] = await Promise.all([
+      prisma.event.findMany({
+        where: includeArchived ? {} : { archived: false },
+        select: {
+          status: true,
+          paymentStatus: true,
+          createdAt: true,
+          eventDate: true,
+          eventType: true,
+          eventLocation: true,
+          eventPackage: true,
+          packagePrice: true,
+          client: { select: { firstName: true, lastName: true, email: true, phone: true } },
+          backdropLink: { select: { name: true, attendant: { select: { name: true } } } },
+          agreements: {
+            where: includeArchived ? {} : { archived: false },
+            orderBy: { createdAt: 'desc' },
+            select: { status: true, signedAt: true },
+          },
+        },
+      }),
+      prisma.agreement.findMany({
+        where: includeArchived ? { eventId: null } : { archived: false, eventId: null },
+        select: agreementExportSelect,
+      }),
+    ]);
+
+    const eventRows: AgreementExportSource[] = events.map((event) => {
+      const agreement = event.agreements.find((a) => a.signedAt) ?? event.agreements[0] ?? null;
+      const eventStatus = event.status === 'CANCELLED' ? 'Event cancelled' : null;
+      return {
+        status: eventStatus ?? agreement?.status ?? 'No agreement',
+        paymentStatus: event.paymentStatus,
+        signedAt: agreement?.signedAt ?? null,
+        createdAt: event.createdAt,
+        client: {
+          ...event.client,
+          eventDate: null,
+          eventType: null,
+          eventLocation: null,
+          eventPackage: null,
+          packagePrice: null,
+        },
+        event: {
+          eventDate: event.eventDate,
+          eventType: event.eventType,
+          eventLocation: event.eventLocation,
+          eventPackage: event.eventPackage,
+          packagePrice: event.packagePrice,
+        },
+        backdropLink: event.backdropLink,
+      };
     });
 
-    const rows = selectAgreementsForExport(agreements, fromKey, toKey);
+    const rows = selectAgreementsForExport([...eventRows, ...legacyAgreements], fromKey, toKey);
     const csv = buildAgreementsCsv(rows);
     const filename = agreementsExportFilename(fromKey, toKey);
 

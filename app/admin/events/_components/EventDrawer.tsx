@@ -13,7 +13,8 @@ import { AttendantConflictWarning } from '../../agreements/_components/Attendant
 import { FollowUpsPanel } from '../../agreements/_components/FollowUpsPanel';
 import { GalleryReadyPreviewModal } from '../../agreements/_components/GalleryReadyPreviewModal';
 import { InvoiceModal } from '../../agreements/_components/InvoiceModal';
-import { ToggleSwitch } from '../../agreements/_components/ToggleSwitch';
+import { AttendantModal } from '../../agreements/_components/AttendantModal';
+import { ModalFrame } from '../../agreements/_components/ModalFrame';
 import { backdropLinkLabel, extractAttendantIdFromUrl } from '../../agreements/_components/agreementUtils';
 import type { Agreement, BackdropLinkOption, InvoiceResult, InvoiceType } from '../../agreements/_components/types';
 import { eyebrowClass, fieldClass, metaPanelClass, smallLabelClass } from '../../agreements/_components/uiClasses';
@@ -121,6 +122,9 @@ export function EventDrawer({
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [invoiceResult, setInvoiceResult] = useState<InvoiceResult | null>(null);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [attendantOpen, setAttendantOpen] = useState(false);
+  const [linkEmail, setLinkEmail] = useState<{ kind: 'payment' | 'receipt'; to: string; subject: string; html: string } | null>(null);
+  const [sendingLink, setSendingLink] = useState(false);
 
   const hydrate = useCallback((data: EventDetail) => {
     setEvent(data);
@@ -147,6 +151,67 @@ export function EventDrawer({
   useEffect(() => {
     load();
   }, [load]);
+
+  // Esc closes the open modal first, then the panel. Modals opened from the page sit on top.
+  const modalOpen = invoiceOpen || attendantOpen || preview !== null || linkEmail !== null;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (document.querySelector('[role="dialog"][aria-modal="true"]:not([data-event-drawer])') && !modalOpen) return;
+      if (invoiceOpen) setInvoiceOpen(false);
+      else if (linkEmail) setLinkEmail(null);
+      else if (attendantOpen) setAttendantOpen(false);
+      else if (preview) setPreview(null);
+      else onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [invoiceOpen, attendantOpen, preview, linkEmail, modalOpen, onClose]);
+
+  /** Preview, then send, the payment or receipt link email. Saves an edited link first. */
+  const openLinkEmail = async (kind: 'payment' | 'receipt') => {
+    if (!event) return;
+    const typed = (kind === 'payment' ? paymentLink : receiptLink).trim();
+    const stored = kind === 'payment' ? event.stripePaymentLink ?? '' : event.stripeReceiptLink ?? '';
+    if (!typed) {
+      showToast(`Add the ${kind} link first`, 'error');
+      return;
+    }
+    if (typed !== stored) {
+      const saved = await patch(kind === 'payment' ? { stripePaymentLink: typed } : { stripeReceiptLink: typed });
+      if (!saved) return;
+    }
+    const response = await adminFetch(`/api/events/${encodeURIComponent(event.id)}/send-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, preview: true }),
+    });
+    if (!response.ok) {
+      showToast(await errorMessage(response, 'Could not build the email'), 'error');
+      return;
+    }
+    setLinkEmail({ kind, ...(await response.json()) });
+  };
+
+  const sendLinkEmail = async () => {
+    if (!event || !linkEmail) return;
+    setSendingLink(true);
+    try {
+      const response = await adminFetch(`/api/events/${encodeURIComponent(event.id)}/send-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: linkEmail.kind }),
+      });
+      if (!response.ok) {
+        showToast(await errorMessage(response, 'Could not send the email'), 'error');
+        return;
+      }
+      showToast(`${linkEmail.kind === 'payment' ? 'Payment' : 'Receipt'} link sent to ${linkEmail.to}`);
+      setLinkEmail(null);
+    } finally {
+      setSendingLink(false);
+    }
+  };
 
   // Backdrop choices come from the attendant's backdrop tool.
   const backdropUrl = event?.backdropLink?.url ?? backdropLinks.find((l) => l.id === event?.backdropLinkId)?.url ?? null;
@@ -437,7 +502,12 @@ export function EventDrawer({
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
-            <label className={smallLabelClass}>Payment link</label>
+            <div className="flex items-center justify-between">
+              <label className={smallLabelClass}>Payment link</label>
+              <button type="button" onClick={() => openLinkEmail('payment')} className="mb-1.5 border-0 bg-transparent p-0 text-xs font-semibold text-accent underline underline-offset-2">
+                Email to client
+              </button>
+            </div>
             <input
               value={paymentLink}
               onChange={(e) => setPaymentLink(e.target.value)}
@@ -447,7 +517,12 @@ export function EventDrawer({
             />
           </div>
           <div>
-            <label className={smallLabelClass}>Receipt link</label>
+            <div className="flex items-center justify-between">
+              <label className={smallLabelClass}>Receipt link</label>
+              <button type="button" onClick={() => openLinkEmail('receipt')} className="mb-1.5 border-0 bg-transparent p-0 text-xs font-semibold text-accent underline underline-offset-2">
+                Email to client
+              </button>
+            </div>
             <input
               value={receiptLink}
               onChange={(e) => setReceiptLink(e.target.value)}
@@ -492,25 +567,13 @@ export function EventDrawer({
             </option>
           ))}
         </select>
-        <div className="flex flex-col gap-2 text-sm text-admin-text">
-          <label className="flex items-center gap-3">
-            <ToggleSwitch
-              on={event.showPhoneNumberAlways}
-              disabled={saving}
-              label="Always show phone number"
-              onClick={() => patch({ showPhoneNumberAlways: !event.showPhoneNumberAlways })}
-            />
-            Always show my phone number to the client
-          </label>
-          <label className="flex items-center gap-3">
-            <ToggleSwitch
-              on={event.forceVirtualGreenScreen}
-              disabled={saving}
-              label="Virtual green screen"
-              onClick={() => patch({ forceVirtualGreenScreen: !event.forceVirtualGreenScreen })}
-            />
-            Virtual green screen backdrops
-          </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <AdminButton size="compact" onClick={() => setAttendantOpen(true)}>
+            <UIcon name="users" /> Attendant View
+          </AdminButton>
+          <span className="text-xs text-admin-muted">
+            {[event.showPhoneNumberAlways && 'Phone always shown', event.forceVirtualGreenScreen && 'Virtual green screen'].filter(Boolean).join(' · ')}
+          </span>
         </div>
       </Section>
 
@@ -596,6 +659,33 @@ export function EventDrawer({
           onCreate={createInvoice}
         />
       )}
+      {attendantOpen && (
+        <AttendantModal
+          // The attendant link and toggles read these fields; the link uses the event id.
+          agreement={{ id: event.id, showPhoneNumberAlways: event.showPhoneNumberAlways, forceVirtualGreenScreen: event.forceVirtualGreenScreen } as unknown as Agreement}
+          updatingPhone={saving}
+          updatingGreenScreen={saving}
+          onClose={() => setAttendantOpen(false)}
+          onTogglePhone={() => patch({ showPhoneNumberAlways: !event.showPhoneNumberAlways }, 'Saved')}
+          onToggleGreenScreen={() => patch({ forceVirtualGreenScreen: !event.forceVirtualGreenScreen }, 'Saved')}
+          showToast={showToast}
+        />
+      )}
+      {linkEmail && (
+        <ModalFrame onBackdropClick={() => setLinkEmail(null)} maxWidthClass="max-w-[680px]">
+          <h3 className="m-0 mb-1 text-lg text-admin-text">Email the {linkEmail.kind} link</h3>
+          <p className="m-0 mb-3 text-sm text-admin-muted">
+            To {linkEmail.to} · {linkEmail.subject}
+          </p>
+          <iframe title="Email preview" srcDoc={linkEmail.html} className="mb-4 h-[420px] w-full rounded border border-admin-hairline bg-white" />
+          <div className="flex justify-end gap-3">
+            <AdminButton onClick={() => setLinkEmail(null)}>Cancel</AdminButton>
+            <AdminButton variant="primary" disabled={sendingLink} onClick={sendLinkEmail}>
+              {sendingLink ? 'Sending...' : 'Send email'}
+            </AdminButton>
+          </div>
+        </ModalFrame>
+      )}
       <GalleryReadyPreviewModal preview={preview} sending={sendingGallery} onClose={() => setPreview(null)} onSend={sendGallery} />
     </Shell>
   );
@@ -607,6 +697,7 @@ function Shell({ children, onClose }: { children: React.ReactNode; onClose: () =
       <aside
         role="dialog"
         aria-modal="true"
+        data-event-drawer
         onClick={(e) => e.stopPropagation()}
         className="h-full w-full max-w-[560px] overflow-y-auto border-l border-admin-hairline bg-admin-surface p-5 md:p-6"
       >

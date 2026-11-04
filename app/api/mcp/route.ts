@@ -19,6 +19,14 @@ import { searchClients, getClient } from '@/lib/mcp/tools/clients';
 import { searchAgreements, getAgreement } from '@/lib/mcp/tools/agreements';
 import { createAgreementForEvent, createEvent, getEvent, searchEvents, updateEvent } from '@/lib/mcp/tools/events';
 import {
+  createInvoice,
+  listOptions,
+  sendAgreement,
+  sendEventGalleryEmail,
+  sendEventReviewRequest,
+  updateAgreement,
+} from '@/lib/mcp/tools/manage';
+import {
   addClientNote,
   createAgreementDraft,
   createClient,
@@ -101,6 +109,55 @@ const eventFieldsSchema = z.strictObject({
   attendantName: z.string().nullable().optional(),
   status: eventStatusSchema.optional(),
   cancellationReason: z.string().nullable().optional(),
+  galleryLinks: z.array(z.strictObject({ title: z.string().optional(), url: z.string().min(1) })).optional(),
+  selectedBackdropName: z.string().nullable().optional(),
+  showPhoneNumberAlways: z.boolean().optional(),
+  forceVirtualGreenScreen: z.boolean().optional(),
+  followUpsPaused: z.boolean().optional(),
+  reviewReceived: z.boolean().optional(),
+  archived: z.boolean().optional(),
+});
+
+const updateAgreementSchema = z.strictObject({
+  id: z.string().min(1),
+  fields: z.strictObject({
+    expiresAt: z.string().nullable().optional(),
+    templateId: z.string().min(1).optional(),
+    status: agreementStatusSchema.optional(),
+    chaserPaused: z.boolean().optional(),
+    archived: z.boolean().optional(),
+    secondSignerEnabled: z.boolean().optional(),
+    secondSignerFirstName: z.string().nullable().optional(),
+    secondSignerLastName: z.string().nullable().optional(),
+    secondSignerEmail: z.string().nullable().optional(),
+    secondSignerPhone: z.string().nullable().optional(),
+    requireBothSignatures: z.boolean().optional(),
+  }),
+});
+
+const sendAgreementSchema = z.strictObject({
+  agreementId: z.string().min(1),
+  confirm: z.boolean().optional(),
+});
+
+const sendGallerySchema = z.strictObject({
+  eventId: z.string().min(1),
+  resend: z.boolean().optional(),
+  confirm: z.boolean().optional(),
+});
+
+const sendReviewSchema = z.strictObject({
+  eventId: z.string().min(1),
+  market: z.enum(['ontario', 'calgary']).optional(),
+  confirm: z.boolean().optional(),
+});
+
+const createInvoiceSchema = z.strictObject({
+  eventId: z.string().min(1),
+  invoiceType: z.enum(['default', 'total-only', 'total-minus-deposit', 'custom-amount']).optional(),
+  customAmount: z.number().positive().optional(),
+  disableOnlinePayment: z.boolean().optional(),
+  confirm: z.boolean().optional(),
 });
 
 const createEventSchema = z.strictObject({
@@ -303,7 +360,7 @@ const mcpHandler = createMcpHandler(
       'update_event',
       {
         description:
-          'Update an event: date, time, duration, venue, package, price, notes, payment status, next action, attendant (by name), or status. Setting status COMPLETED completes a signed agreement on it; CANCELLED cancels its agreements. Requires write scope.',
+          'Update anything on an event: date, time, duration, venue, package, price, notes, payment status, next action, attendant (by name; see list_options), backdrop, gallery links, phone/green-screen toggles, follow-up pause, already-reviewed, archived, or status. COMPLETED completes a signed agreement on it; CANCELLED cancels its agreements; archiving archives its agreements. Sends nothing. Requires write scope.',
         inputSchema: updateEventSchema,
       },
       async ({ id, fields }) => runWriteTool(() => updateEvent(id, fields)),
@@ -317,6 +374,71 @@ const mcpHandler = createMcpHandler(
         inputSchema: createAgreementForEventSchema,
       },
       async ({ eventId, templateId }) => runWriteTool(() => createAgreementForEvent(eventId, templateId)),
+    );
+
+    server.registerTool(
+      'list_options',
+      {
+        description: 'List attendants (by name), agreement templates (id and title), and the allowed payment, event and agreement statuses.',
+        inputSchema: z.strictObject({}),
+      },
+      async () => {
+        try {
+          return toolResult(await listOptions());
+        } catch {
+          return toolError('list_options failed');
+        }
+      },
+    );
+
+    server.registerTool(
+      'update_agreement',
+      {
+        description:
+          'Change an agreement: expiry date, template (drafts only), status (signing rules apply), reminder chaser pause, archive, second signer. Requires write scope. Does not send anything.',
+        inputSchema: updateAgreementSchema,
+      },
+      async ({ id, fields }) => runWriteTool(() => updateAgreement(id, fields)),
+    );
+
+    server.registerTool(
+      'send_agreement',
+      {
+        description:
+          'Email the client their agreement to review and sign (a draft becomes SENT). Only after Dennis has confirmed in the conversation: pass confirm: true. Requires write scope.',
+        inputSchema: sendAgreementSchema,
+      },
+      async ({ agreementId, confirm }) => runWriteTool(() => sendAgreement(agreementId, confirm)),
+    );
+
+    server.registerTool(
+      'send_gallery_email',
+      {
+        description:
+          'Email the client their gallery links for an event now (resend: true to send again). Only after Dennis has confirmed: pass confirm: true. Requires write scope.',
+        inputSchema: sendGallerySchema,
+      },
+      async ({ eventId, resend, confirm }) => runWriteTool(() => sendEventGalleryEmail(eventId, { resend, confirm })),
+    );
+
+    server.registerTool(
+      'send_review_request',
+      {
+        description:
+          'Email the client the one-time Google review request for an event (market ontario or calgary). Only after Dennis has confirmed: pass confirm: true. Requires write scope.',
+        inputSchema: sendReviewSchema,
+      },
+      async ({ eventId, market, confirm }) => runWriteTool(() => sendEventReviewRequest(eventId, { market, confirm })),
+    );
+
+    server.registerTool(
+      'create_invoice',
+      {
+        description:
+          'Create the Stripe invoice(s) for an event from its package price: default (deposit + balance), total-only, total-minus-deposit, or custom-amount. Stripe emails the client. Only after Dennis has confirmed: pass confirm: true. Requires write scope.',
+        inputSchema: createInvoiceSchema,
+      },
+      async ({ eventId, ...options }) => runWriteTool(() => createInvoice(eventId, options)),
     );
 
     server.registerTool(
@@ -461,4 +583,13 @@ async function handle(request: Request): Promise<Response> {
   }
 }
 
-export { handle as GET, handle as POST, handle as DELETE };
+/**
+ * No server-to-client stream: every tool call is a plain POST. A GET would hold an idle SSE stream
+ * open until Vercel kills it at 300 seconds (the timeout errors in the logs). The MCP spec lets a
+ * server answer GET with 405, and clients then just use POST.
+ */
+async function getNotSupported() {
+  return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } });
+}
+
+export { getNotSupported as GET, handle as POST, handle as DELETE };

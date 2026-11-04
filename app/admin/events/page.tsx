@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { adminFetch } from '@/lib/adminFetch';
 import {
@@ -128,6 +128,19 @@ function EventsAdminPage() {
 
   useEffect(() => {
     document.title = 'Events | CRM | Photobooth Guys';
+  }, []);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || !searchInputRef.current) return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return;
+      e.preventDefault();
+      searchInputRef.current.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const loadEvents = async () => {
@@ -282,10 +295,11 @@ function EventsAdminPage() {
             ))}
           </div>
           <input
+            ref={searchInputRef}
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search client, type, venue..."
+            placeholder="Search client, type, venue... (press /)"
             className={`${fieldClass} md:max-w-[320px]`}
           />
         </div>

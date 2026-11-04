@@ -8,6 +8,7 @@ import { assertNoForbiddenFields, labelClientProvidedText } from '@/lib/mcp/tool
 import { mcpCalendarDate, mcpEndTime, mcpPrice } from '@/lib/mcp/tools/datetime';
 import { logEventActivity, resolveEventId } from '@/lib/events/booking';
 import { setEventStatus } from '@/lib/events/status';
+import { setEventArchived } from '@/lib/events/archive';
 import { normalizePaymentStatus, PAYMENT_STATUSES, DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 import { addTorontoCalendarDaysFrom, fromTorontoDateTimeLocalInput, normalizeEventDateToNoonUtc, parseTorontoCalendarDateKey } from '@/lib/dates';
 import { conflictsForAssignment, type AttendantConflict } from '@/lib/attendants/conflicts';
@@ -38,6 +39,13 @@ export type EventFields = {
   attendantName?: string | null;
   status?: EventStatus;
   cancellationReason?: string | null;
+  galleryLinks?: Array<{ title?: string; url: string }>;
+  selectedBackdropName?: string | null;
+  showPhoneNumberAlways?: boolean;
+  forceVirtualGreenScreen?: boolean;
+  followUpsPaused?: boolean;
+  reviewReceived?: boolean;
+  archived?: boolean;
 };
 
 function parseEventDateInput(value: string): Date {
@@ -77,6 +85,11 @@ const eventSummarySelect = {
   galleryEmailSentAt: true,
   reviewRequestSentAt: true,
   cancellationReason: true,
+  showPhoneNumberAlways: true,
+  forceVirtualGreenScreen: true,
+  followUpsPaused: true,
+  reviewReceived: true,
+  stripePaymentLink: true,
   client: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
   backdropLink: { select: { name: true, attendant: { select: { name: true } } } },
   agreements: {
@@ -110,6 +123,11 @@ function summarize(event: EventRow) {
     galleryLinks: Array.isArray(event.galleryLinks) ? event.galleryLinks : [],
     galleryEmailSent: Boolean(event.galleryEmailSentAt),
     reviewRequestSent: Boolean(event.reviewRequestSentAt),
+    showPhoneNumberAlways: event.showPhoneNumberAlways,
+    forceVirtualGreenScreen: event.forceVirtualGreenScreen,
+    followUpsPaused: event.followUpsPaused,
+    reviewReceived: event.reviewReceived,
+    stripePaymentLink: event.stripePaymentLink,
     cancellationReason: event.cancellationReason,
     client: {
       id: event.client.id,
@@ -202,6 +220,22 @@ async function eventDataFrom(fields: EventFields): Promise<{ data: Prisma.EventU
     if (!normalized) return { error: `Payment status must be one of: ${PAYMENT_STATUSES.join(', ')}` };
     data.paymentStatus = normalized;
   }
+  if (fields.galleryLinks !== undefined) {
+    const links = fields.galleryLinks.filter((g) => g.url?.trim());
+    for (const link of links) {
+      try {
+        new URL(link.url);
+      } catch {
+        return { error: `Invalid gallery link: ${link.url}` };
+      }
+    }
+    data.galleryLinks = links.map((g, i) => ({ title: g.title?.trim() || (i === 0 ? 'Photo Gallery' : `Gallery ${i + 1}`), url: g.url.trim() }));
+  }
+  if (fields.selectedBackdropName !== undefined) data.selectedBackdropName = fields.selectedBackdropName?.trim() || null;
+  if (fields.showPhoneNumberAlways !== undefined) data.showPhoneNumberAlways = fields.showPhoneNumberAlways;
+  if (fields.forceVirtualGreenScreen !== undefined) data.forceVirtualGreenScreen = fields.forceVirtualGreenScreen;
+  if (fields.followUpsPaused !== undefined) data.followUpsPaused = fields.followUpsPaused;
+  if (fields.reviewReceived !== undefined) data.reviewReceived = fields.reviewReceived;
   if (fields.attendantName !== undefined) {
     if (!fields.attendantName?.trim()) {
       data.backdropLinkId = null;
@@ -261,6 +295,9 @@ export async function updateEvent(id: string, fields: EventFields) {
   }
   if (fields.status) {
     await setEventStatus(eventId, fields.status, { reason: fields.cancellationReason ?? null, by: MCP_ACTOR });
+  }
+  if (fields.archived !== undefined) {
+    await setEventArchived(eventId, fields.archived);
   }
   const after = await getEvent(eventId);
   await logEventActivity(eventId, 'NOTE_ADDED', {
