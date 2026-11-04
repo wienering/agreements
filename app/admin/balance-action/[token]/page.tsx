@@ -6,7 +6,7 @@ import { balanceActionRefusal } from '@/lib/balanceAction';
 import { verifyBalanceActionToken } from '@/lib/balanceActionToken';
 import { adminEventPath } from '@/lib/events/booking';
 import { loadBalanceActionEvent } from '@/lib/events/balanceActionEvent';
-import { formatEventDateToronto, resolveAgreementEventDate } from '@/lib/dates';
+import { formatEventDateToronto } from '@/lib/dates';
 import { authOptions } from '@/lib/auth';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { buildBalanceReminderDraft } from '@/lib/balanceReminderMessage';
@@ -62,7 +62,7 @@ export default async function BalanceActionPage({
   }
 
   const clientName = `${agreement.client.firstName} ${agreement.client.lastName}`.trim() || 'Client';
-  const eventDate = resolveAgreementEventDate(agreement);
+  const eventDate = agreement.eventDate;
   const eventLabel = eventDate ? formatEventDateToronto(eventDate) : 'No event date';
   const adminHref = adminEventPath(agreement.id);
   const refusal = balanceActionRefusal(agreement);
