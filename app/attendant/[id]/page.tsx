@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { resolveEventId } from '@/lib/events/booking';
 import { getBackdropThumbnailUrl } from '@/lib/backdropThumbnail';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -22,22 +23,8 @@ export async function generateMetadata({ params }: AttendantPageProps): Promise<
   const { id } = await params;
   
   try {
-    // Fetch agreement with event date for title
-    const agreement = await prisma.agreement.findUnique({
-      where: { id },
-      select: {
-        event: {
-          select: {
-            eventDate: true,
-          },
-        },
-        client: {
-          select: {
-            eventDate: true,
-          },
-        },
-      },
-    });
+    // The link carries an event id (or, on older links, an agreement id on the event)
+    const agreement = await loadAttendantEvent(id);
 
     if (!agreement) {
       return {
@@ -81,49 +68,8 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
   const fromGroup = resolvedSearchParams.fromGroup as string | undefined;
 
   try {
-    // Fetch agreement with client, event, and backdropLink relations
-    // Only select fields we need - don't fetch sensitive data
-    const agreement = await prisma.agreement.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        clientId: true,
-        selectedBackdropName: true,
-        eventId: true,
-        showPhoneNumberAlways: true,
-        forceVirtualGreenScreen: true,
-        client: {
-          select: {
-            firstName: true,
-            phone: true,
-            eventDate: true,
-            eventLocation: true,
-            eventStartTime: true,
-            eventDuration: true,
-            notes: true,
-            isWhitelabelClient: true,
-          },
-        },
-        event: {
-          select: {
-            eventDate: true,
-            eventLocation: true,
-            eventStartTime: true,
-            eventDuration: true,
-            notes: true,
-            eventName: true,
-            eventPhone: true,
-            unlimitedPrints: true,
-          },
-        },
-        backdropLink: {
-          select: {
-            name: true,
-            url: true,
-          },
-        },
-      },
-    });
+    // The booking lives on the event. Older links carry an agreement id; those resolve to its event.
+    const agreement = await loadAttendantEvent(id);
 
     // If agreement not found, show custom error page
     if (!agreement || !agreement.client) {
@@ -482,4 +428,62 @@ export default async function AttendantPage({ params, searchParams }: AttendantP
     console.error('Error fetching agreement:', error);
     return <AttendantUnavailable variant="missing" />;
   }
+}
+
+/** The event behind an attendant link, in the shape this page reads. */
+async function loadAttendantEvent(id: string) {
+  const eventId = await resolveEventId(id);
+  if (!eventId) return null;
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: {
+      id: true,
+      clientId: true,
+      selectedBackdropName: true,
+      showPhoneNumberAlways: true,
+      forceVirtualGreenScreen: true,
+      eventDate: true,
+      eventLocation: true,
+      eventStartTime: true,
+      eventDuration: true,
+      notes: true,
+      eventName: true,
+      eventPhone: true,
+      unlimitedPrints: true,
+      client: {
+        select: {
+          firstName: true,
+          phone: true,
+          eventDate: true,
+          eventLocation: true,
+          eventStartTime: true,
+          eventDuration: true,
+          notes: true,
+          isWhitelabelClient: true,
+        },
+      },
+      backdropLink: { select: { name: true, url: true } },
+    },
+  });
+  if (!event) return null;
+  return {
+    id: event.id,
+    clientId: event.clientId,
+    selectedBackdropName: event.selectedBackdropName,
+    eventId: event.id,
+    showPhoneNumberAlways: event.showPhoneNumberAlways,
+    forceVirtualGreenScreen: event.forceVirtualGreenScreen,
+    client: event.client,
+    event: {
+      eventDate: event.eventDate,
+      eventLocation: event.eventLocation,
+      eventStartTime: event.eventStartTime,
+      eventDuration: event.eventDuration,
+      notes: event.notes,
+      eventName: event.eventName,
+      eventPhone: event.eventPhone,
+      unlimitedPrints: event.unlimitedPrints,
+    },
+    backdropLink: event.backdropLink,
+  };
 }

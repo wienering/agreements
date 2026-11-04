@@ -89,20 +89,22 @@ async function fetchJobsForAttendantIds(
       };
     }
 
-    // Find all Agreements that reference those BackdropLinks
-    // Exclude completed and cancelled agreements from display
-    const agreements = await prisma.agreement.findMany({
+    // Every upcoming event assigned to those links, with or without an agreement.
+    const events = await prisma.event.findMany({
       where: {
         backdropLinkId: { in: backdropLinkIds },
         archived: false,
-        status: {
-          notIn: ['COMPLETED', 'CANCELLED'],
-        },
+        status: 'UPCOMING',
       },
       select: {
         id: true,
         status: true,
         selectedBackdropName: true,
+        eventDate: true,
+        eventLocation: true,
+        eventStartTime: true,
+        eventType: true,
+        eventName: true,
         client: {
           select: {
             firstName: true,
@@ -113,15 +115,6 @@ async function fetchJobsForAttendantIds(
             isWhitelabelClient: true,
           },
         },
-        event: {
-          select: {
-            eventDate: true,
-            eventLocation: true,
-            eventStartTime: true,
-            eventType: true,
-            eventName: true,
-          },
-        },
         backdropLink: {
           select: {
             name: true,
@@ -129,6 +122,18 @@ async function fetchJobsForAttendantIds(
         },
       },
     });
+    // Same shape as before, so the job list below is unchanged. `id` is the event id.
+    const agreements = events.map((event) => ({
+      ...event,
+      status: event.status === 'UPCOMING' ? 'SIGNED' : event.status,
+      event: {
+        eventDate: event.eventDate,
+        eventLocation: event.eventLocation,
+        eventStartTime: event.eventStartTime,
+        eventType: event.eventType,
+        eventName: event.eventName,
+      },
+    }));
 
     // Format jobs and calculate metrics
     const now = new Date();
