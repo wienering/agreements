@@ -4,7 +4,8 @@ import {
   parseConflictBuffers,
   type ConflictBuffers,
 } from '@/lib/attendants/conflictSettings';
-import { CONFLICT_STATUSES, type ConflictAgreement } from '@/lib/attendants/conflicts';
+import { type ConflictAgreement } from '@/lib/attendants/conflicts';
+import { bookingStatusOf, NO_CLIENT_EVENT_FIELDS, resolveEventId } from '@/lib/events/booking';
 import { addTorontoCalendarDaysFrom } from '@/lib/dates';
 import { prisma } from '@/lib/prisma';
 
@@ -22,26 +23,32 @@ const conflictSelect = {
   archived: true,
   cancelledAt: true,
   createdAt: true,
-  eventId: true,
-  client: { select: { firstName: true, lastName: true, ...eventDetailSelect } },
-  event: { select: eventDetailSelect },
+  ...eventDetailSelect,
+  client: { select: { firstName: true, lastName: true } },
   backdropLink: { select: { attendantId: true } },
-} satisfies Prisma.AgreementSelect;
+} satisfies Prisma.EventSelect;
 
-type ConflictRecord = Prisma.AgreementGetPayload<{ select: typeof conflictSelect }>;
+type ConflictRecord = Prisma.EventGetPayload<{ select: typeof conflictSelect }>;
 
+/** An event as a conflict job. `id` and `eventId` are both the event id. */
 function toConflictAgreement(record: ConflictRecord): ConflictAgreement {
   return {
     id: record.id,
-    status: record.status,
+    status: bookingStatusOf(record.status),
     archived: record.archived,
     cancelledAt: record.cancelledAt,
     createdAt: record.createdAt,
-    eventId: record.eventId,
+    eventId: record.id,
     attendantId: record.backdropLink?.attendantId ?? null,
     clientName: `${record.client.firstName} ${record.client.lastName}`.trim(),
-    client: record.client,
-    event: record.event,
+    client: { ...NO_CLIENT_EVENT_FIELDS },
+    event: {
+      eventDate: record.eventDate,
+      eventLocation: record.eventLocation,
+      eventStartTime: record.eventStartTime,
+      eventDuration: record.eventDuration,
+      eventPackage: record.eventPackage,
+    },
   };
 }
 
@@ -51,33 +58,28 @@ export async function loadConflictBuffers(): Promise<ConflictBuffers> {
 }
 
 /**
- * Agreements that hold an attendant's time from yesterday onward (Toronto).
+ * Events that hold an attendant's time from yesterday onward (Toronto).
  * Past double-bookings aren't worth warning about.
  */
 export async function loadUpcomingAssignedAgreements(now = new Date()): Promise<ConflictAgreement[]> {
   const from = addTorontoCalendarDaysFrom(now, -1);
-  const records = await prisma.agreement.findMany({
+  const records = await prisma.event.findMany({
     where: {
-      status: { in: [...CONFLICT_STATUSES] },
+      status: { not: 'CANCELLED' },
       archived: false,
       cancelledAt: null,
       backdropLink: { is: { attendantId: { not: null } } },
-      OR: [
-        { event: { is: { eventDate: { gte: from } } } },
-        {
-          AND: [
-            { OR: [{ eventId: null }, { event: { is: { eventDate: null } } }] },
-            { client: { eventDate: { gte: from } } },
-          ],
-        },
-      ],
+      eventDate: { gte: from },
     },
     select: conflictSelect,
   });
   return records.map(toConflictAgreement);
 }
 
+/** By event id, or an agreement id on the event (older callers). */
 export async function loadConflictAgreement(id: string): Promise<ConflictAgreement | null> {
-  const record = await prisma.agreement.findUnique({ where: { id }, select: conflictSelect });
+  const eventId = await resolveEventId(id);
+  if (!eventId) return null;
+  const record = await prisma.event.findUnique({ where: { id: eventId }, select: conflictSelect });
   return record ? toConflictAgreement(record) : null;
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminEventPath } from '@/lib/events/booking';
 import {
-  adminAgreementPath,
+
   balanceActionPath,
   createBalanceActionToken,
 } from '@/lib/balanceActionToken';
@@ -96,7 +97,7 @@ async function handler(request: NextRequest) {
             markPaidUrl: `${baseUrl}${balanceActionPath(markPaid)}`,
             remindUrl: `${baseUrl}${balanceActionPath(remind)}`,
             snoozeUrl: `${baseUrl}${balanceActionPath(snooze)}`,
-            adminUrl: `${baseUrl}${adminAgreementPath(row.id)}`,
+            adminUrl: `${baseUrl}${adminEventPath(row.id)}`,
           },
           now,
         ),

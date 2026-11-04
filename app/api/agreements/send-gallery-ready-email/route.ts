@@ -6,6 +6,7 @@ import { handleApiError } from '@/lib/handleApiError';
 import { buildReviewRequestEmail } from '@/lib/followups/reviewRequestEmail';
 import { followupsDryRun, GOOGLE_REVIEW_URL_ONTARIO } from '@/lib/followups/rules';
 import { sendGalleryEmail } from '@/lib/followups/send';
+import { resolveEventId } from '@/lib/events/booking';
 import {
   buildGalleryReadyEmail,
   resolveGalleryLinks,
@@ -18,16 +19,14 @@ const sendGalleryReadyEmailSchema = z.object({
 });
 
 const NO_GALLERY_LINKS_MESSAGE =
-  'No gallery link has been set for this agreement. Please add a gallery link first.';
+  'No gallery link has been set for this event. Please add a gallery link first.';
 
-async function loadGalleryReadyAgreement(agreementId: string) {
-  return prisma.agreement.findUnique({
-    where: { id: agreementId },
-    include: {
-      client: true,
-      event: true,
-    },
-  });
+/** The event's gallery state, by event id or (older callers) an agreement id on it. */
+async function loadGalleryReadyAgreement(id: string) {
+  const eventId = await resolveEventId(id);
+  if (!eventId) return null;
+  const event = await prisma.event.findUnique({ where: { id: eventId }, include: { client: true } });
+  return event ? { ...event, galleryLink: null, event } : null;
 }
 
 export async function GET(request: NextRequest) {
@@ -41,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const agreement = await loadGalleryReadyAgreement(agreementId.trim());
     if (!agreement) {
-      return NextResponse.json({ error: 'Agreement not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
     const review = buildReviewRequestEmail(agreement.client, GOOGLE_REVIEW_URL_ONTARIO);
@@ -87,12 +86,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await sendGalleryEmail(agreementId, { trigger: 'manual', dryRun, resend });
+    const eventId = await resolveEventId(agreementId);
+    if (!eventId) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    const result = await sendGalleryEmail(eventId, { trigger: 'manual', dryRun, resend });
 
     switch (result.status) {
       case 'sent': {
-        const updated = await prisma.agreement.findUnique({
-          where: { id: agreementId },
+        const updated = await prisma.event.findUnique({
+          where: { id: eventId },
           select: { galleryEmailSentAt: true },
         });
         return NextResponse.json({
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
       case 'refused':
         return NextResponse.json(
           { error: result.reason },
-          { status: result.reason === 'Agreement not found' ? 404 : 409 },
+          { status: result.reason === 'Event not found' ? 404 : 409 },
         );
       case 'failed':
         return NextResponse.json(

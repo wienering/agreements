@@ -37,12 +37,16 @@ export const CALENDAR_FEED_STATUSES = ['DRAFT', 'SENT', 'SIGNED', 'COMPLETED'] a
 
 /** Status given to a booked event that has no agreement in the feed. */
 export const EVENT_ONLY_STATUS = 'CONFIRMED';
+/** Event rows: booked statuses that appear. Cancelled events never do. */
+const EVENT_FEED_STATUSES = new Set([EVENT_ONLY_STATUS, 'UPCOMING', 'COMPLETED']);
 
 const FULLY_SIGNED_STATUSES = new Set(['SIGNED', 'COMPLETED']);
 
 export type CalendarFeedSource = {
-  /** 'event' is a booked event with no agreement; `id` is then the Event id. Default 'agreement'. */
+  /** 'event' is a booked event (`id` is the Event id). 'agreement' is an older agreement with no event. */
   kind?: 'agreement' | 'event';
+  /** Event rows: where the event's agreement stands, e.g. "Agreement signed". */
+  agreementLabel?: string | null;
   id: string;
   status: string;
   archived: boolean;
@@ -88,7 +92,7 @@ export function calendarFeedWindow(now = new Date()): { fromKey: string; toKey: 
 export function isIncludedInCalendarFeed(source: CalendarFeedSource, now = new Date()): boolean {
   const statusOk =
     source.kind === 'event'
-      ? source.status === EVENT_ONLY_STATUS
+      ? EVENT_FEED_STATUSES.has(source.status)
       : (CALENDAR_FEED_STATUSES as readonly string[]).includes(source.status);
   if (!statusOk) return false;
   if (source.archived || source.cancelledAt) return false;
@@ -182,7 +186,10 @@ function isSignedByOneOfTwo(source: CalendarFeedSource): boolean {
 }
 
 export function calendarFeedStatusLabel(source: CalendarFeedSource): string {
-  if (source.kind === 'event') return 'Confirmed, no agreement';
+  if (source.kind === 'event') {
+    const base = source.status === 'COMPLETED' ? 'Completed' : 'Confirmed';
+    return source.agreementLabel ? `${base}, ${source.agreementLabel}` : `${base}, no agreement`;
+  }
   switch (source.status) {
     case 'SIGNED':
       return 'Signed';
@@ -249,7 +256,9 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
   const details = eventDetails(source);
   const clientName = `${source.client.firstName} ${source.client.lastName}`.trim();
   const isEventOnly = source.kind === 'event';
-  const adminUrl = isEventOnly ? `${ADMIN_ORIGIN}/admin/events` : adminAgreementUrl(source.id);
+  const adminUrl = isEventOnly
+    ? `${ADMIN_ORIGIN}/admin/events?event=${encodeURIComponent(source.id)}`
+    : adminAgreementUrl(source.id);
   // Keyed by the Event record when there is one, so adding or signing an agreement
   // updates the same calendar entry instead of creating a second one.
   const eventKey = isEventOnly ? source.id : source.eventId;
@@ -265,7 +274,7 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
     source.client.phone?.trim() ? `Phone: ${source.client.phone.trim()}` : null,
     details.packageName ? `Package: ${details.packageName}` : null,
     attendantName ? `Attendant: ${attendantName}` : null,
-    isEventOnly ? null : `Payment: ${displayPaymentStatus(source.paymentStatus) ?? 'Not recorded'}`,
+    `Payment: ${displayPaymentStatus(source.paymentStatus) ?? 'Not recorded'}`,
     `Admin: ${adminUrl}`,
     `Status: ${calendarFeedStatusLabel(source)}`,
   ]

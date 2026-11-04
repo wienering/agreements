@@ -7,6 +7,7 @@ import {
 } from '@/lib/followups/rules';
 import { alertHeldGallery, sendGalleryEmail, sendReviewRequest, type FollowupSendResult } from '@/lib/followups/send';
 import { prisma } from '@/lib/prisma';
+import { bookingStatusOf } from '@/lib/events/booking';
 
 export const followupSelect = {
   id: true,
@@ -14,22 +15,43 @@ export const followupSelect = {
   archived: true,
   cancelledAt: true,
   paymentStatus: true,
-  galleryLink: true,
   galleryLinks: true,
   galleryEmailSentAt: true,
   reviewRequestSentAt: true,
   followUpsPaused: true,
   reviewReceived: true,
   galleryHeldAlertAt: true,
-  client: { select: { firstName: true, lastName: true, eventDate: true } },
-  event: { select: { eventDate: true } },
-} satisfies Prisma.AgreementSelect;
+  eventDate: true,
+  client: { select: { firstName: true, lastName: true } },
+} satisfies Prisma.EventSelect;
 
-export type FollowupRecord = Prisma.AgreementGetPayload<{ select: typeof followupSelect }>;
+type FollowupEventRow = Prisma.EventGetPayload<{ select: typeof followupSelect }>;
 
-/** Active agreements that still have a follow-up to send. Rules decide the rest. */
+/** An event in the shape the follow-up rules read. `id` is the event id. */
+export type FollowupRecord = FollowupAgreement & { client: { firstName: string; lastName: string; eventDate: Date | null } };
+
+export function toFollowupRecord(row: FollowupEventRow): FollowupRecord {
+  return {
+    id: row.id,
+    status: bookingStatusOf(row.status),
+    archived: row.archived,
+    cancelledAt: row.cancelledAt,
+    paymentStatus: row.paymentStatus,
+    galleryLink: null,
+    galleryLinks: row.galleryLinks,
+    galleryEmailSentAt: row.galleryEmailSentAt,
+    reviewRequestSentAt: row.reviewRequestSentAt,
+    followUpsPaused: row.followUpsPaused,
+    reviewReceived: row.reviewReceived,
+    galleryHeldAlertAt: row.galleryHeldAlertAt,
+    event: { eventDate: row.eventDate },
+    client: { firstName: row.client.firstName, lastName: row.client.lastName, eventDate: null },
+  };
+}
+
+/** Active events that still have a follow-up to send. Rules decide the rest. */
 export async function loadFollowupCandidates(): Promise<FollowupRecord[]> {
-  return prisma.agreement.findMany({
+  const rows = await prisma.event.findMany({
     where: {
       status: { not: 'CANCELLED' },
       archived: false,
@@ -38,9 +60,11 @@ export async function loadFollowupCandidates(): Promise<FollowupRecord[]> {
     },
     select: followupSelect,
   });
+  return rows.map(toFollowupRecord);
 }
 
 export type FollowupRunItem = {
+  /** The event id. Named agreementId for the dry-run card, which predates events. */
   agreementId: string;
   clientName: string;
   eventDateKey: string | null;
@@ -88,7 +112,7 @@ export async function runFollowups(options: {
 }): Promise<FollowupRunSummary> {
   const { now, dryRun, launchKey } = options;
   const records = await loadFollowupCandidates();
-  const plan = planFollowups(records as FollowupAgreement[], now, launchKey);
+  const plan = planFollowups(records, now, launchKey);
   const byId = new Map(records.map((r) => [r.id, r]));
 
   const summary: FollowupRunSummary = {
