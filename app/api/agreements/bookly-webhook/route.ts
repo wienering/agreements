@@ -3,10 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
 import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
-import { randomBytes } from 'crypto';
 import { createHmac } from 'crypto';
 import { hasUnlimitedPrintsExtra, mapBooklyToClient } from '@/lib/bookly/mapping';
-import { DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 
 // Flexible schema to handle various Bookly payload formats
 const booklyWebhookSchema = z.object({
@@ -281,48 +279,8 @@ export async function POST(request: NextRequest) {
       devLog(`✅ Event ${event.id} created for client ${client.email}`);
     }
 
-    // Optional: Create agreement automatically
-    const templateId = validatedData.templateId || process.env.BOOKLY_DEFAULT_TEMPLATE_ID;
-    let agreement = null;
-
-    if (templateId) {
-      try {
-        // Verify template exists
-        const template = await prisma.template.findUnique({
-          where: { id: templateId },
-        });
-
-        if (!template) {
-          console.warn(`⚠️ Template ${templateId} not found, skipping agreement creation`);
-        } else {
-          // Generate unique token for agreement
-          const uniqueToken = randomBytes(32).toString('hex');
-
-          agreement = await prisma.agreement.create({
-            data: {
-              clientId: client.id,
-              templateId: templateId,
-              uniqueToken,
-              status: 'DRAFT',
-              paymentStatus: DEFAULT_PAYMENT_STATUS,
-              expiresAt: null,
-              customHtmlContent: template.htmlContent, // Copy template content to agreement
-            },
-            include: {
-              client: true,
-              template: true,
-            },
-          });
-
-          if (agreement) {
-            devLog(`✅ Agreement ${agreement.id} created for client ${client.email}`);
-          }
-        }
-      } catch (error) {
-        // Log error but don't fail the webhook - client was created successfully
-        console.error('Error creating agreement:', error);
-      }
-    }
+    // Bookings are events. An agreement is only made when the client asks for one, from the
+    // event in the admin, so the webhook no longer creates one (templateId is ignored).
 
     // Return success response
     return NextResponse.json({
@@ -334,13 +292,6 @@ export async function POST(request: NextRequest) {
         firstName: client.firstName,
         lastName: client.lastName,
       },
-      ...(agreement ? {
-        agreement: {
-          id: agreement.id,
-          status: agreement.status,
-          uniqueToken: agreement.uniqueToken,
-        },
-      } : {}),
     }, { status: 200 });
 
   } catch (error: any) {

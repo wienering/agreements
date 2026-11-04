@@ -44,7 +44,8 @@ export async function POST(
 
     let eventId = lead.eventId;
 
-    if (!eventId && (lead.eventDate || lead.eventType || lead.eventLocation)) {
+    // An agreement always belongs to an event.
+    if (!eventId) {
       const event = await prisma.event.create({
         data: {
           clientId: lead.clientId,

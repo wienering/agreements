@@ -28,6 +28,7 @@ GRANT SELECT ON TABLE
   "Template",
   "ClientNote",
   "AgreementActivity",
+  "EventActivity",
   "AuditLog",
   "Settings",
   "BackdropLink",
