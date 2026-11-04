@@ -1,0 +1,398 @@
+import { devLog } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+import { paymentStatusAfterInvoiceIssued, stripeInvoiceTypeFor } from '@/lib/paymentStatus';
+import Stripe from 'stripe';
+import { resolveEventId } from '@/lib/events/booking';
+import {
+  addTorontoCalendarDays,
+  formatEventDateToronto,
+  getTorontoDateParts,
+  torontoCalendarDaysBetween,
+  torontoMidnightUtc,
+  torontoStartOfTodayUtc,
+} from '@/lib/dates';
+
+export const createInvoiceSchema = z.object({
+  agreementId: z.string().min(1, 'Agreement ID is required'),
+  invoiceType: z.enum(['default', 'total-only', 'total-minus-deposit', 'custom-amount']).optional().default('default'),
+  customAmount: z.number().positive().optional(),
+  disableOnlinePayment: z.boolean().optional().default(false),
+});
+
+/**
+ * Calculate invoice due dates based on event date
+ * Rules:
+ * - If invoiceType is 'total-only':
+ *   - Single invoice for full amount, due 7 days before event date
+ *   - If event is less than 7 days away, due today
+ * - If invoiceType is 'total-minus-deposit':
+ *   - Single invoice for total amount minus $100, due 7 days before event date
+ *   - If event is less than 7 days away, due today
+ * - If invoiceType is 'custom-amount':
+ *   - Single invoice for custom amount, due 7 days before event date
+ *   - If event is less than 7 days away, due today
+ * - If invoiceType is 'default':
+ *   - If event date is > 7 days in the future:
+ *     - Deposit: $100 due today
+ *     - Remaining amount: due 7 days before event date
+ *   - If event date is ≤ 7 days in the future:
+ *     - Entire amount: due today
+ */
+function torontoDueDateSevenDaysBeforeEvent(eventDate: Date): Date {
+  const { year, month, day } = getTorontoDateParts(eventDate);
+  const due = addTorontoCalendarDays(year, month, day, -7);
+  return torontoMidnightUtc(due.year, due.month, due.day);
+}
+
+function calculateInvoiceDetails(
+  eventDate: Date | null, 
+  totalAmount: number, 
+  invoiceType: 'default' | 'total-only' | 'total-minus-deposit' | 'custom-amount' = 'default',
+  customAmount?: number
+) {
+  const today = torontoStartOfTodayUtc();
+
+  const resolveDueDate = (event: Date): Date => {
+    const remainingDueDate = torontoDueDateSevenDaysBeforeEvent(event);
+    return remainingDueDate < today ? today : remainingDueDate;
+  };
+
+  // Handle "Total Amount Only" invoice type
+  if (invoiceType === 'total-only') {
+    if (!eventDate) {
+      return {
+        depositAmount: 0,
+        remainingAmount: totalAmount,
+        depositDueDate: today,
+        remainingDueDate: today,
+        needsTwoInvoices: false,
+      };
+    }
+
+    const finalDueDate = resolveDueDate(eventDate);
+
+    return {
+      depositAmount: 0,
+      remainingAmount: totalAmount,
+      depositDueDate: finalDueDate,
+      remainingDueDate: finalDueDate,
+      needsTwoInvoices: false,
+    };
+  }
+
+  // Handle "Total Amount Minus $100 Deposit" invoice type
+  if (invoiceType === 'total-minus-deposit') {
+    const invoiceAmount = Math.max(0, totalAmount - 100);
+    
+    if (!eventDate) {
+      return {
+        depositAmount: 0,
+        remainingAmount: invoiceAmount,
+        depositDueDate: today,
+        remainingDueDate: today,
+        needsTwoInvoices: false,
+      };
+    }
+
+    const finalDueDate = resolveDueDate(eventDate);
+
+    return {
+      depositAmount: 0,
+      remainingAmount: invoiceAmount,
+      depositDueDate: finalDueDate,
+      remainingDueDate: finalDueDate,
+      needsTwoInvoices: false,
+    };
+  }
+
+  // Handle "Custom Amount" invoice type
+  if (invoiceType === 'custom-amount') {
+    if (customAmount === undefined || customAmount <= 0) {
+      throw new Error('Custom amount is required and must be greater than 0');
+    }
+    
+    if (!eventDate) {
+      return {
+        depositAmount: 0,
+        remainingAmount: customAmount,
+        depositDueDate: today,
+        remainingDueDate: today,
+        needsTwoInvoices: false,
+      };
+    }
+
+    const finalDueDate = resolveDueDate(eventDate);
+
+    return {
+      depositAmount: 0,
+      remainingAmount: customAmount,
+      depositDueDate: finalDueDate,
+      remainingDueDate: finalDueDate,
+      needsTwoInvoices: false,
+    };
+  }
+
+  // Default invoice type logic (existing behavior)
+  if (!eventDate) {
+    return {
+      depositAmount: 0,
+      remainingAmount: totalAmount,
+      depositDueDate: today,
+      remainingDueDate: today,
+      needsTwoInvoices: false,
+    };
+  }
+
+  const daysUntilEvent = torontoCalendarDaysBetween(today, eventDate);
+
+  if (daysUntilEvent > 7) {
+    const depositAmount = Math.min(100, totalAmount);
+    const remainingAmount = totalAmount - depositAmount;
+    const remainingDueDate = torontoDueDateSevenDaysBeforeEvent(eventDate);
+    
+    return {
+      depositAmount,
+      remainingAmount: remainingAmount > 0 ? remainingAmount : 0,
+      depositDueDate: today,
+      remainingDueDate,
+      needsTwoInvoices: remainingAmount > 0,
+    };
+  }
+
+  return {
+    depositAmount: 0,
+    remainingAmount: totalAmount,
+    depositDueDate: today,
+    remainingDueDate: today,
+    needsTwoInvoices: false,
+  };
+}
+
+export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
+
+/**
+ * Create the Stripe invoice(s) for an event (or an agreement id on it) and record the payment link.
+ * Shared by the admin button and the Claude connector. Stripe errors are thrown to the caller.
+ */
+export async function createEventInvoice(
+  stripe: Stripe,
+  validatedData: CreateInvoiceInput,
+): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
+    // Invoices belong to the event. `agreementId` may be an event id, or an agreement id on the event.
+    const eventId = await resolveEventId(validatedData.agreementId);
+    const eventRecord = eventId
+      ? await prisma.event.findUnique({ where: { id: eventId }, include: { client: true } })
+      : null;
+
+    if (!eventRecord) {
+      return { httpStatus: 404, body: { error: 'Event not found' } };
+    }
+    const agreement = { ...eventRecord, event: eventRecord };
+
+    // Validate required fields
+    if (!agreement.client.email) {
+      return { httpStatus: 400, body: { error: 'Client email is required to create invoice' } };
+    }
+
+    // Use event packagePrice if available, otherwise fall back to client packagePrice
+    const packagePrice = agreement.event.packagePrice ?? agreement.client.packagePrice;
+    const totalAmount = packagePrice ? Number(packagePrice) : 0;
+
+    if (totalAmount <= 0) {
+      return { httpStatus: 400, body: { error: 'Package price must be greater than 0' } };
+    }
+
+    // Validate custom amount if invoice type is custom-amount
+    if (validatedData.invoiceType === 'custom-amount') {
+      if (!validatedData.customAmount || validatedData.customAmount <= 0) {
+        return { httpStatus: 400, body: { error: 'Custom amount is required and must be greater than 0' } };
+      }
+    }
+
+    // Use event eventDate if available, otherwise fall back to client eventDate
+    const eventDate = agreement.event.eventDate ?? agreement.client.eventDate;
+
+    // Calculate invoice details
+    const invoiceDetails = calculateInvoiceDetails(
+      eventDate ? new Date(eventDate) : null,
+      totalAmount,
+      validatedData.invoiceType,
+      validatedData.customAmount
+    );
+
+    const clientName = `${agreement.client.firstName || ''} ${agreement.client.lastName || ''}`.trim() || agreement.client.email;
+
+    // Build package description for invoice items
+    // Use event eventPackage if available, otherwise fall back to client eventPackage
+    const eventPackage = agreement.event.eventPackage ?? agreement.client.eventPackage ?? '';
+    const baseDescription = eventPackage 
+      ? `Photo Booth Rental ${eventPackage}` 
+      : 'Photo Booth Rental';
+    
+    // Prepare event date for supply date (period) if available
+    // Use the eventDate we already extracted above (from event or client)
+    const periodDates = eventDate ? {
+      start: Math.floor(new Date(eventDate).getTime() / 1000),
+      end: Math.floor(new Date(eventDate).getTime() / 1000), // Same day for service date
+    } : undefined;
+
+    // Format event date for display on invoice
+    const formattedEventDate = eventDate ? formatEventDateToronto(eventDate) : null;
+
+    // Thank you memo
+    const thankYouMemo = 'Thanks for choosing Photobooth Guys for your event! We appreciate your business.';
+
+    // Find or create Stripe customer
+    let customerId: string;
+    
+    // Try to find existing customer by email
+    const existingCustomers = await stripe.customers.list({
+      email: agreement.client.email,
+      limit: 1,
+    });
+
+    if (existingCustomers.data.length > 0) {
+      customerId = existingCustomers.data[0].id;
+    } else {
+      // Create new customer
+      const customer = await stripe.customers.create({
+        email: agreement.client.email,
+        name: clientName,
+        metadata: {
+          clientId: agreement.client.id,
+        },
+      });
+      customerId = customer.id;
+    }
+
+    const invoiceResults: Array<{
+      type: 'deposit' | 'full' | 'remaining';
+      invoiceId: string;
+      amount: number;
+      dueDate: Date;
+      invoiceUrl: string;
+    }> = [];
+
+    // Create deposit invoice if needed
+    if (invoiceDetails.needsTwoInvoices && invoiceDetails.depositAmount > 0) {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      
+      const depositInvoice = await stripe.invoices.create({
+        customer: customerId,
+        collection_method: 'send_invoice',
+        due_date: Math.floor(today.getTime() / 1000), // Unix timestamp
+        description: `Deposit for ${clientName}${formattedEventDate ? `\nEvent Date: ${formattedEventDate}` : ''}`,
+        footer: thankYouMemo,
+        payment_settings: validatedData.disableOnlinePayment ? {
+          payment_method_types: [], // Disable all payment methods
+        } : undefined,
+        metadata: {
+          eventId: agreement.id,
+          invoiceType: 'deposit',
+        },
+      });
+
+      // Add line item for deposit
+      await stripe.invoiceItems.create({
+        customer: customerId,
+        invoice: depositInvoice.id,
+        amount: Math.round(invoiceDetails.depositAmount * 100), // Convert to cents
+        description: `${baseDescription} Deposit`,
+        period: periodDates,
+      });
+
+      // Finalize the invoice
+      const finalizedInvoice = await stripe.invoices.finalizeInvoice(depositInvoice.id);
+      
+      // Send the invoice
+      await stripe.invoices.sendInvoice(finalizedInvoice.id);
+
+      invoiceResults.push({
+        type: 'deposit',
+        invoiceId: finalizedInvoice.id,
+        amount: invoiceDetails.depositAmount,
+        dueDate: invoiceDetails.depositDueDate,
+        invoiceUrl: finalizedInvoice.hosted_invoice_url || finalizedInvoice.invoice_pdf || '',
+      });
+    }
+
+    // Create remaining amount invoice or full invoice
+    // Always use remainingAmount as it's correctly calculated for all invoice types
+    const remainingOrFullAmount = invoiceDetails.remainingAmount;
+
+    if (remainingOrFullAmount > 0) {
+      // Use the calculated due date
+      const remainingDueDate = new Date(invoiceDetails.remainingDueDate);
+      remainingDueDate.setHours(23, 59, 59, 999); // End of due day
+      const dueDateTimestamp = Math.floor(remainingDueDate.getTime() / 1000);
+
+      const remainingInvoice = await stripe.invoices.create({
+        customer: customerId,
+        collection_method: 'send_invoice',
+        due_date: dueDateTimestamp, // Unix timestamp
+        description: invoiceDetails.needsTwoInvoices 
+          ? `Remaining balance for ${clientName}${formattedEventDate ? `\nEvent Date: ${formattedEventDate}` : ''}`
+          : `Invoice for ${clientName}${formattedEventDate ? `\nEvent Date: ${formattedEventDate}` : ''}`,
+        footer: thankYouMemo,
+        payment_settings: validatedData.disableOnlinePayment ? {
+          payment_method_types: [], // Disable all payment methods
+        } : undefined,
+        metadata: {
+          eventId: agreement.id,
+          invoiceType: stripeInvoiceTypeFor(validatedData.invoiceType, invoiceDetails.needsTwoInvoices),
+        },
+      });
+
+      // Add line item
+      await stripe.invoiceItems.create({
+        customer: customerId,
+        invoice: remainingInvoice.id,
+        amount: Math.round(remainingOrFullAmount * 100), // Convert to cents
+        description: invoiceDetails.needsTwoInvoices 
+          ? `${baseDescription} Balance`
+          : baseDescription,
+        period: periodDates,
+      });
+
+      // Finalize the invoice
+      const finalizedInvoice = await stripe.invoices.finalizeInvoice(remainingInvoice.id);
+      
+      // Send the invoice
+      await stripe.invoices.sendInvoice(finalizedInvoice.id);
+
+      invoiceResults.push({
+        type: invoiceDetails.needsTwoInvoices ? 'remaining' : 'full',
+        invoiceId: finalizedInvoice.id,
+        amount: remainingOrFullAmount,
+        dueDate: remainingDueDate,
+        invoiceUrl: finalizedInvoice.hosted_invoice_url || finalizedInvoice.invoice_pdf || '',
+      });
+    }
+
+    // Update agreement with invoice information
+    // Store the first invoice URL as the payment link (usually the deposit if exists)
+    const primaryInvoiceUrl = invoiceResults[0]?.invoiceUrl || '';
+    const allInvoiceUrls = invoiceResults.map(r => r.invoiceUrl).filter(Boolean).join(', ');
+
+    // Not paid becomes Invoice issued; a recorded deposit or balance is kept for the webhook.
+    const nextPaymentStatus = paymentStatusAfterInvoiceIssued(agreement.paymentStatus);
+    await prisma.event.update({
+      where: { id: eventRecord.id },
+      data: {
+        stripePaymentLink: primaryInvoiceUrl || agreement.stripePaymentLink,
+        ...(nextPaymentStatus ? { paymentStatus: nextPaymentStatus } : {}),
+      },
+    });
+
+    devLog(`Created ${invoiceResults.length} invoice(s) for agreement ${agreement.id}`);
+
+    return { httpStatus: 200, body: {
+      success: true,
+      customerId,
+      invoices: invoiceResults,
+      agreementId: agreement.id,
+      message: `Successfully created ${invoiceResults.length} invoice(s)`,
+    } };
+}

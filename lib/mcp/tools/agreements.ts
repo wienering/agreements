@@ -200,6 +200,10 @@ export async function getAgreement(id: string) {
           packagePrice: true,
           eventName: true,
           notes: true,
+          paymentStatus: true,
+          nextAction: true,
+          selectedBackdropName: true,
+          backdropLink: { select: { attendant: { select: { name: true } } } },
         },
       },
       template: {
@@ -222,13 +226,14 @@ export async function getAgreement(id: string) {
   const result = {
     id: agreement.id,
     status: agreement.status,
-    paymentStatus: agreement.paymentStatus,
+    // Booking data lives on the event when there is one.
+    paymentStatus: agreement.event?.paymentStatus ?? agreement.paymentStatus,
     expiresAt: mcpDateTime(agreement.expiresAt),
     signedAt: mcpDateTime(agreement.signedAt),
-    nextAction: agreement.nextAction,
+    nextAction: agreement.event ? agreement.event.nextAction : agreement.nextAction,
     archived: agreement.archived,
-    selectedBackdropName: agreement.selectedBackdropName,
-    attendants: attendantNamesOf(agreement),
+    selectedBackdropName: agreement.event ? agreement.event.selectedBackdropName : agreement.selectedBackdropName,
+    attendants: attendantNamesOf(agreement.event ? { backdropLink: agreement.event.backdropLink } : agreement),
     client: {
       id: agreement.client.id,
       name: `${agreement.client.firstName} ${agreement.client.lastName}`.trim(),
