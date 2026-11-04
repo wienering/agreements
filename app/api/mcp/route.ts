@@ -583,4 +583,13 @@ async function handle(request: Request): Promise<Response> {
   }
 }
 
-export { handle as GET, handle as POST, handle as DELETE };
+/**
+ * No server-to-client stream: every tool call is a plain POST. A GET would hold an idle SSE stream
+ * open until Vercel kills it at 300 seconds (the timeout errors in the logs). The MCP spec lets a
+ * server answer GET with 405, and clients then just use POST.
+ */
+async function getNotSupported() {
+  return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } });
+}
+
+export { getNotSupported as GET, handle as POST, handle as DELETE };
