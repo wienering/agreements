@@ -233,7 +233,7 @@ export async function getAgreement(id: string) {
     nextAction: agreement.event ? agreement.event.nextAction : agreement.nextAction,
     archived: agreement.archived,
     selectedBackdropName: agreement.event ? agreement.event.selectedBackdropName : agreement.selectedBackdropName,
-    attendants: attendantNamesOf(agreement.event ? { backdropLink: agreement.event.backdropLink } : agreement),
+    attendants: attendantNamesOf(agreement.event?.backdropLink ? { backdropLink: agreement.event.backdropLink } : agreement),
     client: {
       id: agreement.client.id,
       name: `${agreement.client.firstName} ${agreement.client.lastName}`.trim(),
