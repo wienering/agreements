@@ -368,7 +368,7 @@ model Event {
   files          ClientFile[]
   leads          Lead[]
   activities     EventActivity[]
-  notes          ClientNote[]
+  clientNotes    ClientNote[]
 
   @@index([clientId])
   @@index([archived])
