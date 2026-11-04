@@ -52,7 +52,7 @@ export default function AgreementsAdminPage() {
   const [createInitial, setCreateInitial] = useState({ clientId: '', eventId: '', templateId: '' });
 
   useEffect(() => {
-    document.title = 'Agreements | Admin | Photobooth Guys';
+    document.title = 'Agreements | CRM | Photobooth Guys';
   }, []);
 
   useEffect(() => {
@@ -201,7 +201,7 @@ export default function AgreementsAdminPage() {
           <div>
             <h1 className="admin-page-title m-0 text-2xl font-bold text-admin-text md:text-[32px]">Agreements</h1>
             <div className="admin-title-rule" aria-hidden="true" />
-            <p className="mb-3 mt-2 text-base text-admin-muted">Manage client agreements and contracts</p>
+            <p className="mb-3 mt-2 text-base text-admin-muted">Agreements sent to clients. Unsent drafts stay on the Events page (or pick the Draft filter).</p>
             <AdminButton
               variant="ghost"
               size="compact"

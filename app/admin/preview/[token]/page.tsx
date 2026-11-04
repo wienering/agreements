@@ -22,7 +22,7 @@ export default function AdminPreviewPage() {
   const delivery = useAgreementDelivery(token, agreement, true);
 
   useEffect(() => {
-    document.title = 'Agreement Preview | Admin | Photobooth Guys';
+    document.title = 'Agreement Preview | CRM | Photobooth Guys';
   }, []);
 
   const fetchAgreement = useCallback(async () => {

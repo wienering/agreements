@@ -17,7 +17,7 @@ export default function AdminLogin() {
   const router = useRouter();
 
   useEffect(() => {
-    document.title = 'Admin Login | Photobooth Guys';
+    document.title = 'CRM Login | Photobooth Guys';
   }, []);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export default function AdminLogin() {
           <div className="leading-tight">
             <p className="text-base font-semibold text-admin-text">Photobooth Guys</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-admin-muted">
-              Agreements
+              CRM
             </p>
           </div>
           <Link
@@ -252,7 +252,7 @@ export default function AdminLogin() {
 
       <footer className="border-t border-admin-border bg-admin-surface py-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-admin-muted">
-          <span>© {new Date().getFullYear()} Photobooth Guys • Agreements</span>
+          <span>© {new Date().getFullYear()} Photobooth Guys • CRM</span>
           <Link href="/" className="hover:text-accent">Back to Home</Link>
         </div>
       </footer>

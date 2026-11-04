@@ -14,7 +14,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="leading-tight">
             <p className="text-base font-semibold text-ink">Photobooth Guys</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Agreements</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">CRM</p>
           </div>
           <nav className="hidden gap-6 md:flex">
             <a href="/admin" className="text-sm font-medium text-ink hover:text-accent hover:underline underline-offset-2">Dashboard</a>
@@ -124,7 +124,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-hairline bg-paper py-6">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-sm text-muted">
-          <span>© {new Date().getFullYear()} Photobooth Guys • Agreements</span>
+          <span>© {new Date().getFullYear()} Photobooth Guys • CRM</span>
           <a href="/admin/login" className="font-medium text-ink hover:text-accent hover:underline underline-offset-2">Admin Login</a>
         </div>
       </footer>

@@ -4,6 +4,7 @@ import {
   torontoCalendarDaysBetween,
 } from '@/lib/dates';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
+import { isUnsentDraft } from '@/lib/agreements/visibility';
 import type { Agreement, BackdropLinkOption, GalleryLink } from './types';
 import { DOUBLE_BOOKED_FILTER, NO_ATTENDANT_FILTER } from './types';
 
@@ -113,8 +114,14 @@ export function filterAgreements(
   attendantFilter: string,
   debouncedSearchTerm: string,
   doubleBookedIds: ReadonlySet<string> = new Set(),
+  keepIds: ReadonlySet<string> = new Set(),
 ): Agreement[] {
   let filtered = agreements;
+  // Drafts that never went to the client belong to the Events page. They still show
+  // under the Draft filter, and one created in this session stays visible so it can be sent.
+  if (statusFilter !== 'DRAFT') {
+    filtered = filtered.filter((agreement) => keepIds.has(agreement.id) || !isUnsentDraft(agreement));
+  }
   if (statusFilter !== 'ALL') {
     filtered = filtered.filter((agreement) => agreement.status === statusFilter);
   }

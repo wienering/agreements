@@ -150,7 +150,7 @@ export default function QuotesPage() {
 
   // Set page title
   useEffect(() => {
-    document.title = 'Quotes | Admin | Photobooth Guys';
+    document.title = 'Quotes | CRM | Photobooth Guys';
   }, []);
 
   const [currentStep, setCurrentStep] = useState(1);

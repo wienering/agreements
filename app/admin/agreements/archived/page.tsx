@@ -39,7 +39,7 @@ interface Agreement {
 
 export default function ArchivedAgreementsPage() {
   useEffect(() => {
-    document.title = 'Archived Agreements | Admin | Photobooth Guys';
+    document.title = 'Archived Agreements | CRM | Photobooth Guys';
   }, []);
 
   const [agreements, setAgreements] = useState<Agreement[]>([]);

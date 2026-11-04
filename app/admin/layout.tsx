@@ -21,7 +21,8 @@ const navGroups = [
     items: [
       { id: 'leads', label: 'Leads', iconName: 'target', href: '/admin/leads', tooltip: 'Lead pipeline and follow-up tracking' },
       { id: 'quotes', label: 'Quotes', iconName: 'dollar', href: '/admin/quotes', tooltip: 'Generate quotes for potential clients' },
-      { id: 'agreements', label: 'Agreements', iconName: 'file-signature', href: '/admin/agreements', tooltip: 'Manage client agreements' },
+      { id: 'events', label: 'Events', iconName: 'calendar', href: '/admin/events', tooltip: 'Every booked event, with or without an agreement' },
+      { id: 'agreements', label: 'Agreements', iconName: 'file-signature', href: '/admin/agreements', tooltip: 'Agreements sent to clients' },
     ],
   },
   {
@@ -116,7 +117,7 @@ export default function AdminLayout({
               Photobooth Guys
             </span>
             <span className="mt-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-admin-muted">
-              Agreements
+              CRM
             </span>
           </Link>
         </div>

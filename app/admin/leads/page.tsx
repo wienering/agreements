@@ -42,7 +42,7 @@ const TAB_OPTIONS: { key: LeadTab; label: string }[] = [
 
 export default function LeadsPage() {
   useEffect(() => {
-    document.title = 'Leads | Admin | Photobooth Guys';
+    document.title = 'Leads | CRM | Photobooth Guys';
   }, []);
 
   const router = useRouter();

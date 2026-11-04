@@ -18,7 +18,7 @@ interface AttendantGroup {
 
 export default function AttendantGroupsPage() {
   useEffect(() => {
-    document.title = 'Attendant Hubs | Admin | Photobooth Guys';
+    document.title = 'Attendant Hubs | CRM | Photobooth Guys';
   }, []);
 
   const [groups, setGroups] = useState<AttendantGroup[]>([]);

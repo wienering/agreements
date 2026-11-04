@@ -15,8 +15,8 @@ const libreFranklin = Libre_Franklin({
 })
 
 export const metadata: Metadata = {
-  title: 'Agreements',
-  description: 'Client agreement management system',
+  title: 'Photobooth Guys',
+  description: 'Photobooth Guys client agreements and bookings',
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.ico',
