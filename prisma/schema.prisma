@@ -475,6 +475,45 @@ enum LeadStage {
 enum LeadSource {
   QUOTE
   MANUAL
+  BOOKING_FORM
+}
+
+/// Where a lead stands in follow-up. Replaces LeadStage (kept for one release, then dropped).
+enum LeadStatus {
+  NEW
+  FOLLOWING_UP
+  BOOKED
+  LOST
+  PAUSED
+}
+
+enum LeadActivityKind {
+  CREATED
+  EMAIL_SENT
+  SMS_SENT
+  REPLY_DETECTED
+  STATUS_CHANGED
+  DELAYED
+  NOTE
+  CALL
+}
+
+/// One entry on a lead's timeline: a touch from n8n, a status change, or a note.
+model LeadActivity {
+  id          String           @id @default(cuid())
+  leadId      String
+  kind        LeadActivityKind
+  touchNumber Int?
+  summary     String?
+  /// n8n | admin | connector | backfill
+  source      String
+  /// Set by n8n so a retried call doesn't log the same touch twice.
+  externalKey String?          @unique
+  occurredAt  DateTime         @default(now())
+  createdAt   DateTime         @default(now())
+  lead        Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, occurredAt])
 }
 
 model PortalOtpVerification {
@@ -616,8 +655,20 @@ model Lead {
   client           Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
   event            Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
   agreement        Agreement?
-  
+  activities       LeadActivity[]
+
+  // Lead nurturing (Nov 2026)
+  status           LeadStatus @default(NEW)
+  /// Why a lead was lost: declined | fake | duplicate | old | no response | already booked
+  lostReason       String?
+  /// The Sheet's lead_id ("Pre-Booking Leads Not Booked"), used to match n8n calls and rows.
+  sheetLeadId      String?    @unique
+  lastReplyAt      DateTime?
+  sheetSyncedAt    DateTime?
+  sheetSyncError   String?
+
   @@index([stage])
+  @@index([status])
   @@index([nextFollowUpAt])
   @@index([email])
   @@index([eventDate])
