@@ -2,12 +2,15 @@ import { after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { addTorontoCalendarDaysFrom, torontoDayBoundsUtc } from '@/lib/dates';
 import { pickEntryToAdopt } from '@/lib/googleCalendar/adopt';
+import { isAlbertaLocation, parseStoredCalendarId, storeCalendarId } from '@/lib/googleCalendar/region';
 import {
   CalendarApiError,
   deleteCalendarEvent,
   insertCalendarEvent,
   isGoogleCalendarConfigured,
   listCalendarEvents,
+  albertaCalendarConfigured,
+  type CalendarKey,
   patchCalendarEvent,
 } from '@/lib/googleCalendar/client';
 import { buildGoogleCalendarEvent } from '@/lib/googleCalendar/format';
@@ -45,20 +48,27 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<Calend
     const event = await prisma.event.findUnique({ where: { id: eventId }, select: syncSelect });
     if (!event) return 'skipped';
     const body = event.archived || event.status === 'CANCELLED' ? null : buildGoogleCalendarEvent(event);
+    const stored = event.googleCalendarEventId ? parseStoredCalendarId(event.googleCalendarEventId) : null;
+    // Alberta venues go on the Alberta calendar (when one is set up), everything else on the main one.
+    const target: CalendarKey = albertaCalendarConfigured() && isAlbertaLocation(event.eventLocation) ? 'alberta' : 'main';
+
+    const clearStored = () =>
+      prisma.event.update({ where: { id: eventId }, data: { googleCalendarEventId: null, googleCalendarSyncedAt: new Date() } });
 
     if (!body) {
-      if (!event.googleCalendarEventId) return 'skipped';
-      await deleteCalendarEvent(event.googleCalendarEventId);
-      await prisma.event.update({
-        where: { id: eventId },
-        data: { googleCalendarEventId: null, googleCalendarSyncedAt: new Date() },
-      });
+      if (!stored) return 'skipped';
+      await deleteCalendarEvent(stored.id, stored.key);
+      await clearStored();
       return 'removed';
     }
 
-    if (event.googleCalendarEventId) {
+    if (stored && stored.key !== target) {
+      // The venue moved provinces (or the Alberta calendar was just set up): move the entry.
+      await deleteCalendarEvent(stored.id, stored.key);
+      await clearStored();
+    } else if (stored) {
       try {
-        await patchCalendarEvent(event.googleCalendarEventId, body);
+        await patchCalendarEvent(stored.id, body, stored.key);
         await prisma.event.update({ where: { id: eventId }, data: { googleCalendarSyncedAt: new Date() } });
         return 'updated';
       } catch (error) {
@@ -68,20 +78,20 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<Calend
     }
 
     // An entry Bookly already made for this booking is taken over instead of adding a second one.
-    const adopted = event.eventDate ? await findEntryToAdopt(event, event.eventDate) : null;
+    const adopted = event.eventDate ? await findEntryToAdopt(event, event.eventDate, target) : null;
     if (adopted) {
-      await patchCalendarEvent(adopted, body);
+      await patchCalendarEvent(adopted, body, target);
       await prisma.event.update({
         where: { id: eventId },
-        data: { googleCalendarEventId: adopted, googleCalendarSyncedAt: new Date() },
+        data: { googleCalendarEventId: storeCalendarId(target, adopted), googleCalendarSyncedAt: new Date() },
       });
       return 'adopted';
     }
 
-    const googleEventId = await insertCalendarEvent(body);
+    const googleEventId = await insertCalendarEvent(body, target);
     await prisma.event.update({
       where: { id: eventId },
-      data: { googleCalendarEventId: googleEventId, googleCalendarSyncedAt: new Date() },
+      data: { googleCalendarEventId: storeCalendarId(target, googleEventId), googleCalendarSyncedAt: new Date() },
     });
     return 'created';
   } catch (error) {
@@ -153,17 +163,18 @@ export async function queueCalendarSyncForClient(clientId: string): Promise<void
 async function findEntryToAdopt(
   event: { client: { firstName: string; lastName: string; email: string } },
   eventDate: Date,
+  key: CalendarKey,
 ): Promise<string | null> {
   const { start, end } = torontoDayBoundsUtc(eventDate);
-  const entries = await listCalendarEvents(start, end);
-  const candidateIds = entries.map((entry) => entry.id);
+  const entries = await listCalendarEvents(start, end, key);
+  const storedForms = entries.map((entry) => storeCalendarId(key, entry.id));
   const claimed = new Set(
     (
       await prisma.event.findMany({
-        where: { googleCalendarEventId: { in: candidateIds } },
+        where: { googleCalendarEventId: { in: storedForms } },
         select: { googleCalendarEventId: true },
       })
     ).map((row) => row.googleCalendarEventId),
   );
-  return pickEntryToAdopt(entries.filter((entry) => !claimed.has(entry.id)), event.client);
+  return pickEntryToAdopt(entries.filter((entry) => !claimed.has(storeCalendarId(key, entry.id))), event.client);
 }
