@@ -623,7 +623,7 @@ function Shell({ children, onClose }: { children: React.ReactNode; onClose: () =
       <aside
         role="dialog"
         aria-modal="true"
-        data-event-drawer"
+        data-event-drawer
         onClick={(e) => e.stopPropagation()}
         className="h-full w-full max-w-[560px] overflow-y-auto border-l border-admin-hairline bg-admin-surface p-5 md:p-6"
       >
