@@ -42,38 +42,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upsert client by email
-    let client = await prisma.client.findUnique({
-      where: { email },
-    });
-
-    if (!client) {
-      client = await prisma.client.create({
-        data: {
-          firstName,
-          lastName,
-          email,
-          phone: phone || null,
-        },
-      });
-    } else {
-      client = await prisma.client.update({
-        where: { id: client.id },
-        data: {
-          firstName,
-          lastName,
-          phone: phone !== undefined ? phone : undefined,
-        },
-      });
-    }
+    // Leads no longer create or edit Clients: a client is created when the lead is marked booked
+    // (so form entries can't rename an existing client or fill the client list with non-bookings).
 
     // Create lead (avoid duplicate for same email within last 5 min)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     const existingLead = await prisma.lead.findFirst({
       where: {
-        email,
+        email: { equals: email, mode: 'insensitive' },
         createdAt: { gte: fiveMinutesAgo },
-        stage: 'QUOTE_REQUESTED',
       },
     });
 
@@ -91,11 +68,11 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         eventDate: parsedEventDate,
         notes: `From website quote form (${validated.source || 'quote_tool_contact_form'})`,
-        clientId: client.id,
+        activities: {
+          create: { kind: 'CREATED', summary: 'Came in from the quote tool', source: 'website' },
+        },
       },
-      include: {
-        client: { select: { id: true } },
-      },
+      select: { id: true },
     });
 
     return NextResponse.json({ success: true, leadId: lead.id });

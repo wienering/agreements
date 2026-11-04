@@ -1,11 +1,13 @@
 /**
- * One-time setup: lets the app write to the photoboothguys.ca@gmail.com Google Calendar.
- * Prints a refresh token to put in Vercel as GOOGLE_CALENDAR_REFRESH_TOKEN.
+ * One-time setup: lets the app write to the photoboothguys.ca@gmail.com Google Calendar, or (with
+ * --sheets) to its Google Sheets. Prints a refresh token to put in Vercel as
+ * GOOGLE_CALENDAR_REFRESH_TOKEN, or GOOGLE_SHEETS_REFRESH_TOKEN with --sheets.
  *
  * Before running: in Google Cloud Console (the project behind the Drive connection), enable the
  * Google Calendar API. Stop `npm run dev` first, because this listens on the same address.
  *
  *   npx tsx scripts/google-calendar-auth.ts
+ *   npx tsx scripts/google-calendar-auth.ts --sheets   (enable the Google Sheets API first)
  *
  * Reads GOOGLE_DRIVE_CLIENT_ID, GOOGLE_DRIVE_CLIENT_SECRET and GOOGLE_DRIVE_REDIRECT_URI from .env.
  */
@@ -31,11 +33,16 @@ if (!clientId || !clientSecret) {
   process.exit(1);
 }
 
+const sheets = process.argv.includes('--sheets');
+const scope = sheets ? 'https://www.googleapis.com/auth/spreadsheets' : 'https://www.googleapis.com/auth/calendar.events';
+const envName = sheets ? 'GOOGLE_SHEETS_REFRESH_TOKEN' : 'GOOGLE_CALENDAR_REFRESH_TOKEN';
+const what = sheets ? 'Google Sheets' : 'calendar';
+
 const oauth = new OAuth2Client(clientId, clientSecret, redirectUri);
 const url = oauth.generateAuthUrl({
   access_type: 'offline',
   prompt: 'consent',
-  scope: ['https://www.googleapis.com/auth/calendar.events'],
+  scope: [scope],
 });
 
 async function exchange(code: string) {
@@ -44,7 +51,7 @@ async function exchange(code: string) {
     console.error('\nGoogle did not return a refresh token. Remove the app at https://myaccount.google.com/permissions and run this again.');
     return;
   }
-  console.log('\nAdd this to Vercel as GOOGLE_CALENDAR_REFRESH_TOKEN (Production), then redeploy:\n');
+  console.log(`\nAdd this to Vercel as ${envName} (Production), then redeploy:\n`);
   console.log(tokens.refresh_token);
 }
 
@@ -54,7 +61,7 @@ const isLocal = ['localhost', '127.0.0.1'].includes(redirect.hostname);
 if (!isLocal) {
   // The redirect address is on the live site. After signing in, the browser lands there (the page
   // itself may show an error); the code is in the address bar. Paste the whole address here.
-  console.log('1. Open this link and sign in as photoboothguys.ca@gmail.com, then allow calendar access:\n');
+  console.log(`1. Open this link and sign in as photoboothguys.ca@gmail.com, then allow ${what} access:\n`);
   console.log(url);
   console.log('\n2. You will land on a page on your site (it may show an error, that is fine).');
   console.log('   Copy the whole address from the browser bar and paste it below.\n');
@@ -97,7 +104,7 @@ if (!isLocal) {
   });
 
   server.listen(Number(redirect.port) || 80, () => {
-    console.log('Open this link, sign in as photoboothguys.ca@gmail.com, and allow calendar access:\n');
+    console.log(`Open this link, sign in as photoboothguys.ca@gmail.com, and allow ${what} access:\n`);
     console.log(url);
   });
 }

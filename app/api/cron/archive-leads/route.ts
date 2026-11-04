@@ -24,6 +24,7 @@ async function runArchiveLeads() {
     select: {
       id: true,
       stage: true,
+      status: true,
       eventDate: true,
       lastContactedAt: true,
       createdAt: true,
@@ -43,10 +44,13 @@ async function runArchiveLeads() {
   for (const lead of leads) {
     let reason: AutoArchiveReason | null = null;
 
-    if (lead.stage === 'SIGNED' || lead.stage === 'COMPLETED') {
+    if (lead.status === 'BOOKED') {
       reason = 'booked';
-    } else if (lead.stage === 'LOST') {
+    } else if (lead.status === 'LOST') {
       reason = 'lost';
+    } else if (lead.status === 'PAUSED') {
+      // Paused leads stay in the active list until resumed or closed by hand.
+      reason = null;
     } else {
       reason = getAutoArchiveReason(lead, now);
     }

@@ -62,31 +62,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = createLeadSchema.parse(body);
 
-    // Upsert client by email
-    let client = await prisma.client.findUnique({
-      where: { email: validated.email },
-    });
-
-    if (!client) {
-      client = await prisma.client.create({
-        data: {
-          firstName: validated.firstName,
-          lastName: validated.lastName,
-          email: validated.email,
-          phone: validated.phone || null,
-        },
-      });
-    } else {
-      client = await prisma.client.update({
-        where: { id: client.id },
-        data: {
-          firstName: validated.firstName,
-          lastName: validated.lastName,
-          phone: validated.phone !== undefined ? validated.phone : undefined,
-        },
-      });
-    }
-
+    // No Client is created here; Mark booked creates or links the client.
     const lead = await prisma.lead.create({
       data: {
         source: validated.source as 'QUOTE' | 'MANUAL',
@@ -101,7 +77,7 @@ export async function POST(request: NextRequest) {
         quotePackageHours: validated.quotePackageHours ?? null,
         quoteTotal: validated.quoteTotal != null ? validated.quoteTotal : null,
         notes: validated.notes || null,
-        clientId: client.id,
+        activities: { create: { kind: 'CREATED', summary: 'Added by hand', source: 'admin' } },
       },
       include: {
         client: { select: { id: true, firstName: true, lastName: true, email: true } },
