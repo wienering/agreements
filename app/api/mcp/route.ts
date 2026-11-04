@@ -575,6 +575,13 @@ async function handle(request: Request): Promise<Response> {
       return rateLimitResponse();
     }
 
+    // No server-to-client stream: tool calls are plain POSTs. An authenticated GET would hold an
+    // idle SSE stream open until Vercel kills it at 300s, so answer 405 (allowed by the MCP spec).
+    // Unauthenticated GETs above still get the 401 + WWW-Authenticate that sign-in discovery needs.
+    if (request.method === 'GET') {
+      return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } });
+    }
+
     return runWithMcpAuth(verified!, () => authHandler(request));
   } catch (error) {
     console.error('[mcp] handler error');
@@ -583,13 +590,4 @@ async function handle(request: Request): Promise<Response> {
   }
 }
 
-/**
- * No server-to-client stream: every tool call is a plain POST. A GET would hold an idle SSE stream
- * open until Vercel kills it at 300 seconds (the timeout errors in the logs). The MCP spec lets a
- * server answer GET with 405, and clients then just use POST.
- */
-async function getNotSupported() {
-  return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } });
-}
-
-export { getNotSupported as GET, handle as POST, handle as DELETE };
+export { handle as GET, handle as POST, handle as DELETE };
