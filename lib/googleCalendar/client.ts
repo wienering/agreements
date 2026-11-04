@@ -48,7 +48,7 @@ export class CalendarApiError extends Error {
   }
 }
 
-async function call<T>(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T | null> {
+async function call<T>(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T | null> {
   const { token } = await getClient().getAccessToken();
   if (!token) throw new CalendarApiError(401, 'No Google access token');
   const response = await fetch(`${API}${path}`, {
@@ -82,4 +82,24 @@ export async function deleteCalendarEvent(googleEventId: string): Promise<void> 
     if (error instanceof CalendarApiError && (error.status === 404 || error.status === 410)) return;
     throw error;
   }
+}
+
+export type ExistingCalendarEvent = {
+  id: string;
+  status?: string;
+  summary?: string;
+  description?: string;
+  extendedProperties?: { private?: Record<string, string> };
+};
+
+/** Entries on the calendar between two instants (recurring ones expanded). */
+export async function listCalendarEvents(timeMin: Date, timeMax: Date): Promise<ExistingCalendarEvent[]> {
+  const params = new URLSearchParams({
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+    singleEvents: 'true',
+    maxResults: '100',
+  });
+  const result = await call<{ items?: ExistingCalendarEvent[] }>('GET', `/calendars/${calendarId()}/events?${params}`);
+  return result?.items ?? [];
 }

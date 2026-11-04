@@ -1,11 +1,13 @@
 import { after } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { addTorontoCalendarDaysFrom } from '@/lib/dates';
+import { addTorontoCalendarDaysFrom, torontoDayBoundsUtc } from '@/lib/dates';
+import { pickEntryToAdopt } from '@/lib/googleCalendar/adopt';
 import {
   CalendarApiError,
   deleteCalendarEvent,
   insertCalendarEvent,
   isGoogleCalendarConfigured,
+  listCalendarEvents,
   patchCalendarEvent,
 } from '@/lib/googleCalendar/client';
 import { buildGoogleCalendarEvent } from '@/lib/googleCalendar/format';
@@ -31,7 +33,7 @@ const syncSelect = {
   agreements: { where: { archived: false, status: { not: 'CANCELLED' as const } }, select: { status: true } },
 } as const;
 
-export type CalendarSyncResult = 'created' | 'updated' | 'removed' | 'skipped' | 'not_configured' | 'failed';
+export type CalendarSyncResult = 'created' | 'adopted' | 'updated' | 'removed' | 'skipped' | 'not_configured' | 'failed';
 
 /**
  * Make the Google Calendar match one event: create or update the entry while the event is live and
@@ -63,6 +65,17 @@ export async function syncEventToGoogleCalendar(eventId: string): Promise<Calend
         // Deleted by hand in Google Calendar: make a new entry.
         if (!(error instanceof CalendarApiError && (error.status === 404 || error.status === 410))) throw error;
       }
+    }
+
+    // An entry Bookly already made for this booking is taken over instead of adding a second one.
+    const adopted = event.eventDate ? await findEntryToAdopt(event, event.eventDate) : null;
+    if (adopted) {
+      await patchCalendarEvent(adopted, body);
+      await prisma.event.update({
+        where: { id: eventId },
+        data: { googleCalendarEventId: adopted, googleCalendarSyncedAt: new Date() },
+      });
+      return 'adopted';
     }
 
     const googleEventId = await insertCalendarEvent(body);
@@ -99,6 +112,7 @@ export function queueCalendarSync(eventId: string | null | undefined): void {
 export async function reconcileGoogleCalendar(now = new Date()) {
   const summary: Record<CalendarSyncResult, number> = {
     created: 0,
+    adopted: 0,
     updated: 0,
     removed: 0,
     skipped: 0,
@@ -133,4 +147,23 @@ export async function queueCalendarSyncForClient(clientId: string): Promise<void
     select: { id: true },
   });
   for (const event of events) queueCalendarSync(event.id);
+}
+
+/** The one entry on the event's day that another tool (Bookly) made for this client, if any. */
+async function findEntryToAdopt(
+  event: { client: { firstName: string; lastName: string; email: string } },
+  eventDate: Date,
+): Promise<string | null> {
+  const { start, end } = torontoDayBoundsUtc(eventDate);
+  const entries = await listCalendarEvents(start, end);
+  const candidateIds = entries.map((entry) => entry.id);
+  const claimed = new Set(
+    (
+      await prisma.event.findMany({
+        where: { googleCalendarEventId: { in: candidateIds } },
+        select: { googleCalendarEventId: true },
+      })
+    ).map((row) => row.googleCalendarEventId),
+  );
+  return pickEntryToAdopt(entries.filter((entry) => !claimed.has(entry.id)), event.client);
 }
