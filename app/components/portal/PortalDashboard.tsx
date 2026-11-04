@@ -88,7 +88,6 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const pageRef = useRef(1);
   const router = useRouter();
   const isAdmin = mode === 'adminPreview';
@@ -255,9 +254,8 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
 
   // The agreements section appears only once the client has an agreement to see.
   const agreementTotal = data ? Object.values(data.filters.statusSummary).reduce((n, count) => n + count, 0) : 0;
-  const showAgreements = isAdmin || agreementTotal > 0;
+  const showAgreements = agreementTotal > 0;
 
-  const relevantAgreement = data?.agreements.find((agreement) => agreement.nextAction) || data?.agreements[0];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
@@ -295,124 +293,7 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
 
       {data && (
         <>
-          {!isAdmin && <PortalEventsList />}
-          {isAdmin && (
-          <div className="mb-8 rounded-lg border border-hairline bg-panel">
-            <button
-              type="button"
-              onClick={() => setOverviewCollapsed(!overviewCollapsed)}
-              className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-paper"
-            >
-              <div className="flex items-center gap-3">
-                {isAdmin ? (
-                  <div className="text-2xl text-muted">
-                    <UIcon name="user" className="text-2xl" />
-                  </div>
-                ) : (
-                  <UIcon name="user" className="text-2xl text-accent" />
-                )}
-                <div>
-                  <h2 className="text-xl font-semibold text-ink">{isAdmin ? 'Event Overview' : 'Your Event Overview'}</h2>
-                  <p className="text-sm text-muted">
-                    {data.client.firstName} {data.client.lastName}
-                    {data.client.eventDate && ` • ${formatEventDateToronto(data.client.eventDate)}`}
-                  </p>
-                </div>
-              </div>
-              <svg
-                className={`h-5 w-5 text-muted transition-transform ${overviewCollapsed ? '' : 'rotate-180'}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {!overviewCollapsed && (
-              <div className="border-t border-hairline p-6">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {data.client.eventPackage && (
-                    <div>
-                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
-                        <UIcon name="box" className="text-base" />
-                        Package Booked
-                      </h3>
-                      <p className="text-lg font-semibold text-ink">{data.client.eventPackage}</p>
-                      {data.client.packagePrice && (
-                        <p className="text-sm text-muted">${data.client.packagePrice.toFixed(2)}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {relevantAgreement?.paymentStatus && (
-                    <div>
-                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
-                        <UIcon name="credit-card" className="text-base" />
-                        Payment Status
-                      </h3>
-                      <span className="inline-flex items-center rounded-full bg-panel px-3 py-1 text-sm font-medium text-ink">
-                        {relevantAgreement.paymentStatus}
-                      </span>
-                      {relevantAgreement.stripePaymentLink && (
-                        <a
-                          href={relevantAgreement.stripePaymentLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 block text-sm font-semibold text-ink underline underline-offset-2 hover:text-accent"
-                        >
-                          Make Payment →
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
-                      <UIcon name="phone-call" className="text-base" />
-                      Contact Method
-                    </h3>
-                    <div className="space-y-1">
-                      <p className="flex items-center gap-2 text-sm text-ink">
-                        <UIcon name="envelope" className="shrink-0 text-sm" />
-                        {data.client.email}
-                      </p>
-                      {data.client.phone && (
-                        <p className="flex items-center gap-2 text-sm text-ink">
-                          <UIcon name="smartphone" className="shrink-0 text-sm" />
-                          {data.client.phone}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {data.client.eventLocation && (
-                    <div>
-                      <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-ink">
-                        <UIcon name="marker" className="text-base" />
-                        Event Location
-                      </h3>
-                      <p className="text-sm text-ink">{data.client.eventLocation}</p>
-                      {data.client.eventType && <p className="text-xs text-muted">{data.client.eventType}</p>}
-                    </div>
-                  )}
-
-                  {relevantAgreement?.nextAction && (
-                    <div className="md:col-span-2 lg:col-span-3">
-                      <div className="rounded-lg border border-warn bg-panel p-4">
-                        <h3 className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-warn">
-                          <UIcon name="bolt" className="text-base" />
-                          Next Action
-                        </h3>
-                        <p className="text-base font-semibold text-warn">{relevantAgreement.nextAction}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          )}
+          <PortalEventsList preview={isAdmin ? { email: adminEmail, clientId: adminClientId } : undefined} />
 
           {showAgreements && (
           <>
