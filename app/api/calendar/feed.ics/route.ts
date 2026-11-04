@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildCalendarFeed } from '@/lib/calendarFeed';
 import { isValidCalendarFeedKey } from '@/lib/calendarFeedKey';
-import { findCalendarFeedAgreements } from '@/lib/calendarFeedQuery';
+import { findCalendarFeedAgreements, findCalendarFeedEventsWithoutAgreement } from '@/lib/calendarFeedQuery';
 import { handleApiError } from '@/lib/handleApiError';
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +14,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const now = new Date();
-    const agreements = await findCalendarFeedAgreements(now);
-    const body = buildCalendarFeed(agreements, now);
+    const [agreements, eventsWithoutAgreement] = await Promise.all([
+      findCalendarFeedAgreements(now),
+      findCalendarFeedEventsWithoutAgreement(now),
+    ]);
+    const body = buildCalendarFeed(agreements, now, eventsWithoutAgreement);
 
     return new NextResponse(body, {
       status: 200,

@@ -402,7 +402,7 @@ describe('selectOneAgreementPerEvent', () => {
 });
 
 describe('buildCalendarFeed', () => {
-  it('writes one entry per event, keeping the UID of the chosen agreement', () => {
+  it('writes one entry per event, keyed by the event and showing the chosen agreement', () => {
     const feed = buildCalendarFeed(
       [
         source({ id: 'agr_draft', eventId: 'evt_1', status: 'DRAFT', createdAt: new Date('2026-09-20') }),
@@ -411,8 +411,10 @@ describe('buildCalendarFeed', () => {
       NOW,
     );
     expect(feed.match(/BEGIN:VEVENT/g)).toHaveLength(1);
-    expect(feed).toContain('UID:agr_signed@agreements.photoboothguys.ca');
-    expect(feed).not.toContain('agr_draft@');
+    const unfolded = feed.replace(/\r\n /g, '');
+    expect(unfolded).toContain('UID:event-evt_1@agreements.photoboothguys.ca');
+    expect(unfolded).toContain('/admin/agreements?agreement=agr_signed');
+    expect(unfolded).not.toContain('agr_draft');
   });
 
   it('ignores excluded agreements when choosing the entry for an event', () => {
@@ -423,8 +425,9 @@ describe('buildCalendarFeed', () => {
       ],
       NOW,
     );
-    expect(feed).toContain('UID:agr_sent@agreements.photoboothguys.ca');
-    expect(feed.replace(/\r\n /g, '')).toContain('\\nStatus: Sent\\, not signed');
+    const unfolded = feed.replace(/\r\n /g, '');
+    expect(unfolded).toContain('UID:event-evt_1@agreements.photoboothguys.ca');
+    expect(unfolded).toContain('\\nStatus: Sent\\, not signed');
   });
 
   it('writes only included agreements, with escaped and folded text', () => {
@@ -446,5 +449,26 @@ describe('buildCalendarFeed', () => {
     feed.split('\r\n').forEach((line) => {
       expect(Buffer.byteLength(line, 'utf8')).toBeLessThanOrEqual(75);
     });
+  });
+
+  it('adds booked events that have no agreement, once each', () => {
+    const eventOnly = source(
+      { kind: 'event', id: 'evt_2', eventId: 'evt_2', status: 'CONFIRMED', paymentStatus: null, backdropLink: null },
+      { eventLocation: 'Casa Loma' },
+    );
+    const feed = buildCalendarFeed([source({ id: 'agr_1', eventId: 'evt_1' })], NOW, [eventOnly]);
+    const unfolded = feed.replace(/\r\n /g, '');
+    expect(feed.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+    expect(unfolded).toContain('UID:event-evt_2@agreements.photoboothguys.ca');
+    expect(unfolded).toContain('Status: Confirmed\\, no agreement');
+    expect(unfolded).toContain('/admin/events');
+    expect(buildCalendarFeed([], NOW, [eventOnly])).not.toContain('Payment:');
+  });
+
+  it('never writes an event twice when it also has an agreement', () => {
+    const eventOnly = source({ kind: 'event', id: 'evt_1', eventId: 'evt_1', status: 'CONFIRMED' });
+    const feed = buildCalendarFeed([source({ id: 'agr_1', eventId: 'evt_1' })], NOW, [eventOnly]);
+    expect(feed.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+    expect(feed).toContain('UID:event-evt_1@agreements.photoboothguys.ca');
   });
 });

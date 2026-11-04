@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import {
   CALENDAR_FEED_STATUSES,
+  EVENT_ONLY_STATUS,
   calendarFeedWindow,
   type CalendarFeedSource,
 } from '@/lib/calendarFeed';
@@ -66,5 +67,63 @@ export async function findCalendarFeedAgreements(now = new Date()): Promise<Cale
       ],
     },
     select: calendarFeedSelect,
+  });
+}
+
+/**
+ * Booked events (not archived) in the feed window with no active agreement.
+ * Events that do have one reach the feed through findCalendarFeedAgreements.
+ */
+export async function findCalendarFeedEventsWithoutAgreement(now = new Date()): Promise<CalendarFeedSource[]> {
+  const { fromKey, toKey } = calendarFeedWindow(now);
+  const windowStart = addTorontoCalendarDaysFrom(parseTorontoCalendarDateKey(fromKey) ?? now, -1);
+  const windowEnd = addTorontoCalendarDaysFrom(parseTorontoCalendarDateKey(toKey) ?? now, 2);
+
+  const events = await prisma.event.findMany({
+    where: {
+      archived: false,
+      eventDate: { gte: windowStart, lt: windowEnd },
+      agreements: {
+        none: { status: { in: [...CALENDAR_FEED_STATUSES] }, archived: false, cancelledAt: null },
+      },
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      ...eventDetailSelect,
+      client: { select: { firstName: true, lastName: true, phone: true, email: true } },
+    },
+  });
+
+  return events.map((event) => {
+    const details = {
+      eventDate: event.eventDate,
+      eventLocation: event.eventLocation,
+      eventStartTime: event.eventStartTime,
+      eventDuration: event.eventDuration,
+      eventPackage: event.eventPackage,
+    };
+    return {
+      kind: 'event' as const,
+      id: event.id,
+      status: EVENT_ONLY_STATUS,
+      archived: false,
+      cancelledAt: null,
+      paymentStatus: null,
+      createdAt: event.createdAt,
+      updatedAt: event.updatedAt,
+      eventId: event.id,
+      client: {
+        ...event.client,
+        eventDate: null,
+        eventLocation: null,
+        eventStartTime: null,
+        eventDuration: null,
+        eventPackage: null,
+      },
+      event: details,
+      backdropLink: null,
+    };
   });
 }

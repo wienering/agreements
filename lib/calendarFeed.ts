@@ -35,9 +35,14 @@ export type EventScheduleSource = {
 /** Agreement statuses that appear in the feed. CANCELLED never does. */
 export const CALENDAR_FEED_STATUSES = ['DRAFT', 'SENT', 'SIGNED', 'COMPLETED'] as const;
 
+/** Status given to a booked event that has no agreement in the feed. */
+export const EVENT_ONLY_STATUS = 'CONFIRMED';
+
 const FULLY_SIGNED_STATUSES = new Set(['SIGNED', 'COMPLETED']);
 
 export type CalendarFeedSource = {
+  /** 'event' is a booked event with no agreement; `id` is then the Event id. Default 'agreement'. */
+  kind?: 'agreement' | 'event';
   id: string;
   status: string;
   archived: boolean;
@@ -81,7 +86,11 @@ export function calendarFeedWindow(now = new Date()): { fromKey: string; toKey: 
 }
 
 export function isIncludedInCalendarFeed(source: CalendarFeedSource, now = new Date()): boolean {
-  if (!(CALENDAR_FEED_STATUSES as readonly string[]).includes(source.status)) return false;
+  const statusOk =
+    source.kind === 'event'
+      ? source.status === EVENT_ONLY_STATUS
+      : (CALENDAR_FEED_STATUSES as readonly string[]).includes(source.status);
+  if (!statusOk) return false;
   if (source.archived || source.cancelledAt) return false;
   const eventDate = resolveAgreementEventDate(source);
   if (!eventDate) return false;
@@ -173,6 +182,7 @@ function isSignedByOneOfTwo(source: CalendarFeedSource): boolean {
 }
 
 export function calendarFeedStatusLabel(source: CalendarFeedSource): string {
+  if (source.kind === 'event') return 'Confirmed, no agreement';
   switch (source.status) {
     case 'SIGNED':
       return 'Signed';
@@ -238,7 +248,12 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
   const { dateKey } = schedule;
   const details = eventDetails(source);
   const clientName = `${source.client.firstName} ${source.client.lastName}`.trim();
-  const adminUrl = adminAgreementUrl(source.id);
+  const isEventOnly = source.kind === 'event';
+  const adminUrl = isEventOnly ? `${ADMIN_ORIGIN}/admin/events` : adminAgreementUrl(source.id);
+  // Keyed by the Event record when there is one, so adding or signing an agreement
+  // updates the same calendar entry instead of creating a second one.
+  const eventKey = isEventOnly ? source.id : source.eventId;
+  const uid = eventKey ? `event-${eventKey}@${UID_DOMAIN}` : `${source.id}@${UID_DOMAIN}`;
 
   const timing: IcsEvent['timing'] =
     schedule.start && schedule.end
@@ -250,7 +265,7 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
     source.client.phone?.trim() ? `Phone: ${source.client.phone.trim()}` : null,
     details.packageName ? `Package: ${details.packageName}` : null,
     attendantName ? `Attendant: ${attendantName}` : null,
-    `Payment: ${displayPaymentStatus(source.paymentStatus) ?? 'Not recorded'}`,
+    isEventOnly ? null : `Payment: ${displayPaymentStatus(source.paymentStatus) ?? 'Not recorded'}`,
     `Admin: ${adminUrl}`,
     `Status: ${calendarFeedStatusLabel(source)}`,
   ]
@@ -258,7 +273,7 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
     .join('\n');
 
   return {
-    uid: `${source.id}@${UID_DOMAIN}`,
+    uid,
     summary: details.packageName ? `${clientName} – ${details.packageName}` : clientName,
     location: details.location,
     description,
@@ -296,9 +311,23 @@ export function selectOneAgreementPerEvent<T extends EventChoiceSource>(sources:
   return [...chosen.values()];
 }
 
-export function buildCalendarFeed(sources: CalendarFeedSource[], now = new Date()): string {
+/**
+ * Every booked event appears once: through its agreement when it has one in the feed,
+ * otherwise as an event-only entry. Agreements without an Event record (older bookings
+ * with the date on the client) still appear on their own.
+ */
+export function buildCalendarFeed(
+  sources: CalendarFeedSource[],
+  now = new Date(),
+  eventOnlySources: CalendarFeedSource[] = [],
+): string {
   const included = sources.filter((source) => isIncludedInCalendarFeed(source, now));
-  const events = selectOneAgreementPerEvent(included)
+  const chosen = selectOneAgreementPerEvent(included);
+  const coveredEventIds = new Set(chosen.map((source) => source.eventId).filter(Boolean));
+  const eventOnly = eventOnlySources.filter(
+    (source) => !coveredEventIds.has(source.id) && isIncludedInCalendarFeed(source, now),
+  );
+  const events = [...chosen, ...eventOnly]
     .map(toCalendarFeedEvent)
     .filter((event): event is IcsEvent => event !== null);
 
