@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   constructEvent: vi.fn(),
-  prisma: { agreement: { findUnique: vi.fn(), update: vi.fn() } },
+  prisma: { event: { findUnique: vi.fn(), update: vi.fn() }, agreement: { findUnique: vi.fn(), update: vi.fn() } },
   sendTelegramMessage: vi.fn(),
 }));
 
@@ -23,7 +23,7 @@ function paidInvoiceEvent(invoiceType?: string) {
     data: {
       object: {
         id: 'in_1',
-        metadata: { agreementId: 'agr_1', ...(invoiceType ? { invoiceType } : {}) },
+        metadata: { eventId: 'agr_1', ...(invoiceType ? { invoiceType } : {}) },
         hosted_invoice_url: 'https://stripe.example/receipt',
         amount_paid: 95000,
       },
@@ -33,7 +33,7 @@ function paidInvoiceEvent(invoiceType?: string) {
 
 async function deliver(invoiceType: string | undefined, currentPaymentStatus: string | null) {
   mocks.constructEvent.mockReturnValue(paidInvoiceEvent(invoiceType));
-  mocks.prisma.agreement.findUnique.mockResolvedValue({
+  mocks.prisma.event.findUnique.mockResolvedValue({
     id: 'agr_1',
     paymentStatus: currentPaymentStatus,
     client: { email: 'jane@example.com', firstName: 'Jane', lastName: 'Smith' },
@@ -46,7 +46,7 @@ async function deliver(invoiceType: string | undefined, currentPaymentStatus: st
   return POST(request);
 }
 
-const writtenPaymentStatus = () => mocks.prisma.agreement.update.mock.calls[0]?.[0]?.data?.paymentStatus;
+const writtenPaymentStatus = () => mocks.prisma.event.update.mock.calls[0]?.[0]?.data?.paymentStatus;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -91,7 +91,7 @@ describe('Stripe webhook payment status', () => {
 
   it('keeps the status, saves the receipt and alerts when a balance is paid without a recorded deposit', async () => {
     const response = await deliver('remaining', 'Invoice issued');
-    const data = mocks.prisma.agreement.update.mock.calls[0][0].data;
+    const data = mocks.prisma.event.update.mock.calls[0][0].data;
     expect(data).toEqual({ stripeReceiptLink: 'https://stripe.example/receipt' });
     expect((await response.json()).paymentStatus).toBe('Invoice issued');
 
@@ -100,12 +100,12 @@ describe('Stripe webhook payment status', () => {
     expect(message).toContain('Jane Smith ($950.00)');
     expect(message).toContain('"remaining"');
     expect(message).toContain('"Invoice issued"');
-    expect(message).toContain('https://agreements.photoboothguys.ca/admin/agreements?agreement=agr_1');
+    expect(message).toContain('https://agreements.photoboothguys.ca/admin/events?event=agr_1');
   });
 
   it('keeps the status and alerts for an unknown invoice type', async () => {
     await deliver(undefined, null);
-    expect(mocks.prisma.agreement.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
+    expect(mocks.prisma.event.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
     expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
     expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"blank"');
   });
@@ -114,10 +114,10 @@ describe('Stripe webhook payment status', () => {
     for (const current of [null, 'Invoice issued', 'Deposit paid']) {
       vi.clearAllMocks();
       await deliver('custom', current);
-      expect(mocks.prisma.agreement.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
+      expect(mocks.prisma.event.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
       expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
       expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"custom"');
-      expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('/admin/agreements?agreement=agr_1');
+      expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('/admin/events?event=agr_1');
     }
   });
 
@@ -134,7 +134,7 @@ describe('Stripe webhook payment status', () => {
     for (const current of [null, 'Invoice issued', 'Not paid']) {
       vi.clearAllMocks();
       await deliver('minus-deposit', current);
-      expect(mocks.prisma.agreement.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
+      expect(mocks.prisma.event.update.mock.calls[0][0].data).not.toHaveProperty('paymentStatus');
       expect(mocks.sendTelegramMessage).toHaveBeenCalledTimes(1);
       expect(mocks.sendTelegramMessage.mock.calls[0][0]).toContain('"minus-deposit"');
     }

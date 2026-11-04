@@ -462,7 +462,7 @@ describe('buildCalendarFeed', () => {
     expect(unfolded).toContain('UID:event-evt_2@agreements.photoboothguys.ca');
     expect(unfolded).toContain('Status: Confirmed\\, no agreement');
     expect(unfolded).toContain('/admin/events');
-    expect(buildCalendarFeed([], NOW, [eventOnly])).toContain('Payment: Not recorded');
+    expect(buildCalendarFeed([], NOW, [eventOnly]).replace(/\r\n /g, '')).toContain('Payment: Not recorded');
   });
 
   it('never writes an event twice when it also has an agreement', () => {
