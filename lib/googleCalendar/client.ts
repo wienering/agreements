@@ -25,8 +25,20 @@ export function isGoogleCalendarConfigured(): boolean {
   );
 }
 
-function calendarId(): string {
-  return encodeURIComponent(process.env.GOOGLE_CALENDAR_ID?.trim() || 'primary');
+/** Which business calendar an entry lives on: the main one, or the Alberta one. */
+export type CalendarKey = 'main' | 'alberta';
+
+/** The Alberta calendar is used only when GOOGLE_CALENDAR_ID_ALBERTA is set. */
+export function albertaCalendarConfigured(): boolean {
+  return Boolean(process.env.GOOGLE_CALENDAR_ID_ALBERTA?.trim());
+}
+
+function calendarId(key: CalendarKey = 'main'): string {
+  const id =
+    key === 'alberta' && albertaCalendarConfigured()
+      ? (process.env.GOOGLE_CALENDAR_ID_ALBERTA as string).trim()
+      : process.env.GOOGLE_CALENDAR_ID?.trim() || 'primary';
+  return encodeURIComponent(id);
 }
 
 function getClient(): OAuth2Client {
@@ -64,20 +76,24 @@ async function call<T>(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', path: string
   return (await response.json()) as T;
 }
 
-export async function insertCalendarEvent(body: GoogleCalendarEventBody): Promise<string> {
-  const created = await call<{ id: string }>('POST', `/calendars/${calendarId()}/events`, body);
+export async function insertCalendarEvent(body: GoogleCalendarEventBody, key: CalendarKey = 'main'): Promise<string> {
+  const created = await call<{ id: string }>('POST', `/calendars/${calendarId(key)}/events`, body);
   if (!created?.id) throw new CalendarApiError(500, 'Google Calendar did not return an event id');
   return created.id;
 }
 
-export async function patchCalendarEvent(googleEventId: string, body: GoogleCalendarEventBody): Promise<void> {
-  await call('PATCH', `/calendars/${calendarId()}/events/${encodeURIComponent(googleEventId)}`, body);
+export async function patchCalendarEvent(
+  googleEventId: string,
+  body: GoogleCalendarEventBody,
+  key: CalendarKey = 'main',
+): Promise<void> {
+  await call('PATCH', `/calendars/${calendarId(key)}/events/${encodeURIComponent(googleEventId)}`, body);
 }
 
 /** Deletes the entry. An entry that's already gone counts as deleted. */
-export async function deleteCalendarEvent(googleEventId: string): Promise<void> {
+export async function deleteCalendarEvent(googleEventId: string, key: CalendarKey = 'main'): Promise<void> {
   try {
-    await call('DELETE', `/calendars/${calendarId()}/events/${encodeURIComponent(googleEventId)}`);
+    await call('DELETE', `/calendars/${calendarId(key)}/events/${encodeURIComponent(googleEventId)}`);
   } catch (error) {
     if (error instanceof CalendarApiError && (error.status === 404 || error.status === 410)) return;
     throw error;
@@ -93,13 +109,17 @@ export type ExistingCalendarEvent = {
 };
 
 /** Entries on the calendar between two instants (recurring ones expanded). */
-export async function listCalendarEvents(timeMin: Date, timeMax: Date): Promise<ExistingCalendarEvent[]> {
+export async function listCalendarEvents(
+  timeMin: Date,
+  timeMax: Date,
+  key: CalendarKey = 'main',
+): Promise<ExistingCalendarEvent[]> {
   const params = new URLSearchParams({
     timeMin: timeMin.toISOString(),
     timeMax: timeMax.toISOString(),
     singleEvents: 'true',
     maxResults: '100',
   });
-  const result = await call<{ items?: ExistingCalendarEvent[] }>('GET', `/calendars/${calendarId()}/events?${params}`);
+  const result = await call<{ items?: ExistingCalendarEvent[] }>('GET', `/calendars/${calendarId(key)}/events?${params}`);
   return result?.items ?? [];
 }
