@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { devLog } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -385,6 +386,7 @@ export async function createEventInvoice(
         ...(nextPaymentStatus ? { paymentStatus: nextPaymentStatus } : {}),
       },
     });
+    queueCalendarSync(eventRecord.id);
 
     devLog(`Created ${invoiceResults.length} invoice(s) for agreement ${agreement.id}`);
 

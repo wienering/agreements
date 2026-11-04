@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
@@ -159,6 +160,8 @@ export async function POST(request: NextRequest) {
     // An agreement always belongs to an event. Without one, a new event is made for the client.
     const targetEventId =
       eventId || (await prisma.event.create({ data: { clientId }, select: { id: true } })).id;
+
+    queueCalendarSync(targetEventId);
 
     // Generate unique token
     const uniqueToken = randomBytes(32).toString('hex');

@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { prisma } from '@/lib/prisma';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { logEventActivity } from '@/lib/events/booking';
@@ -76,6 +77,7 @@ export async function persistBackdropSelection(
 
     if (target.kind === 'event') {
       await prisma.event.update({ where: { id: target.id }, data: { selectedBackdropName: normalizedName } });
+      queueCalendarSync(target.id);
       await logEventActivity(target.id, 'BACKDROP_SELECTED', { backdropName: normalizedName, via });
     } else {
       await prisma.agreement.update({ where: { id: target.id }, data: { selectedBackdropName: normalizedName } });

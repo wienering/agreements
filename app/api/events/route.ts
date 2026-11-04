@@ -1,3 +1,4 @@
+import { queueCalendarSync } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    queueCalendarSync(event.id);
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
     return handleApiError(error, 'events', request.method);

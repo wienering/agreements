@@ -362,6 +362,10 @@ model Event {
   reviewReceived     Boolean   @default(false)
   galleryHeldAlertAt DateTime?
   notesLastViewedAt  DateTime?
+
+  /// The matching entry on the business Google Calendar, once synced.
+  googleCalendarEventId  String?
+  googleCalendarSyncedAt DateTime?
   
   client         Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   agreements     Agreement[]

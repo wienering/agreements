@@ -1,3 +1,4 @@
+import { queueCalendarSyncForClient } from '@/lib/googleCalendar/sync';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
@@ -123,6 +124,8 @@ export async function PUT(request: NextRequest) {
           validatedData.isWhitelabelClient !== undefined ? validatedData.isWhitelabelClient : undefined,
       },
     });
+    // Name, phone and email appear on the client's calendar entries.
+    await queueCalendarSyncForClient(updatedClient.id);
 
     devLog('Updated client:', updatedClient);
     return NextResponse.json(updatedClient);
