@@ -49,12 +49,12 @@ describe('buildFollowupDigestSections', () => {
     expect(sections.goingOut.map((i) => i.clientName)).toEqual(['Gail Smith', 'Rita Smith']);
     expect(sections.goingOut[0].label).toMatch(/^Gallery email/);
     expect(sections.goingOut[1].label).toBe('Review request');
-    expect(sections.goingOut[0].adminUrl).toBe(`${BASE}/admin/agreements?agreement=a_gallery`);
+    expect(sections.goingOut[0].adminUrl).toBe(`${BASE}/admin/events?event=a_gallery`);
   });
 
   it('keeps listing held galleries every day, even after the alert went out', () => {
     expect(sections.held).toHaveLength(1);
-    expect(sections.held[0]).toMatchObject({ clientName: 'Hank Smith', adminUrl: `${BASE}/admin/agreements?agreement=a_held` });
+    expect(sections.held[0]).toMatchObject({ clientName: 'Hank Smith', adminUrl: `${BASE}/admin/events?event=a_held` });
     expect(sections.held[0].label).toContain('Payment: Deposit paid');
   });
 

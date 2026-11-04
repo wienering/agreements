@@ -41,6 +41,11 @@ export async function GET(request: NextRequest) {
         notes: true,
         unlimitedPrints: true,
         createdAt: true,
+        status: true,
+        paymentStatus: true,
+        nextAction: true,
+        galleryEmailSentAt: true,
+        backdropLink: { select: { id: true, name: true, attendant: { select: { name: true } } } },
         client: { select: { id: true, firstName: true, lastName: true, email: true } },
         agreements: {
           where: { archived: false },
