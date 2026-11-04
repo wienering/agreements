@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { UIcon } from '@/app/components/UIcon';
 import { eventTitle, type PortalEventSummary } from '@/app/components/portal/PortalEventsList';
 import { formatEventDateToronto } from '@/lib/dates';
+import { PrintTemplatesWidget } from '@/app/components/portal/PrintTemplatesWidget';
 
 type Backdrop = { id: string; name: string; description: string | null; thumbnailUrl: string | null };
 
@@ -128,6 +129,14 @@ export default function PortalEventPage() {
           selectedName={event.backdrop.selectedName}
           onSaved={(name) => setEvent((prev) => (prev ? { ...prev, backdrop: { ...prev.backdrop, selectedName: name } } : prev))}
         />
+      )}
+
+      {event.status === 'UPCOMING' && (
+        <section className="mb-6 rounded-lg border border-hairline bg-panel p-6">
+          <h2 className="m-0 text-lg font-semibold text-ink">Print template</h2>
+          <p className="m-0 mb-4 mt-1 text-sm text-muted">Pick the layout for your photo strips and make it your own.</p>
+          <PrintTemplatesWidget />
+        </section>
       )}
 
       {event.galleryLinks.length > 0 && (
