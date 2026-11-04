@@ -81,7 +81,7 @@ async function loadAgreements(): Promise<{ agreements: MoveAgreement[]; leadByAg
       event: event
         ? { ...event, movedAlready: event.activities.length > 0, activities: undefined }
         : null,
-    } as MoveAgreement;
+    } as unknown as MoveAgreement;
   });
   return { agreements, leadByAgreement };
 }
@@ -132,8 +132,8 @@ async function applyPlan(plan: MovePlan, leadByAgreement: Map<string, string>, n
       await tx.event.update({
         where: { id: eventId },
         data: {
-          ...(rest as Prisma.EventUncheckedUpdateInput),
-          galleryLinks: (galleryLinks ?? Prisma.DbNull) as Prisma.InputJsonValue,
+          ...(rest as unknown as Prisma.EventUncheckedUpdateInput),
+          galleryLinks: galleryLinks ? (galleryLinks as Prisma.InputJsonValue) : Prisma.DbNull,
           status: plan.status,
           completedAt: plan.status === 'COMPLETED' ? now : null,
           cancelledAt: plan.status === 'CANCELLED' ? plan.cancelledAt ?? now : null,
