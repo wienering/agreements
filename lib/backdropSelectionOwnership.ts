@@ -66,6 +66,28 @@ export async function verifyBackdropSelectionOwnership(params: {
     return { ok: false, reason: 'ownership_mismatch_attendant' };
   }
 
+  // The attendant is on the event now. The id may be the event's, or an agreement on it.
+  const asAgreement = await prisma.agreement.findUnique({
+    where: { id: agreementId },
+    select: { id: true, archived: true, status: true, eventId: true },
+  });
+  const eventId = asAgreement ? asAgreement.eventId : agreementId;
+
+  if (eventId) {
+    const event = await prisma.event.findFirst({
+      where: { id: eventId, archived: false, status: { not: 'CANCELLED' } },
+      select: { id: true, backdropLinkId: true, client: { select: { email: true } } },
+    });
+    if (!event) return { ok: false, reason: 'agreement_not_found' };
+    if (!event.backdropLinkId || !backdropLinkIds.includes(event.backdropLinkId)) {
+      return { ok: false, reason: 'ownership_mismatch_attendant' };
+    }
+    if (clientEmail.trim().toLowerCase() !== event.client.email.trim().toLowerCase()) {
+      return { ok: false, reason: 'ownership_mismatch_email' };
+    }
+    return { ok: true, agreementId: event.id };
+  }
+
   const agreement = await prisma.agreement.findFirst({
     where: {
       ...writableAgreementWhere(agreementId),
@@ -78,15 +100,9 @@ export async function verifyBackdropSelectionOwnership(params: {
   });
 
   if (!agreement) {
-    const exists = await prisma.agreement.findUnique({
-      where: { id: agreementId },
-      select: { id: true, archived: true, status: true, backdropLinkId: true },
-    });
-
-    if (!exists || exists.archived || exists.status === 'CANCELLED') {
+    if (!asAgreement || asAgreement.archived || asAgreement.status === 'CANCELLED') {
       return { ok: false, reason: 'agreement_not_found' };
     }
-
     return { ok: false, reason: 'ownership_mismatch_attendant' };
   }
 

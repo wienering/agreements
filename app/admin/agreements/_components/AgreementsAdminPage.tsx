@@ -201,7 +201,7 @@ export default function AgreementsAdminPage() {
           <div>
             <h1 className="admin-page-title m-0 text-2xl font-bold text-admin-text md:text-[32px]">Agreements</h1>
             <div className="admin-title-rule" aria-hidden="true" />
-            <p className="mb-3 mt-2 text-base text-admin-muted">Agreements sent to clients. Unsent drafts stay on the Events page (or pick the Draft filter).</p>
+            <p className="mb-3 mt-2 text-base text-admin-muted">Agreements on events, at every status. Payment, attendant and gallery are managed on the event.</p>
             <AdminButton
               variant="ghost"
               size="compact"

@@ -1,10 +1,11 @@
+import { eventWithBookingInclude, withEventBooking } from '@/lib/agreements/eventBooking';
 import { prisma } from '@/lib/prisma';
 
 /** Same relations the agreements list returns for each row. */
 export const agreementListInclude = {
   client: true,
   template: true,
-  event: true,
+  event: eventWithBookingInclude,
   backdropLink: {
     select: {
       id: true,
@@ -36,7 +37,7 @@ export async function findAgreementListItem(id: string) {
   `;
 
   return {
-    ...agreement,
+    ...withEventBooking(agreement),
     unreadNotesCount: rows[0]?.unreadNotesCount ?? 0,
   };
 }

@@ -56,6 +56,19 @@ export const agreementPatchSchema = z
 
 export type AgreementPatch = z.infer<typeof agreementPatchSchema>;
 
+/** Patch fields stored on the event when the agreement has one. */
+const EVENT_BOOKING_FIELDS = [
+  'galleryLinks',
+  'nextAction',
+  'paymentStatus',
+  'stripePaymentLink',
+  'stripeReceiptLink',
+  'showPhoneNumberAlways',
+  'forceVirtualGreenScreen',
+  'backdropLinkId',
+  'notesLastViewedAt',
+] as const;
+
 export class AgreementPatchError extends Error {
   readonly status: number;
 
@@ -158,7 +171,7 @@ export async function patchAgreement(id: string, body: unknown, options: PatchAg
 
   const existing = await prisma.agreement.findUnique({
     where: { id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, eventId: true },
   });
 
   if (!existing) {
@@ -182,6 +195,21 @@ export async function patchAgreement(id: string, body: unknown, options: PatchAg
   }
 
   const data = buildAgreementPatchData(input, now());
+
+  // Booking fields belong to the event. On an agreement with an event they are written there.
+  if (existing.eventId) {
+    const eventData: Prisma.EventUncheckedUpdateInput = {};
+    for (const field of EVENT_BOOKING_FIELDS) {
+      if (field in data) {
+        (eventData as Record<string, unknown>)[field] = (data as Record<string, unknown>)[field];
+        delete (data as Record<string, unknown>)[field];
+      }
+    }
+    delete (data as Record<string, unknown>).galleryLink;
+    if (Object.keys(eventData).length > 0) {
+      await prisma.event.update({ where: { id: existing.eventId }, data: eventData });
+    }
+  }
 
   if (Object.keys(data).length > 0) {
     try {

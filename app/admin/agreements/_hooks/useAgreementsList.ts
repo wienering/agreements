@@ -49,7 +49,6 @@ export function useAgreementsList() {
   const [completedPage, setCompletedPage] = useState(1);
   const [completedExpanded, setCompletedExpanded] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(() => new Set());
-  const [createdIds, setCreatedIds] = useState<Set<string>>(() => new Set());
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -154,7 +153,6 @@ export function useAgreementsList() {
 
   const prependAgreement = (created: Agreement) => {
     setAgreements((prev) => [{ ...created, unreadNotesCount: created.unreadNotesCount ?? 0 }, ...prev]);
-    setCreatedIds((prev) => new Set(prev).add(created.id));
   };
 
   const removeAgreement = (id: string) => {
@@ -162,8 +160,8 @@ export function useAgreementsList() {
   };
 
   const filteredAgreements = useMemo(
-    () => filterAgreements(agreements, statusFilter, attendantFilter, debouncedSearchTerm, doubleBookedIds, createdIds),
-    [agreements, debouncedSearchTerm, statusFilter, attendantFilter, doubleBookedIds, createdIds],
+    () => filterAgreements(agreements, statusFilter, attendantFilter, debouncedSearchTerm, doubleBookedIds),
+    [agreements, debouncedSearchTerm, statusFilter, attendantFilter, doubleBookedIds],
   );
 
   const activeAgreements = useMemo(

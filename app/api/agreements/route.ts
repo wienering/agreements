@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { agreementListSlimSelect } from '@/lib/agreements/listSelect';
+import { eventWithBookingInclude, withEventBooking } from '@/lib/agreements/eventBooking';
 import { DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 
 export async function GET(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
             include: {
               client: true,
               template: true,
-              event: true,
+              event: eventWithBookingInclude,
               backdropLink: {
                 select: {
                   id: true,
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
     );
 
     const agreementsWithUnreadCounts = agreements.map((agreement) => ({
-      ...agreement,
+      ...withEventBooking(agreement),
       unreadNotesCount: unreadCountByAgreementId.get(agreement.id) ?? 0,
     }));
     
