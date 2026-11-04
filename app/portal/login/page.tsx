@@ -109,7 +109,7 @@ function PortalLoginContent() {
       } else if (response.status === 429) {
         setError(data.error || 'Too many attempts. Please try again in a few minutes.');
       } else {
-        setError('Failed to send verification code');
+        setError(data.error || 'Failed to send verification code');
       }
     } catch (error) {
       setError('Network error. Please try again.');

@@ -203,7 +203,19 @@ export function AgreementDrawer({
               </div>
               <div className="mt-4">
                 <label className="mb-2 block text-sm font-medium text-admin-text">Preview</label>
-                <RichTextPreview html={editingContent || '<p>Enter content above to see preview...</p>'} />
+                <RichTextPreview
+                  html={editingContent || '<p>Enter content above to see preview...</p>'}
+                  clientData={detail.client}
+                  eventData={detail.event}
+                  agreementId={detail.id}
+                  secondSigner={{
+                    enabled: editSecondSignerEnabled,
+                    firstName: editSecondSignerFirstName,
+                    lastName: editSecondSignerLastName,
+                    email: editSecondSignerEmail,
+                    phone: editSecondSignerPhone,
+                  }}
+                />
               </div>
             </Accordion>
 

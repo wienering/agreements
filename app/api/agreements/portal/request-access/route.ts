@@ -11,6 +11,7 @@ import {
 } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
+import { reportServerError } from '@/lib/errorAlert';
 
 const RATE_LIMIT_MESSAGE = 'Too many attempts. Please try again in a few minutes.';
 const REQUEST_WINDOW_MS = 15 * 60 * 1000;
@@ -56,15 +57,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
     }
 
-    await prisma.otpRequestLog.create({
+    const requestLog = await prisma.otpRequestLog.create({
       data: { email: emailLower, ip: clientIP },
+      select: { id: true },
     });
 
     cleanupOldRequestLogs();
 
     // Check if client exists by primary email...
     let client = await prisma.client.findFirst({
-      where: { email: emailLower },
+      where: { email: { equals: emailLower, mode: 'insensitive' } },
     });
 
     // ...or by secondary signer email on any agreement
@@ -108,11 +110,22 @@ export async function POST(request: NextRequest) {
 
     const emailHtml = generateVerificationEmail(client, verificationCode);
 
-    await sendEmail({
-      to: emailLower,
-      subject: 'Your Client Portal Access Code - Photobooth Guys',
-      html: emailHtml,
-    });
+    try {
+      await sendEmail({
+        to: emailLower,
+        subject: 'Your Client Portal Access Code - Photobooth Guys',
+        html: emailHtml,
+      });
+    } catch (sendError) {
+      // A send that failed on our side doesn't count toward the request limit, and Dennis gets
+      // a Telegram alert with the mail server's reason.
+      await prisma.otpRequestLog.delete({ where: { id: requestLog.id } }).catch(() => undefined);
+      await reportServerError({ route: '/api/agreements/portal/request-access (email send)', method: 'POST', error: sendError });
+      return NextResponse.json({
+        error: 'We could not send your code just now. Please try again in a minute.',
+        code: 'EMAIL_FAILED'
+      }, { status: 502 });
+    }
 
     return NextResponse.json({
       success: true,
@@ -152,7 +165,7 @@ function generateVerificationEmail(client: any, code: string): string {
       "<strong>Security Notice:</strong> If you didn't request this code, please ignore this email. Never share this code with anyone.",
       'default',
     )}
-    <p style="margin:16px 0 0 0;">Once logged in, you'll be able to view all your agreements and add any missing information.</p>
+    <p style="margin:16px 0 0 0;">Once logged in, you'll be able to see your event details, choose your backdrop and print template, and view your photos.</p>
     <p style="margin:16px 0 0 0;">This verification code is valid for 15 minutes only.</p>
     <p style="margin:8px 0 0 0;">Questions? Contact us at <a href="mailto:info@photoboothguys.ca" style="color:#1E3B31;text-decoration:underline;">info@photoboothguys.ca</a></p>
   `;
