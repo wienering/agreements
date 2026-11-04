@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  prisma: { agreement: { findMany: vi.fn(), updateMany: vi.fn() } },
+  prisma: { agreement: { findMany: vi.fn(), updateMany: vi.fn() }, event: { findMany: vi.fn() } },
   logAgreementActivity: vi.fn(),
+  setEventStatus: vi.fn(),
 }));
 
 vi.mock('@/lib/prisma', () => ({ prisma: mocks.prisma }));
 vi.mock('@/lib/activityLog', () => ({ logAgreementActivity: mocks.logAgreementActivity }));
+vi.mock('@/lib/events/status', () => ({ setEventStatus: mocks.setEventStatus }));
 
 import { autoCompleteDryRun, isDueForAutoComplete, runAutoComplete, type AutoCompleteCandidate } from '@/lib/autoComplete';
 
@@ -59,6 +61,26 @@ describe('runAutoComplete', () => {
     mocks.prisma.agreement.findMany.mockReset();
     mocks.prisma.agreement.updateMany.mockReset();
     mocks.logAgreementActivity.mockReset();
+    mocks.setEventStatus.mockReset();
+    mocks.prisma.event.findMany.mockReset();
+    mocks.prisma.event.findMany.mockResolvedValue([]);
+  });
+
+  it('completes upcoming events the day after, through setEventStatus', async () => {
+    mocks.prisma.event.findMany.mockResolvedValue([
+      { id: 'evt_1', eventDate: new Date('2026-10-01T22:00:00.000Z'), client: { firstName: 'Ada', lastName: 'Lovelace' } },
+      { id: 'evt_today', eventDate: new Date('2026-10-02T20:00:00.000Z'), client: { firstName: 'Bo', lastName: 'Li' } },
+    ]);
+    mocks.prisma.agreement.findMany.mockResolvedValue([]);
+    mocks.setEventStatus.mockResolvedValue({ eventId: 'evt_1', from: 'UPCOMING', to: 'COMPLETED', agreements: [] });
+
+    const summary = await runAutoComplete({ now: NOW, dryRun: false });
+
+    expect(mocks.setEventStatus).toHaveBeenCalledTimes(1);
+    expect(mocks.setEventStatus).toHaveBeenCalledWith('evt_1', 'COMPLETED', expect.objectContaining({ activityType: 'AUTO_COMPLETED' }));
+    expect(summary.completed).toEqual([
+      { agreementId: 'evt_1', clientName: 'Ada Lovelace', eventDateKey: '2026-10-01', result: 'event completed' },
+    ]);
   });
 
   it('moves due agreements to COMPLETED, only if still SIGNED, and logs it', async () => {

@@ -19,6 +19,55 @@ const eventCreateSchema = z.object({
   unlimitedPrints: z.boolean().optional(),
 });
 
+/** Every non-archived event with its client and agreements, for the Events page. */
+export async function GET(request: NextRequest) {
+  try {
+    await requireAdmin(request);
+    const events = await prisma.event.findMany({
+      where: { archived: false },
+      orderBy: [{ eventDate: 'asc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        clientId: true,
+        eventDate: true,
+        eventType: true,
+        eventName: true,
+        eventLocation: true,
+        eventStartTime: true,
+        eventDuration: true,
+        eventPackage: true,
+        packagePrice: true,
+        eventPhone: true,
+        notes: true,
+        unlimitedPrints: true,
+        createdAt: true,
+        status: true,
+        paymentStatus: true,
+        nextAction: true,
+        galleryEmailSentAt: true,
+        backdropLink: { select: { id: true, name: true, attendant: { select: { name: true } } } },
+        client: { select: { id: true, firstName: true, lastName: true, email: true } },
+        agreements: {
+          where: { archived: false },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            status: true,
+            emailSendCount: true,
+            lastEmailedAt: true,
+            firstViewedAt: true,
+            paymentStatus: true,
+            template: { select: { title: true, internalTitle: true } },
+          },
+        },
+      },
+    });
+    return NextResponse.json(events);
+  } catch (error) {
+    return handleApiError(error, 'events', request.method);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
 

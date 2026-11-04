@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { eventWithBookingInclude, withEventBooking } from '@/lib/agreements/eventBooking';
+import { UNSENT_DRAFT_WHERE } from '@/lib/portal/events';
 import { prisma } from '@/lib/prisma';
 import { pickSecondSigner } from '@/lib/agreementSmartFields';
 import { authenticateSession } from '../../shared/auth';
@@ -22,17 +24,18 @@ export async function GET(
     const { id: agreementId } = await params;
 
     // Get agreement details - use email to match all client records with same email
-    const agreement = await prisma.agreement.findFirst({
+    const agreementRow = await prisma.agreement.findFirst({
       where: {
         id: agreementId,
         client: {
           email: sessionClient.email.toLowerCase(),
-        }
+        },
+        NOT: UNSENT_DRAFT_WHERE,
       },
       include: {
         client: true,
         template: true,
-        event: true,
+        event: eventWithBookingInclude,
         notes: {
           orderBy: { createdAt: 'desc' }
         },
@@ -40,6 +43,9 @@ export async function GET(
         backdropLink: true
       }
     });
+
+    // Payment, gallery and backdrop are on the event.
+    const agreement = agreementRow ? withEventBooking(agreementRow) : null;
 
     if (!agreement) {
       return NextResponse.json(

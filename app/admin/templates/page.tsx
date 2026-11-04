@@ -31,7 +31,7 @@ import {
 export default function TemplatesPage() {
   // Set page title
   useEffect(() => {
-    document.title = 'Templates | Admin | Photobooth Guys';
+    document.title = 'Templates | CRM | Photobooth Guys';
   }, []);
 
   const [templates, setTemplates] = useState<AgreementTemplate[]>([]);

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UIcon } from '@/app/components/UIcon';
 import { formatDateToronto, formatEventDateToronto } from '@/lib/dates';
+import { PortalEventsList } from './PortalEventsList';
 
 export interface PortalAgreement {
   id: string;
@@ -252,6 +253,10 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
     );
   }
 
+  // The agreements section appears only once the client has an agreement to see.
+  const agreementTotal = data ? Object.values(data.filters.statusSummary).reduce((n, count) => n + count, 0) : 0;
+  const showAgreements = isAdmin || agreementTotal > 0;
+
   const relevantAgreement = data?.agreements.find((agreement) => agreement.nextAction) || data?.agreements[0];
 
   return (
@@ -284,12 +289,14 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
         </h1>
         <div className="client-title-rule" aria-hidden="true" />
         <p className="mt-3 text-muted">
-          {isAdmin ? 'Admin preview of client portal' : 'Here are all your agreements with Photobooth Guys'}
+          {isAdmin ? 'Admin preview of client portal' : 'Your bookings with Photobooth Guys'}
         </p>
       </div>
 
       {data && (
         <>
+          {!isAdmin && <PortalEventsList />}
+          {isAdmin && (
           <div className="mb-8 rounded-lg border border-hairline bg-panel">
             <button
               type="button"
@@ -405,7 +412,11 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
               </div>
             )}
           </div>
+          )}
 
+          {showAgreements && (
+          <>
+          <h2 className="mb-4 text-xl font-semibold text-ink">Your agreements</h2>
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               <button
@@ -661,6 +672,8 @@ export function PortalDashboard({ mode, adminEmail = null, adminClientId = null 
                 Next
               </button>
             </div>
+          )}
+          </>
           )}
         </>
       )}

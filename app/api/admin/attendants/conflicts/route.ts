@@ -46,7 +46,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const conflicts = Object.fromEntries(findAttendantConflicts(upcoming, buffers));
+    // Keyed by event id. The Agreements page looks rows up by agreement id, so add those keys too.
+    const byEvent = findAttendantConflicts(upcoming, buffers);
+    const conflicts: Record<string, unknown> = Object.fromEntries(byEvent);
+    if (byEvent.size > 0) {
+      const agreements = await prisma.agreement.findMany({
+        where: { eventId: { in: [...byEvent.keys()] }, archived: false },
+        select: { id: true, eventId: true },
+      });
+      for (const agreement of agreements) {
+        if (agreement.eventId) conflicts[agreement.id] = byEvent.get(agreement.eventId);
+      }
+    }
     return NextResponse.json({ buffers, conflicts }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     return handleApiError(error, 'admin/attendants/conflicts', request.method);

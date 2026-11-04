@@ -10,7 +10,7 @@ import { torontoDateKey } from '@/lib/dates';
 import { verifyBackdropSelectionOwnership } from '@/lib/backdropSelectionOwnership';
 import {
   persistBackdropSelection,
-  writableAgreementWhere,
+  resolveBackdropTarget,
 } from '@/lib/backdropSelectionPersistence';
 
 const SECRET_PATH_FAILURE_BODY = { ok: false } as const;
@@ -129,10 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (validatedData.agreementId) {
-      const agreement = await prisma.agreement.findFirst({
-        where: writableAgreementWhere(validatedData.agreementId),
-        select: { id: true },
-      });
+      const agreement = await resolveBackdropTarget(validatedData.agreementId);
 
       if (!agreement) {
         return NextResponse.json(

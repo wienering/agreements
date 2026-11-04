@@ -20,3 +20,4 @@ export function balanceActionRefusal(agreement: BalanceActionAgreementState): st
   }
   return null;
 }
+

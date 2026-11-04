@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto';
 import { requireMcpWriteScope } from '@/lib/mcp/authContext';
+import { MCP_ACTOR } from '@/lib/mcp/config';
+import { logEventActivity, resolveEventId } from '@/lib/events/booking';
 import { getMcpPrisma } from '@/lib/mcp/db';
 import { logMcpAgreementActivity, logMcpAudit } from '@/lib/mcp/audit';
 import { assertNoForbiddenFields } from '@/lib/mcp/tools/sanitize';
@@ -230,6 +232,7 @@ export async function createClient(
   return result;
 }
 
+/** Payment lives on the event. Accepts an event id, or an agreement id on the event. */
 export async function setPaymentStatus(agreementId: string, status: string) {
   requireMcpWriteScope();
   const prisma = getMcpPrisma();
@@ -240,11 +243,30 @@ export async function setPaymentStatus(agreementId: string, status: string) {
     };
   }
 
+  const eventId = await resolveEventId(agreementId);
+  if (eventId) {
+    const event = await prisma.event.findUnique({ where: { id: eventId }, select: { paymentStatus: true } });
+    if (!event) return { error: 'Event not found' };
+    const before = { paymentStatus: event.paymentStatus };
+    await prisma.event.update({ where: { id: eventId }, data: { paymentStatus: normalized } });
+    const after = { paymentStatus: normalized };
+    await logEventActivity(eventId, normalized === 'Fully paid' ? 'PAYMENT_MARKED_PAID' : 'NOTE_ADDED', {
+      actor: MCP_ACTOR,
+      tool: 'set_payment_status',
+      before,
+      after,
+    });
+    const result = { eventId, before, after };
+    assertNoForbiddenFields(result);
+    return result;
+  }
+
+  // Older agreement with no event: the payment status stays on the agreement.
   const existing = await prisma.agreement.findUnique({
     where: { id: agreementId },
     select: { id: true, paymentStatus: true, status: true },
   });
-  if (!existing) return { error: 'Agreement not found' };
+  if (!existing) return { error: 'Event or agreement not found' };
 
   const before = { paymentStatus: existing.paymentStatus };
   await prisma.agreement.update({

@@ -2,8 +2,7 @@ import {
   buildGalleryReadyEmail,
   resolveGalleryLinks,
 } from '@/app/api/agreements/send-gallery-ready-email/buildGalleryReadyEmail';
-import { logAgreementActivity } from '@/lib/activityLog';
-import { adminAgreementUrl } from '@/lib/calendarFeed';
+import { adminEventUrl, bookingStatusOf, logEventActivity } from '@/lib/events/booking';
 import { sendEmail } from '@/lib/email/send';
 import { buildReviewRequestEmail } from '@/lib/followups/reviewRequestEmail';
 import { manualReviewRefusal } from '@/lib/followups/rules';
@@ -12,6 +11,7 @@ import { sendTelegramMessage } from '@/lib/telegram';
 
 export type FollowupTrigger = 'auto' | 'manual';
 
+/** Follow-ups belong to the event. `agreementId` carries the event id (kept for existing callers). */
 export type FollowupSendResult =
   | { status: 'sent'; agreementId: string; to: string; subject: string }
   | { status: 'dry_run'; agreementId: string; to: string; subject: string; html: string }
@@ -36,15 +36,14 @@ async function reportSendFailure(
   error: unknown,
 ) {
   const reason = errorText(error);
-  await logAgreementActivity(agreementId, 'FOLLOWUP_EMAIL_FAILED', { email, trigger, error: reason });
+  await logEventActivity(agreementId, 'FOLLOWUP_EMAIL_FAILED', { email, trigger, error: reason });
   const label = email === 'gallery' ? 'Gallery email' : 'Review request';
   await sendTelegramMessage(
-    `${label} failed for ${name}. Nothing was recorded as sent, so it will be tried again on the next run.\n${reason}\n${adminAgreementUrl(agreementId)}`,
+    `${label} failed for ${name}. Nothing was recorded as sent, so it will be tried again on the next run.\n${reason}\n${adminEventUrl(agreementId)}`,
     { disableWebPagePreview: true },
   );
 }
 
-const galleryInclude = { client: true, event: true } as const;
 
 /**
  * Send the gallery email. The first send claims galleryEmailSentAt atomically (that starts the
@@ -56,10 +55,11 @@ export async function sendGalleryEmail(
   options: SendOptions & { resend?: boolean },
 ): Promise<FollowupSendResult> {
   const now = options.now ?? new Date();
-  const agreement = await prisma.agreement.findUnique({ where: { id: agreementId }, include: galleryInclude });
-  if (!agreement) return { status: 'refused', agreementId, reason: 'Agreement not found' };
+  const event = await prisma.event.findUnique({ where: { id: agreementId }, include: { client: true } });
+  if (!event) return { status: 'refused', agreementId, reason: 'Event not found' };
+  const agreement = { ...event, galleryLink: null, event };
   if (resolveGalleryLinks(agreement).length === 0) {
-    return { status: 'refused', agreementId, reason: 'No gallery link has been set for this agreement.' };
+    return { status: 'refused', agreementId, reason: 'No gallery link has been set for this event.' };
   }
   if (options.resend && !agreement.galleryEmailSentAt) {
     return { status: 'refused', agreementId, reason: "The gallery email hasn't been sent yet. Use Send now." };
@@ -81,11 +81,11 @@ export async function sendGalleryEmail(
       await reportSendFailure(agreementId, name, 'gallery', options.trigger, error);
       return { status: 'failed', agreementId, reason: errorText(error) };
     }
-    await logAgreementActivity(agreementId, 'GALLERY_EMAIL_SENT', { trigger: options.trigger, resend: true, recipient: to });
+    await logEventActivity(agreementId, 'GALLERY_EMAIL_SENT', { trigger: options.trigger, resend: true, recipient: to });
     return { status: 'sent', agreementId, to, subject };
   }
 
-  const claim = await prisma.agreement.updateMany({
+  const claim = await prisma.event.updateMany({
     where: { id: agreementId, galleryEmailSentAt: null },
     data: { galleryEmailSentAt: now },
   });
@@ -96,7 +96,7 @@ export async function sendGalleryEmail(
   try {
     await sendEmail({ to, subject, html });
   } catch (error) {
-    await prisma.agreement.updateMany({
+    await prisma.event.updateMany({
       where: { id: agreementId, galleryEmailSentAt: now },
       data: { galleryEmailSentAt: null },
     });
@@ -104,7 +104,7 @@ export async function sendGalleryEmail(
     return { status: 'failed', agreementId, reason: errorText(error) };
   }
 
-  await logAgreementActivity(agreementId, 'GALLERY_EMAIL_SENT', { trigger: options.trigger, recipient: to });
+  await logEventActivity(agreementId, 'GALLERY_EMAIL_SENT', { trigger: options.trigger, recipient: to });
   return { status: 'sent', agreementId, to, subject };
 }
 
@@ -117,8 +117,9 @@ export async function sendReviewRequest(
   options: SendOptions & { reviewUrl: string; market?: 'ontario' | 'calgary' },
 ): Promise<FollowupSendResult> {
   const now = options.now ?? new Date();
-  const agreement = await prisma.agreement.findUnique({ where: { id: agreementId }, include: { client: true } });
-  if (!agreement) return { status: 'refused', agreementId, reason: 'Agreement not found' };
+  const event = await prisma.event.findUnique({ where: { id: agreementId }, include: { client: true } });
+  if (!event) return { status: 'refused', agreementId, reason: 'Event not found' };
+  const agreement = { ...event, status: bookingStatusOf(event.status) };
   const refusal = manualReviewRefusal(agreement);
   if (refusal) return { status: 'refused', agreementId, reason: refusal };
   if (!agreement.client.email) return { status: 'refused', agreementId, reason: 'Client email is missing' };
@@ -127,7 +128,7 @@ export async function sendReviewRequest(
   const { subject, html, text } = buildReviewRequestEmail(agreement.client, options.reviewUrl);
   if (options.dryRun) return { status: 'dry_run', agreementId, to, subject, html };
 
-  const claim = await prisma.agreement.updateMany({
+  const claim = await prisma.event.updateMany({
     where: { id: agreementId, reviewRequestSentAt: null },
     data: { reviewRequestSentAt: now },
   });
@@ -138,7 +139,7 @@ export async function sendReviewRequest(
   try {
     await sendEmail({ to, subject, html, text });
   } catch (error) {
-    await prisma.agreement.updateMany({
+    await prisma.event.updateMany({
       where: { id: agreementId, reviewRequestSentAt: now },
       data: { reviewRequestSentAt: null },
     });
@@ -146,7 +147,7 @@ export async function sendReviewRequest(
     return { status: 'failed', agreementId, reason: errorText(error) };
   }
 
-  await logAgreementActivity(agreementId, 'REVIEW_REQUEST_SENT', {
+  await logEventActivity(agreementId, 'REVIEW_REQUEST_SENT', {
     trigger: options.trigger,
     recipient: to,
     market: options.market ?? 'ontario',
@@ -163,16 +164,16 @@ export async function alertHeldGallery(
   options: { dryRun: boolean; now?: Date },
 ): Promise<'alerted' | 'already_alerted' | 'dry_run'> {
   if (options.dryRun) return 'dry_run';
-  const claim = await prisma.agreement.updateMany({
+  const claim = await prisma.event.updateMany({
     where: { id: agreement.id, galleryHeldAlertAt: null },
     data: { galleryHeldAlertAt: options.now ?? new Date() },
   });
   if (claim.count === 0) return 'already_alerted';
 
   const paymentStatus = agreement.paymentStatus?.trim() || 'blank';
-  await logAgreementActivity(agreement.id, 'GALLERY_EMAIL_HELD', { paymentStatus });
+  await logEventActivity(agreement.id, 'GALLERY_EMAIL_HELD', { paymentStatus });
   await sendTelegramMessage(
-    `Gallery email held for ${clientName(agreement.client)}: payment status is "${paymentStatus}", not "Fully paid". It goes out on the next 10am run once marked Fully paid, or use Send now.\n${adminAgreementUrl(agreement.id)}`,
+    `Gallery email held for ${clientName(agreement.client)}: payment status is "${paymentStatus}", not "Fully paid". It goes out on the next 10am run once marked Fully paid, or use Send now.\n${adminEventUrl(agreement.id)}`,
     { disableWebPagePreview: true },
   );
   return 'alerted';

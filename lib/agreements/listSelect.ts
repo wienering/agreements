@@ -1,3 +1,4 @@
+import { eventWithBookingInclude } from '@/lib/agreements/eventBooking';
 import type { Prisma } from '@prisma/client';
 
 type BooleanSelect<T> = { [K in keyof T]-?: true };
@@ -87,7 +88,7 @@ const agreementListSlimScalars = {
 export const agreementListSlimSelect = {
   ...agreementListSlimScalars,
   client: true,
-  event: true,
+  event: eventWithBookingInclude,
   template: {
     select: templateListSlimSelect,
   },

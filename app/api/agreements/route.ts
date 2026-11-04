@@ -3,6 +3,7 @@ import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { agreementListSlimSelect } from '@/lib/agreements/listSelect';
+import { eventWithBookingInclude, withEventBooking } from '@/lib/agreements/eventBooking';
 import { DEFAULT_PAYMENT_STATUS } from '@/lib/paymentStatus';
 
 export async function GET(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
             include: {
               client: true,
               template: true,
-              event: true,
+              event: eventWithBookingInclude,
               backdropLink: {
                 select: {
                   id: true,
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
     );
 
     const agreementsWithUnreadCounts = agreements.map((agreement) => ({
-      ...agreement,
+      ...withEventBooking(agreement),
       unreadNotesCount: unreadCountByAgreementId.get(agreement.id) ?? 0,
     }));
     
@@ -155,6 +156,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // An agreement always belongs to an event. Without one, a new event is made for the client.
+    const targetEventId =
+      eventId || (await prisma.event.create({ data: { clientId }, select: { id: true } })).id;
+
     // Generate unique token
     const uniqueToken = randomBytes(32).toString('hex');
 
@@ -162,7 +167,7 @@ export async function POST(request: NextRequest) {
       data: {
         clientId,
         templateId,
-        eventId: eventId || null,
+        eventId: targetEventId,
         uniqueToken,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
         status: 'DRAFT',

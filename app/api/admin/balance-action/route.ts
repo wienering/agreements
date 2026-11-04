@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { logAgreementActivity } from '@/lib/activityLog';
+import { logEventActivity } from '@/lib/events/booking';
+import { loadBalanceActionEvent } from '@/lib/events/balanceActionEvent';
 import { balanceActionRefusal } from '@/lib/balanceAction';
 import { verifyBalanceActionToken } from '@/lib/balanceActionToken';
 import { balanceDigestSnoozeUntil, FULLY_PAID_STATUS } from '@/lib/balanceDigest';
@@ -38,27 +39,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const agreement = await prisma.agreement.findUnique({
-      where: { id: payload.agreementId },
-      select: {
-        id: true,
-        status: true,
-        archived: true,
-        cancelledAt: true,
-        paymentStatus: true,
-        client: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    });
+    const agreement = await loadBalanceActionEvent(payload.agreementId);
 
     if (!agreement) {
       return NextResponse.json(
-        { error: 'This agreement could not be found. Nothing was changed.' },
+        { error: 'This event could not be found. Nothing was changed.' },
         { status: 404 },
       );
     }
@@ -69,11 +54,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (payload.action === 'mark_paid') {
-      await prisma.agreement.update({
+      await prisma.event.update({
         where: { id: agreement.id },
         data: { paymentStatus: FULLY_PAID_STATUS },
       });
-      await logAgreementActivity(agreement.id, 'PAYMENT_MARKED_PAID');
+      await logEventActivity(agreement.id, 'PAYMENT_MARKED_PAID');
       return NextResponse.json({
         ok: true,
         action: payload.action,
@@ -84,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (payload.action === 'snooze') {
       const until = balanceDigestSnoozeUntil();
-      await prisma.agreement.update({
+      await prisma.event.update({
         where: { id: agreement.id },
         data: { balanceDigestSnoozedUntil: until },
       });
@@ -113,7 +98,7 @@ export async function POST(request: NextRequest) {
     const recipient = agreement.client.email.trim();
     if (!recipient) {
       return NextResponse.json(
-        { error: 'This agreement has no client email. Nothing was sent.' },
+        { error: 'This event has no client email. Nothing was sent.' },
         { status: 400 },
       );
     }
@@ -129,11 +114,11 @@ export async function POST(request: NextRequest) {
       text: message,
     });
 
-    await prisma.agreement.update({
+    await prisma.event.update({
       where: { id: agreement.id },
       data: { balanceReminderSentAt: new Date() },
     });
-    await logAgreementActivity(agreement.id, 'BALANCE_REMINDER_SENT', {
+    await logEventActivity(agreement.id, 'BALANCE_REMINDER_SENT', {
       recipient,
     });
 

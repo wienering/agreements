@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { resolveAgreementEventDate, torontoDateKey, torontoStartOfTodayUtc } from '@/lib/dates';
 import { prisma } from '@/lib/prisma';
+import { setEventStatus } from '@/lib/events/status';
 
 /**
  * Automatic Completed: a SIGNED agreement moves to COMPLETED on the Toronto day after its event.
@@ -41,29 +42,47 @@ export function autoCompleteDryRun(vercelEnv: string | undefined = process.env.V
   return vercelEnv !== 'production';
 }
 
+/**
+ * Events move to Completed the Toronto day after they happen; their signed agreements follow
+ * (lib/events/status.ts). Older signed agreements with no event keep the agreement-only rule.
+ * `agreementId` in the summary is the event id for event rows.
+ */
 export async function runAutoComplete(options: { now: Date; dryRun: boolean }): Promise<AutoCompleteSummary> {
   const { now, dryRun } = options;
   const startOfToday = torontoStartOfTodayUtc(now);
+  const summary: AutoCompleteSummary = { dryRun, completed: [] };
+
+  const events = await prisma.event.findMany({
+    where: { status: 'UPCOMING', cancelledAt: null, eventDate: { lt: startOfToday } },
+    select: { id: true, eventDate: true, client: { select: { firstName: true, lastName: true } } },
+  });
+  for (const event of events) {
+    const candidate = { id: event.id, status: 'SIGNED', cancelledAt: null, event: { eventDate: event.eventDate }, client: { eventDate: null } };
+    if (!isDueForAutoComplete(candidate, now)) continue;
+    const item = {
+      agreementId: event.id,
+      clientName: `${event.client.firstName} ${event.client.lastName}`.trim(),
+      eventDateKey: torontoDateKey(event.eventDate as Date),
+    };
+    if (dryRun) {
+      summary.completed.push({ ...item, result: 'would complete event' });
+      continue;
+    }
+    const change = await setEventStatus(event.id, 'COMPLETED', { now, activityType: 'AUTO_COMPLETED' });
+    summary.completed.push({ ...item, result: change ? 'event completed' : 'skipped: status changed' });
+  }
 
   // Coarse filter on the event date; isDueForAutoComplete settles the Toronto day.
   const records = await prisma.agreement.findMany({
     where: {
       status: 'SIGNED',
       cancelledAt: null,
-      OR: [
-        { event: { eventDate: { lt: startOfToday } } },
-        {
-          AND: [
-            { OR: [{ eventId: null }, { event: { is: { eventDate: null } } }] },
-            { client: { eventDate: { lt: startOfToday } } },
-          ],
-        },
-      ],
+      eventId: null,
+      client: { eventDate: { lt: startOfToday } },
     },
     select: autoCompleteSelect,
   });
 
-  const summary: AutoCompleteSummary = { dryRun, completed: [] };
   for (const record of records) {
     if (!isDueForAutoComplete(record, now)) continue;
     const eventDateKey = torontoDateKey(resolveAgreementEventDate(record) as Date);

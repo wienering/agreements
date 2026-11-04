@@ -83,7 +83,7 @@ interface Client {
 export default function ClientsPage() {
   // Set page title
   useEffect(() => {
-    document.title = 'Clients | Admin | Photobooth Guys';
+    document.title = 'Clients | CRM | Photobooth Guys';
   }, []);
 
   const ITEMS_PER_PAGE = 25;

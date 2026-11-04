@@ -5,6 +5,7 @@ import { devLog } from '@/lib/logger';
 import { isFullyPaid, paymentStatusAfterStripeInvoice } from '@/lib/paymentStatus';
 import { adminAgreementUrl } from '@/lib/calendarFeed';
 import { sendTelegramMessage } from '@/lib/telegram';
+import { adminEventUrl, resolveEventId } from '@/lib/events/booking';
 
 export async function POST(request: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -71,25 +72,24 @@ export async function POST(request: NextRequest) {
     if (event.type === 'invoice.paid' || event.type === 'invoice.payment_succeeded') {
       const invoice = event.data.object as Stripe.Invoice;
 
-      // Extract agreementId from invoice metadata
-      const agreementId = invoice.metadata?.agreementId;
+      // Invoices carry eventId; ones made before the move to events carry agreementId.
+      const reference = invoice.metadata?.eventId || invoice.metadata?.agreementId;
       const invoiceType = invoice.metadata?.invoiceType;
 
-      if (!agreementId) {
-        console.warn('Invoice paid but no agreementId in metadata:', invoice.id);
+      if (!reference) {
+        console.warn('Invoice paid but no eventId or agreementId in metadata:', invoice.id);
         // Return success to prevent Stripe from retrying
-        return NextResponse.json({ received: true, message: 'No agreementId in metadata' });
+        return NextResponse.json({ received: true, message: 'No eventId in metadata' });
       }
 
-      devLog(`Processing payment for agreement ${agreementId}, invoice type: ${invoiceType}`);
+      // Payment belongs to the event. An older agreement with no event keeps it on the agreement.
+      const eventId = await resolveEventId(reference);
+      const agreementId = eventId ?? reference;
+      devLog(`Processing payment for ${eventId ? 'event' : 'agreement'} ${agreementId}, invoice type: ${invoiceType}`);
 
-      // Find the agreement
-      const agreement = await prisma.agreement.findUnique({
-        where: { id: agreementId },
-        include: {
-          client: true,
-        },
-      });
+      const agreement = eventId
+        ? await prisma.event.findUnique({ where: { id: eventId }, include: { client: true } })
+        : await prisma.agreement.findUnique({ where: { id: reference }, include: { client: true } });
 
       if (!agreement) {
         console.error(`Agreement not found: ${agreementId}`);
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
           `Stripe invoice paid for agreement ${agreementId} (type: ${invoiceType ?? 'none'}) but payment status left as "${currentLabel}". Set it by hand.`,
         );
         await sendTelegramMessage(
-          `Stripe payment received for ${clientName}${amount}, but the payment status wasn't changed: invoice type "${invoiceType ?? 'none'}", current status "${currentLabel}". Please set it by hand.\n${adminAgreementUrl(agreementId)}`,
+          `Stripe payment received for ${clientName}${amount}, but the payment status wasn't changed: invoice type "${invoiceType ?? 'none'}", current status "${currentLabel}". Please set it by hand.\n${eventId ? adminEventUrl(eventId) : adminAgreementUrl(agreementId)}`,
           { disableWebPagePreview: true },
         );
       }
@@ -129,10 +129,11 @@ export async function POST(request: NextRequest) {
 
       // Update the agreement
       if (Object.keys(updateData).length > 0) {
-        await prisma.agreement.update({
-          where: { id: agreementId },
-          data: updateData,
-        });
+        if (eventId) {
+          await prisma.event.update({ where: { id: eventId }, data: updateData });
+        } else {
+          await prisma.agreement.update({ where: { id: agreementId }, data: updateData });
+        }
       }
 
       const storedPaymentStatus = newPaymentStatus ?? agreement.paymentStatus;

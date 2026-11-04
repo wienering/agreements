@@ -30,7 +30,7 @@ const MATCH_FROM_URL = '__match__';
 export default function BackdropLinksPage() {
   // Set page title
   useEffect(() => {
-    document.title = 'Backdrop Links | Admin | Photobooth Guys';
+    document.title = 'Backdrop Links | CRM | Photobooth Guys';
   }, []);
 
   const [backdropLinks, setBackdropLinks] = useState<BackdropLink[]>([]);

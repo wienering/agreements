@@ -261,13 +261,16 @@ model ClientNote {
   id          String     @id @default(cuid())
   clientId    String
   agreementId String?
+  eventId     String?
   content     String
   createdAt   DateTime   @default(now())
   client      Client     @relation("ClientNotes", fields: [clientId], references: [id])
   agreement   Agreement? @relation(fields: [agreementId], references: [id])
+  event       Event?     @relation(fields: [eventId], references: [id])
 
   @@index([clientId])
   @@index([agreementId, createdAt])
+  @@index([eventId, createdAt])
 }
 
 model BackdropLink {
@@ -280,6 +283,7 @@ model BackdropLink {
   attendantId  String?
   attendant    Attendant?  @relation(fields: [attendantId], references: [id], onDelete: SetNull)
   agreements   Agreement[]
+  events       Event[]
 
   @@index([displayOrder])
   @@index([attendantId])
@@ -331,15 +335,64 @@ model Event {
   archivedAt     DateTime?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+
+  // Booking state. The event is the booking; an agreement is optional and always hangs off an event.
+  status             EventStatus @default(UPCOMING)
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  /// One of PAYMENT_STATUSES in lib/paymentStatus.ts. Enforced by Event_paymentStatus_check.
+  paymentStatus      String    @default("Not paid")
+  stripePaymentLink  String?
+  stripeReceiptLink  String?
+  galleryLinks       Json?     // Array of { title: string, url: string }
+  galleryEmailSentAt DateTime?
+  reviewRequestSentAt DateTime?
+  nextAction         String?
+  backdropLinkId     String?
+  backdropLink       BackdropLink? @relation(fields: [backdropLinkId], references: [id], onDelete: SetNull)
+  selectedBackdropName String?
+  showPhoneNumberAlways Boolean  @default(false)
+  forceVirtualGreenScreen Boolean @default(false)
+  balanceDigestSnoozedUntil DateTime?
+  balanceReminderSentAt DateTime?
+  followUpsPaused    Boolean   @default(false)
+  /// "Already reviewed": the automatic review request is skipped.
+  reviewReceived     Boolean   @default(false)
+  galleryHeldAlertAt DateTime?
+  notesLastViewedAt  DateTime?
   
   client         Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   agreements     Agreement[]
   files          ClientFile[]
   leads          Lead[]
+  activities     EventActivity[]
+  clientNotes    ClientNote[]
 
   @@index([clientId])
   @@index([archived])
   @@index([eventDate])
+  @@index([status, archived])
+  @@index([backdropLinkId])
+}
+
+enum EventStatus {
+  UPCOMING
+  COMPLETED
+  CANCELLED
+}
+
+/// Booking history for an event (payment, attendant, gallery, follow-ups). Signing history stays on AgreementActivity.
+model EventActivity {
+  id        String                @id @default(cuid())
+  eventId   String
+  type      AgreementActivityType
+  meta      Json?
+  createdAt DateTime              @default(now())
+  event     Event                 @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
 }
 
 model ClientFile {
@@ -400,6 +453,10 @@ enum AgreementActivityType {
   AUTO_COMPLETED
   /// The daily cron moved an event's uploaded file to Google Drive trash after the grace period.
   UPLOAD_AUTO_DELETED
+  /// Event status changed (meta: { from, to }). Completing or cancelling an event also completes or cancels its agreements.
+  EVENT_STATUS_CHANGED
+  /// Booking data was copied from an agreement onto its event by the 2026-11 events migration (meta: { agreementId }).
+  MOVED_FROM_AGREEMENT
 }
 
 enum LeadStage {

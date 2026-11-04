@@ -4,7 +4,8 @@ import {
   FULLY_PAID_STATUS,
   isIncludedInBalanceDigest,
 } from '@/lib/balanceDigest';
-import { addTorontoCalendarDaysFrom, resolveAgreementEventDate } from '@/lib/dates';
+import { addTorontoCalendarDaysFrom } from '@/lib/dates';
+import { bookingStatusOf } from '@/lib/events/booking';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { prisma } from '@/lib/prisma';
 
@@ -17,27 +18,20 @@ const digestSelect = {
   balanceDigestSnoozedUntil: true,
   balanceReminderSentAt: true,
   stripePaymentLink: true,
+  eventDate: true,
+  eventPackage: true,
+  packagePrice: true,
   client: {
     select: {
       firstName: true,
       lastName: true,
       email: true,
       emailGreetingName: true,
-      eventDate: true,
-      eventPackage: true,
-      packagePrice: true,
     },
   },
-  event: {
-    select: {
-      eventDate: true,
-      eventPackage: true,
-      packagePrice: true,
-    },
-  },
-} satisfies Prisma.AgreementSelect;
+} satisfies Prisma.EventSelect;
 
-type DigestRecord = Prisma.AgreementGetPayload<{ select: typeof digestSelect }>;
+type DigestRecord = Prisma.EventGetPayload<{ select: typeof digestSelect }>;
 
 export type BalanceDigestRow = {
   id: string;
@@ -58,70 +52,50 @@ function amountOf(value: Prisma.Decimal | null | undefined): number | null {
   return Number.isFinite(amount) ? amount : null;
 }
 
+/** One row per event; `id` is the event id. */
 function toRow(record: DigestRecord): BalanceDigestRow | null {
-  const eventDate = resolveAgreementEventDate(record);
-  if (!eventDate) return null;
-
-  const packageName =
-    record.event?.eventPackage?.trim() || record.client.eventPackage?.trim() || null;
-  const packagePrice = amountOf(record.event?.packagePrice) ?? amountOf(record.client.packagePrice);
-
+  if (!record.eventDate) return null;
   return {
     id: record.id,
     clientName: `${record.client.firstName} ${record.client.lastName}`.trim(),
     greetingName: getEmailGreeting(record.client),
     clientEmail: record.client.email,
-    eventDate,
-    packageName,
-    packagePrice,
+    eventDate: record.eventDate,
+    packageName: record.eventPackage?.trim() || null,
+    packagePrice: amountOf(record.packagePrice),
     paymentStatus: record.paymentStatus,
     balanceReminderSentAt: record.balanceReminderSentAt,
     stripePaymentLink: record.stripePaymentLink,
   };
 }
 
-/** Event date (the Event's, else the client's) in the range. `gte` is optional. */
-function eventDateIn(range: { gte?: Date; lt: Date }): Prisma.AgreementWhereInput {
-  return {
-    OR: [
-      { event: { eventDate: range } },
-      {
-        AND: [
-          { OR: [{ eventId: null }, { event: { is: { eventDate: null } } }] },
-          { client: { eventDate: range } },
-        ],
-      },
-    ],
-  };
-}
-
+/** Upcoming events in the next 10 days and completed events that still owe a balance. */
 export async function findBalanceDigestAgreements(now = new Date()): Promise<BalanceDigestRow[]> {
   const windowStart = addTorontoCalendarDaysFrom(now, -1);
   const windowEnd = addTorontoCalendarDaysFrom(now, BALANCE_DIGEST_LOOKAHEAD_DAYS + 2);
 
   // Coarse filter only: exact day boundaries and other spellings of fully paid are
   // settled by isIncludedInBalanceDigest, which uses isFullyPaid().
-  const records = await prisma.agreement.findMany({
+  const records = await prisma.event.findMany({
     where: {
       archived: false,
       cancelledAt: null,
-      AND: [
-        {
-          paymentStatus: { not: FULLY_PAID_STATUS },
-        },
-        {
-          OR: [
-            { AND: [{ status: 'SIGNED' }, eventDateIn({ gte: windowStart, lt: windowEnd })] },
-            { AND: [{ status: 'COMPLETED' }, eventDateIn({ lt: windowEnd })] },
-          ],
-        },
+      paymentStatus: { not: FULLY_PAID_STATUS },
+      OR: [
+        { status: 'UPCOMING', eventDate: { gte: windowStart, lt: windowEnd } },
+        { status: 'COMPLETED', eventDate: { lt: windowEnd } },
       ],
     },
     select: digestSelect,
   });
 
   return records
-    .filter((record) => isIncludedInBalanceDigest(record, now))
+    .filter((record) =>
+      isIncludedInBalanceDigest(
+        { ...record, status: bookingStatusOf(record.status), event: { eventDate: record.eventDate }, client: null },
+        now,
+      ),
+    )
     .map(toRow)
     .filter((row): row is BalanceDigestRow => row !== null)
     .sort((a, b) => {

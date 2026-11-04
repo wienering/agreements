@@ -140,7 +140,7 @@ const cardClass = 'min-w-0 rounded-sm border border-admin-border bg-admin-surfac
 
 export default function AdminHome() {
   useEffect(() => {
-    document.title = 'Admin Dashboard | Photobooth Guys';
+    document.title = 'Dashboard | CRM | Photobooth Guys';
   }, []);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [warnings, setWarnings] = useState<WarningsData | null>(null);

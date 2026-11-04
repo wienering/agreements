@@ -45,6 +45,11 @@ vi.mock('@/lib/activityLog', () => ({
   logAgreementActivity: vi.fn(),
 }));
 
+vi.mock('@/lib/events/booking', () => ({
+  resolveEventId: vi.fn().mockResolvedValue(null),
+  logEventActivity: vi.fn(),
+}));
+
 vi.mock('@/lib/attendants/conflictQuery', () => ({
   loadConflictAgreement: vi.fn().mockResolvedValue(null),
   loadUpcomingAssignedAgreements: vi.fn().mockResolvedValue([]),

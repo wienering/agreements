@@ -19,7 +19,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
     if (typeof document !== 'undefined') {
       // Only set default title if current title is the root default or hasn't been customized
       const currentTitle = document.title;
-      const isDefaultTitle = currentTitle === 'Agreements' || currentTitle === 'Client Portal' || currentTitle.startsWith('Client Portal -');
+      const isDefaultTitle = currentTitle === 'Agreements' || currentTitle === 'Photobooth Guys' || currentTitle === 'Client Portal' || currentTitle.startsWith('Client Portal -');
       
       // Only update if it's still the default title (not set by page metadata)
       if (isDefaultTitle) {

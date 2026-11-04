@@ -40,7 +40,7 @@ interface ImportResponse {
 export default function ImportEventsPage() {
   // Set page title
   useEffect(() => {
-    document.title = 'Import Events | Admin | Photobooth Guys';
+    document.title = 'Import Events | CRM | Photobooth Guys';
   }, []);
 
   const [file, setFile] = useState<File | null>(null);

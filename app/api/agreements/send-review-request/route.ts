@@ -8,6 +8,7 @@ import {
   GOOGLE_REVIEW_URL_ONTARIO,
 } from '@/lib/followups/rules';
 import { sendReviewRequest } from '@/lib/followups/send';
+import { resolveEventId } from '@/lib/events/booking';
 
 const sendReviewRequestSchema = z.object({
   agreementId: z.string().min(1, 'Agreement ID is required'),
@@ -38,7 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await sendReviewRequest(agreementId, {
+    const eventId = await resolveEventId(agreementId);
+    if (!eventId) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    const result = await sendReviewRequest(eventId, {
       trigger: 'manual',
       dryRun,
       reviewUrl,
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
       case 'refused':
         return NextResponse.json(
           { error: result.reason },
-          { status: result.reason === 'Agreement not found' ? 404 : 409 },
+          { status: result.reason === 'Event not found' ? 404 : 409 },
         );
       case 'failed':
         return NextResponse.json(

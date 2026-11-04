@@ -1,4 +1,4 @@
-import { adminAgreementPath } from '@/lib/balanceActionToken';
+import { adminEventPath } from '@/lib/events/booking';
 import { formatEventDateToronto, resolveAgreementEventDate } from '@/lib/dates';
 import { planFollowups, type FollowupAgreement } from '@/lib/followups/rules';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
@@ -35,7 +35,7 @@ export function buildFollowupDigestSections(
   baseUrl: string,
 ): FollowupDigestSections {
   const plan = planFollowups(agreements, now, launchKey);
-  const url = (id: string) => `${baseUrl}${adminAgreementPath(id)}`;
+  const url = (id: string) => `${baseUrl}${adminEventPath(id)}`;
   const byName = (x: FollowupDigestItem, y: FollowupDigestItem) => x.clientName.localeCompare(y.clientName);
 
   const goingOut = [

@@ -3,11 +3,12 @@ import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { BalanceActionForm } from './BalanceActionForm';
 import { balanceActionRefusal } from '@/lib/balanceAction';
-import { adminAgreementPath, verifyBalanceActionToken } from '@/lib/balanceActionToken';
-import { formatEventDateToronto, resolveAgreementEventDate } from '@/lib/dates';
+import { verifyBalanceActionToken } from '@/lib/balanceActionToken';
+import { adminEventPath } from '@/lib/events/booking';
+import { loadBalanceActionEvent } from '@/lib/events/balanceActionEvent';
+import { formatEventDateToronto } from '@/lib/dates';
 import { authOptions } from '@/lib/auth';
 import { getEmailGreeting } from '@/lib/email/greeting';
-import { prisma } from '@/lib/prisma';
 import { buildBalanceReminderDraft } from '@/lib/balanceReminderMessage';
 
 export const dynamic = 'force-dynamic';
@@ -49,44 +50,21 @@ export default async function BalanceActionPage({
     );
   }
 
-  const agreement = await prisma.agreement.findUnique({
-    where: { id: payload.agreementId },
-    select: {
-      id: true,
-      status: true,
-      archived: true,
-      cancelledAt: true,
-      paymentStatus: true,
-      stripePaymentLink: true,
-      client: {
-        select: {
-          firstName: true,
-          lastName: true,
-          emailGreetingName: true,
-          eventDate: true,
-        },
-      },
-      event: {
-        select: {
-          eventDate: true,
-        },
-      },
-    },
-  });
+  const agreement = await loadBalanceActionEvent(payload.agreementId);
 
   if (!agreement) {
     return (
       <Shell>
-        <h1 className="m-0 text-2xl font-semibold">This agreement could not be found.</h1>
+        <h1 className="m-0 text-2xl font-semibold">This event could not be found.</h1>
         <p className="mt-4 mb-0 text-admin-muted">Nothing was changed.</p>
       </Shell>
     );
   }
 
   const clientName = `${agreement.client.firstName} ${agreement.client.lastName}`.trim() || 'Client';
-  const eventDate = resolveAgreementEventDate(agreement);
+  const eventDate = agreement.eventDate;
   const eventLabel = eventDate ? formatEventDateToronto(eventDate) : 'No event date';
-  const adminHref = adminAgreementPath(agreement.id);
+  const adminHref = adminEventPath(agreement.id);
   const refusal = balanceActionRefusal(agreement);
 
   if (refusal) {
@@ -97,7 +75,7 @@ export default async function BalanceActionPage({
         <p className="mt-1 mb-0 text-admin-muted">{eventLabel}</p>
         <p className="mt-4 mb-0">
           <Link href={adminHref} className="text-accent">
-            Back to the agreement
+            Back to the event
           </Link>
         </p>
       </Shell>

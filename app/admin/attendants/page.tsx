@@ -47,7 +47,7 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
 
 export default function AttendantsPage() {
   useEffect(() => {
-    document.title = 'Attendants | Admin | Photobooth Guys';
+    document.title = 'Attendants | CRM | Photobooth Guys';
   }, []);
 
   const [attendants, setAttendants] = useState<Attendant[]>([]);

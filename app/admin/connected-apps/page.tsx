@@ -20,7 +20,7 @@ export default function ConnectedAppsPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = 'Connected apps | Admin | Photobooth Guys';
+    document.title = 'Connected apps | CRM | Photobooth Guys';
   }, []);
 
   const load = useCallback(async () => {

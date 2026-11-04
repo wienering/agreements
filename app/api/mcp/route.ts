@@ -17,6 +17,7 @@ import {
 import { McpScopeError, runWithMcpAuth } from '@/lib/mcp/authContext';
 import { searchClients, getClient } from '@/lib/mcp/tools/clients';
 import { searchAgreements, getAgreement } from '@/lib/mcp/tools/agreements';
+import { createAgreementForEvent, createEvent, getEvent, searchEvents, updateEvent } from '@/lib/mcp/tools/events';
 import {
   addClientNote,
   createAgreementDraft,
@@ -68,6 +69,53 @@ const createClientSchema = z.strictObject({
     email: z.string().email(),
     confirmDuplicate: z.boolean().optional(),
   }),
+});
+
+const eventStatusSchema = z.enum(['UPCOMING', 'COMPLETED', 'CANCELLED']);
+
+const searchEventsSchema = z.strictObject({
+  query: z.string().min(1).max(200).optional(),
+  dateFrom: z.string().min(1).optional(),
+  dateTo: z.string().min(1).optional(),
+  status: eventStatusSchema.optional(),
+  includeArchived: z.boolean().optional(),
+});
+
+const getEventSchema = z.strictObject({
+  id: z.string().min(1),
+});
+
+const eventFieldsSchema = z.strictObject({
+  eventDate: z.string().nullable().optional(),
+  startTime: z.string().nullable().optional(),
+  duration: z.string().nullable().optional(),
+  eventType: z.string().nullable().optional(),
+  eventName: z.string().nullable().optional(),
+  venue: z.string().nullable().optional(),
+  package: z.string().nullable().optional(),
+  price: z.union([z.string(), z.number()]).nullable().optional(),
+  phone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  paymentStatus: z.string().optional(),
+  nextAction: z.string().nullable().optional(),
+  attendantName: z.string().nullable().optional(),
+  status: eventStatusSchema.optional(),
+  cancellationReason: z.string().nullable().optional(),
+});
+
+const createEventSchema = z.strictObject({
+  clientId: z.string().min(1),
+  fields: eventFieldsSchema,
+});
+
+const updateEventSchema = z.strictObject({
+  id: z.string().min(1),
+  fields: eventFieldsSchema,
+});
+
+const createAgreementForEventSchema = z.strictObject({
+  eventId: z.string().min(1),
+  templateId: z.string().min(1).optional(),
 });
 
 const setPaymentStatusSchema = z.strictObject({
@@ -209,6 +257,69 @@ const mcpHandler = createMcpHandler(
     );
 
     server.registerTool(
+      'search_events',
+      {
+        description:
+          'Search booked events (the bookings). Defaults to upcoming events when no query or dates are given. Optional query (client name, email, venue, type), dateFrom/dateTo (YYYY-MM-DD), status (UPCOMING, COMPLETED, CANCELLED). Each event lists its agreements, if any.',
+        inputSchema: searchEventsSchema,
+      },
+      async (args) => {
+        try {
+          return toolResult(await searchEvents(args));
+        } catch {
+          return toolError('search_events failed');
+        }
+      },
+    );
+
+    server.registerTool(
+      'get_event',
+      {
+        description: 'Get one event by id (an agreement id also works): details, payment status, attendant, gallery, status and its agreements.',
+        inputSchema: getEventSchema,
+      },
+      async ({ id }) => {
+        try {
+          const event = await getEvent(id);
+          if (!event) return toolError('Event not found');
+          return toolResult(event);
+        } catch {
+          return toolError('get_event failed');
+        }
+      },
+    );
+
+    server.registerTool(
+      'create_event',
+      {
+        description:
+          'Create a confirmed event (booking) for a client, with no agreement. Puts it on the calendar. Optional paymentStatus, attendantName, status. Requires write scope. Returns attendant double-booking warnings.',
+        inputSchema: createEventSchema,
+      },
+      async ({ clientId, fields }) => runWriteTool(() => createEvent(clientId, fields)),
+    );
+
+    server.registerTool(
+      'update_event',
+      {
+        description:
+          'Update an event: date, time, duration, venue, package, price, notes, payment status, next action, attendant (by name), or status. Setting status COMPLETED completes a signed agreement on it; CANCELLED cancels its agreements. Requires write scope.',
+        inputSchema: updateEventSchema,
+      },
+      async ({ id, fields }) => runWriteTool(() => updateEvent(id, fields)),
+    );
+
+    server.registerTool(
+      'create_agreement_for_event',
+      {
+        description:
+          'Create a DRAFT agreement on an existing event, from a template (defaults to the first). Never sends it. Use only when the client has asked for an agreement. Requires write scope.',
+        inputSchema: createAgreementForEventSchema,
+      },
+      async ({ eventId, templateId }) => runWriteTool(() => createAgreementForEvent(eventId, templateId)),
+    );
+
+    server.registerTool(
       'update_client',
       {
         description:
@@ -232,7 +343,7 @@ const mcpHandler = createMcpHandler(
       'set_payment_status',
       {
         description:
-          'Set an agreement payment status to one of the canonical values. Requires write scope.',
+          'Set the payment status on an event (pass the event id, or an agreement id on it) to one of the canonical values. Requires write scope.',
         inputSchema: setPaymentStatusSchema,
       },
       async ({ agreementId, status }) => runWriteTool(() => setPaymentStatus(agreementId, status)),
@@ -251,7 +362,7 @@ const mcpHandler = createMcpHandler(
       'create_agreement_draft',
       {
         description:
-          'Create a DRAFT agreement for a client with event details. Never sends to the client. Optional templateId (defaults to first template). Returns attendant double-booking warnings when applicable. Requires write scope.',
+          'Create a new event AND a DRAFT agreement on it in one step. Prefer create_event (no agreement) unless the client asked for an agreement; for an existing event use create_agreement_for_event. Never sends to the client. Requires write scope.',
         inputSchema: createAgreementDraftSchema,
       },
       async ({ clientId, fields }) => runWriteTool(() => createAgreementDraft(clientId, fields)),

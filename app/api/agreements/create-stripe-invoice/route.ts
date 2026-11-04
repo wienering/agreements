@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { formatZodDetails } from '@/lib/handleApiError';
 import { paymentStatusAfterInvoiceIssued, stripeInvoiceTypeFor } from '@/lib/paymentStatus';
 import Stripe from 'stripe';
+import { resolveEventId } from '@/lib/events/booking';
 import {
   addTorontoCalendarDays,
   formatEventDateToronto,
@@ -190,22 +191,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createInvoiceSchema.parse(body);
 
-    // Fetch agreement with client, template, and event information
-    const agreement = await prisma.agreement.findUnique({
-      where: { id: validatedData.agreementId },
-      include: {
-        client: true,
-        template: true,
-        event: true,
-      },
-    });
+    // Invoices belong to the event. `agreementId` may be an event id, or an agreement id on the event.
+    const eventId = await resolveEventId(validatedData.agreementId);
+    const eventRecord = eventId
+      ? await prisma.event.findUnique({ where: { id: eventId }, include: { client: true } })
+      : null;
 
-    if (!agreement) {
+    if (!eventRecord) {
       return NextResponse.json(
-        { error: 'Agreement not found' },
+        { error: 'Event not found' },
         { status: 404 }
       );
     }
+    const agreement = { ...eventRecord, event: eventRecord };
 
     // Validate required fields
     if (!agreement.client.email) {
@@ -216,7 +214,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use event packagePrice if available, otherwise fall back to client packagePrice
-    const packagePrice = agreement.event?.packagePrice ?? agreement.client.packagePrice;
+    const packagePrice = agreement.event.packagePrice ?? agreement.client.packagePrice;
     const totalAmount = packagePrice ? Number(packagePrice) : 0;
 
     if (totalAmount <= 0) {
@@ -237,7 +235,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use event eventDate if available, otherwise fall back to client eventDate
-    const eventDate = agreement.event?.eventDate ?? agreement.client.eventDate;
+    const eventDate = agreement.event.eventDate ?? agreement.client.eventDate;
 
     // Calculate invoice details
     const invoiceDetails = calculateInvoiceDetails(
@@ -251,7 +249,7 @@ export async function POST(request: NextRequest) {
 
     // Build package description for invoice items
     // Use event eventPackage if available, otherwise fall back to client eventPackage
-    const eventPackage = agreement.event?.eventPackage ?? agreement.client.eventPackage ?? '';
+    const eventPackage = agreement.event.eventPackage ?? agreement.client.eventPackage ?? '';
     const baseDescription = eventPackage 
       ? `Photo Booth Rental ${eventPackage}` 
       : 'Photo Booth Rental';
@@ -286,7 +284,6 @@ export async function POST(request: NextRequest) {
         email: agreement.client.email,
         name: clientName,
         metadata: {
-          agreementId: agreement.id,
           clientId: agreement.client.id,
         },
       });
@@ -316,7 +313,7 @@ export async function POST(request: NextRequest) {
           payment_method_types: [], // Disable all payment methods
         } : undefined,
         metadata: {
-          agreementId: agreement.id,
+          eventId: agreement.id,
           invoiceType: 'deposit',
         },
       });
@@ -367,7 +364,7 @@ export async function POST(request: NextRequest) {
           payment_method_types: [], // Disable all payment methods
         } : undefined,
         metadata: {
-          agreementId: agreement.id,
+          eventId: agreement.id,
           invoiceType: stripeInvoiceTypeFor(validatedData.invoiceType, invoiceDetails.needsTwoInvoices),
         },
       });
@@ -405,8 +402,8 @@ export async function POST(request: NextRequest) {
 
     // Not paid becomes Invoice issued; a recorded deposit or balance is kept for the webhook.
     const nextPaymentStatus = paymentStatusAfterInvoiceIssued(agreement.paymentStatus);
-    await prisma.agreement.update({
-      where: { id: validatedData.agreementId },
+    await prisma.event.update({
+      where: { id: eventRecord.id },
       data: {
         stripePaymentLink: primaryInvoiceUrl || agreement.stripePaymentLink,
         ...(nextPaymentStatus ? { paymentStatus: nextPaymentStatus } : {}),
