@@ -328,6 +328,8 @@ model Event {
   eventPackage   String?
   packagePrice   Decimal?   @db.Decimal(10, 2)
   notes          String?
+  /// Private notes for Dennis only: never shown to attendants or clients.
+  internalNotes  String?
   eventName      String?
   eventPhone     String?
   unlimitedPrints Boolean   @default(false)

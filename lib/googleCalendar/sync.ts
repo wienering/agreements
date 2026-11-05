@@ -27,6 +27,7 @@ const syncSelect = {
   packagePrice: true,
   eventPhone: true,
   notes: true,
+  internalNotes: true,
   unlimitedPrints: true,
   paymentStatus: true,
   selectedBackdropName: true,

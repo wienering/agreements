@@ -24,6 +24,7 @@ export interface EventListItem {
   packagePrice?: string | number | null;
   eventPhone?: string | null;
   notes?: string | null;
+  internalNotes?: string | null;
   unlimitedPrints?: boolean;
   createdAt?: string;
   status?: 'UPCOMING' | 'COMPLETED' | 'CANCELLED';
