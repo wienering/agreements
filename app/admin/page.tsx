@@ -207,18 +207,14 @@ export default function AdminHome() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <AdminButton variant="ghost" onClick={() => router.push('/admin/leads')}>
+                Leads
+              </AdminButton>
               <AdminButton variant="ghost" onClick={() => router.push('/admin/clients')}>
                 Clients
               </AdminButton>
-              <AdminButton variant="ghost" onClick={() => router.push('/admin/agreements')}>
-                Agreements
-              </AdminButton>
-              <AdminButton
-                variant="primary"
-                onClick={() => router.push('/admin/agreements')}
-                title="Create a new agreement"
-              >
-                + New agreement
+              <AdminButton variant="ghost" onClick={() => router.push('/admin/events')}>
+                Events
               </AdminButton>
             </div>
           </div>
