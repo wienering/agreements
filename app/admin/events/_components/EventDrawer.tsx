@@ -706,16 +706,26 @@ export function EventDrawer({
 }
 
 function Shell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  // Lock the page behind the panel so scrolling the panel doesn't drag the page (and its top bar).
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[900] flex justify-end bg-black/30" onClick={onClose}>
+    // z-[999]: above the mobile top bar (z-997), below modals opened from the panel (z-1000).
+    <div className="fixed inset-0 z-[999] flex justify-end bg-black/30" onClick={onClose}>
       <aside
         role="dialog"
         aria-modal="true"
         data-event-drawer
         onClick={(e) => e.stopPropagation()}
-        className="h-full w-full max-w-[560px] overflow-y-auto border-l border-admin-hairline bg-admin-surface p-5 md:p-6"
+        className="h-full w-full max-w-[560px] overflow-y-auto overscroll-contain border-l border-admin-hairline bg-admin-surface px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] md:p-6"
       >
-        <div className="mb-2 flex justify-end">
+        <div className="sticky top-0 z-10 -mx-5 -mt-2 mb-2 flex justify-end bg-admin-surface px-5 py-2 md:-mx-6 md:px-6">
           <button type="button" onClick={onClose} className="p-1 text-admin-muted hover:text-admin-text" aria-label="Close">
             <UIcon name="x" className="text-xl" />
           </button>
