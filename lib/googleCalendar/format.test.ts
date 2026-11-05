@@ -11,7 +11,8 @@ function source(overrides: Partial<CalendarSyncSource> = {}): CalendarSyncSource
     eventPackage: '2 Hour Photo Booth Rental',
     packagePrice: 850,
     eventPhone: null,
-    notes: 'START TIME TBC',
+    notes: 'Set up by the bar',
+    internalNotes: 'START TIME TBC',
     unlimitedPrints: true,
     paymentStatus: 'Deposit paid',
     selectedBackdropName: null,
@@ -33,6 +34,7 @@ describe('buildGoogleCalendarEvent', () => {
     expect(body.description).toContain('Contact Phone: +16475550100');
     expect(body.description).toContain('Backdrop: To be selected');
     expect(body.description).toContain('<b>Unlimited Prints</b>');
+    expect(body.description).toContain('Additional Info:<br><b>Unlimited Prints</b><br><b>Set up by the bar</b>');
     expect(body.description).toContain('Internal Notes: <b>START TIME TBC</b>');
     expect(body.description).toContain('Payment Status: Deposit paid');
     expect(body.description).toContain('Agreement: None');

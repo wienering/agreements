@@ -15,6 +15,7 @@ export type CalendarSyncSource = {
   packagePrice: { toString(): string } | number | null;
   eventPhone: string | null;
   notes: string | null;
+  internalNotes: string | null;
   unlimitedPrints: boolean;
   paymentStatus: string;
   selectedBackdropName: string | null;
@@ -87,8 +88,9 @@ export function buildGoogleCalendarEvent(source: CalendarSyncSource): GoogleCale
     `Backdrop: ${e(source.selectedBackdropName?.trim() || 'To be selected')}`,
     'Additional Info:',
     ...(source.unlimitedPrints ? ['<b>Unlimited Prints</b>'] : []),
+    ...(source.notes?.trim() ? [`<b>${e(source.notes.trim()).replace(/\n/g, '<br>')}</b>`] : []),
     '',
-    `Internal Notes: ${source.notes?.trim() ? `<b>${e(source.notes.trim()).replace(/\n/g, '<br>')}</b>` : ''}`,
+    `Internal Notes: ${source.internalNotes?.trim() ? `<b>${e(source.internalNotes.trim()).replace(/\n/g, '<br>')}</b>` : ''}`,
     '',
     `Email: ${e(source.client.email)}`,
     '',

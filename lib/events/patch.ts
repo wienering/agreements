@@ -29,6 +29,7 @@ export const eventBookingPatchSchema = z
   .object({
     galleryLinks: z.array(galleryEntrySchema).optional(),
     nextAction: z.string().max(500, 'Next action must be 500 characters or less').optional(),
+    internalNotes: z.string().max(5000, 'Internal notes must be 5000 characters or less').optional(),
     paymentStatus: paymentStatusInputSchema.optional(),
     stripePaymentLink: z.string().url('Invalid payment link URL').optional().or(z.literal('')),
     stripeReceiptLink: z.string().url('Invalid receipt link URL').optional().or(z.literal('')),
@@ -64,6 +65,7 @@ export function buildEventBookingData(input: EventBookingPatch, now: Date): Pris
       }));
   }
   if (input.nextAction !== undefined) data.nextAction = input.nextAction || null;
+  if (input.internalNotes !== undefined) data.internalNotes = input.internalNotes.trim() || null;
   if (input.paymentStatus !== undefined) data.paymentStatus = input.paymentStatus;
   if (input.stripePaymentLink !== undefined) data.stripePaymentLink = input.stripePaymentLink || null;
   if (input.stripeReceiptLink !== undefined) data.stripeReceiptLink = input.stripeReceiptLink || null;

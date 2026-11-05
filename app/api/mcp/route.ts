@@ -104,6 +104,7 @@ const eventFieldsSchema = z.strictObject({
   price: z.union([z.string(), z.number()]).nullable().optional(),
   phone: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  internalNotes: z.string().nullable().optional(),
   paymentStatus: z.string().optional(),
   nextAction: z.string().nullable().optional(),
   attendantName: z.string().nullable().optional(),
@@ -360,7 +361,7 @@ const mcpHandler = createMcpHandler(
       'update_event',
       {
         description:
-          'Update anything on an event: date, time, duration, venue, package, price, notes, payment status, next action, attendant (by name; see list_options), backdrop, gallery links, phone/green-screen toggles, follow-up pause, already-reviewed, archived, or status. COMPLETED completes a signed agreement on it; CANCELLED cancels its agreements; archiving archives its agreements. Sends nothing. Requires write scope.',
+          'Update anything on an event: date, time, duration, venue, package, price, notes ("Additional info": attendants see it), internalNotes (private: payments, balances, pricing go here, never in notes), payment status, next action, attendant (by name; see list_options), backdrop, gallery links, phone/green-screen toggles, follow-up pause, already-reviewed, archived, or status. COMPLETED completes a signed agreement on it; CANCELLED cancels its agreements; archiving archives its agreements. Sends nothing. Requires write scope.',
         inputSchema: updateEventSchema,
       },
       async ({ id, fields }) => runWriteTool(() => updateEvent(id, fields)),

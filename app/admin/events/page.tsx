@@ -42,6 +42,7 @@ type EventForm = {
   packagePrice: string;
   eventPhone: string;
   notes: string;
+  internalNotes: string;
   unlimitedPrints: boolean;
 };
 
@@ -57,6 +58,7 @@ const emptyForm: EventForm = {
   packagePrice: '',
   eventPhone: '',
   notes: '',
+  internalNotes: '',
   unlimitedPrints: false,
 };
 
@@ -80,6 +82,7 @@ function formFromEvent(event: EventListItem): EventForm {
     packagePrice: event.packagePrice != null ? String(event.packagePrice) : '',
     eventPhone: event.eventPhone ?? '',
     notes: event.notes ?? '',
+    internalNotes: event.internalNotes ?? '',
     unlimitedPrints: event.unlimitedPrints ?? false,
   };
 }
@@ -461,8 +464,19 @@ function EventsAdminPage() {
                 Unlimited prints
               </label>
               <div className="md:col-span-2">
-                <Field label="Notes">
+                <Field label="Additional info (attendants see this)">
                   <textarea rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} className={fieldClass} />
+                </Field>
+              </div>
+              <div className="md:col-span-2">
+                <Field label="Internal notes (only you see this)">
+                  <textarea
+                    rows={3}
+                    value={form.internalNotes}
+                    onChange={(e) => set('internalNotes', e.target.value)}
+                    placeholder="Payments, balances, pricing, anything attendants shouldn't see"
+                    className={fieldClass}
+                  />
                 </Field>
               </div>
             </div>

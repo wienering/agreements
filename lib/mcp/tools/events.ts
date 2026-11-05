@@ -36,6 +36,7 @@ export type EventFields = {
   price?: string | number | null;
   phone?: string | null;
   notes?: string | null;
+  internalNotes?: string | null;
   paymentStatus?: string;
   nextAction?: string | null;
   attendantName?: string | null;
@@ -80,6 +81,7 @@ const eventSummarySelect = {
   packagePrice: true,
   eventPhone: true,
   notes: true,
+  internalNotes: true,
   paymentStatus: true,
   nextAction: true,
   selectedBackdropName: true,
@@ -144,6 +146,7 @@ function summarize(event: EventRow) {
       signed: Boolean(agreement.signedAt),
     })),
     ...(labelClientProvidedText(event.notes) ?? {}),
+    internalNotes: event.internalNotes ?? null,
   };
   assertNoForbiddenFields(result);
   return result;
@@ -208,6 +211,7 @@ async function eventDataFrom(fields: EventFields): Promise<{ data: Prisma.EventU
   if (fields.package !== undefined) data.eventPackage = fields.package?.trim() || null;
   if (fields.phone !== undefined) data.eventPhone = fields.phone?.trim() || null;
   if (fields.notes !== undefined) data.notes = fields.notes?.trim() || null;
+  if (fields.internalNotes !== undefined) data.internalNotes = fields.internalNotes?.trim() || null;
   if (fields.nextAction !== undefined) data.nextAction = fields.nextAction?.trim() || null;
   if (fields.price !== undefined) {
     if (fields.price === null || fields.price === '') data.packagePrice = null;

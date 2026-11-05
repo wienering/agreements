@@ -44,6 +44,7 @@ export interface EventDetail {
   galleryLinks: GalleryLink[] | null;
   galleryEmailSentAt: string | null;
   nextAction: string | null;
+  internalNotes: string | null;
   backdropLinkId: string | null;
   selectedBackdropName: string | null;
   showPhoneNumberAlways: boolean;
@@ -109,6 +110,7 @@ export function EventDrawer({
   const [saving, setSaving] = useState(false);
   const [gallery, setGallery] = useState<GalleryLink[]>([]);
   const [nextAction, setNextAction] = useState('');
+  const [internalNotes, setInternalNotes] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
   const [receiptLink, setReceiptLink] = useState('');
   const [backdropOptions, setBackdropOptions] = useState<Array<{ id: string; name: string }>>([]);
@@ -130,6 +132,7 @@ export function EventDrawer({
     setEvent(data);
     setGallery(Array.isArray(data.galleryLinks) && data.galleryLinks.length ? data.galleryLinks : [{ title: '', url: '' }]);
     setNextAction(data.nextAction ?? '');
+    setInternalNotes(data.internalNotes ?? '');
     setPaymentLink(data.stripePaymentLink ?? '');
     setReceiptLink(data.stripeReceiptLink ?? '');
   }, []);
@@ -626,6 +629,17 @@ export function EventDrawer({
           onChange={(e) => setNextAction(e.target.value)}
           onBlur={() => nextAction !== (event.nextAction ?? '') && patch({ nextAction }, 'Next action saved')}
           placeholder="What needs to happen next"
+          className={fieldClass}
+        />
+      </Section>
+
+      <Section title="Internal notes">
+        <textarea
+          rows={3}
+          value={internalNotes}
+          onChange={(e) => setInternalNotes(e.target.value)}
+          onBlur={() => internalNotes !== (event.internalNotes ?? '') && patch({ internalNotes }, 'Internal notes saved')}
+          placeholder="Only you see this: payments, balances, pricing"
           className={fieldClass}
         />
       </Section>
