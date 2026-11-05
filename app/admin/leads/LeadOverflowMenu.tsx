@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { AdminButton } from '../../components/AdminButton';
 import { LOST_REASONS } from '@/lib/leads/status';
 import { isOpenLeadStatus } from '@/lib/leads/display';
@@ -39,8 +39,52 @@ export function LeadOverflowMenu({
 }: LeadOverflowMenuProps) {
   const [open, setOpen] = useState(false);
   const [showLostReasons, setShowLostReasons] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+
+  // The lead list clips overflow, so the menu is positioned against the
+  // viewport and clamped to stay fully on screen (flips above when needed).
+  const placeMenu = useCallback(() => {
+    const anchor = buttonRef.current?.getBoundingClientRect();
+    const menu = menuRef.current;
+    if (!anchor || !menu) return;
+    const margin = 8;
+    const width = menu.offsetWidth;
+    const height = menu.offsetHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let left = anchor.right - width;
+    if (left < margin) left = anchor.left;
+    left = Math.max(margin, Math.min(left, vw - width - margin));
+
+    let top = anchor.bottom + 4;
+    if (top + height > vh - margin && anchor.top - height - 4 >= margin) {
+      top = anchor.top - height - 4;
+    }
+    setMenuPos({ top, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    placeMenu();
+  }, [open, showLostReasons, placeMenu]);
+
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener('resize', placeMenu);
+    window.addEventListener('scroll', placeMenu, true);
+    return () => {
+      window.removeEventListener('resize', placeMenu);
+      window.removeEventListener('scroll', placeMenu, true);
+    };
+  }, [open, placeMenu]);
 
   useEffect(() => {
     if (!open) {
@@ -48,7 +92,7 @@ export function LeadOverflowMenu({
       return;
     }
 
-    const handlePointerDown = (event: MouseEvent) => {
+    const handlePointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
         setOpen(false);
       }
@@ -60,10 +104,10 @@ export function LeadOverflowMenu({
       }
     };
 
-    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [open]);
@@ -90,6 +134,7 @@ export function LeadOverflowMenu({
 
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
+      <div ref={buttonRef} style={{ display: 'inline-flex' }}>
       <AdminButton
         variant="ghost"
         size="compact"
@@ -102,23 +147,29 @@ export function LeadOverflowMenu({
       >
         ⋯
       </AdminButton>
+      </div>
 
       {open && (
         <div
+          ref={menuRef}
           id={menuId}
           role="menu"
           aria-label={`Actions for ${lead.firstName} ${lead.lastName}`}
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            right: 0,
-            minWidth: '190px',
+            position: 'fixed',
+            top: menuPos?.top ?? 0,
+            left: menuPos?.left ?? 0,
+            visibility: menuPos ? 'visible' : 'hidden',
+            minWidth: '210px',
+            maxWidth: 'calc(100vw - 16px)',
+            maxHeight: 'calc(100vh - 16px)',
+            overflowY: 'auto',
             padding: '6px',
             backgroundColor: cardBg,
             border: `1px solid ${borderColor}`,
             borderRadius: '2px',
-            boxShadow: 'none',
-            zIndex: 20,
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12)',
+            zIndex: 990,
             display: 'grid',
             gap: '4px',
           }}
