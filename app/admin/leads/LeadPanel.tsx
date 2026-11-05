@@ -60,6 +60,17 @@ export function LeadPanel({ lead, onClose, onChanged, onMarkBooked, onSetStatus 
     load();
   }, [load, lead.status, lead.contactCount]);
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      // Don't throw away a half-written note.
+      if (event.key === 'Escape' && !text.trim()) onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, text]);
+
+  const when = (value: Date | string) => formatDateTimeToronto(value, { dateStyle: 'medium', timeStyle: 'short' });
+
   const add = async (kind: 'NOTE' | 'CALL') => {
     if (!text.trim()) return;
     setSaving(true);
@@ -93,9 +104,9 @@ export function LeadPanel({ lead, onClose, onChanged, onMarkBooked, onSetStatus 
     ['Hours', lead.quotePackageHours != null ? String(lead.quotePackageHours) : '—'],
     ['Came from', lead.source === 'QUOTE' ? 'Quote tool' : lead.source === 'BOOKING_FORM' ? 'Booking form' : 'Added by hand'],
     ['Touches', String(lead.contactCount)],
-    ['Last contacted', lead.lastContactedAt ? formatDateTimeToronto(lead.lastContactedAt) : '—'],
+    ['Last contacted', lead.lastContactedAt ? when(lead.lastContactedAt) : '—'],
     ['Next follow-up', lead.nextFollowUpAt && lead.status === 'FOLLOWING_UP' ? formatEventDateTorontoShort(lead.nextFollowUpAt) : '—'],
-    ['Last reply', lead.lastReplyAt ? formatDateTimeToronto(lead.lastReplyAt) : '—'],
+    ['Last reply', lead.lastReplyAt ? when(lead.lastReplyAt) : '—'],
   ];
 
   return (
@@ -197,7 +208,7 @@ export function LeadPanel({ lead, onClose, onChanged, onMarkBooked, onSetStatus 
                   {activity.touchNumber ? ` #${activity.touchNumber}` : ''}
                 </span>
                 <span className="shrink-0 text-xs text-admin-muted">
-                  {formatDateTimeToronto(activity.occurredAt, { dateStyle: 'medium', timeStyle: 'short' })}
+                  {when(activity.occurredAt)}
                 </span>
               </div>
               {activity.summary && (
