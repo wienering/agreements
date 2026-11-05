@@ -37,6 +37,31 @@ export interface EventListItem {
 
 export type EventView = 'upcoming' | 'past' | 'no-agreement' | 'all';
 
+/** Attendant filter value for events with no attendant assigned. */
+export const NO_ATTENDANT = '__none__';
+
+/** Who's working the event: the attendant on its backdrop link, else the link's own name. */
+export function eventAttendantName(event: EventListItem): string | null {
+  return event.backdropLink?.attendant?.name?.trim() || event.backdropLink?.name?.trim() || null;
+}
+
+/** Attendant names that appear on these events, A to Z, for the filter dropdown. */
+export function attendantOptions(events: EventListItem[]): string[] {
+  const names = new Set<string>();
+  for (const event of events) {
+    const name = eventAttendantName(event);
+    if (name) names.add(name);
+  }
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
+
+function matchesAttendant(event: EventListItem, attendant: string): boolean {
+  if (!attendant) return true;
+  const name = eventAttendantName(event);
+  if (attendant === NO_ATTENDANT) return name === null;
+  return name === attendant;
+}
+
 /** Toronto calendar day of the event, or '' when it has no date. */
 function eventDayKey(event: EventListItem): string {
   return event.eventDate ? torontoDateKey(event.eventDate) : '';
@@ -67,16 +92,19 @@ export function liveAgreements(event: EventListItem): EventListAgreement[] {
 /**
  * Upcoming: today or later, plus undated events, not cancelled. Past: before today, newest first.
  * No agreement: upcoming or undated events with no live agreement. All: everything, cancelled too.
+ * `attendant` narrows to one attendant's events ('' = everyone, NO_ATTENDANT = none assigned).
  */
 export function filterEvents(
   events: EventListItem[],
   view: EventView,
   search: string,
   todayKey: string,
+  attendant = '',
 ): EventListItem[] {
   const term = search.trim().toLowerCase();
   const filtered = events.filter((event) => {
     if (term && !matchesSearch(event, term)) return false;
+    if (!matchesAttendant(event, attendant)) return false;
     const day = eventDayKey(event);
     const isPast = day !== '' && day < todayKey;
     const cancelled = event.status === 'CANCELLED';

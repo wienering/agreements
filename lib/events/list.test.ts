@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { agreementLabel, filterEvents, type EventListItem } from '@/lib/events/list';
+import { agreementLabel, attendantOptions, filterEvents, NO_ATTENDANT, type EventListItem } from '@/lib/events/list';
 
 const client = { id: 'c1', firstName: 'Mandy', lastName: 'Yan', email: 'mandy@example.com' };
 
@@ -52,5 +52,22 @@ describe('agreementLabel', () => {
       'Draft, shared',
     );
     expect(agreementLabel({ id: 'a', status: 'SIGNED' })).toBe('Signed');
+  });
+});
+
+describe('attendant filter', () => {
+  const ian = event('ian', '2026-12-01T17:00:00.000Z', { backdropLink: { id: 'b1', name: 'Ian backdrops', attendant: { name: 'Ian' } } });
+  const daisy = event('daisy', '2026-12-02T17:00:00.000Z', { backdropLink: { id: 'b2', name: 'Daisy Lim', attendant: null } });
+  const nobody = event('nobody', '2026-12-03T17:00:00.000Z');
+  const list = [ian, daisy, nobody];
+
+  it('lists attendant names A to Z', () => {
+    expect(attendantOptions(list)).toEqual(['Daisy Lim', 'Ian']);
+  });
+  it('filters to one attendant, or to events with nobody assigned', () => {
+    expect(filterEvents(list, 'upcoming', '', TODAY, 'Ian').map((e) => e.id)).toEqual(['ian']);
+    expect(filterEvents(list, 'upcoming', '', TODAY, 'Daisy Lim').map((e) => e.id)).toEqual(['daisy']);
+    expect(filterEvents(list, 'upcoming', '', TODAY, NO_ATTENDANT).map((e) => e.id)).toEqual(['nobody']);
+    expect(filterEvents(list, 'upcoming', '', TODAY)).toHaveLength(3);
   });
 });

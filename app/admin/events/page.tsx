@@ -11,7 +11,9 @@ import {
 } from '@/lib/dates';
 import {
   agreementLabel,
+  attendantOptions,
   filterEvents,
+  NO_ATTENDANT,
   liveAgreements,
   type EventListItem,
   type EventView,
@@ -120,6 +122,7 @@ function EventsAdminPage() {
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
   const [view, setView] = useState<EventView>('upcoming');
   const [search, setSearch] = useState('');
+  const [attendant, setAttendant] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<EventListItem | null>(null);
   const [form, setForm] = useState<EventForm>(emptyForm);
@@ -174,7 +177,11 @@ function EventsAdminPage() {
   }, []);
 
   const todayKey = torontoTodayKey();
-  const visible = useMemo(() => filterEvents(events, view, search, todayKey), [events, view, search, todayKey]);
+  const visible = useMemo(
+    () => filterEvents(events, view, search, todayKey, attendant),
+    [events, view, search, todayKey, attendant],
+  );
+  const attendantNames = useMemo(() => attendantOptions(events), [events]);
   const noAgreementCount = useMemo(
     () => filterEvents(events, 'no-agreement', '', todayKey).length,
     [events, todayKey],
@@ -294,6 +301,7 @@ function EventsAdminPage() {
               </AdminButton>
             ))}
           </div>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-end">
           <input
             ref={searchInputRef}
             type="search"
@@ -302,6 +310,21 @@ function EventsAdminPage() {
             placeholder="Search client, type, venue... (press /)"
             className={`${fieldClass} md:max-w-[320px]`}
           />
+            <select
+              value={attendant}
+              onChange={(event) => setAttendant(event.target.value)}
+              aria-label="Filter by attendant"
+              className={`${fieldClass} md:max-w-[200px]`}
+            >
+              <option value="">All attendants</option>
+              {attendantNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+              <option value={NO_ATTENDANT}>No attendant yet</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (
