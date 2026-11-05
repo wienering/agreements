@@ -1,4 +1,5 @@
 import { queueCalendarSync } from '@/lib/googleCalendar/sync';
+import { queueLeadBookingLink } from '@/lib/leads/linkBooking';
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
@@ -162,6 +163,7 @@ export async function POST(request: NextRequest) {
       eventId || (await prisma.event.create({ data: { clientId }, select: { id: true } })).id;
 
     queueCalendarSync(targetEventId);
+    queueLeadBookingLink(targetEventId);
 
     // Generate unique token
     const uniqueToken = randomBytes(32).toString('hex');

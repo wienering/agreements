@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { queueLeadBookingLink } from '@/lib/leads/linkBooking';
 import { adminAuthResponse, requireAdmin } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
       eventPackage ||
       packagePriceParsed !== null
     ) {
-      await prisma.event.create({
+      const createdEvent = await prisma.event.create({
         data: {
           clientId: client.id,
           eventDate: eventDate ? new Date(eventDate) : null,
@@ -172,7 +173,9 @@ export async function POST(request: NextRequest) {
           notes: notes || null,
           archived: false,
         },
+        select: { id: true },
       });
+      queueLeadBookingLink(createdEvent.id);
     }
 
     // Fetch client with events included

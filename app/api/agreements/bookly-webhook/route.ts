@@ -1,4 +1,5 @@
 import { queueCalendarSync } from '@/lib/googleCalendar/sync';
+import { queueLeadBookingLink } from '@/lib/leads/linkBooking';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/logger';
@@ -278,6 +279,7 @@ export async function POST(request: NextRequest) {
         },
       });
       queueCalendarSync(event.id);
+      queueLeadBookingLink(event.id);
       devLog(`✅ Event ${event.id} created for client ${client.email}`);
     }
 

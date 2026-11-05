@@ -45,6 +45,10 @@ vi.mock('@/lib/activityLog', () => ({
   logAgreementActivity: vi.fn(),
 }));
 
+vi.mock('@/lib/leads/linkBooking', () => ({
+  queueLeadBookingLink: vi.fn(),
+}));
+
 vi.mock('@/lib/events/booking', () => ({
   resolveEventId: vi.fn().mockResolvedValue(null),
   logEventActivity: vi.fn(),

@@ -739,3 +739,9 @@ Env: `N8N_API_SECRET`, `GOOGLE_SHEETS_REFRESH_TOKEN` (`npx tsx scripts/google-ca
 Google Sheets API enabled), `LEADS_SHEET_ID`, optional `LEADS_SHEET_TAB` (default `Sheet1`).
 
 One-time link of existing rows: `npx tsx scripts/link-leads-to-sheet.ts` (report), then `--apply`.
+
+**Bookings close leads automatically**: whenever an event is created (Bookly webhook, Events page, new
+client, agreement, CSV import, Claude connector, Mark booked), `queueLeadBookingLink` finds open leads
+(New / Following up / Paused) with the client's email that came in before the event, links them to the
+client and event, sets them Booked and marks their Sheet rows `booked`. Mark booked reuses the client's
+existing upcoming event on the same date instead of creating a duplicate.

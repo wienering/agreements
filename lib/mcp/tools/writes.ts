@@ -1,4 +1,5 @@
 import { queueCalendarSync } from '@/lib/googleCalendar/sync';
+import { queueLeadBookingLink } from '@/lib/leads/linkBooking';
 import { randomBytes } from 'crypto';
 import { requireMcpWriteScope } from '@/lib/mcp/authContext';
 import { MCP_ACTOR } from '@/lib/mcp/config';
@@ -405,6 +406,7 @@ export async function createAgreementDraft(clientId: string, fields: AgreementDr
   });
 
   queueCalendarSync(event.id);
+  queueLeadBookingLink(event.id);
   const agreement = await prisma.agreement.create({
     data: {
       clientId,
@@ -520,6 +522,7 @@ export async function updateAgreementDraft(id: string, fields: AgreementDraftFie
         data: { clientId: existing.clientId, ...eventData },
       });
       await prisma.agreement.update({ where: { id }, data: { eventId: event.id } });
+      queueLeadBookingLink(event.id);
     }
   }
 

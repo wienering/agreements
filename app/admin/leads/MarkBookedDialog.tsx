@@ -35,7 +35,7 @@ export function MarkBookedDialog({ lead, onClose, onBooked }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<{ eventId: string; clientCreated: boolean } | null>(null);
+  const [result, setResult] = useState<{ eventId: string; clientCreated: boolean; eventLinked: boolean } | null>(null);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -67,7 +67,7 @@ export function MarkBookedDialog({ lead, onClose, onBooked }: Props) {
         setError(data.error || data.details?.[0]?.message || 'Could not mark this lead booked');
         return;
       }
-      setResult({ eventId: data.eventId, clientCreated: data.clientCreated });
+      setResult({ eventId: data.eventId, clientCreated: data.clientCreated, eventLinked: Boolean(data.eventLinked) });
       onBooked();
     } catch (err) {
       console.error(err);
@@ -88,7 +88,11 @@ export function MarkBookedDialog({ lead, onClose, onBooked }: Props) {
           <ModalTitle>Booked</ModalTitle>
         </div>
         <p className="m-0 mb-4 text-sm text-admin-text">
-          {result.clientCreated ? 'New client and event added.' : 'Event added to the existing client.'} The lead is
+          {result.eventLinked
+            ? 'They already had a booking on that date, so the lead was linked to it (no duplicate event).'
+            : result.clientCreated
+              ? 'New client and event added.'
+              : 'Event added to the existing client.'} The lead is
           marked booked, so the follow-up emails stop.
         </p>
         <div className="flex justify-end gap-3">

@@ -1,4 +1,5 @@
 import { queueCalendarSync } from '@/lib/googleCalendar/sync';
+import { queueLeadBookingLink } from '@/lib/leads/linkBooking';
 import { randomBytes } from 'crypto';
 import type { Prisma } from '@prisma/client';
 import { requireMcpWriteScope } from '@/lib/mcp/authContext';
@@ -273,6 +274,7 @@ export async function createEvent(clientId: string, fields: EventFields) {
   });
   await logEventActivity(event.id, 'NOTE_ADDED', { actor: MCP_ACTOR, tool: 'create_event' });
   queueCalendarSync(event.id);
+  queueLeadBookingLink(event.id);
   if (fields.status && fields.status !== 'UPCOMING') {
     await setEventStatus(event.id, fields.status, { reason: fields.cancellationReason ?? null, by: MCP_ACTOR });
   }
