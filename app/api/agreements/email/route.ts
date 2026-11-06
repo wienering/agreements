@@ -16,6 +16,7 @@ import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { formatDateToronto } from '@/lib/dates';
 import { SIGNED_STATUSES } from '@/lib/agreementStatus';
+import { appUrl } from '@/lib/appUrl';
 
 const emailRequestSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -75,9 +76,7 @@ export async function POST(request: NextRequest) {
     const clientEmail = escapeHtml(agreement.client.email);
 
     // Get the base URL from request headers or environment
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+    const baseUrl = appUrl();
     const agreementUrl = `${baseUrl}/agreement/${validatedData.token}`;
     const downloadUrl = `${agreementUrl}#download`;
 

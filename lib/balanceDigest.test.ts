@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   balanceDigestSnoozeUntil,
   formatDaysUntilEvent,
+  hasBalanceOwing,
   isIncludedInBalanceDigest,
+  isListedInBalanceDigest,
   type BalanceDigestCandidate,
 } from '@/lib/balanceDigest';
 import { torontoDateKey } from '@/lib/dates';
@@ -152,5 +154,49 @@ describe('isIncludedInBalanceDigest', () => {
     expect(formatDaysUntilEvent(new Date('2026-09-22T16:00:00.000Z'), NOW)).toBe('10 days ago');
     expect(formatDaysUntilEvent(new Date('2026-10-02T20:00:00.000Z'), NOW)).toBe('Today');
     expect(formatDaysUntilEvent(new Date('2026-10-05T16:00:00.000Z'), NOW)).toBe('3 days');
+  });
+});
+
+describe('isListedInBalanceDigest', () => {
+  // Nov 6 2026, the day after the events go-live.
+  const AFTER_LAUNCH = new Date('2026-11-06T15:00:00.000Z');
+  const listed = (overrides: Partial<BalanceDigestCandidate> = {}, packagePrice: number | string | null = 595) =>
+    isListedInBalanceDigest(
+      { ...candidate({ event: { eventDate: new Date('2026-11-10T22:00:00.000Z') }, ...overrides }), packagePrice },
+      AFTER_LAUNCH,
+    );
+
+  it('keeps a signed upcoming event in the next 10 days with a balance', () => {
+    expect(listed()).toBe(true);
+  });
+
+  it('excludes a missing or $0 balance', () => {
+    expect(listed({}, null)).toBe(false);
+    expect(listed({}, 0)).toBe(false);
+    expect(listed({}, '0.00')).toBe(false);
+    expect(listed({}, '150.00')).toBe(true);
+  });
+
+  it('excludes completed events dated before the Nov 4 2026 go-live, by Toronto day', () => {
+    const completed = (eventDate: Date) => listed({ status: 'COMPLETED', paymentStatus: 'Not paid', event: { eventDate } });
+    expect(completed(new Date('2025-11-15T22:00:00.000Z'))).toBe(false);
+    // 11:30pm Nov 3 in Toronto is still before go-live, though it's Nov 4 in UTC.
+    expect(completed(new Date('2026-11-04T04:30:00.000Z'))).toBe(false);
+    expect(completed(new Date('2026-11-04T05:00:00.000Z'))).toBe(true);
+    expect(completed(new Date('2026-11-05T22:00:00.000Z'))).toBe(true);
+  });
+
+  it('still applies the existing rules', () => {
+    expect(listed({ paymentStatus: 'Fully paid' })).toBe(false);
+    expect(listed({ event: { eventDate: new Date('2026-11-20T22:00:00.000Z') } })).toBe(false);
+  });
+});
+
+describe('hasBalanceOwing', () => {
+  it('reads Prisma decimals by their string value', () => {
+    expect(hasBalanceOwing({ toString: () => '0' })).toBe(false);
+    expect(hasBalanceOwing({ toString: () => '425.50' })).toBe(true);
+    expect(hasBalanceOwing(undefined)).toBe(false);
+    expect(hasBalanceOwing(-10)).toBe(false);
   });
 });

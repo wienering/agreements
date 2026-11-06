@@ -1,5 +1,6 @@
 import { AgreementActivityType, Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { appUrl } from '@/lib/appUrl';
 
 /**
  * Events are the booking. These helpers let the existing booking rules (follow-ups, balance
@@ -24,10 +25,8 @@ export function adminEventPath(eventId: string): string {
   return `/admin/events?event=${encodeURIComponent(eventId)}`;
 }
 
-const ADMIN_ORIGIN = 'https://agreements.photoboothguys.ca';
-
 export function adminEventUrl(eventId: string): string {
-  return `${ADMIN_ORIGIN}${adminEventPath(eventId)}`;
+  return `${appUrl()}${adminEventPath(eventId)}`;
 }
 
 export async function logEventActivity(

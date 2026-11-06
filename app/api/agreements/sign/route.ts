@@ -13,6 +13,7 @@ import { sendEmail } from '@/lib/email/send';
 import { getEmailGreeting } from '@/lib/email/greeting';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { isCancelled, isOpenForSigning } from '@/lib/agreements/signable';
+import { appUrl } from '@/lib/appUrl';
 
 const signAgreementSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -342,9 +343,7 @@ async function sendSignedAgreementNotification(agreement: any, clientIP: string,
   }
 
   // Get the base URL from request headers or environment
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'localhost:3000';
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+  const baseUrl = appUrl();
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
   // Build a "Signed By" block — list every signer for clarity
@@ -442,9 +441,7 @@ async function sendClientThankYouEmail(agreement: any, request: NextRequest) {
   }
 
   // Get the base URL from request headers or environment
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'localhost:3000';
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+  const baseUrl = appUrl();
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
   // Resolve from event first, then client (deprecated fields)
@@ -547,9 +544,7 @@ async function sendWaitingForSecondSignerEmail(
     return;
   }
 
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'localhost:3000';
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+  const baseUrl = appUrl();
   const agreementUrl = `${baseUrl}/agreement/${agreement.uniqueToken}`;
 
   // Determine recipient (the OTHER party)
