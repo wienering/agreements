@@ -13,8 +13,18 @@ const prismaMock = vi.hoisted(() => ({
   },
 }));
 
+const appPrismaMock = vi.hoisted(() => ({
+  mcpAuthAttemptLog: {
+    deleteMany: vi.fn(),
+  },
+}));
+
 vi.mock('@/lib/mcp/db', () => ({
   getMcpPrisma: () => prismaMock,
+}));
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: appPrismaMock,
 }));
 
 vi.mock('@/lib/telegram', () => ({
@@ -69,9 +79,10 @@ describe('mcp rateLimit', () => {
     expect(prismaMock.mcpOAuthGrant.updateMany).not.toHaveBeenCalled();
   });
 
-  it('deletes attempt logs older than seven days', async () => {
-    prismaMock.mcpAuthAttemptLog.deleteMany.mockResolvedValue({ count: 12 });
+  it('deletes attempt logs older than seven days with the app role, not the MCP role', async () => {
+    appPrismaMock.mcpAuthAttemptLog.deleteMany.mockResolvedValue({ count: 12 });
     expect(await deleteOldMcpAuthAttemptLogs(7)).toBe(12);
-    expect(prismaMock.mcpAuthAttemptLog.deleteMany).toHaveBeenCalled();
+    expect(appPrismaMock.mcpAuthAttemptLog.deleteMany).toHaveBeenCalled();
+    expect(prismaMock.mcpAuthAttemptLog.deleteMany).not.toHaveBeenCalled();
   });
 });

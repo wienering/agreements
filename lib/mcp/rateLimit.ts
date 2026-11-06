@@ -1,4 +1,5 @@
 import { getMcpPrisma } from '@/lib/mcp/db';
+import { prisma as appPrisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram';
 
 const WINDOW_MS = 15 * 60 * 1000;
@@ -135,8 +136,12 @@ export async function consumeGrantRateLimit(grantId: string): Promise<boolean> {
   return updated.count === 1;
 }
 
+/**
+ * Retention cleanup, run by the archive-leads cron. Uses the app's DATABASE_URL role on purpose:
+ * mcp_claude (MCP_DATABASE_URL) has no DELETE on any table (docs/MCP_DATABASE_ROLE.sql).
+ */
 export async function deleteOldMcpAuthAttemptLogs(olderThanDays = 7): Promise<number> {
-  const prisma = getMcpPrisma();
+  const prisma = appPrisma;
   const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
   const result = await prisma.mcpAuthAttemptLog.deleteMany({
     where: { createdAt: { lt: cutoff } },

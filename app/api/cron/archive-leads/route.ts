@@ -16,7 +16,7 @@ type AutoArchiveReason = Extract<ArchiveReason, 'booked' | 'lost' | 'event_passe
 
 const REASONS: AutoArchiveReason[] = ['booked', 'lost', 'event_passed', 'stale'];
 
-async function runArchiveLeads() {
+async function runArchiveLeads(method: string) {
   const now = new Date();
 
   const leads = await prisma.lead.findMany({
@@ -90,9 +90,22 @@ async function runArchiveLeads() {
     );
   }
 
-  const mcpAttemptLogsDeleted = await deleteOldMcpAuthAttemptLogs(7);
+  // Housekeeping runs last and on its own: a failure here is alerted but never fails lead archiving.
+  let mcpAttemptLogsDeleted: number | null = null;
+  let mcpAttemptLogCleanupFailed = false;
+  try {
+    mcpAttemptLogsDeleted = await deleteOldMcpAuthAttemptLogs(7);
+  } catch (error) {
+    mcpAttemptLogCleanupFailed = true;
+    console.error('[archive-leads] MCP attempt-log cleanup failed', error);
+    await reportServerError({
+      route: '/api/cron/archive-leads (MCP attempt-log cleanup)',
+      method,
+      error,
+    });
+  }
 
-  return { archived, byReason, mcpAttemptLogsDeleted };
+  return { archived, byReason, mcpAttemptLogsDeleted, mcpAttemptLogCleanupFailed };
 }
 
 async function handler(request: NextRequest) {
@@ -101,7 +114,7 @@ async function handler(request: NextRequest) {
   }
 
   try {
-    const summary = await runArchiveLeads();
+    const summary = await runArchiveLeads(request.method);
     console.log('[archive-leads] completed', summary);
     return NextResponse.json({
       ok: true,
