@@ -3,6 +3,7 @@ import { devLog } from './logger';
 import { renderCtaButton, renderEmailLayout, renderNoticeBlock } from '@/lib/email/layout';
 import { sendEmail } from '@/lib/email/send';
 import { formatDateTimeToronto } from '@/lib/dates';
+import { appUrl } from '@/lib/appUrl';
 
 /**
  * Send "Agreement Viewed" alert email. Returns true if sent, false if failed or SMTP not configured.
@@ -18,7 +19,7 @@ export async function sendViewAlertEmail(
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = appUrl();
     const viewAlertTo = process.env.ADMIN_EMAIL || 'info@photoboothguys.ca';
     const adminUrl = `${baseUrl}/admin/agreements`;
 

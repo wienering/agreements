@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminEventPath } from '@/lib/events/booking';
 import {
-
   balanceActionPath,
   createBalanceActionToken,
 } from '@/lib/balanceActionToken';
@@ -14,6 +13,7 @@ import { buildFollowupDigestSections, hasFollowupDigestItems } from '@/lib/follo
 import { followupsLaunchDateKey } from '@/lib/followups/rules';
 import { loadFollowupCandidates } from '@/lib/followups/run';
 import { autoCompleteDryRun, runAutoComplete, type AutoCompleteSummary } from '@/lib/autoComplete';
+import { appUrl } from '@/lib/appUrl';
 
 // Vercel cron invokes this endpoint with GET (user agent: vercel-cron/1.0).
 // Manual triggers can use POST. Both require the CRON_SECRET bearer token.
@@ -22,14 +22,6 @@ import { autoCompleteDryRun, runAutoComplete, type AutoCompleteSummary } from '@
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
-
-function appBaseUrl(request: NextRequest): string {
-  const configured = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '');
-  if (configured) return configured;
-  const proto = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'localhost:3000';
-  return `${proto}://${host}`;
-}
 
 async function handler(request: NextRequest) {
   if (!verifyCronSecret(request)) {
@@ -55,7 +47,7 @@ async function handler(request: NextRequest) {
       await loadFollowupCandidates(),
       now,
       followupsLaunchDateKey(),
-      appBaseUrl(request),
+      appUrl(),
     );
     if (rows.length === 0 && !hasFollowupDigestItems(followups)) {
       return NextResponse.json({
@@ -75,7 +67,7 @@ async function handler(request: NextRequest) {
       return NextResponse.json({ error: 'SMTP not configured' }, { status: 503 });
     }
 
-    const baseUrl = appBaseUrl(request);
+    const baseUrl = appUrl();
     const issuedAt = now.getTime();
     const blocks = [];
 

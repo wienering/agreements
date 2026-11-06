@@ -1,8 +1,9 @@
 import { Prisma } from '@prisma/client';
 import {
   BALANCE_DIGEST_LOOKAHEAD_DAYS,
+  BALANCE_DIGEST_START_DATE_KEY,
   FULLY_PAID_STATUS,
-  isIncludedInBalanceDigest,
+  isListedInBalanceDigest,
 } from '@/lib/balanceDigest';
 import { addTorontoCalendarDaysFrom } from '@/lib/dates';
 import { bookingStatusOf } from '@/lib/events/booking';
@@ -69,18 +70,26 @@ function toRow(record: DigestRecord): BalanceDigestRow | null {
   };
 }
 
-/** Upcoming events in the next 10 days and completed events that still owe a balance. */
+/**
+ * Upcoming events in the next 10 days and completed events that still owe a balance, dated on or
+ * after the events go-live (BALANCE_DIGEST_START_DATE_KEY) with a price above $0.
+ */
 export async function findBalanceDigestAgreements(now = new Date()): Promise<BalanceDigestRow[]> {
   const windowStart = addTorontoCalendarDaysFrom(now, -1);
   const windowEnd = addTorontoCalendarDaysFrom(now, BALANCE_DIGEST_LOOKAHEAD_DAYS + 2);
 
   // Coarse filter only: exact day boundaries and other spellings of fully paid are
-  // settled by isIncludedInBalanceDigest, which uses isFullyPaid().
+  // settled by isListedInBalanceDigest, which uses isFullyPaid() and Toronto calendar days.
+  // A day early in UTC so no go-live-day event is dropped before the exact Toronto check.
+  const startFloor = new Date(`${BALANCE_DIGEST_START_DATE_KEY}T00:00:00.000Z`);
+  startFloor.setUTCDate(startFloor.getUTCDate() - 1);
   const records = await prisma.event.findMany({
     where: {
       archived: false,
       cancelledAt: null,
       paymentStatus: { not: FULLY_PAID_STATUS },
+      packagePrice: { gt: 0 },
+      eventDate: { gte: startFloor },
       OR: [
         { status: 'UPCOMING', eventDate: { gte: windowStart, lt: windowEnd } },
         { status: 'COMPLETED', eventDate: { lt: windowEnd } },
@@ -91,7 +100,7 @@ export async function findBalanceDigestAgreements(now = new Date()): Promise<Bal
 
   return records
     .filter((record) =>
-      isIncludedInBalanceDigest(
+      isListedInBalanceDigest(
         { ...record, status: bookingStatusOf(record.status), event: { eventDate: record.eventDate }, client: null },
         now,
       ),

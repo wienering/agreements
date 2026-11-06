@@ -15,6 +15,7 @@ import { sendGalleryEmail, sendReviewRequest } from '@/lib/followups/send';
 import { createEventInvoice } from '@/lib/stripe/eventInvoice';
 import { PAYMENT_STATUSES } from '@/lib/paymentStatus';
 import { fromTorontoDateTimeLocalInput, parseTorontoCalendarDateKey } from '@/lib/dates';
+import { appUrl } from '@/lib/appUrl';
 
 /**
  * Connector tools that change agreements or send something to a client. Anything that emails a
@@ -26,7 +27,7 @@ const CONFIRM_REQUIRED = {
 };
 
 function baseUrl(): string {
-  return (process.env.NEXT_PUBLIC_BASE_URL || 'https://agreements.photoboothguys.ca').replace(/\/$/, '');
+  return appUrl();
 }
 
 /** Attendants, templates and payment statuses, so names and ids can be matched in conversation. */

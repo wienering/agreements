@@ -6,6 +6,7 @@ import { findBackdropMatchCandidates } from '@/lib/backdropMatchCandidates';
 import { createBackdropMatchConfirmToken } from '@/lib/backdropMatchToken';
 import { formatEventDateToronto, formatEventDateTorontoInput } from '@/lib/dates';
 import { sendTelegramMessage } from '@/lib/telegram';
+import { appUrl } from '@/lib/appUrl';
 
 const proposeBackdropMatchSchema = z.object({
   clientEmail: z.string().email('Invalid email address'),
@@ -26,9 +27,7 @@ const proposeBackdropMatchSchema = z.object({
 });
 
 function getBaseUrl(request: NextRequest): string {
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const host = request.headers.get('host') || 'localhost:3000';
-  return process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+  return appUrl();
 }
 
 function formatOptionalEventDate(value: string | undefined): string {

@@ -13,6 +13,7 @@ import { reportServerError } from '@/lib/errorAlert';
 import { sendChaseReminderEmail } from '@/lib/email/chaseReminderEmail';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram';
+import { appUrl } from '@/lib/appUrl';
 
 // Vercel cron invokes this endpoint with GET (user agent: vercel-cron/1.0).
 // Manual triggers can use POST. Both require the CRON_SECRET bearer token.
@@ -142,9 +143,7 @@ async function handler(request: NextRequest) {
     return NextResponse.json({ error: 'SMTP not configured' }, { status: 503 });
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host') || 'localhost:3000'}`;
+  const baseUrl = appUrl();
 
   try {
     const summary = await runChaseUnsigned(baseUrl);

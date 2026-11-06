@@ -12,6 +12,7 @@ import {
 import { sendEmail } from '@/lib/email/send';
 import { logAgreementActivity } from '@/lib/activityLog';
 import { formatDateTimeToronto } from '@/lib/dates';
+import { appUrl } from '@/lib/appUrl';
 
 const addNoteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(1000, 'Note content must be less than 1000 characters'),
@@ -33,9 +34,7 @@ async function sendNoteNotificationEmail(
 
   try {
     // Get the base URL from request headers or environment
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
+    const baseUrl = appUrl();
     
     // Escape HTML entities for safety
     const safeNoteContent = escapeHtml(noteContent);

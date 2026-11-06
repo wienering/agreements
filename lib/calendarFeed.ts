@@ -9,12 +9,12 @@ import {
 } from '@/lib/dates';
 import { buildIcsCalendar, type IcsEvent } from '@/lib/ics';
 import { displayPaymentStatus } from '@/lib/paymentStatus';
+import { appUrl } from '@/lib/appUrl';
 
 export const CALENDAR_FEED_PAST_DAYS = 30;
 export const CALENDAR_FEED_FUTURE_MONTHS = 18;
 export const DEFAULT_EVENT_DURATION_MINUTES = 3 * 60;
 
-const ADMIN_ORIGIN = 'https://agreements.photoboothguys.ca';
 const UID_DOMAIN = 'agreements.photoboothguys.ca';
 const MAX_DURATION_MINUTES = 24 * 60;
 
@@ -203,7 +203,7 @@ export function calendarFeedStatusLabel(source: CalendarFeedSource): string {
 }
 
 export function adminAgreementUrl(agreementId: string): string {
-  return `${ADMIN_ORIGIN}${adminAgreementPath(agreementId)}`;
+  return `${appUrl()}${adminAgreementPath(agreementId)}`;
 }
 
 export type EventSchedule = {
@@ -257,7 +257,7 @@ export function toCalendarFeedEvent(source: CalendarFeedSource): IcsEvent | null
   const clientName = `${source.client.firstName} ${source.client.lastName}`.trim();
   const isEventOnly = source.kind === 'event';
   const adminUrl = isEventOnly
-    ? `${ADMIN_ORIGIN}/admin/events?event=${encodeURIComponent(source.id)}`
+    ? `${appUrl()}/admin/events?event=${encodeURIComponent(source.id)}`
     : adminAgreementUrl(source.id);
   // Keyed by the Event record when there is one, so adding or signing an agreement
   // updates the same calendar entry instead of creating a second one.

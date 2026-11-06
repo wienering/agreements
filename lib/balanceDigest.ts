@@ -13,6 +13,12 @@ export const FULLY_PAID_STATUS = PAYMENT_STATUS_FULLY_PAID;
 /** Inclusive window: today through this many Toronto calendar days ahead. */
 export const BALANCE_DIGEST_LOOKAHEAD_DAYS = 10;
 
+/**
+ * Events model go-live (Toronto date). Earlier events never had their payment status carried over
+ * in the events migration, so the digest ignores them. They are left exactly as they are.
+ */
+export const BALANCE_DIGEST_START_DATE_KEY = '2026-11-04';
+
 /** Confirmed snooze hides the agreement until this many Toronto days from now. */
 export const BALANCE_DIGEST_SNOOZE_DAYS = 3;
 
@@ -77,6 +83,37 @@ export function isIncludedInBalanceDigest(
   return agreement.status === 'COMPLETED'
     ? isEventOnOrBeforeBalanceWindowEnd(eventDate, now)
     : isEventWithinBalanceWindow(eventDate, now);
+}
+
+/** A balance is owing only when the event has a price above $0. Missing or $0 is nothing owing. */
+export function hasBalanceOwing(packagePrice: number | string | { toString(): string } | null | undefined): boolean {
+  if (packagePrice == null) return false;
+  const amount = Number(typeof packagePrice === 'number' ? packagePrice : packagePrice.toString());
+  return Number.isFinite(amount) && amount > 0;
+}
+
+/** On or after the events go-live, by Toronto calendar day. */
+export function isOnOrAfterBalanceDigestStart(
+  eventDate: Date,
+  startKey: string = BALANCE_DIGEST_START_DATE_KEY,
+): boolean {
+  const eventKey = torontoDateKey(eventDate);
+  return eventKey !== '' && eventKey >= startKey;
+}
+
+/**
+ * What the daily digest lists: isIncludedInBalanceDigest, limited to events on or after the
+ * events go-live that have a balance above $0.
+ */
+export function isListedInBalanceDigest(
+  event: BalanceDigestCandidate & { packagePrice: number | string | { toString(): string } | null | undefined },
+  now = new Date(),
+  startKey: string = BALANCE_DIGEST_START_DATE_KEY,
+): boolean {
+  const eventDate = resolveAgreementEventDate(event);
+  if (!eventDate || !isOnOrAfterBalanceDigestStart(eventDate, startKey)) return false;
+  if (!hasBalanceOwing(event.packagePrice)) return false;
+  return isIncludedInBalanceDigest(event, now);
 }
 
 export function balanceDigestSnoozeUntil(now = new Date()): Date {
