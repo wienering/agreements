@@ -289,7 +289,9 @@ function EventsAdminPage() {
           </AdminButton>
         </div>
 
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {/* Views on one row and search + attendant on the next until xl, so the search box
+            keeps a usable width on tablets (iPad portrait/landscape) instead of being squeezed. */}
+        <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Event views">
             {VIEWS.map((option) => (
               <AdminButton
@@ -304,20 +306,21 @@ function EventsAdminPage() {
               </AdminButton>
             ))}
           </div>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-end">
-          <input
-            ref={searchInputRef}
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search client, type, venue... (press /)"
-            className={`${fieldClass} md:max-w-[320px]`}
-          />
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center xl:justify-end">
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search client, type, venue... (press /)"
+              aria-label="Search events"
+              className={`${fieldClass} min-w-0 sm:flex-1 xl:w-[320px] xl:flex-none`}
+            />
             <select
               value={attendant}
               onChange={(event) => setAttendant(event.target.value)}
               aria-label="Filter by attendant"
-              className={`${fieldClass} md:max-w-[200px]`}
+              className={`${fieldClass} sm:w-[200px] sm:flex-none`}
             >
               <option value="">All attendants</option>
               {attendantNames.map((name) => (

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UIcon } from '../components/UIcon';
 import { AdminButton } from '../components/AdminButton';
 
@@ -46,6 +46,13 @@ const navGroups = [
   },
 ];
 
+/**
+ * Width at which the sidebar is pinned open and the content column is offset by it.
+ * Must match the `lg:` classes below (Tailwind lg = 1024px). Below it, including iPad
+ * portrait, the sidebar is a drawer behind the top-bar menu button.
+ */
+const SIDEBAR_PINNED_MIN_WIDTH = 1024;
+
 export default function AdminLayout({
   children,
 }: {
@@ -54,18 +61,60 @@ export default function AdminLayout({
   const pathname = usePathname();
   const { status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const closeMenuOnDesktop = () => {
-      if (window.innerWidth >= 768) {
+    const query = window.matchMedia(`(min-width: ${SIDEBAR_PINNED_MIN_WIDTH}px)`);
+    const sync = () => {
+      setIsSidebarPinned(query.matches);
+      if (query.matches) {
         setIsMobileMenuOpen(false);
       }
     };
 
-    closeMenuOnDesktop();
-    window.addEventListener('resize', closeMenuOnDesktop);
-    return () => window.removeEventListener('resize', closeMenuOnDesktop);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
   }, []);
+
+  // Close the drawer whenever the route changes (covers nav taps and back/forward).
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // While the drawer is open: Escape closes it and the page behind doesn't scroll.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isMobileMenuOpen]);
+
+  // A closed drawer is off-screen: keep it out of the tab order and screen readers.
+  // (React 18 has no `inert` prop, so set the attribute directly.)
+  const isSidebarHidden = !isSidebarPinned && !isMobileMenuOpen;
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+    if (isSidebarHidden) {
+      sidebar.setAttribute('inert', '');
+    } else {
+      sidebar.removeAttribute('inert');
+    }
+  });
 
   const isPreviewRoute = pathname?.startsWith('/admin/preview/');
 
@@ -99,14 +148,22 @@ export default function AdminLayout({
     <div data-surface="admin" className="flex min-h-screen bg-admin-bg">
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-[998] bg-black/50 md:hidden"
+          aria-hidden="true"
+          data-admin-sidebar-backdrop
+          className="fixed inset-0 z-[998] bg-black/50 lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      <div className={`fixed top-0 left-0 z-[999] flex h-screen w-[280px] flex-col overflow-hidden border-r border-admin-border bg-admin-sidebar py-6 text-admin-text transition-transform duration-300 ease-in-out md:w-[250px] md:translate-x-0 ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <aside
+        id="admin-sidebar"
+        ref={sidebarRef}
+        data-admin-sidebar
+        aria-label="Admin navigation"
+        className={`fixed top-0 left-0 z-[999] flex h-[100dvh] w-[280px] max-w-[85vw] flex-col overflow-hidden border-r border-admin-border bg-admin-sidebar py-6 text-admin-text transition-transform duration-300 ease-in-out lg:w-[250px] lg:max-w-none lg:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'
+        }`}
+      >
         {/* The logo lockup sits on the light ground at its natural proportions:
             no tile, no container, no background behind it. Swap this block for
             <Image src="/brand/logo-lockup.svg" width={132} /> once that file
@@ -182,13 +239,19 @@ export default function AdminLayout({
             </a>
           </p>
         </div>
-      </div>
+      </aside>
 
-      <div className="w-full flex-1 bg-admin-bg md:ml-[250px] md:w-auto">
-        <div className="sticky top-0 z-[997] flex items-center border-b border-admin-border bg-admin-card px-5 py-4 md:hidden">
+      {/* min-w-0 lets this flex item shrink to the viewport. Without it, long unwrapped
+          text in list rows widens the column past the screen, the page scrolls sideways
+          and the fixed sidebar covers the start of every row. */}
+      <div data-admin-main className="min-w-0 flex-1 bg-admin-bg lg:ml-[250px]">
+        <div className="sticky top-0 z-[997] flex items-center border-b border-admin-border bg-admin-card px-5 py-4 lg:hidden">
           <button
+            ref={menuButtonRef}
             type="button"
             onClick={() => setIsMobileMenuOpen(true)}
+            aria-controls="admin-sidebar"
+            aria-expanded={isMobileMenuOpen}
             className="flex h-12 w-12 min-w-12 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-3 text-admin-text transition-opacity duration-150 active:opacity-70"
             title="Open menu"
             aria-label="Open menu"

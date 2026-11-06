@@ -390,8 +390,9 @@ body {
     font-size: 18px !important;
   }
 
-  /* Compact button padding */
-  button {
+  /* Compact button padding. Skips buttons that are deliberately unpadded (p-0): row
+     click targets, text-link buttons and cards, which otherwise get pushed in 16px. */
+  button:not(.p-0) {
     padding: 10px 16px !important;
     font-size: 14px !important;
   }
